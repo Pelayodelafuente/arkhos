@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { ArkhosLogo } from "@/components/ui/arkhos-logo";
 import { LogoutButton } from "./logout-button";
 
 const modules = [
@@ -47,11 +48,11 @@ export default async function DashboardPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-12">
       <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="font-heading text-3xl text-foreground">
-            Bienvenido a Arkhos
-          </h1>
-          <p className="mt-1 text-text-tertiary">{displayName}</p>
+        <div className="flex flex-col gap-2">
+          <ArkhosLogo size="md" />
+          <p className="text-text-tertiary">
+            Bienvenido, <span className="text-foreground">{displayName}</span>
+          </p>
         </div>
         <LogoutButton />
       </div>
