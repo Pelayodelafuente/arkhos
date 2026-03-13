@@ -35,6 +35,7 @@ export interface Database {
           preferences?: Json;
           updated_at?: string;
         };
+        Relationships: [];
       };
       activity_log: {
         Row: {
@@ -61,10 +62,20 @@ export interface Database {
           entity_name?: string | null;
           detail?: string | null;
         };
+        Relationships: [
+          {
+            foreignKeyName: "activity_log_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
       };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
     Enums: Record<string, never>;
+    CompositeTypes: Record<string, never>;
   };
 }
