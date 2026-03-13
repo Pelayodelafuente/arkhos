@@ -2,7 +2,7 @@
 
 **Autor:** Pelayo de la Fuente
 **Fecha:** Marzo 2026 · v1.0
-**Estado:** En definición
+**Estado:** Fase 1 completada — Fase 2 pendiente
 **Dominio objetivo:** arkhos.pelayodelafuente.es (subdominio)
 **Nombre de la plataforma:** Arkhos (ἀρχός — el que lidera, origen, centro de mando)
 
@@ -432,11 +432,11 @@ CREATE POLICY "Users access own phases" ON project_phases
 
 | Entregable | Estado |
 |---|---|
-| Wordmark (logotipo textual) | Pendiente — "Arkhos" en DM Serif Display |
-| Isotipo (favicon/icono app) | Pendiente — diseño geométrico basado en "A" o pórtico griego |
-| PWA Icons (192px, 512px, maskable) | Pendiente |
+| Wordmark (logotipo textual) | ✅ "Arkhos" en DM Serif Display — `ArkhosLogo` |
+| Isotipo (favicon/icono app) | ✅ A geométrica terracota — `ArkhosIcon` |
+| PWA Icons (192px, 512px) | ✅ SVG en `public/icons/` |
 | Open Graph images | Pendiente |
-| Favicon set | Pendiente |
+| Favicon set | ✅ `public/favicon.svg` |
 
 ---
 
@@ -447,22 +447,22 @@ CREATE POLICY "Users access own phases" ON project_phases
 
 ```
 0.1  ✅ Nombre decidido: Arkhos
-0.2  Crear repositorio en GitHub (privado, monorepo)
-0.3  Scaffold Next.js 15 + TypeScript + Tailwind + App Router
-0.4  Configurar estructura de carpetas según arquitectura
-0.5  Configurar Tailwind con las variables CSS del brand
-0.6  Crear proyecto en Supabase
-0.7  Configurar tablas base (profiles + auth triggers)
-0.8  Implementar autenticación completa:
-     - Login / Register / Reset password
-     - Middleware de protección de rutas
-     - MFA (segundo factor TOTP)
-0.9  Conectar Vercel + GitHub (deploy automático)
-0.10 Configurar subdominio arkhos.pelayodelafuente.es → Vercel
-0.11 Configurar PWA (manifest, service worker, icons placeholder)
-0.12 Configurar Sentry para errores
-0.13 Crear docs/ARCHITECTURE.md y docs/CHANGELOG.md
-0.14 Primer deploy en producción con login funcional
+0.2  ✅ Crear repositorio en GitHub (privado, monorepo)
+0.3  ✅ Scaffold Next.js 15 + TypeScript + Tailwind + App Router
+0.4  ✅ Configurar estructura de carpetas según arquitectura
+0.5  ✅ Configurar Tailwind con las variables CSS del brand
+0.6  ✅ Crear proyecto en Supabase
+0.7  ✅ Configurar tablas base (profiles + auth triggers)
+0.8  ⏳ Implementar autenticación completa:
+     - ✅ Login / Register / Reset password
+     - ✅ Middleware de protección de rutas
+     - ❌ MFA (segundo factor TOTP) — aplazado a Fase 2
+0.9  ✅ Conectar Vercel + GitHub (deploy automático)
+0.10 ✅ Configurar subdominio arkhos.pelayodelafuente.es → Vercel
+0.11 ⏳ Configurar PWA (manifest ✅, service worker ❌, icons placeholder ✅)
+0.12 ❌ Configurar Sentry para errores
+0.13 ✅ Crear docs/ARCHITECTURE.md y docs/CHANGELOG.md
+0.14 ✅ Primer deploy en producción con login funcional
 ```
 
 **Entregable:** App desplegada en arkhos.pelayodelafuente.es con login + MFA + PWA instalable.
@@ -473,26 +473,22 @@ CREATE POLICY "Users access own phases" ON project_phases
 **Objetivo:** Layout principal, navegación entre módulos, sistema de componentes.
 
 ```
-1.1  Diseñar y maquetar layout principal:
-     - Sidebar con navegación (desktop)
-     - Topbar (mobile + breadcrumbs)
-     - Bottom nav (mobile)
-     - Transiciones entre módulos
-1.2  Crear component library base (ui/):
-     - Button (primary, secondary, ghost, danger)
-     - Card, Input, Select, Textarea
+1.1  ✅ Diseñar y maquetar layout principal:
+     - ✅ Sidebar con navegación (desktop)
+     - ✅ Topbar (mobile + hamburguesa)
+     - ✅ Bottom nav (mobile)
+     - ❌ Transiciones entre módulos (Framer Motion)
+1.2  ❌ Crear component library base (ui/):
+     - Button, Card, Input, Select, Textarea
      - Badge, Pill, Tag
      - Modal, Dialog
-     - Progress bar
-     - Toast/Notifications
-     - Tooltip
-     - Skeleton loaders
-1.3  Implementar sistema de temas con CSS variables
-1.4  Diseñar wordmark + isotipo
-1.5  Generar PWA icons definitivos
-1.6  Dashboard home (resumen de todos los módulos)
-1.7  Responsive testing: desktop, tablet, mobile
-1.8  Documentar componentes en docs/
+     - Progress bar, Toast, Tooltip, Skeleton
+1.3  ✅ Implementar sistema de temas con CSS variables
+1.4  ✅ Diseñar wordmark + isotipo
+1.5  ✅ Generar PWA icons (SVG)
+1.6  ✅ Dashboard home (resumen de todos los módulos)
+1.7  ⏳ Responsive testing: desktop ✅, tablet ⏳, mobile ✅
+1.8  ❌ Documentar componentes en docs/
 ```
 
 **Entregable:** Shell completa con navegación, componentes e identidad visual aplicada.
