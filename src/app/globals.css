@@ -29,29 +29,35 @@
 
   /* Sombras (solo modales) */
   --shadow-modal: 0 4px 20px rgba(26, 23, 20, 0.08);
-
-  /* Tipografías */
-  --font-heading: var(--font-dm-serif-display), "DM Serif Display", serif;
-  --font-sans: var(--font-plus-jakarta-sans), "Plus Jakarta Sans", sans-serif;
-  --font-mono: var(--font-jetbrains-mono), "JetBrains Mono", monospace;
 }
 
 @theme inline {
+  /* Fondos */
   --color-background: var(--bg-cream);
   --color-foreground: var(--text-primary);
   --color-card: var(--bg-card);
   --color-sand: var(--bg-sand);
+
+  /* Bordes */
   --color-border: var(--border-stone);
+
+  /* Acento */
   --color-accent: var(--accent-terracotta);
+
+  /* Textos */
   --color-text-secondary: var(--text-secondary);
   --color-text-tertiary: var(--text-tertiary);
+
+  /* Módulos */
   --color-proyectos: var(--module-proyectos);
   --color-patrimonio: var(--module-patrimonio);
   --color-gastos: var(--module-gastos);
   --color-mercados: var(--module-mercados);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-mono);
-  --font-heading: var(--font-heading);
+
+  /* Tipografías — referencia directa a next/font variables (evita ciclos) */
+  --font-sans: var(--font-plus-jakarta-sans), "Plus Jakarta Sans", sans-serif;
+  --font-mono: var(--font-jetbrains-mono), "JetBrains Mono", monospace;
+  --font-heading: var(--font-dm-serif-display), "DM Serif Display", serif;
 }
 
 body {

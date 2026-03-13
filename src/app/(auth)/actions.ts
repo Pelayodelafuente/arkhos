@@ -111,7 +111,7 @@ export async function resetPassword(
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(
     parsed.data.email,
-    { redirectTo: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/callback` }
+    { redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://arkhos.pelayodelafuente.es"}/auth/callback` }
   );
 
   if (error) {
