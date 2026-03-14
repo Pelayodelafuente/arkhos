@@ -46,7 +46,7 @@ export function ToastProvider() {
 
   return (
     <div className="fixed right-4 top-4 z-[100] flex flex-col gap-2">
-      {toasts.map((toast) => (
+      {toasts.map((toast: Toast) => (
         <ToastItem key={toast.id} toast={toast} />
       ))}
     </div>
