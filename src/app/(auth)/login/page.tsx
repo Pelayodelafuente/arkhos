@@ -3,6 +3,9 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { login, type AuthState } from "../actions";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
 
 const initialState: AuthState = { error: null, success: null };
 
@@ -10,59 +13,37 @@ export default function LoginPage() {
   const [state, formAction, pending] = useActionState(login, initialState);
 
   return (
-    <div className="rounded-lg border border-border bg-card p-8">
+    <Card padding="lg">
       <h2 className="mb-6 text-center font-heading text-2xl text-foreground">
         Iniciar sesión
       </h2>
 
       <form action={formAction} className="space-y-4">
-        <div>
-          <label
-            htmlFor="email"
-            className="mb-1 block text-sm font-medium text-text-secondary"
-          >
-            Email
-          </label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            required
-            className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground outline-none placeholder:text-text-tertiary focus:border-accent"
-            placeholder="tu@email.com"
-          />
-        </div>
+        <Input
+          label="Email"
+          name="email"
+          type="email"
+          autoComplete="email"
+          required
+          placeholder="tu@email.com"
+        />
 
-        <div>
-          <label
-            htmlFor="password"
-            className="mb-1 block text-sm font-medium text-text-secondary"
-          >
-            Contraseña
-          </label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            required
-            className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground outline-none placeholder:text-text-tertiary focus:border-accent"
-            placeholder="••••••••"
-          />
-        </div>
+        <Input
+          label="Contraseña"
+          name="password"
+          type="password"
+          autoComplete="current-password"
+          required
+          placeholder="••••••••"
+        />
 
         {state.error && (
           <p className="text-sm text-red-600">{state.error}</p>
         )}
 
-        <button
-          type="submit"
-          disabled={pending}
-          className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-        >
-          {pending ? "Entrando..." : "Iniciar sesión"}
-        </button>
+        <Button type="submit" variant="primary" size="md" loading={pending} className="w-full">
+          Iniciar sesión
+        </Button>
       </form>
 
       <div className="mt-6 space-y-2 text-center text-sm">
@@ -73,14 +54,11 @@ export default function LoginPage() {
           </Link>
         </p>
         <p>
-          <Link
-            href="/reset-password"
-            className="text-text-tertiary hover:text-accent"
-          >
+          <Link href="/reset-password" className="text-text-tertiary hover:text-accent">
             ¿Olvidaste tu contraseña?
           </Link>
         </p>
       </div>
-    </div>
+    </Card>
   );
 }

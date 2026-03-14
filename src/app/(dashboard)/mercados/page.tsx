@@ -1,4 +1,5 @@
 import { TrendingUp } from "lucide-react";
+import { Card } from "@/components/ui/card";
 
 export default function MercadosPage() {
   return (
@@ -9,9 +10,9 @@ export default function MercadosPage() {
         </div>
         <h1 className="font-heading text-2xl text-foreground">Mercados</h1>
       </div>
-      <div className="rounded-lg border border-border bg-card p-8 text-center">
+      <Card padding="lg" className="text-center">
         <p className="text-text-tertiary">Módulo en desarrollo</p>
-      </div>
+      </Card>
     </div>
   );
 }

@@ -3,6 +3,9 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { register, type AuthState } from "../actions";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
 
 const initialState: AuthState = { error: null, success: null };
 
@@ -10,7 +13,7 @@ export default function RegisterPage() {
   const [state, formAction, pending] = useActionState(register, initialState);
 
   return (
-    <div className="rounded-lg border border-border bg-card p-8">
+    <Card padding="lg">
       <h2 className="mb-6 text-center font-heading text-2xl text-foreground">
         Crear cuenta
       </h2>
@@ -28,91 +31,51 @@ export default function RegisterPage() {
       ) : (
         <>
           <form action={formAction} className="space-y-4">
-            <div>
-              <label
-                htmlFor="fullName"
-                className="mb-1 block text-sm font-medium text-text-secondary"
-              >
-                Nombre completo
-              </label>
-              <input
-                id="fullName"
-                name="fullName"
-                type="text"
-                autoComplete="name"
-                required
-                className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground outline-none placeholder:text-text-tertiary focus:border-accent"
-                placeholder="Pelayo de la Fuente"
-              />
-            </div>
+            <Input
+              label="Nombre completo"
+              name="fullName"
+              type="text"
+              autoComplete="name"
+              required
+              placeholder="Pelayo de la Fuente"
+            />
 
-            <div>
-              <label
-                htmlFor="email"
-                className="mb-1 block text-sm font-medium text-text-secondary"
-              >
-                Email
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground outline-none placeholder:text-text-tertiary focus:border-accent"
-                placeholder="tu@email.com"
-              />
-            </div>
+            <Input
+              label="Email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              placeholder="tu@email.com"
+            />
 
-            <div>
-              <label
-                htmlFor="password"
-                className="mb-1 block text-sm font-medium text-text-secondary"
-              >
-                Contraseña
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                required
-                minLength={8}
-                className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground outline-none placeholder:text-text-tertiary focus:border-accent"
-                placeholder="Mínimo 8 caracteres"
-              />
-            </div>
+            <Input
+              label="Contraseña"
+              name="password"
+              type="password"
+              autoComplete="new-password"
+              required
+              minLength={8}
+              placeholder="Mínimo 8 caracteres"
+            />
 
-            <div>
-              <label
-                htmlFor="confirmPassword"
-                className="mb-1 block text-sm font-medium text-text-secondary"
-              >
-                Confirmar contraseña
-              </label>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                autoComplete="new-password"
-                required
-                minLength={8}
-                className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground outline-none placeholder:text-text-tertiary focus:border-accent"
-                placeholder="Repite la contraseña"
-              />
-            </div>
+            <Input
+              label="Confirmar contraseña"
+              name="confirmPassword"
+              type="password"
+              autoComplete="new-password"
+              required
+              minLength={8}
+              placeholder="Repite la contraseña"
+            />
 
             {state.error && (
               <p className="text-sm text-red-600">{state.error}</p>
             )}
 
-            <button
-              type="submit"
-              disabled={pending}
-              className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-            >
-              {pending ? "Creando cuenta..." : "Crear cuenta"}
-            </button>
+            <Button type="submit" variant="primary" size="md" loading={pending} className="w-full">
+              Crear cuenta
+            </Button>
           </form>
 
           <p className="mt-6 text-center text-sm text-text-tertiary">
@@ -123,6 +86,6 @@ export default function RegisterPage() {
           </p>
         </>
       )}
-    </div>
+    </Card>
   );
 }
