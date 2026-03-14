@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, FolderKanban, TrendingUp, Wallet, Receipt, Shield } from "lucide-react";
+import { Home, FolderKanban, TrendingUp, Wallet, Receipt, Shield, BookOpen } from "lucide-react";
 import { ArkhosLogo } from "@/components/ui/arkhos-logo";
 import { Button } from "@/components/ui/button";
 import { logout } from "@/app/(auth)/actions";
@@ -91,6 +91,20 @@ export function Sidebar({ userName }: SidebarProps) {
           })}
         </ul>
       </nav>
+
+      {/* Docs */}
+      <div className="px-3 pb-1">
+        <a
+          href="/docs"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-text-tertiary transition-colors hover:bg-border hover:text-accent"
+        >
+          <span className="h-2 w-2 flex-shrink-0" />
+          <BookOpen size={16} strokeWidth={1.75} className="flex-shrink-0" />
+          Documentación
+        </a>
+      </div>
 
       {/* Settings */}
       <div className="border-t border-border px-3 py-3">
