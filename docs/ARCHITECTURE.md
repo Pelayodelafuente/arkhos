@@ -35,7 +35,7 @@ El desarrollo se hará con **Claude Code** como herramienta principal de desarro
 
 | Tecnología | Justificación |
 |---|---|
-| **Next.js 15 (App Router)** | SSR + SSG + API Routes en un solo framework. El estándar para apps React de producción. App Router para layouts compartidos entre módulos. |
+| **Next.js 16.1.6 (App Router)** | SSR + SSG + API Routes en un solo framework. El estándar para apps React de producción. App Router para layouts compartidos entre módulos. |
 | **TypeScript (strict mode)** | No negociable. Type safety en todo el codebase. Previene bugs, mejora la documentación automática del código. |
 | **Tailwind CSS v4** | Utility-first. Con el sistema de variables CSS del brand se configura una vez y queda consistente en toda la app. Sin CSS custom suelto. |
 | **Framer Motion** | Animaciones de interfaz. Transiciones entre módulos, micro-interacciones. Usado con mesura: diseño flat, pero con transiciones suaves. |
@@ -448,7 +448,7 @@ CREATE POLICY "Users access own phases" ON project_phases
 ```
 0.1  ✅ Nombre decidido: Arkhos
 0.2  ✅ Crear repositorio en GitHub (privado, monorepo)
-0.3  ✅ Scaffold Next.js 15 + TypeScript + Tailwind + App Router
+0.3  ✅ Scaffold Next.js 16.1.6 + TypeScript + Tailwind + App Router
 0.4  ✅ Configurar estructura de carpetas según arquitectura
 0.5  ✅ Configurar Tailwind con las variables CSS del brand
 0.6  ✅ Crear proyecto en Supabase
