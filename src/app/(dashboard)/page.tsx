@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { FolderKanban, TrendingUp, Wallet, Receipt } from "lucide-react";
 import Link from "next/link";
+import { Card } from "@/components/ui/card";
 
 const moduleCards = [
   {
@@ -76,23 +77,21 @@ export default async function DashboardPage() {
       {/* Module cards */}
       <div className="mb-10 grid grid-cols-1 gap-4 sm:grid-cols-2">
         {moduleCards.map(({ name, href, icon: Icon, color, preview }) => (
-          <Link
-            key={name}
-            href={href}
-            className="group rounded-lg border border-border bg-card p-5 transition-colors hover:border-accent"
-          >
-            <div className="mb-4 flex items-center gap-3">
-              <span
-                className="h-2 w-2 flex-shrink-0 rounded-full"
-                style={{ backgroundColor: color }}
-              />
-              <div className="flex items-center gap-2">
-                <Icon size={15} strokeWidth={1.75} className="text-text-tertiary" />
-                <span className="text-sm font-medium text-text-secondary">{name}</span>
+          <Card key={name} clickable padding="sm">
+            <Link href={href} className="block p-2">
+              <div className="mb-4 flex items-center gap-3">
+                <span
+                  className="h-2 w-2 flex-shrink-0 rounded-full"
+                  style={{ backgroundColor: color }}
+                />
+                <div className="flex items-center gap-2">
+                  <Icon size={15} strokeWidth={1.75} className="text-text-tertiary" />
+                  <span className="text-sm font-medium text-text-secondary">{name}</span>
+                </div>
               </div>
-            </div>
-            <p className="font-mono text-xl text-foreground">{preview}</p>
-          </Link>
+              <p className="font-mono text-xl text-foreground">{preview}</p>
+            </Link>
+          </Card>
         ))}
       </div>
 
@@ -101,9 +100,9 @@ export default async function DashboardPage() {
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-text-tertiary">
           Actividad reciente
         </h2>
-        <div className="rounded-lg border border-border bg-card p-6 text-center">
+        <Card padding="md" className="text-center">
           <p className="text-sm text-text-tertiary">Sin actividad reciente</p>
-        </div>
+        </Card>
       </div>
     </div>
   );

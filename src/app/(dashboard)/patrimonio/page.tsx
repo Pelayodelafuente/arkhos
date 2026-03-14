@@ -1,4 +1,5 @@
 import { Wallet } from "lucide-react";
+import { Card } from "@/components/ui/card";
 
 export default function PatrimonioPage() {
   return (
@@ -9,9 +10,9 @@ export default function PatrimonioPage() {
         </div>
         <h1 className="font-heading text-2xl text-foreground">Patrimonio</h1>
       </div>
-      <div className="rounded-lg border border-border bg-card p-8 text-center">
+      <Card padding="lg" className="text-center">
         <p className="text-text-tertiary">Módulo en desarrollo</p>
-      </div>
+      </Card>
     </div>
   );
 }

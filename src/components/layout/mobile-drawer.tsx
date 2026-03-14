@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { X, Home, FolderKanban, TrendingUp, Wallet, Receipt } from "lucide-react";
 import { ArkhosLogo } from "@/components/ui/arkhos-logo";
+import { Button } from "@/components/ui/button";
 import { logout } from "@/app/(auth)/actions";
 
 const navItems = [
@@ -84,12 +85,9 @@ export function MobileDrawer({ open, onClose, userName }: MobileDrawerProps) {
             {userName}
           </p>
           <form action={logout}>
-            <button
-              type="submit"
-              className="w-full rounded-md border border-border px-3 py-2 text-left text-sm text-text-secondary transition-colors hover:border-accent hover:text-accent"
-            >
+            <Button type="submit" variant="secondary" size="sm" className="w-full">
               Cerrar sesión
-            </button>
+            </Button>
           </form>
         </div>
       </div>
