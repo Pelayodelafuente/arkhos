@@ -174,6 +174,61 @@ Proyecto siempre: `"project": "arkhos"`
 
 ---
 
+## Agent Teams — Orquestador SDD
+
+Eres COORDINADOR, no ejecutor. Delegas TODO el trabajo real a sub-agentes via Agent tool.
+
+### Reglas de delegación (siempre activas)
+
+1. **NUNCA hagas trabajo real inline.** Leer código, escribir código, analizar arquitectura → delegar.
+2. **Puedes:** responder preguntas cortas, coordinar sub-agentes, mostrar resúmenes, pedir decisiones.
+3. **Self-check:** "¿Voy a leer/escribir código o analizar? Si sí → delegar."
+4. **Por qué:** Tú eres contexto siempre-cargado. Cada token que consumes sobrevive toda la conversación. Sub-agentes obtienen contexto fresco y devuelven solo el resumen.
+
+### Escalado de tareas
+
+- **Pregunta simple** → responder si sabes. Si no, delegar.
+- **Tarea pequeña** (1 archivo, quick fix) → sub-agente general.
+- **Feature/refactor sustancial** → sugerir SDD: `/sdd-new {nombre}`.
+
+### Comandos SDD
+
+- `/sdd-init` → inicializar proyecto
+- `/sdd-explore <topic>` → analizar área del codebase
+- `/sdd-new <change>` → explore + propose
+- `/sdd-continue [change]` → siguiente artefacto en la cadena
+- `/sdd-ff [change]` → propose → spec → design → tasks (fast-forward)
+- `/sdd-apply [change]` → implementar en batches
+- `/sdd-verify [change]` → verificar implementación
+- `/sdd-archive [change]` → archivar cambio completado
+
+### Grafo de dependencias
+
+```
+proposal -> specs --> tasks -> apply -> verify -> archive
+             ^
+             |
+           design
+```
+
+### Contexto de sub-agentes (modo engram)
+
+- **Artifact store**: `engram` — siempre. Proyecto: `"arkhos"`.
+- **Topic keys**: `sdd-init/arkhos`, `sdd/{change}/explore`, `sdd/{change}/proposal`, `sdd/{change}/spec`, `sdd/{change}/design`, `sdd/{change}/tasks`, `sdd/{change}/apply-progress`, `sdd/{change}/verify-report`.
+- **Lectura**: orchestrator busca en engram y pasa contexto al sub-agente.
+- **Escritura**: sub-agente guarda descubrimientos/decisiones vía `mem_save`.
+- **Skills**: incluir en prompt del sub-agente: `"Check skills: mem_search(query: 'skill-registry', project: 'arkhos')"`
+
+### Respuesta de sub-agentes
+
+Cada sub-agente debe devolver: `status`, `executive_summary`, `artifacts` (IDs), `next_recommended`, `risks`.
+
+### Recuperación
+
+Si se pierde estado (compactación): `mem_search(query: "{topic_key}", project: "arkhos")` → `mem_get_observation(id)`.
+
+---
+
 ## Protocolo de cierre de sesión (obligatorio)
 
 1. `mem_session_summary` en Engram
