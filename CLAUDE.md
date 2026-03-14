@@ -27,6 +27,23 @@ Después de CADA sesión de trabajo, antes del commit final, SIEMPRE debes:
 
 ---
 
+## REGLA #2 — Optimización de tokens y eficiencia
+
+Trabaja con la máxima eficiencia de tokens:
+
+1. **Lee antes de escribir.** Entiende qué existe antes de crear o editar. No reescribas archivos enteros cuando solo necesitas cambiar unas líneas.
+2. **Ediciones quirúrgicas.** Si un archivo tiene 200 líneas y cambias 5, edita solo esas 5.
+3. **No dupliques código.** Antes de crear una función, verifica si ya existe en `src/lib/utils` o en los componentes existentes.
+4. **Sin redundancia verbal.** No expliques lo que vas a hacer Y lo que hiciste. Plan → ejecuta → confirma resultado.
+5. **Agrupa operaciones similares.** 5 componentes del mismo tipo: analiza el patrón, ejecútalos en secuencia sin repetir el approach.
+6. **Confirmaciones concisas.** Qué se hizo + qué archivos + si compila. Sin contexto que ya se conoce.
+7. **Planes en formato lista.** Una línea por paso, sin explicar por qué cada paso es necesario a menos que se pregunte.
+8. **Sin comentarios obvios en código.** Comenta solo lógica no evidente. El código se autodocumenta con buenos nombres.
+9. **Archivos nuevos: contenido completo de una vez. Archivos existentes: ediciones mínimas.**
+10. **Dependencias: un solo `npm install` con todos los paquetes necesarios.**
+
+---
+
 ## Estado actual
 
 - **Fase 0** (Fundación): ✅ completada — auth, Supabase, deploy en Vercel
