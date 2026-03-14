@@ -30,13 +30,16 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  const pathname = request.nextUrl.pathname;
+
   // Protected routes: redirect to /login if not authenticated
   if (
     !user &&
-    request.nextUrl.pathname !== "/login" &&
-    request.nextUrl.pathname !== "/register" &&
-    !request.nextUrl.pathname.startsWith("/api/") &&
-    !request.nextUrl.pathname.startsWith("/_next/")
+    pathname !== "/login" &&
+    pathname !== "/register" &&
+    pathname !== "/verify-mfa" &&
+    !pathname.startsWith("/api/") &&
+    !pathname.startsWith("/_next/")
   ) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
@@ -44,14 +47,20 @@ export async function proxy(request: NextRequest) {
   }
 
   // Authenticated users visiting auth pages → redirect to dashboard
-  if (
-    user &&
-    (request.nextUrl.pathname === "/login" ||
-      request.nextUrl.pathname === "/register")
-  ) {
+  if (user && (pathname === "/login" || pathname === "/register")) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);
+  }
+
+  // MFA check: if user has aal2 required, redirect to /verify-mfa
+  if (user && pathname !== "/verify-mfa") {
+    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (aal && aal.currentLevel === "aal1" && aal.nextLevel === "aal2") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/verify-mfa";
+      return NextResponse.redirect(url);
+    }
   }
 
   return supabaseResponse;

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { Progress } from "@/components/ui";
 import { ProjectIcon } from "./project-icon";
 import { StatusBadge } from "./status-badge";
@@ -8,9 +9,23 @@ import type { ProjectListItem } from "@/types/projects";
 
 interface ProjectCardProps {
   project: ProjectListItem;
+  searchQuery?: string;
 }
 
-export function ProjectCard({ project }: ProjectCardProps) {
+function highlight(text: string, query: string): ReactNode {
+  if (!query) return text;
+  const idx = text.toLowerCase().indexOf(query.toLowerCase());
+  if (idx === -1) return text;
+  return (
+    <>
+      {text.slice(0, idx)}
+      <mark>{text.slice(idx, idx + query.length)}</mark>
+      {text.slice(idx + query.length)}
+    </>
+  );
+}
+
+export function ProjectCard({ project, searchQuery = "" }: ProjectCardProps) {
   const progress =
     project.task_count > 0
       ? Math.round((project.done_task_count / project.task_count) * 100)
@@ -38,7 +53,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
             )}
             <div>
               <h3 className="font-heading text-base text-foreground transition-colors group-hover:text-accent">
-                {project.name}
+                {highlight(project.name, searchQuery)}
               </h3>
               <p className="text-xs text-text-tertiary">
                 {project.type}
@@ -68,7 +83,21 @@ export function ProjectCard({ project }: ProjectCardProps) {
                 key={tech}
                 className="rounded-md bg-sand px-2 py-0.5 text-[10px] font-medium text-text-secondary"
               >
-                {tech}
+                {highlight(tech, searchQuery)}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Tags */}
+        {project.tags && project.tags.length > 0 && (
+          <div className="mb-3 flex flex-wrap gap-1.5">
+            {project.tags.map((tag) => (
+              <span
+                key={tag}
+                className="rounded-md border border-border px-2 py-0.5 text-[10px] font-medium text-text-tertiary"
+              >
+                {highlight(tag, searchQuery)}
               </span>
             ))}
           </div>

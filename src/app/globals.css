@@ -65,3 +65,10 @@ body {
   color: var(--text-primary);
   font-family: var(--font-sans);
 }
+
+mark {
+  background-color: rgba(196, 112, 74, 0.2);
+  color: inherit;
+  border-radius: 2px;
+  padding: 0 1px;
+}
