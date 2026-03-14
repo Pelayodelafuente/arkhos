@@ -38,6 +38,8 @@ export async function proxy(request: NextRequest) {
     pathname !== "/login" &&
     pathname !== "/register" &&
     pathname !== "/verify-mfa" &&
+    pathname !== "/reset-password" &&
+    !pathname.startsWith("/auth/") &&
     !pathname.startsWith("/api/") &&
     !pathname.startsWith("/_next/")
   ) {
