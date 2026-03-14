@@ -48,7 +48,7 @@ Trabaja con la máxima eficiencia de tokens:
 
 - **Fase 0** (Fundación): ✅ completada — auth, Supabase, deploy en Vercel
 - **Fase 1** (Shell): ✅ completada — shell, component library, zustand store
-- **Fase 2** (Módulo Proyectos): 90% — CRUD completo, vistas lista/kanban/detalle, modales, activity log
+- **Fase 2** (Módulo Proyectos): 95% — CRUD completo, dnd-kit, tipos/estados dinámicos, logo upload, 76 iconos, apuntes en tareas
 - **Producción**: arkhos.pelayodelafuente.es (deploy automático desde GitHub main)
 - **Versiones**: Next.js 16.1.6 · React 19 · Tailwind CSS v4 · TypeScript strict · Zod v4
 
@@ -141,19 +141,23 @@ Trabaja con la máxima eficiencia de tokens:
 - `Progress` — barra horizontal, track bg-sand, fill bg-accent, label % opcional en font-mono
 
 ### Módulo Proyectos (`src/components/modules/projects/`)
-- `ProjectIcon` — renderiza icono Lucide por nombre (mapa de 7 iconos)
-- `StatusBadge` — badge con color + dot animado para estado activo
-- `ProjectCard` — card con icono, nombre DM Serif, badge, stack pills, progress, contadores
+- `ProjectIcon` — renderiza icono Lucide por nombre (mapa de 76 iconos), exporta `ICON_MAP`
+- `StatusBadge` — badge con color dinámico + dot animado para estado activo
+- `ProjectCard` — card con logo/icono, nombre DM Serif, badge, stack pills, progress, contadores
 - `ProjectsHeader` — título + stats inline + botón nuevo
-- `ProjectsToolbar` — pills lista/kanban, filtros estado, tag chips, buscador
+- `ProjectsToolbar` — pills lista/kanban, filtros estado dinámico, buscador
 - `ProjectsList` — grid responsive de cards con filtro
-- `ProjectsKanban` — 4 columnas por estado con empty states
+- `ProjectsKanban` — columnas dinámicas por estado del usuario
 - `ProjectsEmpty` — empty state con icono
 - `ProjectsLoading` — skeleton cards
-- `ProjectsView` — orquestador (carga datos, modal, activity feed)
-- `ProjectDetail` — detalle con 3 visualizaciones (progress/diagram/flow), fases expandibles, tareas con checkbox
-- `ProjectModal` — crear/editar con selector de icono, preview, stack/tags input
+- `ProjectsView` — orquestador (carga datos + tipos/estados dinámicos, modal, activity feed)
+- `ProjectDetail` — detalle con 3 visualizaciones, CRUD fases/tareas inline, apuntes con debounce 800ms, drag & drop (dnd-kit)
+- `ProjectModal` — crear/editar con IconPicker (76 iconos), LogoUpload, TypeStatusSelect, preview
 - `ExportModal` — Markdown/JSON, preview, copiar/descargar
+- `IconPicker` — grid 8 cols, 5 categorías, búsqueda
+- `LogoUpload` — drag & drop, validación tipo/tamaño, preview circular
+- `ConfirmModal` — modal reutilizable para acciones destructivas
+- `TypeStatusSelect` — select + "+" para crear tipo/estado inline con color picker
 - `ActivityFeed` — feed de actividad reciente
 
 ### Stores (`src/stores/`)
@@ -161,10 +165,11 @@ Trabaja con la máxima eficiencia de tokens:
   - `useToast()` — hook con `.success()`, `.error()`, `.info()`
 - `projects-store.ts` — projects[], activeProject, loading, viewMode, filters
   - Optimistic updates con rollback + Toast feedback
-  - `useFilteredProjects()`, `useProjectsByStatus()`
+  - `reorderPhasesAction`, `reorderTasksAction` — optimistic sort_order persistence
+  - `useFilteredProjects()`, `useProjectsByStatus(statuses: string[])`
 
 ### Data Layer (`src/lib/supabase/`)
-- `projects.ts` — 15 funciones tipadas (CRUD projects/phases/tasks/links)
+- `projects.ts` — 27 funciones tipadas (CRUD projects/phases/tasks/links + types/statuses + logo + reorder + seed)
 - `activity.ts` — logActivity, getRecentActivity
 
 ---

@@ -2,23 +2,24 @@
 
 import { Search, LayoutList, Columns3 } from "lucide-react";
 import { useProjectsStore } from "@/stores/projects-store";
-import { PROJECT_STATUSES, PROJECT_STATUS_CONFIG, type ProjectStatus, type ViewMode } from "@/types/projects";
+import type { ProjectStatusRecord } from "@/types/projects";
 
-export function ProjectsToolbar() {
+interface ProjectsToolbarProps {
+  statuses: ProjectStatusRecord[];
+}
+
+export function ProjectsToolbar({ statuses }: ProjectsToolbarProps) {
   const viewMode = useProjectsStore((s) => s.viewMode);
   const filters = useProjectsStore((s) => s.filters);
   const setViewMode = useProjectsStore((s) => s.setViewMode);
   const setFilters = useProjectsStore((s) => s.setFilters);
-  const projects = useProjectsStore((s) => s.projects);
 
-  // Collect all unique tags
-  const allTags = Array.from(new Set(projects.flatMap((p) => p.tags))).sort();
-
-  const statusOptions: Array<{ value: ProjectStatus | "all"; label: string }> = [
-    { value: "all", label: "Todos" },
-    ...PROJECT_STATUSES.map((s) => ({
-      value: s,
-      label: PROJECT_STATUS_CONFIG[s].label,
+  const statusOptions: Array<{ value: string; label: string; color: string }> = [
+    { value: "all", label: "Todos", color: "#888780" },
+    ...statuses.map((s) => ({
+      value: s.name,
+      label: s.name,
+      color: s.color,
     })),
   ];
 
@@ -59,7 +60,7 @@ export function ProjectsToolbar() {
         </div>
       </div>
 
-      {/* Row 2: Status filters + Tag filters */}
+      {/* Row 2: Status filters */}
       <div className="flex flex-wrap items-center gap-2">
         {statusOptions.map((opt) => (
           <button
@@ -74,29 +75,6 @@ export function ProjectsToolbar() {
             {opt.label}
           </button>
         ))}
-
-        {allTags.length > 0 && (
-          <>
-            <span className="mx-1 h-4 w-px bg-border" />
-            <div className="flex flex-wrap gap-1.5 overflow-x-auto">
-              {allTags.map((tag) => (
-                <button
-                  key={tag}
-                  onClick={() =>
-                    setFilters({ tag: filters.tag === tag ? null : tag })
-                  }
-                  className={`rounded-full px-2.5 py-0.5 text-xs transition-colors ${
-                    filters.tag === tag
-                      ? "bg-foreground text-background"
-                      : "bg-sand text-text-secondary hover:text-foreground"
-                  }`}
-                >
-                  {tag}
-                </button>
-              ))}
-            </div>
-          </>
-        )}
       </div>
     </div>
   );

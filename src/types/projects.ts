@@ -2,13 +2,7 @@
 // Arkhos — Projects Module Types
 // ══════════════════════════════════════
 
-// ─── Enums ────────────────────────────
-
-export const PROJECT_TYPES = ['Web', 'CLI', 'API', 'Mobile', 'Script', 'Design', 'Other'] as const;
-export type ProjectType = (typeof PROJECT_TYPES)[number];
-
-export const PROJECT_STATUSES = ['active', 'paused', 'done', 'idea'] as const;
-export type ProjectStatus = (typeof PROJECT_STATUSES)[number];
+// ─── Phase & Task enums (unchanged) ──
 
 export const PHASE_STATUSES = ['pending', 'in-progress', 'done'] as const;
 export type PhaseStatus = (typeof PHASE_STATUSES)[number];
@@ -16,26 +10,7 @@ export type PhaseStatus = (typeof PHASE_STATUSES)[number];
 export const TASK_PRIORITIES = ['none', 'low', 'medium', 'high'] as const;
 export type TaskPriority = (typeof TASK_PRIORITIES)[number];
 
-// ─── Icon mapping by project type ─────
-
-export const PROJECT_TYPE_ICONS: Record<ProjectType, string> = {
-  Web: 'Globe',
-  CLI: 'Terminal',
-  API: 'Zap',
-  Mobile: 'Smartphone',
-  Script: 'Code',
-  Design: 'Pen',
-  Other: 'Box',
-};
-
-// ─── Status display config ────────────
-
-export const PROJECT_STATUS_CONFIG: Record<ProjectStatus, { label: string; color: string }> = {
-  active: { label: 'Activo', color: '#5B8C6A' },
-  paused: { label: 'Pausado', color: '#9B7A4A' },
-  done: { label: 'Completado', color: '#4A7A9B' },
-  idea: { label: 'Idea', color: '#888780' },
-};
+// ─── Phase/Task status display config ─
 
 export const PHASE_STATUS_CONFIG: Record<PhaseStatus, { label: string; color: string }> = {
   pending: { label: 'Pendiente', color: '#888780' },
@@ -49,6 +24,86 @@ export const TASK_PRIORITY_CONFIG: Record<TaskPriority, { label: string; color: 
   medium: { label: 'Media', color: '#9B7A4A' },
   high: { label: 'Alta', color: '#C4704A' },
 };
+
+// ─── Dynamic project type / status ────
+
+export interface ProjectTypeRecord {
+  id: string;
+  user_id: string;
+  name: string;
+  icon: string;
+  color: string;
+  sort_order: number;
+  created_at: string;
+}
+
+export interface ProjectStatusRecord {
+  id: string;
+  user_id: string;
+  name: string;
+  color: string;
+  is_default: boolean;
+  sort_order: number;
+  created_at: string;
+}
+
+export interface CreateProjectTypeInput {
+  name: string;
+  icon?: string;
+  color?: string;
+  sort_order?: number;
+}
+
+export interface CreateProjectStatusInput {
+  name: string;
+  color?: string;
+  is_default?: boolean;
+  sort_order?: number;
+}
+
+// ─── Default seeds for new users ──────
+
+export const DEFAULT_PROJECT_TYPES: Omit<CreateProjectTypeInput, 'sort_order'>[] = [
+  { name: 'Web', icon: 'Globe', color: '#4A7A9B' },
+];
+
+export const DEFAULT_PROJECT_STATUSES: Omit<CreateProjectStatusInput, 'sort_order'>[] = [
+  { name: 'Idea', color: '#888780', is_default: true },
+  { name: 'Activo', color: '#5B8C6A' },
+  { name: 'Pausado', color: '#9B7A4A' },
+  { name: 'Completado', color: '#4A7A9B' },
+];
+
+// ─── Icon picker categories ──────────
+
+export const ICON_CATEGORIES = {
+  Desarrollo: [
+    'Code', 'Terminal', 'Cpu', 'Database', 'Globe', 'Server', 'GitBranch',
+    'Package', 'Layers', 'Braces', 'FileCode', 'Webhook', 'MonitorSmartphone',
+    'Bug', 'Binary',
+  ],
+  Diseño: [
+    'Pen', 'Palette', 'Layout', 'Frame', 'Crop', 'Wand2', 'Paintbrush',
+    'Shapes', 'Pencil', 'PenTool', 'Brush', 'Pipette', 'Ratio', 'Grid3x3',
+    'Figma',
+  ],
+  Negocio: [
+    'Briefcase', 'Building2', 'ChartBar', 'Target', 'Users', 'Handshake',
+    'LineChart', 'PieChart', 'Presentation', 'DollarSign', 'TrendingUp',
+    'BadgeDollarSign', 'Store', 'Scale', 'Megaphone',
+  ],
+  Personal: [
+    'BookOpen', 'Camera', 'Music', 'Heart', 'Star', 'Rocket', 'Lightbulb',
+    'Trophy', 'Compass', 'Map', 'Bike', 'Dumbbell', 'Gamepad2', 'Headphones',
+    'GraduationCap',
+  ],
+  Otros: [
+    'Box', 'Folder', 'Archive', 'Zap', 'Shield', 'Lock', 'Bell', 'Settings',
+    'Wrench', 'Cog', 'Key', 'Plug', 'Wifi', 'Cloud', 'Download',
+  ],
+} as const;
+
+export type IconCategory = keyof typeof ICON_CATEGORIES;
 
 // ─── Domain models ────────────────────
 
@@ -89,11 +144,12 @@ export interface Project {
   user_id: string;
   name: string;
   icon: string;
-  type: ProjectType;
-  status: ProjectStatus;
+  logo_url: string | null;
+  type: string;
+  status: string;
   stack: string[];
-  tags: string[];
-  start_date: string | null;
+  tags?: string[];
+  start_date?: string | null;
   sort_order: number;
   created_at: string;
   updated_at: string;
@@ -105,21 +161,19 @@ export interface Project {
 export interface CreateProjectInput {
   name: string;
   icon?: string;
-  type?: ProjectType;
-  status?: ProjectStatus;
+  logo_url?: string | null;
+  type?: string;
+  status?: string;
   stack?: string[];
-  tags?: string[];
-  start_date?: string | null;
 }
 
 export interface UpdateProjectInput {
   name?: string;
   icon?: string;
-  type?: ProjectType;
-  status?: ProjectStatus;
+  logo_url?: string | null;
+  type?: string;
+  status?: string;
   stack?: string[];
-  tags?: string[];
-  start_date?: string | null;
   sort_order?: number;
 }
 
@@ -169,22 +223,11 @@ export type ProjectListItem = Omit<Project, 'phases'> & {
   done_task_count: number;
 };
 
-// ─── Default phases for new projects ──
-
-export const DEFAULT_PHASES = [
-  'Planificación',
-  'Diseño',
-  'Desarrollo',
-  'Testing',
-  'Deploy',
-] as const;
-
 // ─── View modes ───────────────────────
 
 export type ViewMode = 'list' | 'kanban';
 
 export interface ProjectFilters {
-  status: ProjectStatus | 'all';
-  tag: string | null;
+  status: string;
   search: string;
 }

@@ -1,30 +1,25 @@
 "use client";
 
-import { PROJECT_STATUS_CONFIG, type ProjectStatus } from "@/types/projects";
-
 interface StatusBadgeProps {
-  status: ProjectStatus;
+  status: string;
+  color?: string;
   className?: string;
 }
 
-export function StatusBadge({ status, className = "" }: StatusBadgeProps) {
-  const config = PROJECT_STATUS_CONFIG[status];
-
+export function StatusBadge({ status, color = "#888780", className = "" }: StatusBadgeProps) {
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${className}`}
       style={{
-        backgroundColor: `${config.color}14`,
-        color: config.color,
+        backgroundColor: `${color}14`,
+        color: color,
       }}
     >
       <span
-        className={`h-1.5 w-1.5 rounded-full ${
-          status === "active" ? "animate-pulse" : ""
-        }`}
-        style={{ backgroundColor: config.color }}
+        className="h-1.5 w-1.5 rounded-full"
+        style={{ backgroundColor: color }}
       />
-      {config.label}
+      {status}
     </span>
   );
 }

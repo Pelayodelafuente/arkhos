@@ -1,4 +1,4 @@
-// Supabase Database types — aligned with migrations 001 + 002
+// Supabase Database types — aligned with migrations 001 + 002 + 003
 
 export type Json =
   | string
@@ -85,6 +85,7 @@ export interface Database {
           start_date: string | null;
           sort_order: number;
           created_at: string;
+          logo_url: string | null;
           updated_at: string;
         };
         Insert: {
@@ -97,6 +98,7 @@ export interface Database {
           stack?: string[];
           tags?: string[];
           start_date?: string | null;
+          logo_url?: string | null;
           sort_order?: number;
           created_at?: string;
           updated_at?: string;
@@ -109,12 +111,83 @@ export interface Database {
           stack?: string[];
           tags?: string[];
           start_date?: string | null;
+          logo_url?: string | null;
           sort_order?: number;
           updated_at?: string;
         };
         Relationships: [
           {
             foreignKeyName: "projects_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      project_types: {
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          icon: string;
+          color: string;
+          sort_order: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          name: string;
+          icon?: string;
+          color?: string;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Update: {
+          name?: string;
+          icon?: string;
+          color?: string;
+          sort_order?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "project_types_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      project_statuses: {
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          color: string;
+          is_default: boolean;
+          sort_order: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          name: string;
+          color?: string;
+          is_default?: boolean;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Update: {
+          name?: string;
+          color?: string;
+          is_default?: boolean;
+          sort_order?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "project_statuses_user_id_fkey";
             columns: ["user_id"];
             isOneToOne: false;
             referencedRelation: "profiles";
