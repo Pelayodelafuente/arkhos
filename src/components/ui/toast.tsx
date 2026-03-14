@@ -1,7 +1,7 @@
 "use client";
 
 import { CheckCircle, XCircle, Info, X } from "lucide-react";
-import { useUIStore, type Toast, type ToastVariant } from "@/stores/ui-store";
+import { useUIStore, type UIStore, type Toast, type ToastVariant } from "@/stores/ui-store";
 
 const variantConfig: Record<
   ToastVariant,
@@ -13,7 +13,7 @@ const variantConfig: Record<
 };
 
 function ToastItem({ toast }: { toast: Toast }) {
-  const removeToast = useUIStore((s) => s.removeToast);
+  const removeToast = useUIStore((s: UIStore) => s.removeToast);
   const { icon: Icon, color, bg } = variantConfig[toast.variant];
 
   return (
@@ -40,7 +40,7 @@ function ToastItem({ toast }: { toast: Toast }) {
 }
 
 export function ToastProvider() {
-  const toasts = useUIStore((s) => s.toasts);
+  const toasts = useUIStore((s: UIStore) => s.toasts);
 
   if (toasts.length === 0) return null;
 

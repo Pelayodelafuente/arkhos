@@ -12,7 +12,7 @@ export interface Toast {
 
 // ─── Store ────────────────────────────
 
-interface UIStore {
+export interface UIStore {
   // Mobile sidebar
   sidebarOpen: boolean;
   openSidebar: () => void;
