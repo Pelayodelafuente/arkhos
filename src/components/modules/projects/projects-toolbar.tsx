@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Search, LayoutList, Columns3 } from "lucide-react";
 import { useProjectsStore } from "@/stores/projects-store";
 import type { ProjectStatusRecord } from "@/types/projects";
@@ -13,6 +14,13 @@ export function ProjectsToolbar({ statuses }: ProjectsToolbarProps) {
   const filters = useProjectsStore((s) => s.filters);
   const setViewMode = useProjectsStore((s) => s.setViewMode);
   const setFilters = useProjectsStore((s) => s.setFilters);
+
+  const [localSearch, setLocalSearch] = useState(filters.search);
+
+  useEffect(() => {
+    const t = setTimeout(() => setFilters({ search: localSearch }), 300);
+    return () => clearTimeout(t);
+  }, [localSearch, setFilters]);
 
   const statusOptions: Array<{ value: string; label: string; color: string }> = [
     { value: "all", label: "Todos", color: "#888780" },
@@ -53,8 +61,8 @@ export function ProjectsToolbar({ statuses }: ProjectsToolbarProps) {
           <input
             type="text"
             placeholder="Buscar proyecto..."
-            value={filters.search}
-            onChange={(e) => setFilters({ search: e.target.value })}
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
             className="w-full rounded-md border border-border bg-card py-2 pl-9 pr-3 text-sm text-foreground placeholder:text-text-tertiary focus:border-accent focus:outline-none"
           />
         </div>

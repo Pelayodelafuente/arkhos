@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, FolderKanban, TrendingUp, Wallet, Receipt } from "lucide-react";
+import { Home, FolderKanban, TrendingUp, Wallet, Receipt, Shield } from "lucide-react";
 import { ArkhosLogo } from "@/components/ui/arkhos-logo";
 import { Button } from "@/components/ui/button";
 import { logout } from "@/app/(auth)/actions";
@@ -91,6 +91,22 @@ export function Sidebar({ userName }: SidebarProps) {
           })}
         </ul>
       </nav>
+
+      {/* Settings */}
+      <div className="border-t border-border px-3 py-3">
+        <Link
+          href="/settings/security"
+          className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
+            pathname === "/settings/security"
+              ? "bg-accent text-[#FBF0EA]"
+              : "text-text-secondary hover:bg-border hover:text-foreground"
+          }`}
+        >
+          <span className="h-2 w-2 flex-shrink-0" />
+          <Shield size={16} strokeWidth={1.75} className="flex-shrink-0" />
+          Seguridad
+        </Link>
+      </div>
 
       {/* User + logout */}
       <div className="border-t border-border px-4 py-4">

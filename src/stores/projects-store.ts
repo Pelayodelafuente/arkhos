@@ -401,7 +401,8 @@ export function useFilteredProjects(): ProjectListItem[] {
       const q = filters.search.toLowerCase();
       return (
         p.name.toLowerCase().includes(q) ||
-        p.stack.some((s) => s.toLowerCase().includes(q))
+        p.stack.some((s) => s.toLowerCase().includes(q)) ||
+        (p.tags ?? []).some((t) => t.toLowerCase().includes(q))
       );
     }
     return true;
