@@ -48,7 +48,7 @@ Trabaja con la máxima eficiencia de tokens:
 
 - **Fase 0** (Fundación): ✅ completada — auth, Supabase, deploy en Vercel
 - **Fase 1** (Shell): ✅ completada — shell, component library, zustand store
-- **Fase 2** (Módulo Proyectos): pendiente
+- **Fase 2** (Módulo Proyectos): 90% — CRUD completo, vistas lista/kanban/detalle, modales, activity log
 - **Producción**: arkhos.pelayodelafuente.es (deploy automático desde GitHub main)
 - **Versiones**: Next.js 16.1.6 · React 19 · Tailwind CSS v4 · TypeScript strict · Zod v4
 
@@ -140,9 +140,32 @@ Trabaja con la máxima eficiencia de tokens:
 - `Tooltip` — CSS-only con group/group-hover, posición top/bottom
 - `Progress` — barra horizontal, track bg-sand, fill bg-accent, label % opcional en font-mono
 
+### Módulo Proyectos (`src/components/modules/projects/`)
+- `ProjectIcon` — renderiza icono Lucide por nombre (mapa de 7 iconos)
+- `StatusBadge` — badge con color + dot animado para estado activo
+- `ProjectCard` — card con icono, nombre DM Serif, badge, stack pills, progress, contadores
+- `ProjectsHeader` — título + stats inline + botón nuevo
+- `ProjectsToolbar` — pills lista/kanban, filtros estado, tag chips, buscador
+- `ProjectsList` — grid responsive de cards con filtro
+- `ProjectsKanban` — 4 columnas por estado con empty states
+- `ProjectsEmpty` — empty state con icono
+- `ProjectsLoading` — skeleton cards
+- `ProjectsView` — orquestador (carga datos, modal, activity feed)
+- `ProjectDetail` — detalle con 3 visualizaciones (progress/diagram/flow), fases expandibles, tareas con checkbox
+- `ProjectModal` — crear/editar con selector de icono, preview, stack/tags input
+- `ExportModal` — Markdown/JSON, preview, copiar/descargar
+- `ActivityFeed` — feed de actividad reciente
+
 ### Stores (`src/stores/`)
 - `ui-store.ts` — sidebarOpen, toasts[] (auto-dismiss 4s), activeModal
   - `useToast()` — hook con `.success()`, `.error()`, `.info()`
+- `projects-store.ts` — projects[], activeProject, loading, viewMode, filters
+  - Optimistic updates con rollback + Toast feedback
+  - `useFilteredProjects()`, `useProjectsByStatus()`
+
+### Data Layer (`src/lib/supabase/`)
+- `projects.ts` — 15 funciones tipadas (CRUD projects/phases/tasks/links)
+- `activity.ts` — logActivity, getRecentActivity
 
 ---
 
