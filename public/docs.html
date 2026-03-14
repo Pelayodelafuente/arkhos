@@ -1,0 +1,2110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arkhos — Documentación técnica completa</title>
+<meta name="description" content="Documentación exhaustiva de Arkhos: arquitectura, seguridad, stack cognitivo, component library y módulo Proyectos. Construido por Pelayo de la Fuente.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+/* ════════════════════════════════════════════════
+   DESIGN TOKENS
+   ════════════════════════════════════════════════ */
+:root {
+  --cream: #FAF7F2;
+  --sand: #F0EBE1;
+  --stone: #E2D9CA;
+  --card: #FFFFFF;
+  --fg: #1A1714;
+  --fg2: #3D3630;
+  --fg3: #888780;
+  --fg4: #B0A48F;
+  --accent: #C4704A;
+  --accent-light: rgba(196,112,74,0.10);
+  --accent-glow: rgba(196,112,74,0.25);
+  --accent-hover: #B5623D;
+  --mod-projects: #C4704A;
+  --mod-markets: #9B7A4A;
+  --mod-portfolio: #5B8C6A;
+  --mod-expenses: #4A7A9B;
+  --green: #5B8C6A;
+  --green-bg: rgba(91,140,106,0.10);
+  --blue: #4A7A9B;
+  --blue-bg: rgba(74,122,155,0.10);
+  --gold: #9B7A4A;
+  --gold-bg: rgba(155,122,74,0.10);
+  --red: #DC2626;
+  --red-bg: rgba(220,38,38,0.10);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-xs: 4px;
+  --shadow-modal: 0 4px 20px rgba(26,23,20,0.08);
+  --shadow-lg: 0 8px 30px rgba(26,23,20,0.12);
+  --font-display: 'DM Serif Display', Georgia, serif;
+  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+  --sidebar-w: 272px;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ════════════════════════════════════════════════
+   RESET & GLOBAL
+   ════════════════════════════════════════════════ */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 32px; font-size: 16px; }
+body {
+  font-family: var(--font-body);
+  background: var(--cream);
+  color: var(--fg2);
+  line-height: 1.72;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+::selection { background: var(--accent-light); color: var(--fg); }
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--stone); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--fg4); }
+a { color: var(--accent); text-decoration: none; transition: all 0.2s var(--ease); }
+a:hover { color: var(--accent-hover); }
+img { max-width: 100%; display: block; }
+hr.divider { border: none; border-top: 1px solid var(--stone); margin: 56px 0; }
+
+/* ════════════════════════════════════════════════
+   SIDEBAR NAVIGATION
+   ════════════════════════════════════════════════ */
+.sidebar {
+  position: fixed; top: 0; left: 0; width: var(--sidebar-w); height: 100vh;
+  background: var(--card); border-right: 1px solid var(--stone);
+  z-index: 100; display: flex; flex-direction: column;
+  transition: transform 0.35s var(--ease);
+}
+.sidebar-header {
+  padding: 24px 20px 18px; border-bottom: 1px solid var(--stone);
+}
+.sidebar-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.sidebar-logo svg { flex-shrink: 0; }
+.sidebar-logo span {
+  font-family: var(--font-display); font-size: 22px; color: var(--fg);
+  letter-spacing: -0.02em;
+}
+.sidebar-badge {
+  display: inline-block; font-family: var(--font-mono); font-size: 10px;
+  font-weight: 500; background: var(--accent-light); color: var(--accent);
+  padding: 2px 8px; border-radius: 10px; letter-spacing: 0.03em;
+}
+.sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; }
+.sidebar-nav::-webkit-scrollbar { width: 3px; }
+.nav-group { padding: 0 12px; margin-bottom: 2px; }
+.nav-group-label {
+  font-size: 9px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.14em; color: var(--fg4); padding: 10px 10px 4px;
+}
+.nav-link {
+  display: flex; align-items: center; gap: 8px; padding: 6px 10px;
+  border-radius: 6px; font-size: 12.5px; font-weight: 500;
+  color: var(--fg3); cursor: pointer; transition: all 0.15s var(--ease);
+  text-decoration: none; border: none; background: none;
+  width: 100%; text-align: left; font-family: inherit; line-height: 1.4;
+}
+.nav-link:hover { background: var(--sand); color: var(--fg2); }
+.nav-link.active { background: var(--accent-light); color: var(--accent); font-weight: 700; }
+.nav-num {
+  font-family: var(--font-mono); font-size: 9px; color: var(--fg4);
+  min-width: 18px; text-align: right; flex-shrink: 0;
+}
+.nav-link.active .nav-num { color: var(--accent); }
+.sidebar-footer {
+  padding: 14px 20px; border-top: 1px solid var(--stone);
+  font-size: 11px; color: var(--fg4); line-height: 1.6;
+}
+.sidebar-footer a { font-size: 11px; }
+
+/* Progress bar */
+.read-progress {
+  position: fixed; top: 0; left: var(--sidebar-w); right: 0; height: 2px;
+  background: var(--stone); z-index: 200;
+}
+.read-progress-bar { height: 100%; background: var(--accent); width: 0%; transition: width 0.08s linear; }
+
+/* Mobile nav */
+.mobile-toggle {
+  display: none; position: fixed; top: 14px; left: 14px; z-index: 200;
+  width: 38px; height: 38px; border-radius: 8px;
+  background: var(--card); border: 1px solid var(--stone);
+  cursor: pointer; align-items: center; justify-content: center;
+  box-shadow: var(--shadow-modal);
+}
+.mobile-toggle svg { color: var(--fg2); }
+.mobile-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(26,23,20,0.45);
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 90;
+}
+
+/* ════════════════════════════════════════════════
+   MAIN CONTENT AREA
+   ════════════════════════════════════════════════ */
+.main { margin-left: var(--sidebar-w); min-height: 100vh; }
+.content { max-width: 820px; margin: 0 auto; padding: 48px 36px 80px; }
+
+/* ════════════════════════════════════════════════
+   TYPOGRAPHY SYSTEM
+   ════════════════════════════════════════════════ */
+.section {
+  padding-top: 24px; margin-bottom: 64px;
+  opacity: 0; transform: translateY(20px);
+  transition: opacity 0.55s var(--ease), transform 0.55s var(--ease);
+}
+.section.visible { opacity: 1; transform: translateY(0); }
+h1 {
+  font-family: var(--font-display); font-size: clamp(2rem, 4.5vw, 2.8rem);
+  color: var(--fg); line-height: 1.12; letter-spacing: -0.03em; margin-bottom: 8px;
+}
+h2 {
+  font-family: var(--font-display); font-size: clamp(1.5rem, 3vw, 1.9rem);
+  color: var(--fg); line-height: 1.2; letter-spacing: -0.02em; margin-bottom: 12px;
+}
+h3 {
+  font-family: var(--font-body); font-size: 1rem; font-weight: 800;
+  color: var(--fg); margin-bottom: 8px; letter-spacing: -0.01em;
+}
+h4 {
+  font-family: var(--font-body); font-size: 0.8rem; font-weight: 800;
+  color: var(--fg3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;
+}
+.section-eyebrow {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+  color: var(--accent); letter-spacing: 0.06em; text-transform: uppercase;
+  margin-bottom: 6px; display: flex; align-items: center; gap: 8px;
+}
+.section-eyebrow::before { content: ''; width: 20px; height: 1.5px; background: var(--accent); }
+.lead { font-size: 1.05rem; color: var(--fg3); line-height: 1.75; max-width: 62ch; }
+p { margin-bottom: 14px; max-width: 68ch; font-size: 14.5px; }
+.text-sm { font-size: 13px; }
+.text-xs { font-size: 12px; }
+.text-fg3 { color: var(--fg3); }
+.text-accent { color: var(--accent); }
+.text-green { color: var(--green); }
+.text-gold { color: var(--gold); }
+.text-blue { color: var(--blue); }
+.fw-700 { font-weight: 700; }
+.fw-800 { font-weight: 800; }
+.mt-0 { margin-top: 0; }
+.mt-8 { margin-top: 8px; }
+.mt-16 { margin-top: 16px; }
+.mt-24 { margin-top: 24px; }
+.mt-32 { margin-top: 32px; }
+.mt-40 { margin-top: 40px; }
+.mb-0 { margin-bottom: 0; }
+.mb-8 { margin-bottom: 8px; }
+.mb-16 { margin-bottom: 16px; }
+.mb-24 { margin-bottom: 24px; }
+.gap-8 { gap: 8px; }
+.gap-12 { gap: 12px; }
+.gap-16 { gap: 16px; }
+.mono { font-family: var(--font-mono); }
+
+/* ════════════════════════════════════════════════
+   CARD SYSTEM
+   ════════════════════════════════════════════════ */
+.card {
+  background: var(--card); border: 1px solid var(--stone); border-radius: var(--radius);
+  padding: 24px; transition: border-color 0.2s var(--ease), transform 0.2s var(--ease);
+}
+.card:hover { border-color: var(--fg4); }
+.card-highlight:hover { border-color: var(--accent); transform: translateY(-1px); }
+.card-grid { display: grid; gap: 14px; }
+.card-grid-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.card-grid-3 { grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+.card-grid-4 { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+.card-flush { padding: 0; overflow: hidden; }
+
+/* ════════════════════════════════════════════════
+   BADGES
+   ════════════════════════════════════════════════ */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 600; padding: 3px 10px;
+  border-radius: 20px; letter-spacing: 0.02em; white-space: nowrap;
+}
+.badge-accent { background: var(--accent-light); color: var(--accent); }
+.badge-green { background: var(--green-bg); color: var(--green); }
+.badge-blue { background: var(--blue-bg); color: var(--blue); }
+.badge-gold { background: var(--gold-bg); color: var(--gold); }
+.badge-gray { background: var(--sand); color: var(--fg3); }
+.badge-red { background: var(--red-bg); color: var(--red); }
+
+/* ════════════════════════════════════════════════
+   CODE BLOCKS
+   ════════════════════════════════════════════════ */
+.code-block {
+  background: #1E1B18; border-radius: var(--radius-sm);
+  padding: 20px 24px; margin: 14px 0 18px; overflow-x: auto;
+  font-family: var(--font-mono); font-size: 12.5px; line-height: 1.75;
+  color: #d4cdc2; position: relative; border: 1px solid rgba(255,255,255,0.04);
+}
+.code-block .code-lang {
+  position: absolute; top: 10px; right: 14px; font-size: 9px;
+  color: #665a4c; text-transform: uppercase; letter-spacing: 0.1em;
+  font-weight: 600;
+}
+.code-block .kw { color: #C4704A; }
+.code-block .str { color: #7a9b76; }
+.code-block .cm { color: #665a4c; font-style: italic; }
+.code-block .fn { color: #9B7A4A; }
+.code-block .num { color: #4A7A9B; }
+.code-block .type { color: #5B8C6A; }
+.code-block .op { color: #888780; }
+.code-block .prop { color: #b8a88a; }
+.code-inline {
+  font-family: var(--font-mono); font-size: 0.84em;
+  background: var(--sand); padding: 1.5px 6px; border-radius: 4px;
+  color: var(--accent); font-weight: 500;
+}
+
+/* ════════════════════════════════════════════════
+   TABLES
+   ════════════════════════════════════════════════ */
+.table-wrap {
+  overflow-x: auto; margin: 14px 0 18px; border-radius: var(--radius-sm);
+  border: 1px solid var(--stone);
+}
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th {
+  background: var(--sand); font-weight: 700; text-align: left;
+  padding: 10px 16px; color: var(--fg); font-size: 11px;
+  letter-spacing: 0.03em; text-transform: uppercase;
+}
+td { padding: 10px 16px; border-top: 1px solid var(--stone); color: var(--fg2); vertical-align: top; }
+tr:hover td { background: rgba(240,235,225,0.35); }
+
+/* ════════════════════════════════════════════════
+   VIEW TOGGLE (Technical / Simple)
+   ════════════════════════════════════════════════ */
+.view-toggle {
+  display: inline-flex; background: var(--sand); border-radius: 20px;
+  padding: 3px; gap: 2px; margin-bottom: 20px;
+}
+.view-toggle button {
+  font-family: var(--font-body); font-size: 12px; font-weight: 600;
+  padding: 5px 14px; border-radius: 18px; border: none; cursor: pointer;
+  background: transparent; color: var(--fg3); transition: all 0.2s var(--ease);
+}
+.view-toggle button.active { background: var(--card); color: var(--fg); box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.tech-content { display: none; }
+.tech-content.show { display: block; }
+.simple-content.hide { display: none; }
+
+/* ════════════════════════════════════════════════
+   EXPLANATION BLOCKS (deep-dive)
+   ════════════════════════════════════════════════ */
+.explain {
+  background: var(--card); border: 1px solid var(--stone); border-radius: var(--radius);
+  padding: 20px 24px; margin: 14px 0 18px;
+  border-left: 3px solid var(--accent); font-size: 14px; line-height: 1.7;
+}
+.explain-title {
+  font-weight: 800; font-size: 13px; color: var(--accent);
+  margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em;
+}
+.explain p { margin-bottom: 10px; max-width: none; }
+.explain p:last-child { margin-bottom: 0; }
+.explain.green { border-left-color: var(--green); }
+.explain.green .explain-title { color: var(--green); }
+.explain.blue { border-left-color: var(--blue); }
+.explain.blue .explain-title { color: var(--blue); }
+.explain.gold { border-left-color: var(--gold); }
+.explain.gold .explain-title { color: var(--gold); }
+
+/* Info callouts */
+.callout {
+  display: flex; gap: 12px; padding: 16px 20px; border-radius: var(--radius-sm);
+  margin: 14px 0 18px; font-size: 13px; line-height: 1.6;
+}
+.callout-icon { flex-shrink: 0; font-size: 18px; margin-top: 1px; }
+.callout-body p { margin-bottom: 6px; max-width: none; font-size: 13px; }
+.callout-body p:last-child { margin-bottom: 0; }
+.callout-info { background: var(--blue-bg); color: var(--fg2); }
+.callout-warn { background: var(--gold-bg); color: var(--fg2); }
+.callout-tip { background: var(--green-bg); color: var(--fg2); }
+
+/* ════════════════════════════════════════════════
+   DIAGRAM CONTAINERS
+   ════════════════════════════════════════════════ */
+.diagram-container {
+  margin: 18px 0; padding: 28px 24px; background: var(--card);
+  border: 1px solid var(--stone); border-radius: var(--radius);
+  overflow-x: auto;
+}
+.diagram-container svg { display: block; margin: 0 auto; }
+.diagram-caption {
+  font-size: 12px; color: var(--fg3); text-align: center;
+  margin-top: 14px; font-style: italic;
+}
+.flow-node { fill: var(--card); stroke: var(--stone); stroke-width: 1; }
+.flow-node:hover { stroke: var(--accent); stroke-width: 1.5; }
+.flow-text {
+  font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px;
+  fill: var(--fg2); text-anchor: middle; dominant-baseline: central;
+  font-weight: 700;
+}
+.flow-subtext {
+  font-family: 'JetBrains Mono', monospace; font-size: 9px;
+  fill: var(--fg3); text-anchor: middle;
+}
+.flow-arrow { stroke: var(--stone); stroke-width: 1.2; fill: none; marker-end: url(#arrowhead); }
+.flow-label {
+  font-family: 'Plus Jakarta Sans', sans-serif; font-size: 9px;
+  fill: var(--fg4); text-anchor: middle;
+}
+
+/* ════════════════════════════════════════════════
+   COMPONENT PREVIEW CARDS
+   ════════════════════════════════════════════════ */
+.comp-card { padding: 20px; position: relative; }
+.comp-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.comp-name { font-family: var(--font-mono); font-size: 14px; font-weight: 600; color: var(--fg); }
+.comp-file { font-family: var(--font-mono); font-size: 10px; color: var(--fg4); }
+.comp-desc { font-size: 13px; color: var(--fg3); margin-bottom: 12px; line-height: 1.55; }
+.comp-preview {
+  background: var(--cream); border: 1px solid var(--stone); border-radius: 6px;
+  padding: 14px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+
+/* ════════════════════════════════════════════════
+   TIMELINE
+   ════════════════════════════════════════════════ */
+.timeline { position: relative; padding-left: 32px; }
+.timeline::before {
+  content: ''; position: absolute; left: 7px; top: 8px; bottom: 8px;
+  width: 2px; background: linear-gradient(to bottom, var(--accent), var(--stone) 70%);
+}
+.tl-item { position: relative; padding-bottom: 28px; }
+.tl-item:last-child { padding-bottom: 0; }
+.tl-dot {
+  position: absolute; left: -32px; top: 4px; width: 16px; height: 16px;
+  border-radius: 50%; border: 2px solid var(--stone); background: var(--cream); z-index: 1;
+}
+.tl-dot.done { background: var(--green); border-color: var(--green); }
+.tl-dot.active { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-light); }
+.tl-dot.future { background: var(--sand); border-color: var(--stone); }
+.tl-date { font-family: var(--font-mono); font-size: 11px; color: var(--fg4); margin-bottom: 2px; }
+.tl-title { font-weight: 800; font-size: 14px; color: var(--fg); margin-bottom: 4px; }
+.tl-desc { font-size: 13px; color: var(--fg3); line-height: 1.6; }
+
+/* ════════════════════════════════════════════════
+   SECURITY LAYERS
+   ════════════════════════════════════════════════ */
+.security-layer {
+  display: flex; align-items: flex-start; gap: 16px; padding: 18px 0;
+  border-bottom: 1px solid var(--stone);
+}
+.security-layer:last-child { border-bottom: none; }
+.security-num {
+  font-family: var(--font-mono); font-size: 22px; font-weight: 600;
+  color: var(--stone); min-width: 36px; line-height: 1;
+}
+.security-name { font-weight: 800; font-size: 14px; color: var(--fg); margin-bottom: 4px; }
+.security-impl { font-family: var(--font-mono); font-size: 11px; color: var(--fg4); margin-bottom: 4px; }
+.security-desc { font-size: 13px; color: var(--fg3); line-height: 1.6; }
+
+/* ════════════════════════════════════════════════
+   PIPELINE
+   ════════════════════════════════════════════════ */
+.pipeline {
+  display: flex; gap: 0; align-items: stretch; margin: 20px 0;
+  overflow-x: auto; padding: 4px 0;
+}
+.pipeline-step {
+  flex: 1; min-width: 120px; padding: 18px 14px; text-align: center;
+  background: var(--card); border: 1px solid var(--stone); border-radius: var(--radius-sm);
+  transition: all 0.2s var(--ease);
+}
+.pipeline-step:hover { border-color: var(--accent); transform: translateY(-2px); }
+.pipeline-icon { font-size: 22px; margin-bottom: 8px; line-height: 1; }
+.pipeline-name { font-weight: 800; font-size: 12px; color: var(--fg); margin-bottom: 2px; }
+.pipeline-desc { font-size: 10px; color: var(--fg3); line-height: 1.4; }
+.pipeline-arrow {
+  display: flex; align-items: center; padding: 0 3px;
+  color: var(--stone); font-size: 16px; flex-shrink: 0;
+}
+
+/* ════════════════════════════════════════════════
+   SWATCHES
+   ════════════════════════════════════════════════ */
+.swatch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(115px, 1fr)); gap: 10px; margin: 14px 0; }
+.swatch {
+  cursor: pointer; border-radius: var(--radius-sm); overflow: hidden;
+  border: 1px solid var(--stone); transition: transform 0.15s var(--ease);
+}
+.swatch:hover { transform: scale(1.04); }
+.swatch-color { height: 52px; }
+.swatch-info { padding: 8px 10px; background: var(--card); }
+.swatch-name { font-size: 11px; font-weight: 700; color: var(--fg); }
+.swatch-hex { font-family: var(--font-mono); font-size: 10px; color: var(--fg3); }
+.swatch-toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(16px);
+  background: var(--fg); color: var(--cream); padding: 8px 20px;
+  border-radius: var(--radius-sm); font-size: 13px; font-weight: 600;
+  opacity: 0; transition: all 0.3s var(--ease); z-index: 999;
+  pointer-events: none; font-family: var(--font-mono);
+}
+.swatch-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ════════════════════════════════════════════════
+   FOOTER
+   ════════════════════════════════════════════════ */
+.doc-footer {
+  border-top: 1px solid var(--stone); padding: 40px 0 24px;
+  margin-top: 48px; text-align: center;
+}
+.doc-footer-logo { font-family: var(--font-display); font-size: 20px; color: var(--fg); margin-bottom: 8px; }
+.doc-footer-meta { font-size: 12px; color: var(--fg4); line-height: 1.8; }
+
+/* ════════════════════════════════════════════════
+   HERO SECTION
+   ════════════════════════════════════════════════ */
+.hero { padding: 72px 0 40px; }
+.hero-eyebrow {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+  color: var(--accent); letter-spacing: 0.08em; text-transform: uppercase;
+  margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+}
+.hero-eyebrow::before { content: ''; width: 24px; height: 1.5px; background: var(--accent); }
+.hero-stats { display: flex; gap: 28px; flex-wrap: wrap; margin-top: 28px; }
+.hero-stat { display: flex; align-items: baseline; gap: 6px; }
+.hero-stat-num { font-family: var(--font-display); font-size: 1.6rem; color: var(--accent); }
+.hero-stat-label { font-size: 12.5px; color: var(--fg3); }
+.hero-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 36px; }
+.hero-module {
+  padding: 20px; border-radius: var(--radius); border: 1px solid var(--stone);
+  background: var(--card); transition: all 0.25s var(--ease);
+}
+.hero-module:hover { transform: translateY(-2px); box-shadow: var(--shadow-modal); }
+.hero-module-dot { width: 8px; height: 8px; border-radius: 50%; margin-bottom: 10px; }
+.hero-module-name { font-weight: 800; font-size: 14px; color: var(--fg); margin-bottom: 4px; }
+.hero-module-desc { font-size: 12px; color: var(--fg3); line-height: 1.5; }
+.hero-module-status {
+  font-family: var(--font-mono); font-size: 10px; margin-top: 10px;
+  font-weight: 600; letter-spacing: 0.03em;
+}
+
+/* ════════════════════════════════════════════════
+   ANIMATIONS
+   ════════════════════════════════════════════════ */
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pulse-dot { 0%, 100% { box-shadow: 0 0 0 0 var(--accent-glow); } 50% { box-shadow: 0 0 0 6px transparent; } }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+.animate-pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
+.hero-stat { opacity: 0; animation: fadeInUp 0.5s var(--ease) forwards; }
+.hero-stat:nth-child(1) { animation-delay: 0.2s; }
+.hero-stat:nth-child(2) { animation-delay: 0.35s; }
+.hero-stat:nth-child(3) { animation-delay: 0.5s; }
+.hero-stat:nth-child(4) { animation-delay: 0.65s; }
+.hero-module { opacity: 0; animation: fadeInUp 0.45s var(--ease) forwards; }
+.hero-module:nth-child(1) { animation-delay: 0.4s; }
+.hero-module:nth-child(2) { animation-delay: 0.5s; }
+.hero-module:nth-child(3) { animation-delay: 0.6s; }
+.hero-module:nth-child(4) { animation-delay: 0.7s; }
+
+/* ════════════════════════════════════════════════
+   RESPONSIVE
+   ════════════════════════════════════════════════ */
+@media (max-width: 1024px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .mobile-toggle { display: flex; }
+  .mobile-overlay.show { display: block; }
+  .main { margin-left: 0; }
+  .read-progress { left: 0; }
+  .content { padding: 28px 18px 60px; }
+  .hero { padding-top: 56px; }
+  .hero-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  .hero-grid { grid-template-columns: 1fr; }
+  .hero-stats { gap: 16px; }
+  .pipeline { flex-direction: column; }
+  .pipeline-arrow { transform: rotate(90deg); justify-content: center; padding: 4px 0; }
+  .card-grid-2, .card-grid-3, .card-grid-4 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<button class="mobile-toggle" onclick="toggleSidebar()" aria-label="Menú">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+</button>
+<div class="mobile-overlay" onclick="toggleSidebar()"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <svg width="26" height="26" viewBox="0 0 72 72" fill="none">
+        <path d="M36 12L16 58" stroke="#C4704A" stroke-width="4" stroke-linecap="round"/>
+        <path d="M36 12L56 58" stroke="#C4704A" stroke-width="4" stroke-linecap="round"/>
+        <path d="M22 44H50" stroke="#C4704A" stroke-width="3.5" stroke-linecap="round"/>
+        <path d="M26 36H46" stroke="#C4704A" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+        <circle cx="36" cy="12" r="3" fill="#C4704A" opacity="0.7"/>
+      </svg>
+      <span>Arkhos</span>
+    </div>
+    <span class="sidebar-badge">documentación v2.0</span>
+  </div>
+  <nav class="sidebar-nav" id="sidebarNav">
+    <div class="nav-group">
+      <div class="nav-group-label">Visión general</div>
+      <a href="#hero" class="nav-link active"><span class="nav-num">01</span> Qué es Arkhos</a>
+      <a href="#stack" class="nav-link"><span class="nav-num">02</span> Stack tecnológico</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Arquitectura</div>
+      <a href="#architecture" class="nav-link"><span class="nav-num">03</span> Cómo está construido</a>
+      <a href="#database" class="nav-link"><span class="nav-num">04</span> Base de datos</a>
+      <a href="#auth" class="nav-link"><span class="nav-num">05</span> Autenticación y seguridad</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Interfaz</div>
+      <a href="#components" class="nav-link"><span class="nav-num">06</span> Component Library</a>
+      <a href="#projects" class="nav-link"><span class="nav-num">07</span> Módulo Proyectos</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Infraestructura IA</div>
+      <a href="#cognitive" class="nav-link"><span class="nav-num">08</span> Stack Cognitivo</a>
+      <a href="#cicd" class="nav-link"><span class="nav-num">09</span> CI/CD y Testing</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Identidad</div>
+      <a href="#brand" class="nav-link"><span class="nav-num">10</span> Identidad visual</a>
+      <a href="#deploy" class="nav-link"><span class="nav-num">11</span> Infraestructura y Deploy</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Futuro</div>
+      <a href="#roadmap" class="nav-link"><span class="nav-num">12</span> Hoja de ruta</a>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    Generado 14 marzo 2026<br>
+    <a href="https://arkhos.pelayodelafuente.es" target="_blank" rel="noopener">arkhos.pelayodelafuente.es</a>
+  </div>
+</aside>
+
+<div class="read-progress"><div class="read-progress-bar" id="progressBar"></div></div>
+
+<main class="main">
+<div class="content">
+
+<!-- ══════════════════════════════════════════════════════════════
+     01 · HERO — QUÉ ES ARKHOS
+     ══════════════════════════════════════════════════════════════ -->
+<section class="section hero" id="hero">
+  <div class="hero-eyebrow">Documentación completa</div>
+  <h1>Arkhos</h1>
+  <p class="lead">Centro de mando personal modular. Una plataforma privada que unifica la gestión de proyectos, mercados financieros, patrimonio y gastos en un solo lugar — construida con un nivel de ingeniería que va mucho más allá de lo convencional.</p>
+
+  <div class="explain mt-24">
+    <div class="explain-title">¿Por qué existe Arkhos?</div>
+    <p>Imagina que llevas tus proyectos de trabajo en Notion, tus inversiones en un Excel, los gastos del mes en una app del banco, y los precios de mercado los consultas en cinco pestañas distintas del navegador. Cada herramienta tiene su suscripción, sus datos están en silos separados, y ninguna está diseñada para ti específicamente.</p>
+    <p>Arkhos resuelve este problema construyendo una plataforma donde todos estos módulos conviven bajo un mismo techo, con tus datos almacenados de forma privada en tu propia base de datos, sin depender de servicios externos que puedan desaparecer o cambiar sus precios.</p>
+  </div>
+
+  <h3 class="mt-24">El nombre</h3>
+  <p><strong style="color:var(--fg)">ἀρχός</strong> (<em>arkhós</em>) es una palabra del griego antiguo que significa "el que lidera", "el que está al origen", "el que manda". Es la raíz etimológica de palabras que usamos a diario: <em>arquitectura</em> (el que diseña la estructura), <em>arconte</em> (el que gobierna), <em>monarquía</em> (gobierno de uno). El nombre no es casual: refleja la filosofía central de la plataforma — <strong style="color:var(--fg)">tú estás al mando</strong> de tus datos, tus proyectos, tus finanzas.</p>
+
+  <h3 class="mt-24">Para quién es</h3>
+  <p>Personas técnicas o semi-técnicas que quieren un único lugar privado, sin suscripciones por módulo, diseñado específicamente para una sola persona en lugar de intentar ser universal. Arkhos no es un SaaS multi-tenant — es una plataforma personal, construida con los mismos estándares de ingeniería que usarías para un producto con miles de usuarios, pero al servicio de uno solo.</p>
+
+  <div class="hero-stats">
+    <div class="hero-stat"><span class="hero-stat-num">13</span><span class="hero-stat-label">páginas en producción</span></div>
+    <div class="hero-stat"><span class="hero-stat-num">34</span><span class="hero-stat-label">tests automáticos</span></div>
+    <div class="hero-stat"><span class="hero-stat-num">73</span><span class="hero-stat-label">archivos fuente</span></div>
+    <div class="hero-stat"><span class="hero-stat-num">0</span><span class="hero-stat-label">errores TypeScript</span></div>
+  </div>
+
+  <h3 class="mt-32">Los 4 módulos</h3>
+  <p class="text-sm text-fg3 mb-16">Arkhos es modular por diseño: cada módulo se desarrolla como una unidad independiente con su propia base de datos, store de estado, componentes y tests. La arquitectura está pensada para que añadir un nuevo módulo sea un proceso sistemático y predecible.</p>
+
+  <div class="hero-grid">
+    <div class="hero-module">
+      <div class="hero-module-dot" style="background:var(--mod-projects)"></div>
+      <div class="hero-module-name">Proyectos</div>
+      <div class="hero-module-desc">Gestión completa de proyectos con fases, tareas, kanban, búsqueda en tiempo real, drag&nbsp;&amp;&nbsp;drop y exportación.</div>
+      <div class="hero-module-status" style="color:var(--green)">● En producción</div>
+    </div>
+    <div class="hero-module">
+      <div class="hero-module-dot" style="background:var(--mod-markets)"></div>
+      <div class="hero-module-name">Mercados</div>
+      <div class="hero-module-desc">Precios en vivo de crypto, acciones, forex. Gráficas, alertas, watchlist y análisis con IA.</div>
+      <div class="hero-module-status" style="color:var(--gold)">◐ Fase 3 — próximo</div>
+    </div>
+    <div class="hero-module">
+      <div class="hero-module-dot" style="background:var(--mod-portfolio)"></div>
+      <div class="hero-module-name">Patrimonio</div>
+      <div class="hero-module-desc">Cuentas, activos, transacciones. Dashboard de valor neto, P&amp;L y distribución.</div>
+      <div class="hero-module-status" style="color:var(--fg4)">○ Fase 4</div>
+    </div>
+    <div class="hero-module">
+      <div class="hero-module-dot" style="background:var(--mod-expenses)"></div>
+      <div class="hero-module-name">Gastos</div>
+      <div class="hero-module-desc">Categorías, suscripciones, presupuesto mensual, comparativas y exportación.</div>
+      <div class="hero-module-status" style="color:var(--fg4)">○ Fase 5</div>
+    </div>
+  </div>
+
+  <div class="callout callout-info mt-24">
+    <span class="callout-icon">💡</span>
+    <div class="callout-body">
+      <p><strong>La visión a largo plazo:</strong> los módulos se conectan entre sí. El Módulo Patrimonio podrá usar precios en vivo del Módulo Mercados. El dashboard home mostrará un resumen financiero unificado: proyectos activos + valor del portfolio + gastos del mes + alertas de mercado.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+<!-- ══════════════════════════════════════════════════════════════
+     02 · STACK TECNOLÓGICO
+     ══════════════════════════════════════════════════════════════ -->
+<section class="section" id="stack">
+  <div class="section-eyebrow">Sección 02</div>
+  <h2>Stack tecnológico</h2>
+  <p>Cada tecnología fue elegida con un criterio claro: resuelve un problema real del proyecto, tiene adopción estable, y encaja con el resto sin fricciones. No hay ninguna dependencia "porque es popular" — cada una gana su lugar en el stack.</p>
+
+  <div class="view-toggle" data-toggle="stack">
+    <button class="active" onclick="setView('stack','simple')">Vista simple</button>
+    <button onclick="setView('stack','tech')">Vista técnica</button>
+  </div>
+
+  <div class="simple-content" data-view="stack-simple">
+    <div class="card-grid card-grid-2 mt-16">
+      <div class="card card-highlight">
+        <h4>Framework web</h4>
+        <h3>Next.js 16</h3>
+        <p class="text-sm text-fg3">Next.js es un framework construido sobre React que permite crear aplicaciones web completas. Lo que lo hace especial es que puede ejecutar código tanto en el navegador del usuario (lo que ve) como en el servidor (la lógica interna). Esto significa que una sola herramienta maneja tanto la interfaz visual como la conexión con la base de datos, la autenticación y la lógica de negocio.</p>
+        <p class="text-sm text-fg3">La versión 16 trae el "App Router", un sistema que organiza las páginas de la aplicación en carpetas. Cada carpeta dentro de <code class="code-inline">src/app/</code> se convierte automáticamente en una ruta web: la carpeta <code class="code-inline">proyectos</code> genera la página <code class="code-inline">/proyectos</code>.</p>
+      </div>
+      <div class="card card-highlight">
+        <h4>Lenguaje</h4>
+        <h3>TypeScript (modo strict)</h3>
+        <p class="text-sm text-fg3">TypeScript es JavaScript con un sistema de tipos. Piénsalo como una capa de seguridad: cada variable, cada función, cada dato que entra o sale tiene que declarar qué tipo de información contiene. Si una función espera un número y alguien le pasa un texto, TypeScript lo detecta antes de que el código se ejecute.</p>
+        <p class="text-sm text-fg3">El "modo strict" es la configuración más exigente posible. Arkhos tiene <strong>0 errores de TypeScript</strong> y <strong>0 usos de <code class="code-inline">any</code></strong> (la válvula de escape que desactiva los tipos). Esto significa que cada pieza de código está verificada por el compilador.</p>
+      </div>
+      <div class="card card-highlight">
+        <h4>Estilos visuales</h4>
+        <h3>Tailwind CSS v4</h3>
+        <p class="text-sm text-fg3">Tailwind es un sistema de clases CSS que permite diseñar directamente en el HTML. En lugar de escribir archivos CSS separados con nombres inventados (<code class="code-inline">.boton-grande-azul</code>), usas clases atómicas que describen exactamente lo que hacen: <code class="code-inline">px-4</code> (padding horizontal 16px), <code class="code-inline">bg-accent</code> (fondo terracota), <code class="code-inline">rounded-xl</code> (bordes redondeados 12px).</p>
+        <p class="text-sm text-fg3">La versión 4 permite definir variables CSS del brand en un archivo central (<code class="code-inline">globals.css</code>) y usarlas en toda la app sin repetir valores hex manuales. Los colores, tipografías y espaciados de Arkhos están definidos una sola vez.</p>
+      </div>
+      <div class="card card-highlight">
+        <h4>Base de datos y autenticación</h4>
+        <h3>Supabase</h3>
+        <p class="text-sm text-fg3">Supabase es una plataforma que agrupa cuatro servicios en uno: autenticación de usuarios (login, registro, MFA), base de datos PostgreSQL, almacenamiento de archivos (para logos de proyectos) y seguridad a nivel de fila (cada usuario solo ve sus propios datos, incluso si alguien accediera directamente a la base de datos).</p>
+        <p class="text-sm text-fg3">La ventaja principal: tus datos están en <strong>tu propia instancia de PostgreSQL</strong>, no mezclados con los de otros usuarios en un servidor compartido. Tienes control total sobre tus datos.</p>
+      </div>
+      <div class="card card-highlight">
+        <h4>Estado global</h4>
+        <h3>Zustand</h3>
+        <p class="text-sm text-fg3">Cuando varios componentes de la interfaz necesitan acceder a la misma información (por ejemplo, la lista de proyectos aparece tanto en la vista lista como en el kanban), esa información se guarda en un "store" central. Zustand es la librería que gestiona estos stores.</p>
+        <p class="text-sm text-fg3">Lo especial de Zustand en Arkhos es que implementa "optimistic updates": cuando creas un proyecto, la interfaz se actualiza inmediatamente (sin esperar a que el servidor responda). Si el servidor falla, el cambio se revierte automáticamente.</p>
+      </div>
+      <div class="card card-highlight">
+        <h4>Validación de datos</h4>
+        <h3>Zod v4</h3>
+        <p class="text-sm text-fg3">Zod es una librería que valida que los datos tengan la forma correcta antes de usarlos. Cuando un usuario rellena un formulario para crear un proyecto, Zod verifica que el nombre no esté vacío, que el stack sea un array de strings, que la fecha tenga el formato correcto. Esta validación ocurre tanto en el navegador (feedback inmediato) como en el servidor (protección contra manipulación).</p>
+      </div>
+      <div class="card card-highlight">
+        <h4>Iconos</h4>
+        <h3>Lucide React</h3>
+        <p class="text-sm text-fg3">Lucide es una biblioteca de iconos SVG line-style (trazos finos y limpios). Arkhos usa 76 de estos iconos solo en el selector de iconos de proyectos, más los iconos de navegación, acciones y estados. La regla del design system es clara: nunca emojis en la interfaz, siempre iconos Lucide con stroke de 1.5-2px.</p>
+      </div>
+      <div class="card card-highlight">
+        <h4>Drag & drop</h4>
+        <h3>@dnd-kit</h3>
+        <p class="text-sm text-fg3">@dnd-kit es el motor que permite arrastrar y soltar fases y tareas para reordenarlas. A diferencia de otras librerías, @dnd-kit fue diseñada desde cero para ser accesible (funciona con teclado, no solo ratón) y se integra bien con React sin conflictos de renderizado.</p>
+        <p class="text-sm text-fg3">En móvil, donde arrastrar es incómodo, el sistema cambia automáticamente a botones de flecha arriba/abajo.</p>
+      </div>
+      <div class="card card-highlight">
+        <h4>Testing</h4>
+        <h3>Vitest + Testing Library</h3>
+        <p class="text-sm text-fg3">Vitest ejecuta los 34 tests automáticos del proyecto. Cada test verifica un comportamiento específico: "si un usuario no está autenticado, debe redirigir a login", "si el nombre del proyecto está vacío, la validación debe fallar", "formatCurrency(1234.5, 'EUR') debe devolver '1.234,50 €'".</p>
+        <p class="text-sm text-fg3">Testing Library permite testear componentes React tal como los usaría un usuario real: buscando elementos por texto visible, no por IDs internos.</p>
+      </div>
+      <div class="card card-highlight">
+        <h4>Gestor de paquetes</h4>
+        <h3>pnpm</h3>
+        <p class="text-sm text-fg3">pnpm (performant npm) es el gestor de paquetes que instala las dependencias del proyecto. Es hasta 2x más rápido que npm porque almacena los paquetes en una caché global y crea enlaces simbólicos en lugar de copiar archivos. En Arkhos, la instalación completa de dependencias tarda menos de 10 segundos.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="tech-content" data-view="stack-tech">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Tecnología</th><th>Versión</th><th>Categoría</th><th>Propósito</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Next.js</strong></td><td class="mono">16.1.6</td><td>Framework</td><td>App Router, Server Components, Server Actions, renderizado híbrido (SSR + SSG + ISR)</td></tr>
+          <tr><td><strong>React</strong></td><td class="mono">19.2.3</td><td>UI Runtime</td><td>Biblioteca de interfaz. React 19 trae Server Components nativos, <code class="code-inline">useId()</code>, transiciones</td></tr>
+          <tr><td><strong>TypeScript</strong></td><td class="mono">^5 (strict)</td><td>Lenguaje</td><td>Type safety completo. 0 <code class="code-inline">any</code>, 0 errores. <code class="code-inline">noUncheckedIndexedAccess</code> activado</td></tr>
+          <tr><td><strong>Tailwind CSS</strong></td><td class="mono">^4</td><td>Estilos</td><td>Utility-first. Variables del brand en <code class="code-inline">globals.css</code>. <code class="code-inline">@theme inline</code> para tokens</td></tr>
+          <tr><td><strong>@supabase/ssr</strong></td><td class="mono">^0.9.0</td><td>Auth SSR</td><td>Clientes Supabase para contexto SSR. Manejo de cookies <code class="code-inline">getAll</code>/<code class="code-inline">setAll</code></td></tr>
+          <tr><td><strong>@supabase/supabase-js</strong></td><td class="mono">^2.99.1</td><td>SDK</td><td>SDK JavaScript de Supabase. Query builder tipado para PostgreSQL</td></tr>
+          <tr><td><strong>Zustand</strong></td><td class="mono">^5.0.11</td><td>Estado</td><td>Stores atómicos. <code class="code-inline">ui-store.ts</code> (sidebar, toasts, modal) + <code class="code-inline">projects-store.ts</code></td></tr>
+          <tr><td><strong>Lucide React</strong></td><td class="mono">^0.577.0</td><td>Iconos</td><td>Tree-shakeable. Solo se incluyen en el bundle los iconos importados</td></tr>
+          <tr><td><strong>Zod</strong></td><td class="mono">^4.3.6</td><td>Validación</td><td>Import desde <code class="code-inline">zod/v4</code>. Schemas: <code class="code-inline">projectSchema</code>, <code class="code-inline">phaseSchema</code>, <code class="code-inline">taskSchema</code></td></tr>
+          <tr><td><strong>@dnd-kit/core</strong></td><td class="mono">^6.3.1</td><td>DnD engine</td><td>Motor accesible. <code class="code-inline">DndContext</code>, <code class="code-inline">useDraggable</code>, <code class="code-inline">useDroppable</code></td></tr>
+          <tr><td><strong>@dnd-kit/sortable</strong></td><td class="mono">^10.0.0</td><td>DnD sortable</td><td><code class="code-inline">SortableContext</code>, <code class="code-inline">useSortable</code>, <code class="code-inline">arrayMove</code></td></tr>
+          <tr><td><strong>Vitest</strong></td><td class="mono">^4.1.0</td><td>Testing</td><td>Entorno <code class="code-inline">jsdom</code>, alias <code class="code-inline">@</code> → <code class="code-inline">src/</code>, 34 tests en 3 suites</td></tr>
+          <tr><td><strong>@testing-library/react</strong></td><td class="mono">^16.3.2</td><td>Testing</td><td><code class="code-inline">render</code>, <code class="code-inline">screen</code>, <code class="code-inline">fireEvent</code> para tests de componentes</td></tr>
+          <tr><td><strong>pnpm</strong></td><td class="mono">latest</td><td>Paquetes</td><td>Content-addressable storage. <code class="code-inline">pnpm-lock.yaml</code> determinístico</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="explain mt-24">
+      <div class="explain-title">Decisiones técnicas clave</div>
+      <p><strong>¿Por qué Next.js y no Vite + React Router?</strong> Next.js ofrece Server Components nativos (renderiza HTML en el servidor, reduce JavaScript enviado al navegador), Server Actions (funciones que se ejecutan en el servidor sin API routes manuales), y un sistema de middleware (<code class="code-inline">proxy.ts</code>) que intercepta todas las requests para validar autenticación. Con Vite, todo esto habría que implementarlo manualmente.</p>
+      <p><strong>¿Por qué Zustand y no Redux o Context?</strong> Zustand es 2KB comprimido (Redux Toolkit es ~30KB). No requiere Providers envolventes. Un store es una función de una línea: <code class="code-inline">const useStore = create((set) => ({...}))</code>. Para una app personal modular donde cada módulo tiene su propio store, esta simplicidad importa.</p>
+      <p><strong>¿Por qué Supabase y no Firebase o Prisma + Postgres?</strong> Supabase agrupa auth + DB + storage + RLS en un solo servicio. El dato clave: Row Level Security está implementado a nivel de PostgreSQL, no a nivel de aplicación. Esto significa que la seguridad funciona incluso si se accede a la base de datos directamente saltándose la app.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ══════════════════════════════════════════════════════════════
+     03 · ARQUITECTURA
+     ══════════════════════════════════════════════════════════════ -->
+<section class="section" id="architecture">
+  <div class="section-eyebrow">Sección 03</div>
+  <h2>Cómo está construido</h2>
+  <p>Arkhos sigue una arquitectura modular con App Router de Next.js. Cada módulo tiene su propio espacio en la estructura de carpetas, su store de Zustand y sus componentes, pero todos comparten la misma shell de navegación, component library y sistema de autenticación.</p>
+
+  <div class="view-toggle" data-toggle="arch">
+    <button class="active" onclick="setView('arch','simple')">Vista simple</button>
+    <button onclick="setView('arch','tech')">Vista técnica</button>
+  </div>
+
+  <div class="simple-content" data-view="arch-simple">
+    <h3>¿Qué pasa cuando abres Arkhos?</h3>
+    <p>Cuando escribes <code class="code-inline">arkhos.pelayodelafuente.es/proyectos</code> en tu navegador, se desencadena una secuencia precisa de 7 pasos que garantiza que solo tú puedes ver tus datos. Vamos a recorrer cada uno:</p>
+
+    <div class="diagram-container" id="request-flow-diagram">
+      <svg viewBox="0 0 760 360" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width:100%">
+        <defs>
+          <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#B0A48F"/>
+          </marker>
+        </defs>
+        <rect x="20" y="20" width="140" height="56" rx="8" fill="#FFF" stroke="#E2D9CA"/>
+        <text x="90" y="44" class="flow-text">Navegador</text>
+        <text x="90" y="58" class="flow-subtext">GET /proyectos</text>
+        <line x1="160" y1="48" x2="200" y2="48" class="flow-arrow"/>
+        <rect x="200" y="20" width="140" height="56" rx="8" fill="#FFF" stroke="#C4704A" stroke-width="1.5"/>
+        <text x="270" y="44" class="flow-text" fill="#C4704A">proxy.ts</text>
+        <text x="270" y="58" class="flow-subtext">Middleware auth</text>
+        <line x1="340" y1="48" x2="380" y2="48" class="flow-arrow"/>
+        <rect x="380" y="20" width="160" height="56" rx="8" fill="#FFF" stroke="#E2D9CA"/>
+        <text x="460" y="44" class="flow-text">App Router</text>
+        <text x="460" y="58" class="flow-subtext">Server Component</text>
+        <line x1="460" y1="76" x2="460" y2="120" class="flow-arrow"/>
+        <rect x="380" y="120" width="160" height="56" rx="8" fill="#FFF" stroke="#E2D9CA"/>
+        <text x="460" y="144" class="flow-text">ProjectsView</text>
+        <text x="460" y="158" class="flow-subtext">Client Component</text>
+        <line x1="460" y1="176" x2="460" y2="220" class="flow-arrow"/>
+        <rect x="380" y="220" width="160" height="56" rx="8" fill="#FFF" stroke="#9B7A4A" stroke-width="1.5"/>
+        <text x="460" y="244" class="flow-text" fill="#9B7A4A">Zustand Store</text>
+        <text x="460" y="258" class="flow-subtext">projects-store.ts</text>
+        <line x1="540" y1="248" x2="580" y2="248" class="flow-arrow"/>
+        <rect x="580" y="120" width="160" height="56" rx="8" fill="#FFF" stroke="#5B8C6A" stroke-width="1.5"/>
+        <text x="660" y="144" class="flow-text" fill="#5B8C6A">Supabase</text>
+        <text x="660" y="158" class="flow-subtext">projects.ts → SDK</text>
+        <line x1="660" y1="176" x2="660" y2="220" class="flow-arrow"/>
+        <rect x="580" y="220" width="160" height="56" rx="8" fill="#FFF" stroke="#4A7A9B" stroke-width="1.5"/>
+        <text x="660" y="244" class="flow-text" fill="#4A7A9B">PostgreSQL</text>
+        <text x="660" y="258" class="flow-subtext">RLS: user_id = uid()</text>
+        <line x1="660" y1="220" x2="660" y2="176" stroke="#E2D9CA" stroke-width="1.2"/>
+        <line x1="580" y1="148" x2="540" y2="148" stroke="#E2D9CA" stroke-width="1.2" marker-end="url(#arrowhead)"/>
+      </svg>
+      <p class="diagram-caption">Flujo de una petición protegida: del navegador a la base de datos y de vuelta</p>
+    </div>
+
+    <div style="display:grid;gap:12px;margin-top:20px">
+      <div class="card" style="border-left:3px solid var(--fg4);padding:16px 20px">
+        <p class="text-sm mb-0"><strong style="color:var(--fg)">Paso 1 — Tu navegador</strong> envía la petición a la red global de servidores de Vercel (Edge Network). El servidor más cercano a ti geográficamente recibe la request.</p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--accent);padding:16px 20px">
+        <p class="text-sm mb-0"><strong style="color:var(--accent)">Paso 2 — proxy.ts (Middleware)</strong> intercepta la petición antes de que llegue a la página. Crea un cliente de Supabase, lee las cookies de sesión del navegador y llama a <code class="code-inline">getUser()</code> para verificar que eres un usuario autenticado. Si no lo eres, te redirige a <code class="code-inline">/login</code>. Si tienes MFA activado pero no has verificado el segundo factor, te redirige a <code class="code-inline">/verify-mfa</code>.</p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--fg4);padding:16px 20px">
+        <p class="text-sm mb-0"><strong style="color:var(--fg)">Paso 3 — App Router</strong> ejecuta el Server Component de la página. Este código se ejecuta en el servidor (no en tu navegador), obtiene tu userId y renderiza el esqueleto de la página con el componente <code class="code-inline">ProjectsView</code>.</p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--fg4);padding:16px 20px">
+        <p class="text-sm mb-0"><strong style="color:var(--fg)">Paso 4 — ProjectsView (Client Component)</strong> ya corre en tu navegador. Llama al store de Zustand para cargar los proyectos.</p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--gold);padding:16px 20px">
+        <p class="text-sm mb-0"><strong style="color:var(--gold)">Paso 5 — Zustand Store</strong> llama al data layer (<code class="code-inline">projects.ts</code>) que ejecuta queries contra Supabase usando el SDK.</p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--green);padding:16px 20px">
+        <p class="text-sm mb-0"><strong style="color:var(--green)">Pasos 6-7 — Supabase + PostgreSQL</strong> ejecuta la consulta SQL, pero antes de devolver resultados, PostgreSQL aplica las políticas de Row Level Security. Cada fila tiene una verificación: <code class="code-inline">WHERE user_id = auth.uid()</code>. Solo tus proyectos se devuelven, nunca los de otra persona.</p>
+      </div>
+    </div>
+
+    <h3 class="mt-32">¿Y cuando creas algo nuevo?</h3>
+    <p>El flujo de creación (mutación) es igual de interesante porque usa "optimistic updates":</p>
+    <div style="display:grid;gap:8px;margin-top:12px">
+      <div class="card" style="padding:14px 18px">
+        <p class="text-sm mb-0"><strong>1.</strong> Pulsas "Crear proyecto" y rellenas el formulario.</p>
+      </div>
+      <div class="card" style="padding:14px 18px">
+        <p class="text-sm mb-0"><strong>2.</strong> El store aplica el cambio <em>inmediatamente</em> en la interfaz — el proyecto aparece al instante, sin esperar.</p>
+      </div>
+      <div class="card" style="padding:14px 18px">
+        <p class="text-sm mb-0"><strong>3.</strong> En paralelo, envía la petición de INSERT a Supabase.</p>
+      </div>
+      <div class="card" style="padding:14px 18px">
+        <p class="text-sm mb-0"><strong>4a.</strong> Si Supabase confirma: todo bien, el proyecto ya estaba visible.</p>
+      </div>
+      <div class="card" style="padding:14px 18px;border-left:3px solid var(--red)">
+        <p class="text-sm mb-0"><strong>4b.</strong> Si Supabase falla: el store revierte el cambio automáticamente y muestra un Toast de error. La interfaz nunca queda en un estado inconsistente.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="tech-content" data-view="arch-tech">
+    <h3>Estructura de carpetas</h3>
+    <div class="code-block"><span class="code-lang">tree</span><span class="cm">arkhos/</span>
+├── <span class="str">.github/workflows/</span>        <span class="cm">← 3 workflows: ci.yml, security-review.yml, release.yml</span>
+├── <span class="str">.claude/skills/</span>            <span class="cm">← Conocimiento bajo demanda para Claude Code</span>
+│   ├── <span class="fn">supabase/SKILL.md</span>       <span class="cm">← Convenciones DB: clientes por contexto, RLS, migrations</span>
+│   └── <span class="fn">ui/SKILL.md</span>             <span class="cm">← Componentes, colores, patrones UI establecidos</span>
+├── <span class="str">public/</span>                    <span class="cm">← favicon.svg, manifest.json, PWA icons</span>
+├── <span class="str">src/</span>
+│   ├── <span class="str">app/</span>
+│   │   ├── <span class="kw">(auth)/</span>             <span class="cm">← Route group sin sidebar: login, register, reset, verify-mfa</span>
+│   │   ├── <span class="kw">(dashboard)/</span>        <span class="cm">← Route group con shell: layout.tsx comparte sidebar+topbar</span>
+│   │   │   ├── <span class="fn">page.tsx</span>         <span class="cm">← Dashboard home: saludo + 4 cards de módulo</span>
+│   │   │   ├── <span class="fn">proyectos/</span>      <span class="cm">← page.tsx (lista/kanban) + [id]/page.tsx (detalle)</span>
+│   │   │   ├── <span class="fn">mercados/</span>       <span class="cm">← Placeholder Fase 3</span>
+│   │   │   ├── <span class="fn">patrimonio/</span>     <span class="cm">← Placeholder Fase 4</span>
+│   │   │   ├── <span class="fn">gastos/</span>         <span class="cm">← Placeholder Fase 5</span>
+│   │   │   └── <span class="fn">settings/security/</span> <span class="cm">← MFA TOTP: enroll / unenroll</span>
+│   │   ├── <span class="str">auth/callback/</span>     <span class="cm">← Route handler OAuth/magic links</span>
+│   │   ├── <span class="fn">layout.tsx</span>          <span class="cm">← Root: Google Fonts, ToastProvider, variables CSS</span>
+│   │   └── <span class="fn">globals.css</span>         <span class="cm">← Todas las variables del brand + @theme inline</span>
+│   ├── <span class="str">components/</span>
+│   │   ├── <span class="kw">ui/</span>                 <span class="cm">← 13 componentes base con barrel export (index.ts)</span>
+│   │   ├── <span class="kw">layout/</span>             <span class="cm">← Sidebar, topbar, mobile-drawer, bottom-nav</span>
+│   │   └── <span class="kw">modules/projects/</span>   <span class="cm">← 18 componentes dedicados al módulo</span>
+│   ├── <span class="str">lib/</span>
+│   │   ├── <span class="fn">supabase/client.ts</span>  <span class="cm">← createBrowserClient (Client Components)</span>
+│   │   ├── <span class="fn">supabase/server.ts</span>  <span class="cm">← createServerClient (Server Components, Actions, proxy)</span>
+│   │   ├── <span class="fn">supabase/types.ts</span>   <span class="cm">← Tipos Row/Insert/Update generados de la DB</span>
+│   │   ├── <span class="fn">supabase/projects.ts</span> <span class="cm">← 27 funciones tipadas: CRUD projects+phases+tasks+links</span>
+│   │   ├── <span class="fn">supabase/activity.ts</span> <span class="cm">← logActivity() + getRecentActivity()</span>
+│   │   ├── <span class="fn">utils/format.ts</span>     <span class="cm">← formatCurrency(amount, currency), relativeTime(date)</span>
+│   │   └── <span class="fn">validations/index.ts</span> <span class="cm">← Schemas Zod para formularios y server actions</span>
+│   ├── <span class="str">stores/</span>
+│   │   ├── <span class="fn">ui-store.ts</span>         <span class="cm">← sidebarOpen, toasts[], activeModal</span>
+│   │   └── <span class="fn">projects-store.ts</span>   <span class="cm">← proyectos[], filtros, CRUD con optimistic updates</span>
+│   ├── <span class="str">types/projects.ts</span>      <span class="cm">← Domain types: Project, Phase, Task, Link, Type, Status</span>
+│   ├── <span class="str">test/</span>                  <span class="cm">← 3 suites: auth (12), validation (14), utils (8)</span>
+│   └── <span class="fn">proxy.ts</span>               <span class="cm">← Middleware: auth check + AAL verification + redirect logic</span>
+├── <span class="str">supabase/migrations/</span>       <span class="cm">← 3 SQL migrations versionadas</span>
+└── <span class="str">docs/</span>                      <span class="cm">← ARCHITECTURE.md, CHANGELOG.md, STATUS.md, PROJECTS.md</span></div>
+
+    <h3 class="mt-24">Route groups y la separación auth/dashboard</h3>
+    <p class="text-sm text-fg3">Next.js App Router usa "route groups" (carpetas entre paréntesis) para compartir layouts sin afectar la URL. <code class="code-inline">(auth)</code> agrupa las rutas de autenticación que no muestran sidebar. <code class="code-inline">(dashboard)</code> agrupa las rutas protegidas que comparten sidebar, topbar y bottom nav. La URL final es limpia: <code class="code-inline">/login</code>, no <code class="code-inline">/auth/login</code>.</p>
+
+    <h3 class="mt-24">Las 13 rutas del build</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Ruta</th><th>Tipo</th><th>Renderizado</th><th>Descripción</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">/login</td><td><span class="badge badge-gray">Pública</span></td><td>SSR</td><td>Formulario con Server Action</td></tr>
+          <tr><td class="mono">/register</td><td><span class="badge badge-gray">Pública</span></td><td>SSR</td><td>Registro con validación Zod</td></tr>
+          <tr><td class="mono">/reset-password</td><td><span class="badge badge-gray">Pública</span></td><td>SSR</td><td>Solicitar / confirmar nueva contraseña</td></tr>
+          <tr><td class="mono">/verify-mfa</td><td><span class="badge badge-gold">Auth</span></td><td>SSR</td><td>Input TOTP 6 dígitos con autoFocus</td></tr>
+          <tr><td class="mono">/auth/callback</td><td><span class="badge badge-gray">Pública</span></td><td>Route handler</td><td>Callback para OAuth y magic links</td></tr>
+          <tr><td class="mono">/</td><td><span class="badge badge-green">Protegida</span></td><td>SSR + Client</td><td>Dashboard home: saludo + módulos</td></tr>
+          <tr><td class="mono">/proyectos</td><td><span class="badge badge-green">Protegida</span></td><td>SSR + Client</td><td>Lista/Kanban con ProjectsView</td></tr>
+          <tr><td class="mono">/proyectos/[id]</td><td><span class="badge badge-green">Protegida</span></td><td>SSR + Client</td><td>Detalle con ProjectDetail</td></tr>
+          <tr><td class="mono">/mercados</td><td><span class="badge badge-green">Protegida</span></td><td>SSR</td><td>Placeholder Fase 3</td></tr>
+          <tr><td class="mono">/patrimonio</td><td><span class="badge badge-green">Protegida</span></td><td>SSR</td><td>Placeholder Fase 4</td></tr>
+          <tr><td class="mono">/gastos</td><td><span class="badge badge-green">Protegida</span></td><td>SSR</td><td>Placeholder Fase 5</td></tr>
+          <tr><td class="mono">/settings/security</td><td><span class="badge badge-green">Protegida</span></td><td>SSR + Client</td><td>Gestión MFA TOTP</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="explain green mt-24">
+      <div class="explain-title">Server Components vs Client Components</div>
+      <p>Next.js distingue entre componentes que se ejecutan en el servidor (Server Components, por defecto) y los que necesitan interactividad del navegador (Client Components, marcados con <code class="code-inline">'use client'</code>). En Arkhos, los Server Components se usan para obtener datos del usuario y renderizar la estructura de la página. Los Client Components se usan para la interactividad: formularios, modales, drag & drop, búsqueda en tiempo real.</p>
+      <p>Esta separación reduce el JavaScript enviado al navegador: el código del Server Component nunca llega al browser, solo su HTML resultante.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ══════════════════════════════════════════════════════════════
+     04 · BASE DE DATOS
+     ══════════════════════════════════════════════════════════════ -->
+<section class="section" id="database">
+  <div class="section-eyebrow">Sección 04</div>
+  <h2>Base de datos</h2>
+  <p>PostgreSQL en Supabase, con Row Level Security activo en las 8 tablas. La estructura es jerárquica, cuidadosamente diseñada para que cada relación tenga sentido y cada eliminación sea limpia.</p>
+
+  <div class="view-toggle" data-toggle="db">
+    <button class="active" onclick="setView('db','simple')">Vista simple</button>
+    <button onclick="setView('db','tech')">Vista técnica</button>
+  </div>
+
+  <div class="simple-content" data-view="db-simple">
+    <h3>Cómo se organizan tus datos</h3>
+    <p>Piensa en la base de datos como un archivador con cajones organizados. Cada cajón es una "tabla" que guarda un tipo de información. Las tablas están conectadas entre sí de forma lógica:</p>
+
+    <div class="diagram-container">
+      <svg viewBox="0 0 720 320" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width:100%">
+        <defs><marker id="arr2" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#B0A48F"/></marker></defs>
+        <rect x="10" y="120" width="110" height="60" rx="8" fill="#FFF" stroke="#C4704A" stroke-width="1.5"/>
+        <text x="65" y="146" class="flow-text" fill="#C4704A">Tu cuenta</text>
+        <text x="65" y="162" class="flow-subtext">profiles</text>
+        <rect x="170" y="50" width="120" height="60" rx="8" fill="#FFF" stroke="#E2D9CA"/>
+        <text x="230" y="76" class="flow-text">Proyectos</text>
+        <text x="230" y="92" class="flow-subtext">projects</text>
+        <line x1="120" y1="138" x2="170" y2="85" class="flow-arrow" marker-end="url(#arr2)"/>
+        <rect x="340" y="50" width="120" height="60" rx="8" fill="#FFF" stroke="#E2D9CA"/>
+        <text x="400" y="76" class="flow-text">Fases</text>
+        <text x="400" y="92" class="flow-subtext">project_phases</text>
+        <line x1="290" y1="80" x2="340" y2="80" class="flow-arrow" marker-end="url(#arr2)"/>
+        <rect x="510" y="50" width="100" height="60" rx="8" fill="#FFF" stroke="#E2D9CA"/>
+        <text x="560" y="76" class="flow-text">Tareas</text>
+        <text x="560" y="92" class="flow-subtext">phase_tasks</text>
+        <line x1="460" y1="80" x2="510" y2="80" class="flow-arrow" marker-end="url(#arr2)"/>
+        <rect x="650" y="50" width="60" height="60" rx="8" fill="#FFF" stroke="#E2D9CA"/>
+        <text x="680" y="76" class="flow-text">Links</text>
+        <text x="680" y="92" class="flow-subtext" font-size="8">task_links</text>
+        <line x1="610" y1="80" x2="650" y2="80" class="flow-arrow" marker-end="url(#arr2)"/>
+        <rect x="170" y="160" width="120" height="50" rx="8" fill="#FFF" stroke="#E2D9CA"/>
+        <text x="230" y="188" class="flow-text">Actividad</text>
+        <text x="230" y="200" class="flow-subtext">activity_log</text>
+        <line x1="120" y1="155" x2="170" y2="178" class="flow-arrow" marker-end="url(#arr2)"/>
+        <rect x="170" y="240" width="120" height="50" rx="8" fill="#FFF" stroke="#E2D9CA"/>
+        <text x="230" y="262" class="flow-text">Tipos</text>
+        <text x="230" y="274" class="flow-subtext">project_types</text>
+        <line x1="120" y1="168" x2="170" y2="255" class="flow-arrow" marker-end="url(#arr2)"/>
+        <rect x="340" y="240" width="130" height="50" rx="8" fill="#FFF" stroke="#E2D9CA"/>
+        <text x="405" y="262" class="flow-text">Estados</text>
+        <text x="405" y="274" class="flow-subtext">project_statuses</text>
+        <line x1="120" y1="175" x2="340" y2="262" class="flow-arrow" marker-end="url(#arr2)"/>
+        <text x="152" y="72" class="flow-label">1:N</text>
+        <text x="318" y="72" class="flow-label">1:N</text>
+        <text x="488" y="72" class="flow-label">1:N</text>
+        <text x="636" y="72" class="flow-label">1:N</text>
+      </svg>
+      <p class="diagram-caption">8 tablas · Cada flecha 1:N significa "uno a muchos" (un proyecto tiene muchas fases)</p>
+    </div>
+
+    <div class="explain mt-16">
+      <div class="explain-title">La analogía del archivador</div>
+      <p><strong>Tu cuenta</strong> (profiles) es la cerradura del archivador. Solo tú tienes la llave.</p>
+      <p>Dentro del archivador tienes <strong>carpetas de proyectos</strong>. Cada carpeta tiene <strong>separadores</strong> (las fases: "Diseño", "Desarrollo", "Testing"). Detrás de cada separador hay <strong>fichas</strong> (las tareas: "Implementar login", "Crear base de datos"). Y cada ficha puede tener <strong>post-its con URLs</strong> (los links: documentación, diseños en Figma, PRs de GitHub).</p>
+      <p>Si eliminas una carpeta de proyecto, todos sus separadores, fichas y post-its se eliminan automáticamente. Nunca quedan fichas huérfanas flotando sin proyecto.</p>
+    </div>
+
+    <h3 class="mt-24">Tipos y estados personalizables</h3>
+    <p>Las categorías de los proyectos no están grabadas en piedra. Cada usuario puede crear sus propios tipos ("Web", "API", "CLI", "Side Project", "Investigación") y sus propios estados ("Idea", "Activo", "Pausado", "Completado"), cada uno con su color e icono. Esto significa que Arkhos se adapta a cómo tú organizas tu trabajo, no al revés.</p>
+  </div>
+
+  <div class="tech-content" data-view="db-tech">
+    <h3>Schema completo (8 tablas)</h3>
+
+    <h4 class="mt-16">profiles</h4>
+    <p class="text-sm text-fg3">Datos extendidos del usuario. Se crea automáticamente al registrarse mediante el trigger <code class="code-inline">on_auth_user_created</code> que escucha INSERTs en <code class="code-inline">auth.users</code>.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Columna</th><th>Tipo SQL</th><th>Constraints</th><th>Notas</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">id</td><td class="mono">UUID</td><td>PK, FK → auth.users(id) ON DELETE CASCADE</td><td>El mismo ID que Supabase Auth</td></tr>
+          <tr><td class="mono">full_name</td><td class="mono">TEXT</td><td>nullable</td><td>Nombre visible en el dashboard</td></tr>
+          <tr><td class="mono">avatar_url</td><td class="mono">TEXT</td><td>nullable</td><td>URL de imagen de perfil</td></tr>
+          <tr><td class="mono">preferences</td><td class="mono">JSONB</td><td>DEFAULT '{}'</td><td>Configuración extensible sin migrations</td></tr>
+          <tr><td class="mono">created_at</td><td class="mono">TIMESTAMPTZ</td><td>DEFAULT now()</td><td>Fecha de registro</td></tr>
+          <tr><td class="mono">updated_at</td><td class="mono">TIMESTAMPTZ</td><td>AUTO (trigger)</td><td>Trigger: profiles_updated_at</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4 class="mt-24">projects</h4>
+    <p class="text-sm text-fg3">Tabla raíz del módulo Proyectos. Cada proyecto pertenece a un usuario y contiene N fases.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Columna</th><th>Tipo SQL</th><th>Constraints</th><th>Notas</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">id</td><td class="mono">UUID</td><td>PK, gen_random_uuid()</td><td>ID universal único</td></tr>
+          <tr><td class="mono">user_id</td><td class="mono">UUID</td><td>NOT NULL, FK → profiles(id) CASCADE</td><td>Propietario del proyecto</td></tr>
+          <tr><td class="mono">name</td><td class="mono">TEXT</td><td>NOT NULL</td><td>Nombre del proyecto</td></tr>
+          <tr><td class="mono">icon</td><td class="mono">TEXT</td><td>NOT NULL, DEFAULT 'Box'</td><td>Nombre de icono Lucide</td></tr>
+          <tr><td class="mono">logo_url</td><td class="mono">TEXT</td><td>nullable</td><td>URL en Supabase Storage</td></tr>
+          <tr><td class="mono">type</td><td class="mono">TEXT</td><td>NOT NULL, DEFAULT 'Web'</td><td>Valor libre (project_types)</td></tr>
+          <tr><td class="mono">status</td><td class="mono">TEXT</td><td>NOT NULL, DEFAULT 'idea'</td><td>Valor libre (project_statuses)</td></tr>
+          <tr><td class="mono">stack</td><td class="mono">TEXT[]</td><td>DEFAULT '{}'</td><td>Array de tecnologías</td></tr>
+          <tr><td class="mono">tags</td><td class="mono">TEXT[]</td><td>DEFAULT '{}'</td><td>Etiquetas libres</td></tr>
+          <tr><td class="mono">start_date</td><td class="mono">DATE</td><td>nullable</td><td>Fecha de inicio</td></tr>
+          <tr><td class="mono">sort_order</td><td class="mono">INTEGER</td><td>NOT NULL, DEFAULT 0</td><td>Orden manual (drag & drop)</td></tr>
+          <tr><td class="mono">created_at</td><td class="mono">TIMESTAMPTZ</td><td>NOT NULL, DEFAULT now()</td><td></td></tr>
+          <tr><td class="mono">updated_at</td><td class="mono">TIMESTAMPTZ</td><td>AUTO (trigger)</td><td>Trigger: projects_updated_at</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="text-sm text-fg3">Índices: <code class="code-inline">idx_projects_user_id</code>, <code class="code-inline">idx_projects_user_status(user_id, status)</code>, <code class="code-inline">idx_projects_sort_order(user_id, sort_order)</code></p>
+
+    <h4 class="mt-24">project_phases</h4>
+    <p class="text-sm text-fg3">Fases de un proyecto, con status fijo (<code class="code-inline">pending | in-progress | done</code>) y notas.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Columna</th><th>Tipo</th><th>Constraints</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">id</td><td class="mono">UUID PK</td><td>gen_random_uuid()</td></tr>
+          <tr><td class="mono">project_id</td><td class="mono">UUID</td><td>NOT NULL, FK → projects(id) CASCADE</td></tr>
+          <tr><td class="mono">name</td><td class="mono">TEXT</td><td>NOT NULL</td></tr>
+          <tr><td class="mono">status</td><td class="mono">TEXT</td><td>CHECK IN (pending, in-progress, done)</td></tr>
+          <tr><td class="mono">notes</td><td class="mono">TEXT</td><td>DEFAULT ''</td></tr>
+          <tr><td class="mono">sort_order</td><td class="mono">INTEGER</td><td>NOT NULL, DEFAULT 0</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4 class="mt-24">phase_tasks</h4>
+    <p class="text-sm text-fg3">Tareas con prioridad, apuntes Markdown, y auto-guardado via trigger updated_at.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Columna</th><th>Tipo</th><th>Constraints</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">id</td><td class="mono">UUID PK</td><td>gen_random_uuid()</td></tr>
+          <tr><td class="mono">phase_id</td><td class="mono">UUID</td><td>NOT NULL, FK → project_phases(id) CASCADE</td></tr>
+          <tr><td class="mono">text</td><td class="mono">TEXT</td><td>NOT NULL</td></tr>
+          <tr><td class="mono">done</td><td class="mono">BOOLEAN</td><td>NOT NULL, DEFAULT false</td></tr>
+          <tr><td class="mono">priority</td><td class="mono">TEXT</td><td>CHECK IN (none, low, medium, high)</td></tr>
+          <tr><td class="mono">content</td><td class="mono">TEXT</td><td>DEFAULT '' (apuntes Markdown)</td></tr>
+          <tr><td class="mono">sort_order</td><td class="mono">INTEGER</td><td>NOT NULL, DEFAULT 0</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4 class="mt-24">task_links · project_types · project_statuses · activity_log</h4>
+    <p class="text-sm text-fg3"><strong>task_links:</strong> url, label, sort_order → FK a phase_tasks. <strong>project_types:</strong> name, icon, color, sort_order → por usuario. <strong>project_statuses:</strong> name, color, is_default, sort_order → por usuario. <strong>activity_log:</strong> module, action, entity_name, detail → con índice compuesto (user_id, created_at DESC).</p>
+
+    <h3 class="mt-32">Migrations</h3>
+    <div class="explain gold">
+      <div class="explain-title">¿Qué es una migration?</div>
+      <p>Una migration es un archivo SQL numerado que modifica la estructura de la base de datos de forma controlada. Cada migration tiene un número de versión (001, 002, 003) y se ejecuta en orden. Esto permite evolucionar el schema de forma predecible y reproducible.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Migration</th><th>Fecha</th><th>Cambios</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">001_initial_schema</td><td class="mono">13 mar</td><td>profiles + activity_log con RLS. Triggers: handle_new_user (auto-crea perfil), update_updated_at</td></tr>
+          <tr><td class="mono">002_projects_schema</td><td class="mono">15 mar</td><td>projects + phases + tasks + links con RLS, índices, CHECK constraints en status y priority</td></tr>
+          <tr><td class="mono">003_projects_refinements</td><td class="mono">15 mar</td><td>+logo_url en projects. Elimina CHECK de type/status (ahora dinámicos). Crea project_types y project_statuses</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+<!-- ══════════════════════════════════════════════════════════════
+     05 · AUTENTICACIÓN Y SEGURIDAD
+     ══════════════════════════════════════════════════════════════ -->
+<section class="section" id="auth">
+  <div class="section-eyebrow">Sección 05</div>
+  <h2>Autenticación y seguridad</h2>
+  <p>Ocho capas de protección entre el mundo exterior y tus datos. La seguridad no es un añadido posterior — es parte fundamental de la arquitectura desde el día uno.</p>
+
+  <div class="view-toggle" data-toggle="auth">
+    <button class="active" onclick="setView('auth','simple')">Vista simple</button>
+    <button onclick="setView('auth','tech')">Vista técnica</button>
+  </div>
+
+  <div class="simple-content" data-view="auth-simple">
+    <h3>Las 8 capas de seguridad</h3>
+    <p>Imagina tu información como un tesoro en el centro de una fortaleza con 8 muros concéntricos. Cada muro protege contra un tipo de amenaza distinto. Si un atacante consigue atravesar un muro, el siguiente sigue protegiendo.</p>
+
+    <div style="margin-top:16px">
+      <div class="security-layer">
+        <span class="security-num">01</span>
+        <div>
+          <div class="security-name">HTTPS (cifrado del tráfico)</div>
+          <div class="security-impl">Vercel + Let's Encrypt · certificado automático</div>
+          <div class="security-desc">Todo lo que viaja entre tu navegador y el servidor está cifrado. Aunque alguien interceptara tu conexión WiFi, solo vería datos ilegibles. El certificado SSL se renueva automáticamente — Vercel se encarga de esto sin intervención manual.</div>
+        </div>
+      </div>
+      <div class="security-layer">
+        <span class="security-num">02</span>
+        <div>
+          <div class="security-name">Supabase Auth (identidad con JWT)</div>
+          <div class="security-impl">email/password · tokens JWT con rotación automática</div>
+          <div class="security-desc">Cuando introduces tu email y contraseña, Supabase verifica las credenciales y genera dos tokens: un "access token" (válido 1 hora) y un "refresh token" (válido 7 días). El access token es como un pase temporal que el navegador presenta en cada petición. Cuando expira, el refresh token obtiene uno nuevo silenciosamente, sin que tengas que volver a hacer login.</div>
+        </div>
+      </div>
+      <div class="security-layer">
+        <span class="security-num">03</span>
+        <div>
+          <div class="security-name">Middleware proxy.ts</div>
+          <div class="security-impl">Next.js Middleware · intercepta cada request</div>
+          <div class="security-desc">Antes de que cualquier página protegida se cargue, el middleware intercepta la petición y verifica que tienes una sesión válida. Si no la tienes, te redirige a la página de login. Si la tienes pero tu token necesita refrescarse, lo hace automáticamente. Es como el guardia de seguridad que revisa tu credencial antes de dejarte pasar.</div>
+        </div>
+      </div>
+      <div class="security-layer">
+        <span class="security-num">04</span>
+        <div>
+          <div class="security-name">MFA TOTP (segundo factor)</div>
+          <div class="security-impl">Google Authenticator / Authy · código de 6 dígitos</div>
+          <div class="security-desc">MFA (Multi-Factor Authentication) añade una segunda cerradura. Aunque alguien descubra tu contraseña, necesita además el código temporal de 6 dígitos que cambia cada 30 segundos en tu teléfono. TOTP (Time-based One-Time Password) es el estándar que usan Google, Microsoft y la mayoría de servicios profesionales. Lo configuras escaneando un código QR desde una app como Google Authenticator.</div>
+        </div>
+      </div>
+      <div class="security-layer">
+        <span class="security-num">05</span>
+        <div>
+          <div class="security-name">Row Level Security (RLS)</div>
+          <div class="security-impl">PostgreSQL · políticas por tabla en Supabase</div>
+          <div class="security-desc">Esta es la capa más profunda y potente. Cada fila de la base de datos tiene un "candado" implementado a nivel del motor de base de datos, no a nivel de la aplicación. Incluso si alguien consiguiera acceso directo a PostgreSQL saltándose completamente la app, solo vería sus propios datos. Es como si cada fila supiera quién es su dueño y rechazara cualquier otra solicitud.</div>
+        </div>
+      </div>
+      <div class="security-layer">
+        <span class="security-num">06</span>
+        <div>
+          <div class="security-name">Validación Zod (doble verificación)</div>
+          <div class="security-impl">Schemas idénticos en navegador Y servidor</div>
+          <div class="security-desc">Cuando envías datos (crear proyecto, editar tarea), se validan dos veces: primero en tu navegador (para darte feedback inmediato) y otra vez en el servidor (para proteger contra manipulación). Si alguien modifica el JavaScript del navegador para saltarse la validación del lado del cliente, el servidor bloqueará los datos inválidos igualmente.</div>
+        </div>
+      </div>
+      <div class="security-layer">
+        <span class="security-num">07</span>
+        <div>
+          <div class="security-name">Server Actions (lógica oculta)</div>
+          <div class="security-impl">Next.js Server Actions · código nunca expuesto al browser</div>
+          <div class="security-desc">Las operaciones sensibles (crear, editar, eliminar) se ejecutan en el servidor mediante "Server Actions". El código de estas funciones nunca se envía al navegador del usuario. Un atacante no puede inspeccionar la lógica de negocio ni encontrar formas de explotarla, porque simplemente no tiene acceso a ella.</div>
+        </div>
+      </div>
+      <div class="security-layer">
+        <span class="security-num">08</span>
+        <div>
+          <div class="security-name">Variables de entorno</div>
+          <div class="security-impl">.env.local + Vercel Dashboard</div>
+          <div class="security-desc">Las claves secretas (API keys, tokens de Supabase, credenciales de servicios) nunca aparecen en el código fuente. Están almacenadas en el Dashboard de Vercel y se inyectan al servidor en tiempo de ejecución. Incluso si alguien tuviera acceso al repositorio de GitHub, no encontraría ninguna credencial.</div>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="mt-32">¿Cómo funciona el login?</h3>
+    <p>El proceso de login puede parecer instantáneo desde fuera, pero por dentro ocurre una coreografía precisa:</p>
+    <div style="display:grid;gap:8px;margin-top:12px">
+      <div class="card" style="padding:14px 18px"><p class="text-sm mb-0"><strong>1.</strong> Escribes tu email y contraseña en el formulario de <code class="code-inline">/login</code>.</p></div>
+      <div class="card" style="padding:14px 18px"><p class="text-sm mb-0"><strong>2.</strong> Al pulsar "Entrar", un Server Action envía las credenciales directamente al servidor (nunca se exponen en una API pública).</p></div>
+      <div class="card" style="padding:14px 18px"><p class="text-sm mb-0"><strong>3.</strong> Supabase Auth verifica las credenciales contra la base de datos de usuarios.</p></div>
+      <div class="card" style="padding:14px 18px;border-left:3px solid var(--red)"><p class="text-sm mb-0"><strong>Si son incorrectas:</strong> se muestra un mensaje de error en el formulario. Sin revelar si el email existe o no (protección contra enumeración de usuarios).</p></div>
+      <div class="card" style="padding:14px 18px;border-left:3px solid var(--green)"><p class="text-sm mb-0"><strong>Si son correctas:</strong> Supabase genera los tokens JWT y los escribe como cookies en tu navegador.</p></div>
+      <div class="card" style="padding:14px 18px"><p class="text-sm mb-0"><strong>4.</strong> Redirige al dashboard (<code class="code-inline">/</code>). El middleware <code class="code-inline">proxy.ts</code> lee las cookies, verifica que el usuario es válido.</p></div>
+      <div class="card" style="padding:14px 18px;border-left:3px solid var(--gold)"><p class="text-sm mb-0"><strong>5. Si tienes MFA activado:</strong> el middleware detecta que tu nivel de seguridad es AAL1 (solo contraseña) pero necesitas AAL2 (contraseña + TOTP). Te redirige a <code class="code-inline">/verify-mfa</code> donde introduces el código de 6 dígitos de tu app de autenticación.</p></div>
+      <div class="card" style="padding:14px 18px"><p class="text-sm mb-0"><strong>6.</strong> Código correcto → sesión asciende a AAL2 → acceso completo al dashboard.</p></div>
+    </div>
+
+    <div class="callout callout-info mt-24">
+      <span class="callout-icon">🔐</span>
+      <div class="callout-body">
+        <p><strong>AAL1 vs AAL2:</strong> AAL significa "Authentication Assurance Level". AAL1 = has demostrado quién eres con contraseña. AAL2 = has demostrado quién eres con contraseña + un dispositivo físico (tu teléfono). Es el mismo concepto que usan los bancos cuando te piden un SMS además de tu pin.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="tech-content" data-view="auth-tech">
+    <h3>Flujo de login (código real)</h3>
+    <div class="code-block"><span class="code-lang">flujo</span><span class="cm">// 1. Server Action en /login</span>
+<span class="fn">signInWithPassword</span>({ <span class="prop">email</span>, <span class="prop">password</span> })
+    ↓
+<span class="cm">// 2. Supabase genera JWT</span>
+<span class="kw">access_token</span>  <span class="cm">← válido 3600s (1 hora)</span>
+<span class="kw">refresh_token</span> <span class="cm">← válido 604800s (7 días)</span>
+    ↓
+<span class="cm">// 3. @supabase/ssr escribe cookies (getAll/setAll pattern)</span>
+<span class="fn">cookies.setAll</span>(cookiesToSet)
+    ↓
+<span class="cm">// 4. Redirect a /</span>
+<span class="kw">proxy.ts</span> intercepta → <span class="fn">supabase.auth.getUser()</span>
+    │
+    ├── <span class="str">!user</span> → redirect <span class="str">/login</span>
+    ├── <span class="str">user + ruta pública</span> → redirect <span class="str">/</span>
+    └── <span class="str">user + AAL check</span>:
+        ├── currentLevel=<span class="str">'aal1'</span>, nextLevel=<span class="str">'aal1'</span> → <span class="type">PASS</span> (sin MFA)
+        └── currentLevel=<span class="str">'aal1'</span>, nextLevel=<span class="str">'aal2'</span> → redirect <span class="str">/verify-mfa</span></div>
+
+    <h3 class="mt-24">MFA TOTP — Enrollment y verificación</h3>
+    <div class="code-block"><span class="code-lang">enrollment</span><span class="cm">// En /settings/security — primera vez que activas MFA</span>
+
+<span class="cm">// 1. Solicitar factor TOTP</span>
+<span class="kw">const</span> { <span class="prop">data</span> } = <span class="kw">await</span> supabase.auth.mfa.<span class="fn">enroll</span>({
+  <span class="prop">factorType</span>: <span class="str">'totp'</span>
+})
+<span class="cm">// data contiene: { id, type, totp: { qr_code, secret, uri } }</span>
+
+<span class="cm">// 2. Usuario escanea QR → obtiene código de 6 dígitos</span>
+
+<span class="cm">// 3. Verificar el primer código para confirmar enrollment</span>
+<span class="kw">await</span> supabase.auth.mfa.<span class="fn">challengeAndVerify</span>({
+  <span class="prop">factorId</span>: data.id,
+  <span class="prop">code</span>: userInputCode  <span class="cm">// ← los 6 dígitos</span>
+})
+<span class="cm">// → Éxito: factor confirmado, sesión asciende a AAL2</span></div>
+
+    <div class="code-block"><span class="code-lang">verificación</span><span class="cm">// En /verify-mfa — cada login posterior con MFA</span>
+
+<span class="cm">// 1. Obtener factores del usuario</span>
+<span class="kw">const</span> { <span class="prop">data</span> } = <span class="kw">await</span> supabase.auth.mfa.<span class="fn">listFactors</span>()
+<span class="kw">const</span> factor = data.totp[<span class="num">0</span>]
+
+<span class="cm">// 2. Crear challenge</span>
+<span class="kw">const</span> { <span class="prop">data</span>: challenge } = <span class="kw">await</span> supabase.auth.mfa.<span class="fn">challenge</span>({
+  <span class="prop">factorId</span>: factor.id
+})
+
+<span class="cm">// 3. Verificar con el código del usuario</span>
+<span class="kw">const</span> { <span class="prop">error</span> } = <span class="kw">await</span> supabase.auth.mfa.<span class="fn">verify</span>({
+  <span class="prop">factorId</span>: factor.id,
+  <span class="prop">challengeId</span>: challenge.id,
+  <span class="prop">code</span>: userInputCode
+})
+<span class="cm">// → error ? retry : sesión AAL2 → redirect /</span></div>
+
+    <h3 class="mt-24">RLS — Políticas por tabla</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Tabla</th><th>Política RLS</th><th>Estrategia</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">profiles</td><td><code class="code-inline">auth.uid() = id</code></td><td>Directa (PK = user_id)</td></tr>
+          <tr><td class="mono">projects</td><td><code class="code-inline">auth.uid() = user_id</code></td><td>Directa</td></tr>
+          <tr><td class="mono">activity_log</td><td><code class="code-inline">auth.uid() = user_id</code></td><td>Directa</td></tr>
+          <tr><td class="mono">project_types</td><td><code class="code-inline">auth.uid() = user_id</code></td><td>Directa</td></tr>
+          <tr><td class="mono">project_statuses</td><td><code class="code-inline">auth.uid() = user_id</code></td><td>Directa</td></tr>
+          <tr><td class="mono">project_phases</td><td>EXISTS → projects.user_id = auth.uid()</td><td>JOIN al padre</td></tr>
+          <tr><td class="mono">phase_tasks</td><td>EXISTS → phases → projects.user_id</td><td>JOIN doble</td></tr>
+          <tr><td class="mono">task_links</td><td>EXISTS → tasks → phases → projects</td><td>JOIN triple</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="explain blue mt-16">
+      <div class="explain-title">¿Por qué JOIN en lugar de user_id directo?</div>
+      <p>Las tablas hijas (phases, tasks, links) no tienen columna <code class="code-inline">user_id</code>. En su lugar, la política RLS "sube" por la cadena de FKs hasta llegar a la tabla <code class="code-inline">projects</code> que sí tiene <code class="code-inline">user_id</code>. Esto evita redundancia de datos y garantiza consistencia: si cambias el dueño de un proyecto, todas sus fases, tareas y links heredan el cambio automáticamente.</p>
+    </div>
+
+    <h3 class="mt-24">Matcher del middleware</h3>
+    <div class="code-block"><span class="code-lang">regex</span><span class="cm">// Qué rutas intercepta proxy.ts (todo excepto assets estáticos)</span>
+<span class="str">/((?!_next/static|_next/image|favicon.ico|icons/|.*\.(?:svg|png|jpg|jpeg|gif|webp)$).*)</span>
+
+<span class="cm">// Rutas en whitelist (no requieren autenticación):</span>
+<span class="kw">/login</span>, <span class="kw">/register</span>, <span class="kw">/verify-mfa</span>, <span class="kw">/reset-password</span>
+<span class="kw">/auth/*</span>  <span class="cm">← callbacks OAuth</span>
+<span class="kw">/api/*</span>   <span class="cm">← futuras API routes</span>
+<span class="kw">/_next/*</span> <span class="cm">← assets internos de Next.js</span></div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ══════════════════════════════════════════════════════════════
+     06 · COMPONENT LIBRARY
+     ══════════════════════════════════════════════════════════════ -->
+<section class="section" id="components">
+  <div class="section-eyebrow">Sección 06</div>
+  <h2>Component Library</h2>
+  <p>13 componentes UI reutilizables, importados desde un único barrel export. Cada uno sigue los principios del brand: flat design sin sombras (salvo modales), bordes 1px sutiles, paleta cálida, tipografía con carácter, y cero emojis.</p>
+
+  <div class="explain">
+    <div class="explain-title">¿Qué es un barrel export?</div>
+    <p>En lugar de importar cada componente desde su archivo individual (<code class="code-inline">import Button from '@/components/ui/button'</code>), un barrel export centraliza todas las importaciones en un solo archivo <code class="code-inline">index.ts</code>. Esto permite escribir una sola línea: <code class="code-inline">import { Button, Card, Input, Modal } from '@/components/ui'</code>.</p>
+  </div>
+
+  <div class="card-grid card-grid-2 mt-16">
+    <!-- Button -->
+    <div class="card comp-card card-highlight">
+      <div class="comp-header"><span class="comp-name">Button</span><span class="badge badge-accent">Core</span></div>
+      <div class="comp-file">src/components/ui/button.tsx</div>
+      <div class="comp-desc">El componente más usado de toda la app. Extiende los atributos nativos de HTML <code class="code-inline">&lt;button&gt;</code>, añadiendo 4 variantes visuales, 3 tamaños y un estado de carga con spinner animado. Usa <code class="code-inline">forwardRef</code> para compatibilidad con librerías de formularios.</div>
+      <div class="comp-preview">
+        <span style="display:inline-block;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:600;background:#C4704A;color:#fff;font-family:var(--font-body)">Primary</span>
+        <span style="display:inline-block;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:600;background:transparent;color:var(--fg2);border:1px solid var(--stone);font-family:var(--font-body)">Secondary</span>
+        <span style="display:inline-block;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:600;background:transparent;color:var(--fg3);font-family:var(--font-body)">Ghost</span>
+        <span style="display:inline-block;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:600;background:#DC2626;color:#fff;font-family:var(--font-body)">Danger</span>
+      </div>
+      <p class="text-xs text-fg3 mt-8"><strong>Tamaños:</strong> sm (px-3 py-1.5 text-xs) · md (px-4 py-2.5 text-sm) · lg (px-5 py-3 text-base)</p>
+    </div>
+    <!-- Card -->
+    <div class="card comp-card card-highlight">
+      <div class="comp-header"><span class="comp-name">Card</span><span class="badge badge-accent">Core</span></div>
+      <div class="comp-file">src/components/ui/card.tsx</div>
+      <div class="comp-desc">Contenedor universal. <code class="code-inline">rounded-xl</code> (12px), borde sutil 1px, fondo blanco. Tres niveles de padding. Con <code class="code-inline">clickable</code> o <code class="code-inline">onClick</code>, el borde cambia a terracota en hover y el cursor se convierte en pointer. Es la base visual de las cards de proyectos, módulos del dashboard y paneles de configuración.</div>
+      <div class="comp-preview" style="flex-direction:column;gap:6px">
+        <div style="background:var(--card);border:1px solid var(--stone);border-radius:12px;padding:12px;font-size:12px;color:var(--fg3)">Card estándar · padding md</div>
+        <div style="background:var(--card);border:1px solid var(--accent);border-radius:12px;padding:12px;font-size:12px;color:var(--accent)">Card clickable · hover accent</div>
+      </div>
+    </div>
+    <!-- Modal -->
+    <div class="card comp-card card-highlight">
+      <div class="comp-header"><span class="comp-name">Modal</span><span class="badge badge-accent">Core</span></div>
+      <div class="comp-file">src/components/ui/modal.tsx</div>
+      <div class="comp-desc">Ventana flotante sobre un overlay con <code class="code-inline">backdrop-blur-sm</code>. Es la <strong>única excepción</strong> al principio "sin sombras" del design system: usa <code class="code-inline">shadow-modal</code> (0 4px 20px rgba(26,23,20,0.08)) para crear separación visual del contenido detrás. Se cierra con Escape, click en el overlay o botón X.</div>
+      <div class="comp-preview" style="justify-content:center">
+        <div style="background:var(--card);border:1px solid var(--stone);border-radius:12px;padding:14px 18px;box-shadow:0 4px 20px rgba(26,23,20,0.08);font-size:12px;color:var(--fg)">
+          <strong>Nuevo proyecto</strong>
+          <div style="font-size:11px;color:var(--fg3);margin-top:4px">Contenido del modal</div>
+        </div>
+      </div>
+    </div>
+    <!-- Toast -->
+    <div class="card comp-card card-highlight">
+      <div class="comp-header"><span class="comp-name">Toast</span><span class="badge badge-accent">Core</span></div>
+      <div class="comp-file">toast.tsx + ui-store.ts</div>
+      <div class="comp-desc">Sistema de notificaciones basado en Zustand. El <code class="code-inline">ToastProvider</code> está montado en el root layout y siempre disponible. El hook <code class="code-inline">useToast()</code> expone tres funciones: <code class="code-inline">success()</code>, <code class="code-inline">error()</code>, <code class="code-inline">info()</code>. Cada toast se auto-descarta a los 4 segundos. Se posicionan en <code class="code-inline">fixed right-4 top-4</code>.</div>
+      <div class="comp-preview" style="flex-direction:column;gap:4px">
+        <div style="background:var(--green-bg);color:var(--green);padding:6px 10px;border-radius:6px;font-size:11px;font-weight:600">✓ Proyecto creado</div>
+        <div style="background:var(--red-bg);color:var(--red);padding:6px 10px;border-radius:6px;font-size:11px;font-weight:600">✕ Error al guardar</div>
+        <div style="background:var(--accent-light);color:var(--accent);padding:6px 10px;border-radius:6px;font-size:11px;font-weight:600">ℹ Cambios guardados</div>
+      </div>
+    </div>
+    <!-- Badge -->
+    <div class="card comp-card card-highlight">
+      <div class="comp-header"><span class="comp-name">Badge</span><span class="badge badge-accent">Core</span></div>
+      <div class="comp-file">src/components/ui/badge.tsx</div>
+      <div class="comp-desc">Etiqueta de estado con 5 variantes cromáticas. Cada variante usa fondo semitransparente al 12% de opacity con texto del color correspondiente. <code class="code-inline">rounded-full</code> para apariencia de píldora. Se usa en StatusBadge, pills de stack tecnológico y etiquetas de categoría.</div>
+      <div class="comp-preview">
+        <span class="badge badge-accent">Terracotta</span>
+        <span class="badge badge-green">Green</span>
+        <span class="badge badge-blue">Blue</span>
+        <span class="badge badge-gold">Gold</span>
+        <span class="badge badge-gray">Gray</span>
+      </div>
+    </div>
+    <!-- Input -->
+    <div class="card comp-card card-highlight">
+      <div class="comp-header"><span class="comp-name">Input</span><span class="badge badge-accent">Core</span></div>
+      <div class="comp-file">src/components/ui/input.tsx</div>
+      <div class="comp-desc">Campo de texto con label accesible vinculado mediante <code class="code-inline">useId()</code> de React 19 (genera IDs únicos automáticos, no hay colisiones). Borde <code class="code-inline">border-border</code> en reposo, <code class="code-inline">border-accent</code> en focus, borde rojo en estado de error con mensaje visible debajo. <code class="code-inline">forwardRef</code> para integración con librerías de formularios.</div>
+      <div class="comp-preview" style="flex-direction:column;gap:4px;width:100%">
+        <div style="font-size:11px;font-weight:600;color:var(--fg3)">Email</div>
+        <div style="border:1px solid var(--stone);border-radius:6px;padding:7px 10px;font-size:12px;color:var(--fg4);background:var(--card);width:100%">tu@email.com</div>
+      </div>
+    </div>
+    <!-- Progress -->
+    <div class="card comp-card card-highlight">
+      <div class="comp-header"><span class="comp-name">Progress</span><span class="badge badge-gray">Data</span></div>
+      <div class="comp-file">src/components/ui/progress.tsx</div>
+      <div class="comp-desc">Barra de progreso horizontal. Track color arena, fill color terracota con transición CSS de 300ms. El valor se clampea automáticamente entre 0 y 100. Con <code class="code-inline">showLabel</code> muestra el porcentaje en JetBrains Mono. Se usa en las cards de proyecto para mostrar el % de tareas completadas.</div>
+      <div class="comp-preview" style="flex-direction:column;gap:8px;width:100%">
+        <div style="display:flex;align-items:center;gap:8px;width:100%">
+          <div style="flex:1;height:6px;background:var(--sand);border-radius:3px;overflow:hidden"><div style="width:67%;height:100%;background:var(--accent);border-radius:3px;transition:width 0.3s"></div></div>
+          <span class="mono" style="font-size:11px;color:var(--fg3)">67%</span>
+        </div>
+      </div>
+    </div>
+    <!-- Skeleton -->
+    <div class="card comp-card card-highlight">
+      <div class="comp-header"><span class="comp-name">Skeleton</span><span class="badge badge-gray">Loading</span></div>
+      <div class="comp-file">src/components/ui/skeleton.tsx</div>
+      <div class="comp-desc">Placeholder animado para estados de carga. Usa <code class="code-inline">animate-pulse</code> (pulsación suave de opacidad) con fondo arena. Las dimensiones se controlan externamente con <code class="code-inline">className</code>. Regla estricta del design system: nunca spinners genéricos — siempre Skeleton con la forma del contenido que va a aparecer.</div>
+      <div class="comp-preview" style="flex-direction:column;gap:6px;width:100%">
+        <div style="height:12px;width:75%;background:var(--sand);border-radius:4px;animation:pulse 1.5s ease-in-out infinite"></div>
+        <div style="height:12px;width:50%;background:var(--sand);border-radius:4px;animation:pulse 1.5s ease-in-out 0.1s infinite"></div>
+        <div style="height:32px;width:100%;background:var(--sand);border-radius:8px;animation:pulse 1.5s ease-in-out 0.2s infinite;margin-top:4px"></div>
+      </div>
+    </div>
+    <!-- ArkhosLogo -->
+    <div class="card comp-card card-highlight">
+      <div class="comp-header"><span class="comp-name">ArkhosLogo</span><span class="badge badge-gold">Brand</span></div>
+      <div class="comp-file">arkhos-logo.tsx + arkhos-icon.tsx</div>
+      <div class="comp-desc">El isotipo SVG de Arkhos es una "A" geométrica en terracota con 4 elementos: dos trazos diagonales (stroke, sin relleno), una barra horizontal principal a 2/3 de altura, una barra sutil a media altura (opacity 0.5), y un punto circular en el vértice (opacity 0.7). <code class="code-inline">ArkhosLogo</code> combina el icono con el wordmark en DM Serif Display. 3 tamaños (sm/md/lg).</div>
+      <div class="comp-preview" style="justify-content:center;gap:24px">
+        <div style="display:flex;align-items:center;gap:4px">
+          <svg width="20" height="20" viewBox="0 0 72 72" fill="none"><path d="M36 12L16 58" stroke="#C4704A" stroke-width="4" stroke-linecap="round"/><path d="M36 12L56 58" stroke="#C4704A" stroke-width="4" stroke-linecap="round"/><path d="M22 44H50" stroke="#C4704A" stroke-width="3.5" stroke-linecap="round"/><circle cx="36" cy="12" r="3" fill="#C4704A" opacity="0.7"/></svg>
+          <span style="font-family:var(--font-display);font-size:16px;color:var(--fg)">sm</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <svg width="28" height="28" viewBox="0 0 72 72" fill="none"><path d="M36 12L16 58" stroke="#C4704A" stroke-width="4" stroke-linecap="round"/><path d="M36 12L56 58" stroke="#C4704A" stroke-width="4" stroke-linecap="round"/><path d="M22 44H50" stroke="#C4704A" stroke-width="3.5" stroke-linecap="round"/><circle cx="36" cy="12" r="3" fill="#C4704A" opacity="0.7"/></svg>
+          <span style="font-family:var(--font-display);font-size:22px;color:var(--fg)">Arkhos</span>
+        </div>
+      </div>
+    </div>
+    <!-- Tooltip -->
+    <div class="card comp-card card-highlight">
+      <div class="comp-header"><span class="comp-name">Tooltip + Select + Textarea</span><span class="badge badge-gray">Utility</span></div>
+      <div class="comp-file">tooltip.tsx · select.tsx · textarea.tsx</div>
+      <div class="comp-desc"><strong>Tooltip:</strong> implementación CSS-only con <code class="code-inline">group/group-hover</code> de Tailwind (sin JavaScript). Fondo oscuro, texto claro, 2 posiciones. <strong>Select:</strong> misma estructura que Input con flecha ChevronDown superpuesta. <strong>Textarea:</strong> resize-y para redimensionado vertical. Ambos con forwardRef.</div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ══════════════════════════════════════════════════════════════
+     07 · MÓDULO PROYECTOS
+     ══════════════════════════════════════════════════════════════ -->
+<section class="section" id="projects">
+  <div class="section-eyebrow">Sección 07</div>
+  <h2>Módulo Proyectos</h2>
+  <p>El primer módulo funcional de Arkhos y el más complejo hasta la fecha. Gestión completa de proyectos con estructura jerárquica de 4 niveles, 18 componentes React dedicados, 27 funciones en el data layer y optimistic updates en todas las operaciones.</p>
+
+  <div class="explain">
+    <div class="explain-title">La estructura jerárquica</div>
+    <p>Cada <strong>proyecto</strong> contiene <strong>fases</strong> (como las etapas de un plan). Cada fase contiene <strong>tareas</strong> (las acciones concretas). Y cada tarea puede tener <strong>links externos</strong> (documentación, diseños, PRs) y <strong>apuntes en Markdown</strong> (notas detalladas). Esta jerarquía de 4 niveles permite organizar proyectos desde los más simples (una fase, dos tareas) hasta los más complejos (diez fases con docenas de tareas cada una).</p>
+  </div>
+
+  <h3 class="mt-24">Las dos vistas principales</h3>
+  <div class="card-grid card-grid-2 mt-8">
+    <div class="card">
+      <h4>Vista Lista</h4>
+      <p class="text-sm text-fg3">Grid responsive de cards. Cada card muestra: logo o icono del proyecto (seleccionable entre 76 opciones Lucide o imagen subida), nombre en DM Serif Display, badge de estado con color dinámico personalizado, pills del stack tecnológico, barra de progreso basada en tareas completadas, y contadores de fases/tareas.</p>
+      <p class="text-sm text-fg3">La búsqueda en tiempo real (debounce 300ms) busca en nombre, stack y tags, y resalta las coincidencias con <code class="code-inline">&lt;mark&gt;</code> en terracota al 20% de opacity.</p>
+    </div>
+    <div class="card">
+      <h4>Vista Kanban</h4>
+      <p class="text-sm text-fg3">Columnas generadas dinámicamente desde los estados personalizados del usuario. Si tienes estados "Idea", "Activo", "Pausado" y "Completado", el kanban mostrará 4 columnas con esos nombres y colores. Cada columna muestra las cards de proyectos en ese estado. Columnas vacías muestran un empty state específico ("No hay proyectos en estado Idea").</p>
+    </div>
+  </div>
+
+  <h3 class="mt-24">Vista de detalle</h3>
+  <p class="text-sm text-fg3">Cuando entras en un proyecto, tienes 3 visualizaciones para ver las fases y tareas:</p>
+  <div class="card-grid card-grid-3 mt-8">
+    <div class="card">
+      <h4>Progress</h4>
+      <p class="text-sm text-fg3">Fases expandibles con las tareas dentro. Checkbox para completar, selector de prioridad (none/low/medium/high), icono de apuntes (BookOpen, terracota si tiene contenido), y links como chips clickables.</p>
+    </div>
+    <div class="card">
+      <h4>Diagram</h4>
+      <p class="text-sm text-fg3">SVG horizontal con nodos de fase conectados por flechas. Cada nodo muestra el nombre de la fase y su estado con color. Ideal para ver el flujo del proyecto de izquierda a derecha.</p>
+    </div>
+    <div class="card">
+      <h4>Flow</h4>
+      <p class="text-sm text-fg3">SVG vertical con nodos de fase y sub-nodos de tarea. Más detallado que el Diagram porque incluye las tareas individuales dentro de cada fase.</p>
+    </div>
+  </div>
+
+  <h3 class="mt-24">Todas las funcionalidades</h3>
+  <div class="table-wrap mt-8">
+    <table>
+      <thead><tr><th>Funcionalidad</th><th>Cómo funciona</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Crear/Editar proyecto</strong></td><td>ProjectModal con IconPicker (76 iconos Lucide en 5 categorías con búsqueda), LogoUpload (drag & drop, JPG/PNG/WebP max 2MB, preview circular), TypeStatusSelect con botón "+" para crear nuevos tipos/estados inline</td></tr>
+        <tr><td><strong>Búsqueda</strong></td><td>Input en toolbar con debounce 300ms. Busca en nombre, stack[] y tags[]. El término se pasa a cada ProjectCard que resalta coincidencias con <code class="code-inline">&lt;mark&gt;</code></td></tr>
+        <tr><td><strong>Filtros por estado</strong></td><td>Pills en la toolbar. Multi-selección: puedes filtrar "Activo" + "Pausado" simultáneamente</td></tr>
+        <tr><td><strong>CRUD fases</strong></td><td>Crear escribiendo nombre + Enter (Escape cancela). Editar con doble click. Eliminar con ConfirmModal de seguridad</td></tr>
+        <tr><td><strong>CRUD tareas</strong></td><td>Checkbox para completar, campo de texto editable, selector de prioridad con colores (none=gris, low=verde, medium=gold, high=rojo)</td></tr>
+        <tr><td><strong>Apuntes Markdown</strong></td><td>Icono BookOpen por tarea (visible en hover). Textarea en JetBrains Mono con auto-guardado (debounce 800ms). Contador de caracteres</td></tr>
+        <tr><td><strong>Links externos</strong></td><td>Añadir URL con etiqueta opcional. Los links se muestran como chips clickables que abren en nueva pestaña</td></tr>
+        <tr><td><strong>Drag & drop</strong></td><td>@dnd-kit con GripVertical handle visible en hover. sort_order se actualiza en batch en Supabase. En móvil: botones ChevronUp/ChevronDown</td></tr>
+        <tr><td><strong>Exportación</strong></td><td>Modal con toggle Markdown/JSON. Preview del contenido. Botón copiar al portapapeles + botón descargar archivo</td></tr>
+        <tr><td><strong>Optimistic updates</strong></td><td>Toda mutación se aplica inmediatamente en UI. Si Supabase falla → revert automático + Toast.error()</td></tr>
+        <tr><td><strong>Activity Feed</strong></td><td>Feed de actividad reciente: "Creaste Arkhos hace 2 horas", "Editaste la fase Diseño hace 15 min". Timestamps con relativeTime()</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="mt-24">Los 18 componentes</h3>
+  <p class="text-sm text-fg3 mb-8">Cada componente tiene una responsabilidad única. Están en <code class="code-inline">src/components/modules/projects/</code>.</p>
+  <div style="display:flex;flex-wrap:wrap;gap:6px">
+    <span class="badge badge-accent">ProjectsView</span>
+    <span class="badge badge-accent">ProjectDetail</span>
+    <span class="badge badge-accent">ProjectCard</span>
+    <span class="badge badge-accent">ProjectModal</span>
+    <span class="badge badge-accent">ProjectsList</span>
+    <span class="badge badge-accent">ProjectsKanban</span>
+    <span class="badge badge-accent">ProjectsHeader</span>
+    <span class="badge badge-accent">ProjectsToolbar</span>
+    <span class="badge badge-accent">ProjectsEmpty</span>
+    <span class="badge badge-accent">ProjectsLoading</span>
+    <span class="badge badge-accent">ProjectIcon</span>
+    <span class="badge badge-accent">StatusBadge</span>
+    <span class="badge badge-accent">ExportModal</span>
+    <span class="badge badge-accent">IconPicker</span>
+    <span class="badge badge-accent">LogoUpload</span>
+    <span class="badge badge-accent">ConfirmModal</span>
+    <span class="badge badge-accent">TypeStatusSelect</span>
+    <span class="badge badge-accent">ActivityFeed</span>
+  </div>
+
+  <h3 class="mt-24">Data layer</h3>
+  <p class="text-sm text-fg3"><code class="code-inline">src/lib/supabase/projects.ts</code> contiene <strong>27 funciones tipadas</strong> que cubren todo el CRUD: crear/leer/editar/eliminar proyectos, fases, tareas, links, tipos y estados. Cada función recibe y devuelve tipos generados desde la base de datos (Row, Insert, Update), garantizando que los tipos TypeScript coincidan siempre con el schema real de PostgreSQL.</p>
+</section>
+
+<hr class="divider">
+<!-- ══════════════════════════════════════════════════════════════
+     08 · STACK COGNITIVO
+     ══════════════════════════════════════════════════════════════ -->
+<section class="section" id="cognitive">
+  <div class="section-eyebrow">Sección 08</div>
+  <h2>Stack Cognitivo</h2>
+  <p>Arkhos no solo es una aplicación — tiene una infraestructura completa de desarrollo asistido por IA que hace que construirla sea sistemático, reproducible y robusto. Esta infraestructura es tan sofisticada como la propia app.</p>
+
+  <div class="view-toggle" data-toggle="cog">
+    <button class="active" onclick="setView('cog','simple')">Vista simple</button>
+    <button onclick="setView('cog','tech')">Vista técnica</button>
+  </div>
+
+  <div class="simple-content" data-view="cog-simple">
+    <h3>¿Por qué existe?</h3>
+    <p>Desarrollar una aplicación con inteligencia artificial como asistente (Claude Code) presenta tres problemas serios que cualquier desarrollador reconocerá:</p>
+
+    <div class="card-grid card-grid-3 mt-16">
+      <div class="card" style="border-left:3px solid var(--accent)">
+        <h4 style="color:var(--accent)">Problema 1</h4>
+        <h3>Amnesia entre sesiones</h3>
+        <p class="text-sm text-fg3">Claude no recuerda lo que hicisteis ayer. Cada sesión empieza desde cero: "¿qué versiones uso? ¿qué convenciones tenemos? ¿dónde nos quedamos?". Los primeros 15-20 minutos de cada sesión se desperdician reconstruyendo contexto.</p>
+        <p class="text-sm" style="color:var(--accent);font-weight:700;margin:8px 0 0">Solución → Engram</p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--gold)">
+        <h4 style="color:var(--gold)">Problema 2</h4>
+        <h3>Sobrecarga de contexto</h3>
+        <p class="text-sm text-fg3">Cargar todo el código del proyecto en cada conversación consume tokens (el "espacio de memoria" de la IA), limita el espacio para trabajo real y satura el contexto con información irrelevante para la tarea concreta del momento.</p>
+        <p class="text-sm" style="color:var(--gold);font-weight:700;margin:8px 0 0">Solución → Skills + Context7</p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--green)">
+        <h4 style="color:var(--green)">Problema 3</h4>
+        <h3>Sin red de seguridad</h3>
+        <p class="text-sm text-fg3">Código sin tests ni integración continua puede romperse silenciosamente. Un cambio aparentemente inocente puede romper el build en producción sin que nadie lo detecte hasta que un usuario lo reporta.</p>
+        <p class="text-sm" style="color:var(--green);font-weight:700;margin:8px 0 0">Solución → CI/CD + Vitest</p>
+      </div>
+    </div>
+
+    <h3 class="mt-32">Las 6 herramientas del Stack Cognitivo</h3>
+
+    <div style="display:grid;gap:16px;margin-top:16px">
+      <div class="card">
+        <h3>🧠 Engram — Memoria persistente</h3>
+        <p class="text-sm text-fg3">Engram es una base de datos SQLite local que guarda "memorias" de desarrollo. Cada vez que se toma una decisión importante, se resuelve un bug, o se establece un patrón, se guarda una memoria con 4 campos: <strong>What</strong> (qué se hizo), <strong>Why</strong> (por qué), <strong>Where</strong> (archivos afectados), <strong>Learned</strong> (lecciones aprendidas).</p>
+        <p class="text-sm text-fg3">Al inicio de cada nueva sesión de trabajo, se ejecuta <code class="code-inline">mem_context project:"arkhos"</code> y Claude recibe todas las memorias del proyecto. 18 memorias guardadas que dan contexto preciso sin tener que releer todo el código.</p>
+        <p class="text-sm text-fg3"><strong>¿Por qué sobrevive a reinicios?</strong> Porque vive en disco (<code class="code-inline">~/.engram/engram.db</code>), no en la conversación. Cuando la IA "olvida" su contexto de conversación, las memorias persisten.</p>
+      </div>
+
+      <div class="card">
+        <h3>📋 CLAUDE.md — System prompt del proyecto</h3>
+        <p class="text-sm text-fg3">Un archivo de ~260 líneas que se carga automáticamente al inicio de cada sesión de Claude Code. Contiene todo lo que la IA necesita saber: stack con versiones exactas, estructura de carpetas, convenciones de código (commits, TypeScript, CSS, imports), paleta de colores, tipografías, inventario de componentes con sus props, puntos clave de seguridad, y protocolos de trabajo.</p>
+        <p class="text-sm text-fg3"><strong>¿Por qué no más largo?</strong> Cada línea consume tokens del contexto de la IA. 260 líneas es el punto óptimo entre "suficiente información" y "no desperdiciar espacio para trabajo real".</p>
+      </div>
+
+      <div class="card">
+        <h3>📚 Skills — Conocimiento bajo demanda</h3>
+        <p class="text-sm text-fg3">En lugar de cargar toda la documentación en cada conversación, los Skills son archivos Markdown especializados que se cargan solo cuando son necesarios. Arkhos tiene 2 skills: <strong>supabase/SKILL.md</strong> (se carga cuando se trabaja con la base de datos o autenticación) y <strong>ui/SKILL.md</strong> (se carga cuando se crean o modifican componentes visuales).</p>
+        <p class="text-sm text-fg3">Es como un médico que consulta un manual especializado solo cuando trata una enfermedad específica, en lugar de llevar encima toda la enciclopedia médica.</p>
+      </div>
+
+      <div class="card">
+        <h3>🔧 SDD — Spec-Driven Development (9 sub-agentes)</h3>
+        <p class="text-sm text-fg3">Para features grandes (más de 50 líneas de código), el desarrollo sigue un protocolo formal: documentar qué se va a hacer <em>antes</em> de escribir código. Claude Code actúa como orquestador y delega a 8 sub-agentes especializados, cada uno experto en una fase:</p>
+        <p class="text-sm text-fg3"><strong>Explorer</strong> (analiza el código existente) → <strong>Proposer</strong> (propone solución) → <strong>Spec Writer</strong> (documenta requisitos) → <strong>Designer</strong> (define arquitectura) → <strong>Task Planner</strong> (divide en tareas) → <strong>Applier</strong> (implementa) → <strong>Verifier</strong> (verifica) → <strong>Archiver</strong> (archiva el resultado).</p>
+        <p class="text-sm text-fg3">En puntos clave del pipeline hay "Human Gates" donde el trabajo se pausa y el humano debe aprobar antes de continuar. Esto evita que la IA avance en una dirección incorrecta.</p>
+      </div>
+
+      <div class="card">
+        <h3>📖 Context7 — Documentación actualizada de librerías</h3>
+        <p class="text-sm text-fg3">Context7 es un servidor MCP (Model Context Protocol) que provee documentación actualizada directamente en el contexto de Claude. Cuando la IA necesita saber cómo usar una API de @supabase/ssr v0.9.0, Context7 busca la documentación oficial actual en lugar de depender del conocimiento de entrenamiento (que puede estar desactualizado).</p>
+        <p class="text-sm text-fg3"><strong>¿Por qué importa?</strong> Las librerías cambian sus APIs constantemente. Sin Context7, Claude podría usar parámetros que existían en la versión anterior pero ya no funcionan.</p>
+      </div>
+
+      <div class="card">
+        <h3>🚀 CI/CD — Red de seguridad automática</h3>
+        <p class="text-sm text-fg3">Tres workflows de GitHub Actions que se ejecutan automáticamente en cada cambio de código. Más detalle en la siguiente sección.</p>
+      </div>
+    </div>
+
+    <h3 class="mt-32">El pipeline completo de desarrollo</h3>
+    <div class="pipeline">
+      <div class="pipeline-step"><div class="pipeline-icon">👤</div><div class="pipeline-name">Tú</div><div class="pipeline-desc">Defines la feature</div></div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step"><div class="pipeline-icon">⚡</div><div class="pipeline-name">Claude Code</div><div class="pipeline-desc">Carga CLAUDE.md + Skills + Engram</div></div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step"><div class="pipeline-icon">🔧</div><div class="pipeline-name">SDD Pipeline</div><div class="pipeline-desc">8 sub-agentes con Human Gates</div></div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step"><div class="pipeline-icon">📝</div><div class="pipeline-name">Git + PR</div><div class="pipeline-desc">Conventional Commits, branch protection</div></div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step"><div class="pipeline-icon">✅</div><div class="pipeline-name">CI/CD</div><div class="pipeline-desc">TS + lint + build + 34 tests + security</div></div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step"><div class="pipeline-icon">🌐</div><div class="pipeline-name">Deploy</div><div class="pipeline-desc">Vercel → arkhos.pelayodelafuente.es</div></div>
+    </div>
+  </div>
+
+  <div class="tech-content" data-view="cog-tech">
+    <h3>Engram — Detalle técnico</h3>
+    <p class="text-sm text-fg3">SQLite local en <code class="code-inline">~/.engram/engram.db</code>. Sobrevive a compactación de contexto.</p>
+    <div class="code-block"><span class="code-lang">engram</span><span class="cm">// Herramientas MCP disponibles:</span>
+<span class="fn">mem_save</span>     <span class="cm">← guardar memoria (tipo, proyecto, contenido)</span>
+<span class="fn">mem_context</span>  <span class="cm">← cargar contexto completo del proyecto</span>
+<span class="fn">mem_search</span>   <span class="cm">← buscar memorias por query</span>
+<span class="fn">mem_session_summary</span> <span class="cm">← guardar resumen al cerrar sesión</span>
+
+<span class="cm">// Formato estándar de una memoria:</span>
+<span class="kw">What:</span>    Implementé MFA TOTP con AAL1/AAL2
+<span class="kw">Why:</span>     Segundo factor de autenticación para seguridad
+<span class="kw">Where:</span>   proxy.ts, verify-mfa/page.tsx, settings/security/
+<span class="kw">Learned:</span> AAL check debe ir en middleware, no en layout
+
+<span class="cm">// Tipos: decision · bugfix · pattern · config · integration</span>
+<span class="cm">// 18 memorias guardadas actualmente</span></div>
+
+    <h3 class="mt-24">SDD — Pipeline con sub-agentes</h3>
+    <div class="code-block"><span class="code-lang">grafo</span><span class="cm">// Grafo de dependencias SDD:</span>
+<span class="fn">explore</span> → <span class="fn">propose</span> → <span class="fn">specs</span> ──→ <span class="fn">tasks</span> → <span class="fn">apply</span> → <span class="fn">verify</span> → <span class="fn">archive</span>
+                        ↑
+                     <span class="fn">design</span>
+
+<span class="cm">// Comandos del orquestador:</span>
+<span class="kw">/sdd-new</span> &lt;feature&gt;     <span class="cm">← iniciar (explore + propose)</span>
+<span class="kw">/sdd-ff</span> &lt;feature&gt;      <span class="cm">← fast-forward hasta tasks</span>
+<span class="kw">/sdd-apply</span> &lt;feature&gt;   <span class="cm">← implementar en batches</span>
+<span class="kw">/sdd-verify</span> &lt;feature&gt;  <span class="cm">← verificar implementación</span>
+<span class="kw">/sdd-archive</span> &lt;feature&gt; <span class="cm">← archivar cambio completado</span></div>
+    <div class="table-wrap mt-16">
+      <table>
+        <thead><tr><th>Sub-agente</th><th>Responsabilidad</th><th>Input</th><th>Output</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Explorer</strong></td><td>Analiza el codebase relevante</td><td>Feature request</td><td>Mapa del código afectado</td></tr>
+          <tr><td><strong>Proposer</strong></td><td>Propone solución</td><td>Exploración</td><td>Propuesta técnica</td></tr>
+          <tr><td><strong>Spec Writer</strong></td><td>Documenta requisitos</td><td>Propuesta</td><td>Especificación formal</td></tr>
+          <tr><td><strong>Designer</strong></td><td>Arquitectura técnica</td><td>Propuesta + specs</td><td>Decisiones de diseño</td></tr>
+          <tr><td><strong>Task Planner</strong></td><td>Divide en batches</td><td>Specs + design</td><td>Lista de tareas ejecutables</td></tr>
+          <tr><td><strong>Applier</strong></td><td>Implementa código</td><td>Tareas</td><td>Código implementado</td></tr>
+          <tr><td><strong>Verifier</strong></td><td>Verifica vs specs</td><td>Código + specs</td><td>Reporte de verificación</td></tr>
+          <tr><td><strong>Archiver</strong></td><td>Archiva artefactos</td><td>Todo lo anterior</td><td>Memoria en Engram</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="mt-24">CLAUDE.md — Contenido</h3>
+    <p class="text-sm text-fg3">~260 líneas organizadas en secciones: Stack (versiones exactas de package.json), estructura de carpetas, convenciones (Conventional Commits, TypeScript strict, CSS variables, imports con @/), paleta de colores, tipografías, inventario de componentes, seguridad (RLS, secretos, MFA), protocolos de trabajo (bugfix/feature/refactor), protocolo Engram, orquestador SDD, y protocolo de cierre de sesión obligatorio (6 pasos).</p>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ══════════════════════════════════════════════════════════════
+     09 · CI/CD Y TESTING
+     ══════════════════════════════════════════════════════════════ -->
+<section class="section" id="cicd">
+  <div class="section-eyebrow">Sección 09</div>
+  <h2>CI/CD y Testing</h2>
+  <p>Tres workflows de GitHub Actions forman una red de seguridad automática que garantiza que ningún código roto llega a producción. Cada push, cada PR, cada merge se verifica automáticamente.</p>
+
+  <div class="explain">
+    <div class="explain-title">¿Qué es CI/CD?</div>
+    <p><strong>CI (Continuous Integration)</strong> significa que cada vez que se envía código nuevo al repositorio, un servidor automáticamente lo compila, lo valida y ejecuta los tests. Si algo falla, el desarrollador recibe una notificación inmediata.</p>
+    <p><strong>CD (Continuous Deployment)</strong> significa que cuando el código pasa todas las verificaciones, se despliega automáticamente a producción. No hay un paso manual de "subir al servidor" — todo es automático.</p>
+  </div>
+
+  <div class="card-grid card-grid-3 mt-24">
+    <div class="card" style="border-top:3px solid var(--green)">
+      <div class="label">Workflow 1</div>
+      <h3>CI — ci.yml</h3>
+      <p class="text-sm text-fg3">Se ejecuta en cada push a <code class="code-inline">main</code> y en cada Pull Request. Ejecuta 4 checks en secuencia sobre Ubuntu con Node 20 y caché de pnpm:</p>
+      <div style="margin-top:12px;font-size:12px;line-height:2.2">
+        <div><span class="mono" style="color:var(--green)">✓</span> <code class="code-inline">tsc --noEmit</code> — TypeScript compila sin errores (0 tolerancia)</div>
+        <div><span class="mono" style="color:var(--green)">✓</span> <code class="code-inline">next lint</code> — ESLint con reglas Next.js</div>
+        <div><span class="mono" style="color:var(--green)">✓</span> <code class="code-inline">next build</code> — Build completo de producción</div>
+        <div><span class="mono" style="color:var(--green)">✓</span> <code class="code-inline">vitest run</code> — 34 tests en 3 suites</div>
+      </div>
+    </div>
+    <div class="card" style="border-top:3px solid var(--accent)">
+      <div class="label">Workflow 2</div>
+      <h3>Security — security-review.yml</h3>
+      <p class="text-sm text-fg3">Se ejecuta en cada PR (eventos: opened, synchronize, reopened). Usa <code class="code-inline">anthropics/claude-code-security-review@main</code>, una acción oficial de Anthropic.</p>
+      <p class="text-sm text-fg3">Claude Code analiza el diff completo del PR en busca de vulnerabilidades de seguridad y comenta directamente en el PR con sus hallazgos. Es como tener un auditor de seguridad revisando cada cambio automáticamente.</p>
+    </div>
+    <div class="card" style="border-top:3px solid var(--gold)">
+      <div class="label">Workflow 3</div>
+      <h3>Release — release.yml</h3>
+      <p class="text-sm text-fg3">Se ejecuta en cada push a <code class="code-inline">main</code>. Usa <code class="code-inline">googleapis/release-please-action@v4</code>.</p>
+      <p class="text-sm text-fg3">Analiza los Conventional Commits (feat:, fix:, chore:, etc.) y genera automáticamente un PR de release con el CHANGELOG actualizado y un tag semántico de versión. Al mergearlo, se crea la release oficial en GitHub.</p>
+    </div>
+  </div>
+
+  <h3 class="mt-32">Los 34 tests en detalle</h3>
+  <div class="table-wrap mt-8">
+    <table>
+      <thead><tr><th>Suite</th><th>Tests</th><th>Qué verifica exactamente</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">auth.test.ts</td><td class="mono" style="text-align:center">12</td><td>Protección de rutas: "si no hay sesión, redirige a /login". Lógica MFA: "si AAL1 y se necesita AAL2, redirige a /verify-mfa". Whitelist de rutas públicas.</td></tr>
+        <tr><td class="mono">validation.test.ts</td><td class="mono" style="text-align:center">14</td><td>Schemas Zod para proyectos, fases y tareas. Validación de campos requeridos, longitudes máximas, formatos de fecha, arrays de strings. Tests con inputs maliciosos.</td></tr>
+        <tr><td class="mono">utils.test.ts</td><td class="mono" style="text-align:center">8</td><td>formatCurrency: formatea correctamente EUR, USD, con decimales y sin ellos. relativeTime: "hace 2 horas", "hace 3 días", edge cases con fechas futuras.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ══════════════════════════════════════════════════════════════
+     10 · IDENTIDAD VISUAL
+     ══════════════════════════════════════════════════════════════ -->
+<section class="section" id="brand">
+  <div class="section-eyebrow">Sección 10</div>
+  <h2>Identidad visual</h2>
+  <p>Flat design sin sombras (salvo modales), bordes 1px sutiles, paleta cálida, tipografía con carácter. La identidad de Arkhos se siente editorial y premium — diseñada para que usar la app sea una experiencia visual agradable, no solo funcional.</p>
+
+  <h3>Paleta de colores</h3>
+  <p class="text-sm text-fg3 mb-8">Click en cualquier color para copiar el valor hexadecimal al portapapeles.</p>
+
+  <h4 class="mt-16">Fondos</h4>
+  <div class="swatch-grid">
+    <div class="swatch" onclick="copyColor('#FAF7F2','Cream')"><div class="swatch-color" style="background:#FAF7F2"></div><div class="swatch-info"><div class="swatch-name">Cream</div><div class="swatch-hex">#FAF7F2</div></div></div>
+    <div class="swatch" onclick="copyColor('#F0EBE1','Sand')"><div class="swatch-color" style="background:#F0EBE1"></div><div class="swatch-info"><div class="swatch-name">Sand</div><div class="swatch-hex">#F0EBE1</div></div></div>
+    <div class="swatch" onclick="copyColor('#E2D9CA','Stone')"><div class="swatch-color" style="background:#E2D9CA"></div><div class="swatch-info"><div class="swatch-name">Stone</div><div class="swatch-hex">#E2D9CA</div></div></div>
+    <div class="swatch" onclick="copyColor('#FFFFFF','Card')"><div class="swatch-color" style="background:#FFFFFF;border-bottom:1px solid #E2D9CA"></div><div class="swatch-info"><div class="swatch-name">Card</div><div class="swatch-hex">#FFFFFF</div></div></div>
+  </div>
+
+  <h4 class="mt-16">Textos</h4>
+  <div class="swatch-grid">
+    <div class="swatch" onclick="copyColor('#1A1714','Primary')"><div class="swatch-color" style="background:#1A1714"></div><div class="swatch-info"><div class="swatch-name">Primary</div><div class="swatch-hex">#1A1714</div></div></div>
+    <div class="swatch" onclick="copyColor('#3D3630','Secondary')"><div class="swatch-color" style="background:#3D3630"></div><div class="swatch-info"><div class="swatch-name">Secondary</div><div class="swatch-hex">#3D3630</div></div></div>
+    <div class="swatch" onclick="copyColor('#888780','Tertiary')"><div class="swatch-color" style="background:#888780"></div><div class="swatch-info"><div class="swatch-name">Tertiary</div><div class="swatch-hex">#888780</div></div></div>
+    <div class="swatch" onclick="copyColor('#C4704A','Accent')"><div class="swatch-color" style="background:#C4704A"></div><div class="swatch-info"><div class="swatch-name">Accent</div><div class="swatch-hex">#C4704A</div></div></div>
+  </div>
+
+  <h4 class="mt-16">Módulos</h4>
+  <div class="swatch-grid">
+    <div class="swatch" onclick="copyColor('#C4704A','Proyectos')"><div class="swatch-color" style="background:#C4704A"></div><div class="swatch-info"><div class="swatch-name">Proyectos</div><div class="swatch-hex">#C4704A</div></div></div>
+    <div class="swatch" onclick="copyColor('#9B7A4A','Mercados')"><div class="swatch-color" style="background:#9B7A4A"></div><div class="swatch-info"><div class="swatch-name">Mercados</div><div class="swatch-hex">#9B7A4A</div></div></div>
+    <div class="swatch" onclick="copyColor('#5B8C6A','Patrimonio')"><div class="swatch-color" style="background:#5B8C6A"></div><div class="swatch-info"><div class="swatch-name">Patrimonio</div><div class="swatch-hex">#5B8C6A</div></div></div>
+    <div class="swatch" onclick="copyColor('#4A7A9B','Gastos')"><div class="swatch-color" style="background:#4A7A9B"></div><div class="swatch-info"><div class="swatch-name">Gastos</div><div class="swatch-hex">#4A7A9B</div></div></div>
+  </div>
+  <div class="swatch-toast" id="swatchToast">Copiado</div>
+
+  <h3 class="mt-32">Tipografías</h3>
+  <div class="card-grid card-grid-3 mt-8">
+    <div class="card" style="text-align:center">
+      <div style="font-family:var(--font-display);font-size:32px;color:var(--fg);margin-bottom:10px;line-height:1">Arkhos</div>
+      <div class="label">Display</div>
+      <h3>DM Serif Display</h3>
+      <p class="text-sm text-fg3" style="max-width:none">Serif clásica para títulos grandes, nombres de módulo y elementos display. Peso regular. Aporta elegancia editorial y carácter sin ser ornamental.</p>
+    </div>
+    <div class="card" style="text-align:center">
+      <div style="font-family:var(--font-body);font-size:18px;font-weight:600;color:var(--fg);margin-bottom:10px">Plus Jakarta Sans</div>
+      <div class="label">Interfaz</div>
+      <h3>Plus Jakarta Sans</h3>
+      <p class="text-sm text-fg3" style="max-width:none">Sans-serif geométrica moderna para toda la interfaz: labels, body text, botones, navegación. Pesos 300-800. Altamente legible en pantalla.</p>
+    </div>
+    <div class="card" style="text-align:center">
+      <div style="font-family:var(--font-mono);font-size:18px;font-weight:500;color:var(--fg);margin-bottom:10px">1,234.56€</div>
+      <div class="label">Datos</div>
+      <h3>JetBrains Mono</h3>
+      <p class="text-sm text-fg3" style="max-width:none">Monoespaciada developer-friendly para precios, fechas, datos numéricos, código y cualquier información que necesite alineación perfecta de caracteres.</p>
+    </div>
+  </div>
+
+  <h3 class="mt-32">Principios de diseño</h3>
+  <div class="table-wrap mt-8">
+    <table>
+      <thead><tr><th>Principio</th><th>Implementación</th><th>Por qué</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Flat design</strong></td><td>Sin sombras en UI. Excepción: modales (<code class="code-inline">0 4px 20px rgba(26,23,20,0.08)</code>)</td><td>Interfaz limpia, sin jerarquía artificial de profundidad</td></tr>
+        <tr><td><strong>Sin degradados</strong></td><td>Todos los fondos son colores planos</td><td>Consistencia visual, menor complejidad de renderizado</td></tr>
+        <tr><td><strong>Bordes 1px</strong></td><td><code class="code-inline">1px solid #E2D9CA</code> universal</td><td>Separación sutil sin competir con el contenido</td></tr>
+        <tr><td><strong>Border radius</strong></td><td><code class="code-inline">rounded-xl</code> (12px) cards/modales, <code class="code-inline">rounded-md</code> (6px) inputs/botones</td><td>Dos niveles de redondeo para jerarquía visual</td></tr>
+        <tr><td><strong>Iconos Lucide</strong></td><td>Nunca emojis. Stroke 1.5-2px</td><td>Consistencia visual, peso visual uniforme</td></tr>
+        <tr><td><strong>Paleta cálida</strong></td><td>Crema y arena (no blanco/gris puro)</td><td>Sensación editorial premium, reduce fatiga visual</td></tr>
+        <tr><td><strong>Whitespace</strong></td><td>Cards min p-4, layouts generosos</td><td>El contenido respira, el ojo descansa</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ══════════════════════════════════════════════════════════════
+     11 · INFRAESTRUCTURA Y DEPLOY
+     ══════════════════════════════════════════════════════════════ -->
+<section class="section" id="deploy">
+  <div class="section-eyebrow">Sección 11</div>
+  <h2>Infraestructura y Deploy</h2>
+  <p>De un <code class="code-inline">git push</code> a producción en minutos. El pipeline está diseñado para que desplegar cambios sea tan seguro como escribir código.</p>
+
+  <div class="explain">
+    <div class="explain-title">El flujo completo en palabras simples</div>
+    <p>Cuando se hace un cambio en el código: <strong>1)</strong> se crea un Pull Request en GitHub. <strong>2)</strong> Automáticamente, 3 robots verifican el código: uno compila y testea, otro busca vulnerabilidades de seguridad, otro prepara la release. <strong>3)</strong> Si todo pasa, se mergea. <strong>4)</strong> Vercel detecta el cambio, recompila la app y la despliega en su red global de servidores. <strong>5)</strong> En ~60 segundos, <code class="code-inline">arkhos.pelayodelafuente.es</code> está actualizado.</p>
+  </div>
+
+  <div class="diagram-container mt-24">
+    <svg viewBox="0 0 720 200" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width:100%">
+      <defs><marker id="arr3" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#B0A48F"/></marker></defs>
+      <rect x="10" y="60" width="120" height="70" rx="8" fill="#FFF" stroke="#E2D9CA"/>
+      <text x="70" y="88" class="flow-text">Local</text>
+      <text x="70" y="106" class="flow-subtext">pnpm dev</text>
+      <text x="70" y="118" class="flow-subtext">git push</text>
+      <line x1="130" y1="95" x2="165" y2="95" class="flow-arrow" marker-end="url(#arr3)"/>
+      <rect x="165" y="60" width="155" height="70" rx="8" fill="#FFF" stroke="#5B8C6A" stroke-width="1.5"/>
+      <text x="242" y="84" class="flow-text" fill="#5B8C6A">GitHub Actions</text>
+      <text x="242" y="100" class="flow-subtext">tsc + lint + build</text>
+      <text x="242" y="112" class="flow-subtext">34 tests · security</text>
+      <line x1="320" y1="95" x2="350" y2="68" class="flow-arrow" marker-end="url(#arr3)"/>
+      <line x1="320" y1="95" x2="350" y2="122" class="flow-arrow" marker-end="url(#arr3)"/>
+      <rect x="350" y="40" width="65" height="32" rx="6" fill="#5B8C6A"/>
+      <text x="382" y="60" class="flow-text" fill="#FFF" font-size="10">PASS ✓</text>
+      <rect x="350" y="115" width="65" height="32" rx="6" fill="#DC2626"/>
+      <text x="382" y="135" class="flow-text" fill="#FFF" font-size="10">FAIL ✕</text>
+      <line x1="415" y1="56" x2="455" y2="56" class="flow-arrow" marker-end="url(#arr3)"/>
+      <rect x="455" y="30" width="120" height="55" rx="8" fill="#FFF" stroke="#1A1714" stroke-width="1.5"/>
+      <text x="515" y="52" class="flow-text">Vercel</text>
+      <text x="515" y="68" class="flow-subtext">build + deploy</text>
+      <line x1="575" y1="57" x2="610" y2="57" class="flow-arrow" marker-end="url(#arr3)"/>
+      <rect x="610" y="30" width="100" height="55" rx="8" fill="#C4704A"/>
+      <text x="660" y="52" class="flow-text" fill="#FFF" font-size="10">PRODUCCIÓN</text>
+      <text x="660" y="68" class="flow-subtext" fill="rgba(255,255,255,0.7)">Edge Network</text>
+    </svg>
+    <p class="diagram-caption">Pipeline: local → GitHub Actions → Vercel → producción global</p>
+  </div>
+
+  <div class="card-grid card-grid-2 mt-24">
+    <div class="card">
+      <h3>Vercel — Hosting y CDN</h3>
+      <p class="text-sm text-fg3">Vercel es la plataforma de hosting conectada directamente a GitHub. Cada merge a main trigger un build automático de Next.js en los servidores de Vercel. El resultado se distribuye en su Edge Network global: servidores en decenas de países que sirven la app desde el nodo más cercano al usuario.</p>
+      <p class="text-sm text-fg3"><strong>Preview deploys:</strong> cada PR genera automáticamente un deploy de preview en una URL única. Esto permite revisar cambios visualmente antes de mergear, sin afectar producción.</p>
+    </div>
+    <div class="card">
+      <h3>Branch protection</h3>
+      <p class="text-sm text-fg3">La rama <code class="code-inline">main</code> está protegida: nadie puede hacer push directo. Todo cambio debe pasar por un Pull Request y los CI checks deben estar en verde antes de poder mergear.</p>
+      <p class="text-sm text-fg3"><strong>¿Por qué, si solo hay un desarrollador?</strong> Protege contra commits accidentales que rompen el build. Garantiza que todo código pasa TypeScript + tests antes de llegar a producción. Y establece el hábito de trabajo disciplinado.</p>
+    </div>
+    <div class="card">
+      <h3>Dominio y SSL</h3>
+      <p class="text-sm text-fg3"><code class="code-inline">arkhos.pelayodelafuente.es</code> con registro CNAME en Hostinger DNS apuntando a Vercel. El certificado SSL (HTTPS) es automático via Let's Encrypt, renovado por Vercel sin intervención manual.</p>
+    </div>
+    <div class="card">
+      <h3>Variables de entorno (12)</h3>
+      <p class="text-sm text-fg3">Configuradas exclusivamente en Vercel Dashboard. Las <code class="code-inline">NEXT_PUBLIC_*</code> (Supabase URL, anon key, site URL) se exponen al browser. Los secretos (service role key, API keys de Anthropic, CoinGecko, Alpha Vantage, FRED, Upstash, Sentry) solo existen en el servidor.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+<!-- ══════════════════════════════════════════════════════════════
+     12 · HOJA DE RUTA
+     ══════════════════════════════════════════════════════════════ -->
+<section class="section" id="roadmap">
+  <div class="section-eyebrow">Sección 12</div>
+  <h2>Hoja de ruta</h2>
+  <p>Lo que se ha construido, lo que viene, y la visión a largo plazo. Arkhos es una plataforma que crece de forma modular — cada fase añade capacidades nuevas sin romper lo existente.</p>
+
+  <h3>Timeline del proyecto</h3>
+  <div class="timeline mt-16">
+    <div class="tl-item">
+      <div class="tl-dot done"></div>
+      <div class="tl-date">13 marzo 2026</div>
+      <div class="tl-title">Fase 0 — Fundación</div>
+      <div class="tl-desc">Scaffold Next.js 16 con App Router, conexión con Supabase (auth + PostgreSQL), deploy en Vercel con subdominio personalizado. La base sobre la que todo se construye: autenticación email/password, middleware de protección de rutas, estructura de carpetas, configuración de TypeScript strict, Tailwind CSS v4 con variables del brand.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot done"></div>
+      <div class="tl-date">13–14 marzo 2026</div>
+      <div class="tl-title">Fase 1 — Shell de la aplicación</div>
+      <div class="tl-desc">La estructura visual compartida por todos los módulos: Sidebar responsiva (colapsable en móvil), topbar con nombre de usuario, bottom nav para móvil, dashboard home con cards de los 4 módulos. Component library completa: 13 componentes UI (Button, Card, Input, Select, Textarea, Badge, Modal, Toast, Skeleton, Tooltip, Progress, ArkhosIcon, ArkhosLogo). Zustand ui-store para estado global de la interfaz.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot done"></div>
+      <div class="tl-date">14–15 marzo 2026</div>
+      <div class="tl-title">Fase 2 — Módulo Proyectos</div>
+      <div class="tl-desc">El primer módulo completo: 3 SQL migrations, 8 tablas con RLS, data layer con 27 funciones tipadas, 18 componentes React dedicados, Zustand projects-store con optimistic updates. Vistas lista y kanban, detalle con 3 visualizaciones (Progress, Diagram, Flow), CRUD completo de fases y tareas, drag & drop con @dnd-kit, búsqueda con debounce y highlight, filtros por estado, apuntes Markdown con auto-guardado, links externos, exportación Markdown/JSON, MFA TOTP con AAL1/AAL2.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot done"></div>
+      <div class="tl-date">14 marzo 2026</div>
+      <div class="tl-title">Stack Cognitivo + Auditoría</div>
+      <div class="tl-desc">Engram (18 memorias en SQLite), CI/CD (3 workflows GitHub Actions: ci.yml, security-review.yml, release.yml), Vitest (34 tests en 3 suites), Skills bajo demanda (supabase + ui), Context7 MCP, SDD con 8 sub-agentes, CLAUDE.md (~260 líneas). Auditoría completa: 73 archivos fuente, 0 errores TypeScript, 0 TODOs pendientes, 0 secretos en código.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot active animate-pulse-dot"></div>
+      <div class="tl-date">Próximo</div>
+      <div class="tl-title">Fase 3 — Módulo Mercados</div>
+      <div class="tl-desc">
+        Dashboard de precios en tiempo real con múltiples fuentes de datos:
+        <strong>CoinGecko</strong> para criptomonedas (Bitcoin, Ethereum, altcoins),
+        <strong>Alpha Vantage</strong> para acciones, ETFs y forex,
+        <strong>ExchangeRate-API</strong> para tipos de cambio entre divisas,
+        <strong>FRED API</strong> para indicadores macroeconómicos (tipos de interés del BCE/Fed, inflación).
+        Gráficas financieras con TradingView Lightweight Charts.
+        Watchlist personalizable con alertas configurables (above/below/% change).
+        <strong>Análisis IA on-demand</strong> con Anthropic Claude: tendencias, correlaciones, resúmenes en lenguaje natural.
+        Cache de APIs con Upstash Redis para evitar rate limits.
+        API routes dedicadas para procesamiento de datos.
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot future"></div>
+      <div class="tl-date">Planificado</div>
+      <div class="tl-title">Fase 4 — Módulo Patrimonio</div>
+      <div class="tl-desc">Cuentas (brokers, exchanges, bancos) con CRUD completo. Activos por cuenta (stocks, ETFs, crypto, fondos, bonos). Registro de transacciones (compras, ventas, dividendos, fees). Dashboard: valor total, evolución temporal, distribución por tipo de activo, top gainers/losers. Conexión con módulo Mercados para precios en vivo. Cálculo de P&L (beneficio y pérdida), TWR (Time-Weighted Return) y MWR (Money-Weighted Return).</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot future"></div>
+      <div class="tl-date">Planificado</div>
+      <div class="tl-title">Fase 5 — Módulo Gastos</div>
+      <div class="tl-desc">Categorías personalizables (nombre, icono, color). Registro rápido de gastos. Gastos recurrentes (suscripciones mensuales, facturas). Dashboard: gasto mensual por categoría, evolución mensual, comparativa mes actual vs anterior. Presupuestos mensuales por categoría (opcional). Exportación de datos en múltiples formatos.</div>
+    </div>
+  </div>
+
+  <h3 class="mt-40">Infraestructura pendiente</h3>
+  <div class="card-grid card-grid-2 mt-8">
+    <div class="card">
+      <h4>Sentry — Error tracking</h4>
+      <p class="text-sm text-fg3">Monitorización de errores en producción en tiempo real. Cuando algo falla para un usuario, Sentry captura el error con contexto completo (stack trace, navegador, estado de la app) y notifica inmediatamente. Aplazado desde Fase 0.</p>
+    </div>
+    <div class="card">
+      <h4>PWA Service Worker</h4>
+      <p class="text-sm text-fg3">Funcionamiento offline básico. La app ya tiene manifest.json y los iconos PWA configurados. Falta el Service Worker que cachee los assets estáticos y permita abrir la app sin conexión. Aplazado desde Fase 0.</p>
+    </div>
+    <div class="card">
+      <h4>Framer Motion</h4>
+      <p class="text-sm text-fg3">Transiciones fluidas entre módulos y micro-animaciones en la interfaz. Layout animations para cuando las cards cambian de posición (filtros, drag & drop). Aplazado desde Fase 1.</p>
+    </div>
+    <div class="card">
+      <h4>Web Push API</h4>
+      <p class="text-sm text-fg3">Notificaciones push para alertas del módulo Mercados. Cuando Bitcoin supere $100K o cuando tus acciones caigan un 5%, recibirás una notificación aunque no tengas la app abierta.</p>
+    </div>
+  </div>
+
+  <h3 class="mt-40">Visión a largo plazo</h3>
+  <p>Arkhos como <strong style="color:var(--fg)">plataforma modular personal</strong> donde cada módulo resuelve un área concreta de la vida (trabajo, inversiones, patrimonio, gastos) y eventualmente los módulos se conectan entre sí para crear una visión unificada.</p>
+
+  <div class="explain green mt-16">
+    <div class="explain-title">Ejemplo de conexión futura</div>
+    <p>El <strong>Módulo Patrimonio</strong> muestra el valor de tus inversiones. Para calcular el valor actual, consulta precios en tiempo real del <strong>Módulo Mercados</strong>. El <strong>dashboard home</strong> muestra un resumen unificado: proyectos activos del Módulo Proyectos + valor del portfolio del Módulo Patrimonio + gastos del mes del Módulo Gastos + alertas de mercado del Módulo Mercados. Todo en una sola pantalla.</p>
+    <p>La arquitectura ya está diseñada para este escenario: Zustand stores independientes por módulo (se pueden conectar sin acoplar), RLS que garantiza que cada módulo solo accede a los datos de su usuario, componentes UI reutilizables en todos los módulos, y un stack cognitivo que hace que añadir nuevos módulos sea un proceso sistemático y predecible.</p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════
+     FOOTER
+     ══════════════════════════════════════════════════════════════ -->
+<footer class="doc-footer">
+  <div class="doc-footer-logo">
+    <svg width="20" height="20" viewBox="0 0 72 72" fill="none" style="vertical-align:-3px;margin-right:6px">
+      <path d="M36 12L16 58" stroke="#C4704A" stroke-width="4" stroke-linecap="round"/>
+      <path d="M36 12L56 58" stroke="#C4704A" stroke-width="4" stroke-linecap="round"/>
+      <path d="M22 44H50" stroke="#C4704A" stroke-width="3.5" stroke-linecap="round"/>
+      <circle cx="36" cy="12" r="3" fill="#C4704A" opacity="0.7"/>
+    </svg>
+    Arkhos
+  </div>
+  <div class="doc-footer-meta">
+    Documentación generada el 14 de marzo de 2026
+    <span style="margin:0 8px">·</span>
+    Por Pelayo de la Fuente
+    <span style="margin:0 8px">·</span>
+    <a href="https://arkhos.pelayodelafuente.es">arkhos.pelayodelafuente.es</a>
+    <br>
+    <span class="mono" style="font-size:11px">13 páginas · 34 tests · 73 archivos · 8 tablas RLS · 0 errores TypeScript · 0 deuda técnica</span>
+  </div>
+</footer>
+
+</div>
+</main>
+
+<!-- ══════════════════════════════════════════════════════════════
+     JAVASCRIPT
+     ══════════════════════════════════════════════════════════════ -->
+<script>
+/* ── Sidebar toggle (mobile) ── */
+function toggleSidebar() {
+  const s = document.getElementById('sidebar');
+  const o = document.querySelector('.mobile-overlay');
+  const open = s.classList.contains('open');
+  s.classList.toggle('open');
+  o.classList.toggle('show');
+  document.body.style.overflow = open ? '' : 'hidden';
+}
+
+/* ── Scroll spy ── */
+const sections = [];
+const navLinks = [];
+let ticking = false;
+
+function initScrollSpy() {
+  document.querySelectorAll('.section[id]').forEach(s => sections.push({ id: s.id, el: s }));
+  document.querySelectorAll('.nav-link[href]').forEach(l => navLinks.push(l));
+}
+
+function updateScrollSpy() {
+  const y = window.scrollY + 120;
+  let id = sections[0]?.id;
+  for (const s of sections) { if (s.el.offsetTop <= y) id = s.id; }
+  navLinks.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + id));
+}
+
+/* ── Progress bar ── */
+function updateProgress() {
+  const t = document.documentElement.scrollTop;
+  const h = document.documentElement.scrollHeight - window.innerHeight;
+  document.getElementById('progressBar').style.width = (h > 0 ? (t / h) * 100 : 0) + '%';
+}
+
+/* ── Intersection Observer (fade in sections) ── */
+function initObserver() {
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.06, rootMargin: '0px 0px -30px 0px' });
+  document.querySelectorAll('.section').forEach(s => obs.observe(s));
+}
+
+/* ── View toggle (simple / tech) ── */
+function setView(group, mode) {
+  const tog = document.querySelector(`[data-toggle="${group}"]`);
+  if (!tog) return;
+  tog.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+  const simple = document.querySelector(`[data-view="${group}-simple"]`);
+  const tech = document.querySelector(`[data-view="${group}-tech"]`);
+  if (mode === 'tech') {
+    tog.querySelectorAll('button')[1].classList.add('active');
+    if (simple) { simple.classList.add('hide'); }
+    if (tech) { tech.classList.add('show'); }
+  } else {
+    tog.querySelectorAll('button')[0].classList.add('active');
+    if (simple) { simple.classList.remove('hide'); }
+    if (tech) { tech.classList.remove('show'); }
+  }
+}
+
+/* ── Color copy ── */
+function copyColor(hex, name) {
+  navigator.clipboard.writeText(hex).then(() => {
+    const t = document.getElementById('swatchToast');
+    t.textContent = hex + ' copiado';
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 1800);
+  }).catch(() => {});
+}
+
+/* ── Nav links close sidebar on mobile ── */
+function initNavLinks() {
+  document.querySelectorAll('.nav-link[href]').forEach(l => {
+    l.addEventListener('click', () => {
+      if (window.innerWidth <= 1024) toggleSidebar();
+    });
+  });
+}
+
+/* ── Init ── */
+document.addEventListener('DOMContentLoaded', () => {
+  initScrollSpy();
+  initObserver();
+  initNavLinks();
+  updateScrollSpy();
+  updateProgress();
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(() => { updateScrollSpy(); updateProgress(); ticking = false; });
+      ticking = true;
+    }
+  }, { passive: true });
+});
+</script>
+</body>
+</html>
