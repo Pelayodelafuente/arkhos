@@ -229,11 +229,29 @@ Si se pierde estado (compactación): `mem_search(query: "{topic_key}", project: 
 
 ---
 
-## Protocolo de cierre de sesión (obligatorio)
+## Protocolo de cierre de sesión (OBLIGATORIO — no opcional)
 
-1. `mem_session_summary` en Engram
-2. Actualizar `docs/CHANGELOG.md`
-3. Actualizar `docs/STATUS.md` si cambió alguna tarea
-4. `tsc --noEmit` limpio
-5. `next build` limpio
-6. Commit: `feat:` / `fix:` / `docs: close phase X`
+Al terminar cualquier sesión de trabajo, en este orden exacto:
+
+1. `tsc --noEmit` → debe pasar con 0 errores
+2. `next build` → debe compilar sin errores
+3. `mem_session_summary` en Engram con:
+   - goal: qué se intentaba conseguir
+   - discoveries: qué se descubrió durante el trabajo
+   - accomplished: qué se completó realmente
+   - files: lista de archivos modificados
+4. Actualizar `docs/CHANGELOG.md`:
+   - Si es cierre de tarea: añadir bullet bajo la fase activa
+   - Si es cierre de fase: añadir sección de cierre completa
+5. Actualizar `docs/STATUS.md`:
+   - Marcar como ✅ las tareas completadas
+   - Actualizar el porcentaje de la fase activa
+6. Commit con Conventional Commits:
+   - `feat:` para features nuevas
+   - `fix:` para correcciones
+   - `docs:` para documentación
+   - `chore:` para infraestructura
+
+Si el contexto se compacta durante la sesión:
+→ Llama `mem_context` inmediatamente antes de continuar
+→ No continúes sin recuperar el contexto
