@@ -13,6 +13,8 @@ import {
   createTask as createTaskApi,
   updateTask as updateTaskApi,
   deleteTask as deleteTaskApi,
+  reorderPhases as reorderPhasesApi,
+  reorderTasks as reorderTasksApi,
 } from '@/lib/supabase/projects';
 import type {
   Project,
@@ -23,7 +25,6 @@ import type {
   UpdatePhaseInput,
   CreateTaskInput,
   UpdateTaskInput,
-  ProjectStatus,
   ViewMode,
   ProjectFilters,
 } from '@/types/projects';
@@ -55,6 +56,9 @@ interface ProjectsActions {
   editTask: (taskId: string, input: UpdateTaskInput) => Promise<void>;
   removeTask: (taskId: string) => Promise<void>;
 
+  reorderPhasesAction: (orderedIds: string[]) => Promise<void>;
+  reorderTasksAction: (phaseId: string, orderedIds: string[]) => Promise<void>;
+
   setViewMode: (mode: ViewMode) => void;
   setFilters: (filters: Partial<ProjectFilters>) => void;
   clearActiveProject: () => void;
@@ -77,7 +81,7 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
   loading: false,
   error: null,
   viewMode: 'list',
-  filters: { status: 'all', tag: null, search: '' },
+  filters: { status: 'all', search: '' },
 
   // ── Projects ────────────────────────
 
@@ -319,6 +323,62 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
     }
   },
 
+  // ── Reorder ────────────────────────
+
+  reorderPhasesAction: async (orderedIds) => {
+    const active = get().activeProject;
+    if (!active) return;
+
+    const prevPhases = active.phases;
+    const reordered = orderedIds
+      .map((id) => active.phases.find((p) => p.id === id))
+      .filter(Boolean) as typeof active.phases;
+    const withOrder = reordered.map((p, i) => ({ ...p, sort_order: i }));
+
+    set({ activeProject: { ...active, phases: withOrder } });
+
+    try {
+      const client = createClient();
+      await reorderPhasesApi(client, withOrder.map((p, i) => ({ id: p.id, sort_order: i })));
+    } catch (e) {
+      set({ activeProject: { ...active, phases: prevPhases } });
+      const msg = e instanceof Error ? e.message : 'Error al reordenar fases';
+      toast(msg, 'error');
+    }
+  },
+
+  reorderTasksAction: async (phaseId, orderedIds) => {
+    const active = get().activeProject;
+    if (!active) return;
+
+    const prevPhases = active.phases;
+    const phase = active.phases.find((p) => p.id === phaseId);
+    if (!phase) return;
+
+    const reordered = orderedIds
+      .map((id) => phase.tasks.find((t) => t.id === id))
+      .filter(Boolean) as typeof phase.tasks;
+    const withOrder = reordered.map((t, i) => ({ ...t, sort_order: i }));
+
+    set({
+      activeProject: {
+        ...active,
+        phases: active.phases.map((p) =>
+          p.id === phaseId ? { ...p, tasks: withOrder } : p
+        ),
+      },
+    });
+
+    try {
+      const client = createClient();
+      await reorderTasksApi(client, withOrder.map((t, i) => ({ id: t.id, sort_order: i })));
+    } catch (e) {
+      set({ activeProject: { ...active, phases: prevPhases } });
+      const msg = e instanceof Error ? e.message : 'Error al reordenar tareas';
+      toast(msg, 'error');
+    }
+  },
+
   // ── UI state ────────────────────────
 
   setViewMode: (mode) => set({ viewMode: mode }),
@@ -337,25 +397,22 @@ export function useFilteredProjects(): ProjectListItem[] {
 
   return projects.filter((p) => {
     if (filters.status !== 'all' && p.status !== filters.status) return false;
-    if (filters.tag && !p.tags.includes(filters.tag)) return false;
     if (filters.search) {
       const q = filters.search.toLowerCase();
       return (
         p.name.toLowerCase().includes(q) ||
-        p.stack.some((s) => s.toLowerCase().includes(q)) ||
-        p.tags.some((t) => t.toLowerCase().includes(q))
+        p.stack.some((s) => s.toLowerCase().includes(q))
       );
     }
     return true;
   });
 }
 
-export function useProjectsByStatus(): Record<ProjectStatus, ProjectListItem[]> {
+export function useProjectsByStatus(statuses: string[]): Record<string, ProjectListItem[]> {
   const filtered = useFilteredProjects();
-  return {
-    idea: filtered.filter((p) => p.status === 'idea'),
-    active: filtered.filter((p) => p.status === 'active'),
-    paused: filtered.filter((p) => p.status === 'paused'),
-    done: filtered.filter((p) => p.status === 'done'),
-  };
+  const result: Record<string, ProjectListItem[]> = {};
+  for (const status of statuses) {
+    result[status] = filtered.filter((p) => p.status === status);
+  }
+  return result;
 }

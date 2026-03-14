@@ -3,6 +3,10 @@
 import { useEffect, useState } from "react";
 import { useProjectsStore } from "@/stores/projects-store";
 import { useUIStore } from "@/stores/ui-store";
+import { createClient } from "@/lib/supabase/client";
+import { getProjectTypes, getProjectStatuses, seedUserDefaults } from "@/lib/supabase/projects";
+import { DEFAULT_PROJECT_TYPES, DEFAULT_PROJECT_STATUSES } from "@/types/projects";
+import type { ProjectTypeRecord, ProjectStatusRecord } from "@/types/projects";
 import { ProjectsHeader } from "./projects-header";
 import { ProjectsToolbar } from "./projects-toolbar";
 import { ProjectsList } from "./projects-list";
@@ -23,9 +27,31 @@ export function ProjectsView({ userId }: ProjectsViewProps) {
   const openModal = useUIStore((s) => s.openModal);
 
   const [initialLoad, setInitialLoad] = useState(true);
+  const [projectTypes, setProjectTypes] = useState<ProjectTypeRecord[]>([]);
+  const [projectStatuses, setProjectStatuses] = useState<ProjectStatusRecord[]>([]);
 
   useEffect(() => {
-    fetchProjects(userId).then(() => setInitialLoad(false));
+    async function load() {
+      const client = createClient();
+
+      // Seed defaults if first time
+      await seedUserDefaults(client, userId, {
+        types: DEFAULT_PROJECT_TYPES,
+        statuses: DEFAULT_PROJECT_STATUSES,
+      });
+
+      const [types, statuses] = await Promise.all([
+        getProjectTypes(client, userId),
+        getProjectStatuses(client, userId),
+      ]);
+
+      setProjectTypes(types);
+      setProjectStatuses(statuses);
+      await fetchProjects(userId);
+      setInitialLoad(false);
+    }
+
+    load();
   }, [userId, fetchProjects]);
 
   return (
@@ -34,18 +60,24 @@ export function ProjectsView({ userId }: ProjectsViewProps) {
         projects={projects}
         onNewProject={() => openModal("new-project")}
       />
-      <ProjectsToolbar />
+      <ProjectsToolbar statuses={projectStatuses} />
 
       {initialLoad && loading ? (
         <ProjectsLoading />
       ) : viewMode === "kanban" ? (
-        <ProjectsKanban />
+        <ProjectsKanban statuses={projectStatuses} />
       ) : (
         <ProjectsList />
       )}
 
       <ActivityFeed userId={userId} />
-      <ProjectModal userId={userId} />
+      <ProjectModal
+        userId={userId}
+        projectTypes={projectTypes}
+        projectStatuses={projectStatuses}
+        onTypesChange={setProjectTypes}
+        onStatusesChange={setProjectStatuses}
+      />
     </div>
   );
 }

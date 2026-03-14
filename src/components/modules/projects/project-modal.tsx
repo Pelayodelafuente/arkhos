@@ -1,80 +1,106 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Modal, Button, Input, Select } from "@/components/ui";
+import { Modal, Button, Input } from "@/components/ui";
 import { useProjectsStore } from "@/stores/projects-store";
-import { useUIStore } from "@/stores/ui-store";
+import { useUIStore, useToast } from "@/stores/ui-store";
+import { createClient } from "@/lib/supabase/client";
+import {
+  uploadProjectLogo,
+  deleteProjectLogo,
+  createProjectType,
+  createProjectStatus,
+} from "@/lib/supabase/projects";
 import { ProjectIcon } from "./project-icon";
 import { StatusBadge } from "./status-badge";
-import {
-  PROJECT_TYPES,
-  PROJECT_STATUSES,
-  PROJECT_TYPE_ICONS,
-  PROJECT_STATUS_CONFIG,
-  type ProjectType,
-  type ProjectStatus,
-  type CreateProjectInput,
-  type Project,
+import { IconPicker } from "./icon-picker";
+import { LogoUpload } from "./logo-upload";
+import { TypeStatusSelect } from "./type-status-manager";
+import type {
+  CreateProjectInput,
+  Project,
+  ProjectTypeRecord,
+  ProjectStatusRecord,
 } from "@/types/projects";
-
-const AVAILABLE_ICONS = [
-  "Globe", "Terminal", "Zap", "Smartphone", "Code", "Pen", "Box",
-] as const;
 
 interface ProjectModalProps {
   userId: string;
   editProject?: Project | null;
+  projectTypes: ProjectTypeRecord[];
+  projectStatuses: ProjectStatusRecord[];
+  onTypesChange?: (types: ProjectTypeRecord[]) => void;
+  onStatusesChange?: (statuses: ProjectStatusRecord[]) => void;
 }
 
-export function ProjectModal({ userId, editProject }: ProjectModalProps) {
+export function ProjectModal({
+  userId,
+  editProject,
+  projectTypes,
+  projectStatuses,
+  onTypesChange,
+  onStatusesChange,
+}: ProjectModalProps) {
   const activeModal = useUIStore((s) => s.activeModal);
   const closeModal = useUIStore((s) => s.closeModal);
   const addProject = useProjectsStore((s) => s.addProject);
   const editProjectAction = useProjectsStore((s) => s.editProject);
+  const toast = useToast();
 
   const isOpen = activeModal === "new-project" || activeModal === "edit-project";
   const isEditing = activeModal === "edit-project" && !!editProject;
 
+  const defaultStatus = projectStatuses.find((s) => s.is_default)?.name ?? projectStatuses[0]?.name ?? "Idea";
+  const defaultType = projectTypes[0]?.name ?? "Web";
+
   const [name, setName] = useState("");
   const [icon, setIcon] = useState("Globe");
-  const [type, setType] = useState<ProjectType>("Web");
-  const [status, setStatus] = useState<ProjectStatus>("idea");
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [type, setType] = useState(defaultType);
+  const [status, setStatus] = useState(defaultStatus);
   const [stackInput, setStackInput] = useState("");
   const [stack, setStack] = useState<string[]>([]);
-  const [tagsInput, setTagsInput] = useState("");
-  const [tags, setTags] = useState<string[]>([]);
-  const [startDate, setStartDate] = useState("");
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Local copies of types/statuses (updated when user creates new ones inline)
+  const [localTypes, setLocalTypes] = useState(projectTypes);
+  const [localStatuses, setLocalStatuses] = useState(projectStatuses);
+
+  useEffect(() => {
+    setLocalTypes(projectTypes);
+  }, [projectTypes]);
+
+  useEffect(() => {
+    setLocalStatuses(projectStatuses);
+  }, [projectStatuses]);
 
   // Populate form when editing
   useEffect(() => {
     if (isEditing && editProject) {
       setName(editProject.name);
       setIcon(editProject.icon);
+      setLogoUrl(editProject.logo_url);
       setType(editProject.type);
       setStatus(editProject.status);
       setStack(editProject.stack);
-      setTags(editProject.tags);
-      setStartDate(editProject.start_date ?? "");
     } else if (activeModal === "new-project") {
       setName("");
       setIcon("Globe");
-      setType("Web");
-      setStatus("idea");
+      setLogoUrl(null);
+      setType(defaultType);
+      setStatus(defaultStatus);
       setStack([]);
-      setTags([]);
-      setStartDate("");
     }
     setErrors({});
-  }, [activeModal, isEditing, editProject]);
+  }, [activeModal, isEditing, editProject, defaultType, defaultStatus]);
 
-  // Auto-set icon based on type
+  // Auto-set icon based on type (only when creating)
   useEffect(() => {
     if (!isEditing) {
-      setIcon(PROJECT_TYPE_ICONS[type]);
+      const typeRecord = localTypes.find((t) => t.name === type);
+      if (typeRecord) setIcon(typeRecord.icon);
     }
-  }, [type, isEditing]);
+  }, [type, isEditing, localTypes]);
 
   function handleStackKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if ((e.key === "Enter" || e.key === ",") && stackInput.trim()) {
@@ -87,21 +113,53 @@ export function ProjectModal({ userId, editProject }: ProjectModalProps) {
     }
   }
 
-  function handleTagsKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if ((e.key === "Enter" || e.key === ",") && tagsInput.trim()) {
-      e.preventDefault();
-      const val = tagsInput.trim().replace(/,$/, "");
-      if (val && !tags.includes(val)) {
-        setTags((s) => [...s, val]);
-      }
-      setTagsInput("");
+  async function handleLogoUpload(file: File): Promise<string> {
+    if (!isEditing || !editProject) {
+      toast.error("Guarda el proyecto primero para subir un logo");
+      throw new Error("Project must exist to upload logo");
     }
+    const client = createClient();
+    const url = await uploadProjectLogo(client, userId, editProject.id, file);
+    setLogoUrl(url);
+    await editProjectAction(editProject.id, { logo_url: url });
+    return url;
+  }
+
+  async function handleLogoRemove(): Promise<void> {
+    if (!isEditing || !editProject || !logoUrl) return;
+    const client = createClient();
+    await deleteProjectLogo(client, userId, editProject.id, logoUrl);
+    setLogoUrl(null);
+  }
+
+  async function handleCreateType(name: string, extra: { icon?: string; color?: string }) {
+    const client = createClient();
+    const newType = await createProjectType(client, userId, {
+      name,
+      icon: extra.icon,
+      color: extra.color,
+      sort_order: localTypes.length,
+    });
+    const updated = [...localTypes, newType];
+    setLocalTypes(updated);
+    onTypesChange?.(updated);
+  }
+
+  async function handleCreateStatus(name: string, extra: { icon?: string; color?: string }) {
+    const client = createClient();
+    const newStatus = await createProjectStatus(client, userId, {
+      name,
+      color: extra.color,
+      sort_order: localStatuses.length,
+    });
+    const updated = [...localStatuses, newStatus];
+    setLocalStatuses(updated);
+    onStatusesChange?.(updated);
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    // Validate
     const newErrors: Record<string, string> = {};
     if (!name.trim()) newErrors.name = "El nombre es obligatorio";
     if (Object.keys(newErrors).length > 0) {
@@ -115,11 +173,10 @@ export function ProjectModal({ userId, editProject }: ProjectModalProps) {
       await editProjectAction(editProject.id, {
         name: name.trim(),
         icon,
+        logo_url: logoUrl,
         type,
         status,
         stack,
-        tags,
-        start_date: startDate || null,
       });
     } else {
       const input: CreateProjectInput = {
@@ -128,8 +185,6 @@ export function ProjectModal({ userId, editProject }: ProjectModalProps) {
         type,
         status,
         stack,
-        tags,
-        start_date: startDate || null,
       };
       await addProject(userId, input);
     }
@@ -137,6 +192,8 @@ export function ProjectModal({ userId, editProject }: ProjectModalProps) {
     setSaving(false);
     closeModal();
   }
+
+  const statusColor = localStatuses.find((s) => s.name === status)?.color ?? "#888780";
 
   return (
     <Modal
@@ -148,47 +205,40 @@ export function ProjectModal({ userId, editProject }: ProjectModalProps) {
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Preview */}
         <div className="flex items-center gap-3 rounded-lg border border-border bg-sand/40 p-3">
-          <div
-            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg"
-            style={{ backgroundColor: "rgba(196,112,74,0.1)" }}
-          >
-            <ProjectIcon icon={icon} size={20} className="text-accent" />
-          </div>
+          {logoUrl ? (
+            <img
+              src={logoUrl}
+              alt=""
+              className="h-10 w-10 flex-shrink-0 rounded-lg border border-border object-cover"
+            />
+          ) : (
+            <div
+              className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg"
+              style={{ backgroundColor: "rgba(196,112,74,0.1)" }}
+            >
+              <ProjectIcon icon={icon} size={20} className="text-accent" />
+            </div>
+          )}
           <div className="min-w-0 flex-1">
             <p className="truncate font-heading text-base text-foreground">
               {name || "Nombre del proyecto"}
             </p>
             <p className="text-xs text-text-tertiary">{type}</p>
           </div>
-          <StatusBadge status={status} />
+          <StatusBadge status={status} color={statusColor} />
         </div>
 
-        {/* Icon selector */}
-        <div>
-          <label className="mb-1.5 block text-xs font-medium text-text-secondary">
-            Icono
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {AVAILABLE_ICONS.map((iconName) => (
-              <button
-                key={iconName}
-                type="button"
-                onClick={() => setIcon(iconName)}
-                className={`flex h-9 w-9 items-center justify-center rounded-lg border transition-colors ${
-                  icon === iconName
-                    ? "border-accent bg-accent/10"
-                    : "border-border bg-card hover:border-accent"
-                }`}
-              >
-                <ProjectIcon
-                  icon={iconName}
-                  size={16}
-                  className={icon === iconName ? "text-accent" : "text-text-secondary"}
-                />
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* Logo upload (only in edit mode) */}
+        {isEditing && (
+          <LogoUpload
+            logoUrl={logoUrl}
+            onUpload={handleLogoUpload}
+            onRemove={handleLogoRemove}
+          />
+        )}
+
+        {/* Icon picker */}
+        <IconPicker value={icon} onChange={setIcon} />
 
         {/* Name */}
         <Input
@@ -204,20 +254,21 @@ export function ProjectModal({ userId, editProject }: ProjectModalProps) {
 
         {/* Type + Status row */}
         <div className="grid grid-cols-2 gap-3">
-          <Select
+          <TypeStatusSelect
             label="Tipo"
             value={type}
-            onChange={(e) => setType(e.target.value as ProjectType)}
-            options={PROJECT_TYPES.map((t) => ({ value: t, label: t }))}
+            options={localTypes.map((t) => ({ value: t.name, label: t.name }))}
+            onChange={setType}
+            onCreateNew={handleCreateType}
+            mode="type"
           />
-          <Select
+          <TypeStatusSelect
             label="Estado"
             value={status}
-            onChange={(e) => setStatus(e.target.value as ProjectStatus)}
-            options={PROJECT_STATUSES.map((s) => ({
-              value: s,
-              label: PROJECT_STATUS_CONFIG[s].label,
-            }))}
+            options={localStatuses.map((s) => ({ value: s.name, label: s.name }))}
+            onChange={setStatus}
+            onCreateNew={handleCreateStatus}
+            mode="status"
           />
         </div>
 
@@ -252,46 +303,6 @@ export function ProjectModal({ userId, editProject }: ProjectModalProps) {
             className="mt-1.5 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-text-tertiary focus:border-accent focus:outline-none"
           />
         </div>
-
-        {/* Tags */}
-        <div>
-          <label className="mb-1.5 block text-xs font-medium text-text-secondary">
-            Tags
-          </label>
-          <div className="flex flex-wrap gap-1.5">
-            {tags.map((tag) => (
-              <span
-                key={tag}
-                className="inline-flex items-center gap-1 rounded-full bg-foreground/5 px-2.5 py-0.5 text-xs text-text-secondary"
-              >
-                {tag}
-                <button
-                  type="button"
-                  onClick={() => setTags((s) => s.filter((t) => t !== tag))}
-                  className="text-text-tertiary hover:text-foreground"
-                >
-                  &times;
-                </button>
-              </span>
-            ))}
-          </div>
-          <input
-            type="text"
-            value={tagsInput}
-            onChange={(e) => setTagsInput(e.target.value)}
-            onKeyDown={handleTagsKeyDown}
-            placeholder="Escribe y pulsa Enter"
-            className="mt-1.5 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-text-tertiary focus:border-accent focus:outline-none"
-          />
-        </div>
-
-        {/* Start date */}
-        <Input
-          label="Fecha de inicio"
-          type="date"
-          value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-        />
 
         {/* Actions */}
         <div className="flex justify-end gap-2 pt-2">

@@ -13,6 +13,10 @@ import type {
   UpdateTaskInput,
   TaskLink,
   CreateTaskLinkInput,
+  ProjectTypeRecord,
+  ProjectStatusRecord,
+  CreateProjectTypeInput,
+  CreateProjectStatusInput,
 } from '@/types/projects';
 
 type Client = SupabaseClient<Database>;
@@ -22,6 +26,8 @@ type ProjectRow = Database['public']['Tables']['projects']['Row'];
 type PhaseRow = Database['public']['Tables']['project_phases']['Row'];
 type TaskRow = Database['public']['Tables']['phase_tasks']['Row'];
 type LinkRow = Database['public']['Tables']['task_links']['Row'];
+type TypeRow = Database['public']['Tables']['project_types']['Row'];
+type StatusRow = Database['public']['Tables']['project_statuses']['Row'];
 
 // ─── Error helper ─────────────────────
 
@@ -62,8 +68,9 @@ function mapProject(row: ProjectRow, phases: ProjectPhase[] = []): Project {
     user_id: row.user_id,
     name: row.name,
     icon: row.icon,
-    type: row.type as Project['type'],
-    status: row.status as Project['status'],
+    logo_url: row.logo_url,
+    type: row.type,
+    status: row.status,
     stack: row.stack ?? [],
     tags: row.tags ?? [],
     start_date: row.start_date,
@@ -100,6 +107,169 @@ function mapTask(row: TaskRow, links: TaskLink[] = []): PhaseTask {
     updated_at: row.updated_at,
     links,
   };
+}
+
+// ══════════════════════════════════════
+// PROJECT TYPES (user-defined)
+// ══════════════════════════════════════
+
+export async function getProjectTypes(client: Client, userId: string): Promise<ProjectTypeRecord[]> {
+  const result = await client
+    .from('project_types')
+    .select('*')
+    .eq('user_id', userId)
+    .order('sort_order', { ascending: true });
+
+  return assertData<TypeRow[]>(result, 'Error fetching project types') as ProjectTypeRecord[];
+}
+
+export async function createProjectType(
+  client: Client,
+  userId: string,
+  input: CreateProjectTypeInput
+): Promise<ProjectTypeRecord> {
+  const result = await client
+    .from('project_types')
+    .insert({
+      user_id: userId,
+      name: input.name,
+      icon: input.icon ?? 'Box',
+      color: input.color ?? '#888780',
+      sort_order: input.sort_order ?? 0,
+    })
+    .select()
+    .single();
+
+  return assertData<TypeRow>(result, 'Error creating project type') as ProjectTypeRecord;
+}
+
+export async function deleteProjectType(client: Client, typeId: string): Promise<void> {
+  assertNoError(
+    await client.from('project_types').delete().eq('id', typeId),
+    'Error deleting project type'
+  );
+}
+
+// ══════════════════════════════════════
+// PROJECT STATUSES (user-defined)
+// ══════════════════════════════════════
+
+export async function getProjectStatuses(client: Client, userId: string): Promise<ProjectStatusRecord[]> {
+  const result = await client
+    .from('project_statuses')
+    .select('*')
+    .eq('user_id', userId)
+    .order('sort_order', { ascending: true });
+
+  return assertData<StatusRow[]>(result, 'Error fetching project statuses') as ProjectStatusRecord[];
+}
+
+export async function createProjectStatus(
+  client: Client,
+  userId: string,
+  input: CreateProjectStatusInput
+): Promise<ProjectStatusRecord> {
+  const result = await client
+    .from('project_statuses')
+    .insert({
+      user_id: userId,
+      name: input.name,
+      color: input.color ?? '#888780',
+      is_default: input.is_default ?? false,
+      sort_order: input.sort_order ?? 0,
+    })
+    .select()
+    .single();
+
+  return assertData<StatusRow>(result, 'Error creating project status') as ProjectStatusRecord;
+}
+
+export async function deleteProjectStatus(client: Client, statusId: string): Promise<void> {
+  assertNoError(
+    await client.from('project_statuses').delete().eq('id', statusId),
+    'Error deleting project status'
+  );
+}
+
+/** Seed default types and statuses for a new user (if they have none). */
+export async function seedUserDefaults(
+  client: Client,
+  userId: string,
+  defaults: {
+    types: Array<{ name: string; icon?: string; color?: string }>;
+    statuses: Array<{ name: string; color?: string; is_default?: boolean }>;
+  }
+): Promise<void> {
+  const [existingTypes, existingStatuses] = await Promise.all([
+    client.from('project_types').select('id').eq('user_id', userId).limit(1),
+    client.from('project_statuses').select('id').eq('user_id', userId).limit(1),
+  ]);
+
+  if (!existingTypes.data?.length) {
+    const inserts = defaults.types.map((t, i) => ({
+      user_id: userId,
+      name: t.name,
+      icon: t.icon ?? 'Box',
+      color: t.color ?? '#888780',
+      sort_order: i,
+    }));
+    await client.from('project_types').insert(inserts);
+  }
+
+  if (!existingStatuses.data?.length) {
+    const inserts = defaults.statuses.map((s, i) => ({
+      user_id: userId,
+      name: s.name,
+      color: s.color ?? '#888780',
+      is_default: s.is_default ?? false,
+      sort_order: i,
+    }));
+    await client.from('project_statuses').insert(inserts);
+  }
+}
+
+// ══════════════════════════════════════
+// PROJECT LOGO (Supabase Storage)
+// ══════════════════════════════════════
+
+export async function uploadProjectLogo(
+  client: Client,
+  userId: string,
+  projectId: string,
+  file: File
+): Promise<string> {
+  const ext = file.name.split('.').pop() ?? 'png';
+  const path = `${userId}/${projectId}.${ext}`;
+
+  const { error } = await client.storage
+    .from('project-logos')
+    .upload(path, file, { upsert: true, contentType: file.type });
+
+  if (error) throw new ProjectsError('Error uploading logo', error.message);
+
+  const { data } = client.storage.from('project-logos').getPublicUrl(path);
+  return data.publicUrl;
+}
+
+export async function deleteProjectLogo(
+  client: Client,
+  userId: string,
+  projectId: string,
+  currentUrl: string
+): Promise<void> {
+  // Extract file path from the public URL
+  const parts = currentUrl.split('/project-logos/');
+  const filePath = parts[1];
+  if (!filePath) return;
+
+  const { error } = await client.storage.from('project-logos').remove([filePath]);
+  if (error) throw new ProjectsError('Error deleting logo', error.message);
+
+  // Clear logo_url on the project
+  assertNoError(
+    await client.from('projects').update({ logo_url: null }).eq('id', projectId),
+    'Error clearing logo_url'
+  );
 }
 
 // ══════════════════════════════════════
@@ -246,33 +416,18 @@ export async function createProject(
       name: input.name,
       icon: input.icon ?? 'Box',
       type: input.type ?? 'Web',
-      status: input.status ?? 'idea',
+      status: input.status ?? 'Idea',
       stack: input.stack ?? [],
-      tags: input.tags ?? [],
-      start_date: input.start_date ?? null,
+      tags: [],
+      logo_url: input.logo_url ?? null,
     })
     .select()
     .single();
 
   const project = assertData<ProjectRow>(projectResult, 'Error creating project');
 
-  // Create default phases
-  const defaultPhases = ['Planificación', 'Diseño', 'Desarrollo', 'Testing', 'Deploy'];
-  const phasesInsert = defaultPhases.map((name, i) => ({
-    project_id: project.id,
-    name,
-    sort_order: i,
-  }));
-
-  const phasesResult = await client
-    .from('project_phases')
-    .insert(phasesInsert)
-    .select();
-
-  const phaseRows = assertData<PhaseRow[]>(phasesResult, 'Error creating default phases');
-  const phases = phaseRows.map((p) => mapPhase(p));
-
-  return mapProject(project, phases);
+  // No default phases — user creates their own
+  return mapProject(project, []);
 }
 
 export async function updateProject(
@@ -338,6 +493,21 @@ export async function deletePhase(client: Client, phaseId: string): Promise<void
     await client.from('project_phases').delete().eq('id', phaseId),
     'Error deleting phase'
   );
+}
+
+export async function reorderPhases(
+  client: Client,
+  phases: Array<{ id: string; sort_order: number }>
+): Promise<void> {
+  const updates = phases.map((p) =>
+    client.from('project_phases').update({ sort_order: p.sort_order }).eq('id', p.id)
+  );
+
+  const results = await Promise.all(updates);
+  const failed = results.find((r) => r.error);
+  if (failed?.error) {
+    throw new ProjectsError('Error reordering phases', failed.error.message);
+  }
 }
 
 // ══════════════════════════════════════

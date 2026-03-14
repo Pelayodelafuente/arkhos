@@ -37,7 +37,7 @@ export function ExportModal({ project }: ExportModalProps) {
     if (project.stack.length > 0) {
       lines.push(`- **Stack**: ${project.stack.join(", ")}`);
     }
-    if (project.tags.length > 0) {
+    if (project.tags?.length) {
       lines.push(`- **Tags**: ${project.tags.join(", ")}`);
     }
 
