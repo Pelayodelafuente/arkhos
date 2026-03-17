@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { FolderKanban, TrendingUp, Wallet, Receipt } from "lucide-react";
+import { FolderKanban, TrendingUp, Wallet, CreditCard } from "lucide-react";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 
@@ -28,7 +28,7 @@ const moduleCards = [
   {
     name: "Gastos",
     href: "/gastos",
-    icon: Receipt,
+    icon: CreditCard,
     color: "#4A7A9B",
     preview: "€— este mes",
   },

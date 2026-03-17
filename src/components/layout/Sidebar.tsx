@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, FolderKanban, TrendingUp, Wallet, Receipt, Shield, BookOpen } from "lucide-react";
+import { Home, FolderKanban, TrendingUp, Wallet, CreditCard, Shield, BookOpen } from "lucide-react";
 import { ArkhosLogo } from "@/components/ui/arkhos-logo";
 import { Button } from "@/components/ui/button";
 import { logout } from "@/app/(auth)/actions";
@@ -35,7 +35,7 @@ const navItems = [
   {
     label: "Gastos",
     href: "/gastos",
-    icon: Receipt,
+    icon: CreditCard,
     dot: "#4A7A9B",
   },
 ] as const;

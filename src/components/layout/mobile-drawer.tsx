@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { X, Home, FolderKanban, TrendingUp, Wallet, Receipt, Shield, BookOpen } from "lucide-react";
+import { X, Home, FolderKanban, TrendingUp, Wallet, CreditCard, Shield, BookOpen } from "lucide-react";
 import { ArkhosLogo } from "@/components/ui/arkhos-logo";
 import { Button } from "@/components/ui/button";
 import { logout } from "@/app/(auth)/actions";
@@ -12,7 +12,7 @@ const navItems = [
   { label: "Proyectos", href: "/proyectos", icon: FolderKanban, dot: "#C4704A" },
   { label: "Mercados", href: "/mercados", icon: TrendingUp, dot: "#9B7A4A" },
   { label: "Patrimonio", href: "/patrimonio", icon: Wallet, dot: "#5B8C6A" },
-  { label: "Gastos", href: "/gastos", icon: Receipt, dot: "#4A7A9B" },
+  { label: "Gastos", href: "/gastos", icon: CreditCard, dot: "#4A7A9B" },
 ] as const;
 
 interface MobileDrawerProps {
