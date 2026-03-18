@@ -1,91 +1,266 @@
 "use client";
 
-import { useActionState } from "react";
+import { useState, useActionState } from "react";
 import Link from "next/link";
 import { register, type AuthState } from "../actions";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
+import { PasswordStrength } from "@/components/auth/PasswordStrength";
+import { ArrowRight, Eye, EyeOff } from "lucide-react";
 
 const initialState: AuthState = { error: null, success: null };
 
 export default function RegisterPage() {
   const [state, formAction, pending] = useActionState(register, initialState);
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  if (state.success) {
+    return (
+      <div className="flex flex-col items-center text-center">
+        <div className="auth-success-check mb-6">
+          <svg
+            width="64"
+            height="64"
+            viewBox="0 0 64 64"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle
+              cx="32"
+              cy="32"
+              r="28"
+              stroke="#C4704A"
+              strokeWidth="2.5"
+              fill="none"
+              className="auth-draw-circle"
+            />
+            <path
+              d="M20 33 L28 41 L44 25"
+              stroke="#C4704A"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+              className="auth-draw-check"
+            />
+          </svg>
+        </div>
+        <h3 className="font-heading text-[22px] text-foreground">
+          Cuenta creada
+        </h3>
+        <p className="mt-2 text-[14px]" style={{ color: "#888780" }}>
+          {state.success}
+        </p>
+        <Link
+          href="/login"
+          className="mt-6 inline-flex h-[46px] w-full items-center justify-center rounded-[10px] border text-[14px] font-semibold transition-colors hover:border-accent hover:text-accent"
+          style={{ borderColor: "#E2D9CA", color: "#3D3630" }}
+        >
+          Ir a iniciar sesión
+        </Link>
+      </div>
+    );
+  }
 
   return (
-    <Card padding="lg">
-      <h2 className="mb-6 text-center font-heading text-2xl text-foreground">
+    <div className="relative">
+      {/* Top nav link — desktop */}
+      <div className="mb-10 hidden text-right lg:block">
+        <span className="text-[13px]" style={{ color: "#888780" }}>
+          Ya tienes cuenta?{" "}
+        </span>
+        <Link
+          href="/login"
+          className="text-[13px] font-semibold transition-colors hover:opacity-80"
+          style={{ color: "#C4704A" }}
+        >
+          Iniciar sesión
+        </Link>
+      </div>
+
+      {/* Title */}
+      <h1
+        className="font-heading text-foreground"
+        style={{ fontSize: 26, lineHeight: 1.2 }}
+      >
         Crear cuenta
-      </h2>
+      </h1>
+      <p className="mt-2 text-[14px]" style={{ color: "#888780" }}>
+        Empieza a gestionar tus proyectos, mercados y patrimonio.
+      </p>
 
-      {state.success ? (
-        <div className="space-y-4 text-center">
-          <p className="text-sm text-text-secondary">{state.success}</p>
-          <Link
-            href="/login"
-            className="inline-block text-sm text-accent hover:underline"
+      {/* Form */}
+      <form action={formAction} className="mt-8 space-y-5">
+        {/* Full name */}
+        <div className="flex flex-col gap-1.5">
+          <label
+            htmlFor="fullName"
+            className="text-[12px] font-semibold"
+            style={{ color: "#3D3630" }}
           >
-            Ir a iniciar sesión
-          </Link>
+            Nombre completo
+          </label>
+          <input
+            id="fullName"
+            name="fullName"
+            type="text"
+            autoComplete="name"
+            required
+            placeholder="Pelayo de la Fuente"
+            className="auth-input"
+          />
         </div>
-      ) : (
-        <>
-          <form action={formAction} className="space-y-4">
-            <Input
-              label="Nombre completo"
-              name="fullName"
-              type="text"
-              autoComplete="name"
-              required
-              placeholder="Pelayo de la Fuente"
-            />
 
-            <Input
-              label="Email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              placeholder="tu@email.com"
-            />
+        {/* Email */}
+        <div className="flex flex-col gap-1.5">
+          <label
+            htmlFor="email"
+            className="text-[12px] font-semibold"
+            style={{ color: "#3D3630" }}
+          >
+            Email
+          </label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            required
+            placeholder="tu@email.com"
+            className="auth-input"
+          />
+        </div>
 
-            <Input
-              label="Contraseña"
+        {/* Password */}
+        <div className="flex flex-col gap-1.5">
+          <label
+            htmlFor="password"
+            className="text-[12px] font-semibold"
+            style={{ color: "#3D3630" }}
+          >
+            Contraseña
+          </label>
+          <div className="relative">
+            <input
+              id="password"
               name="password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               autoComplete="new-password"
               required
               minLength={8}
               placeholder="Mínimo 8 caracteres"
+              className="auth-input pr-11"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary transition-colors hover:text-foreground"
+              tabIndex={-1}
+              aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+            >
+              {showPassword ? (
+                <EyeOff size={16} strokeWidth={1.5} />
+              ) : (
+                <Eye size={16} strokeWidth={1.5} />
+              )}
+            </button>
+          </div>
+          <PasswordStrength password={password} />
+        </div>
 
-            <Input
-              label="Confirmar contraseña"
+        {/* Confirm password */}
+        <div className="flex flex-col gap-1.5">
+          <label
+            htmlFor="confirmPassword"
+            className="text-[12px] font-semibold"
+            style={{ color: "#3D3630" }}
+          >
+            Confirmar contraseña
+          </label>
+          <div className="relative">
+            <input
+              id="confirmPassword"
               name="confirmPassword"
-              type="password"
+              type={showConfirm ? "text" : "password"}
               autoComplete="new-password"
               required
               minLength={8}
               placeholder="Repite la contraseña"
+              className="auth-input pr-11"
             />
+            <button
+              type="button"
+              onClick={() => setShowConfirm((v) => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary transition-colors hover:text-foreground"
+              tabIndex={-1}
+              aria-label={showConfirm ? "Ocultar contraseña" : "Mostrar contraseña"}
+            >
+              {showConfirm ? (
+                <EyeOff size={16} strokeWidth={1.5} />
+              ) : (
+                <Eye size={16} strokeWidth={1.5} />
+              )}
+            </button>
+          </div>
+        </div>
 
-            {state.error && (
-              <p className="text-sm text-red-600">{state.error}</p>
-            )}
+        {/* Error */}
+        {state.error && (
+          <p className="text-[13px] text-red-600">{state.error}</p>
+        )}
 
-            <Button type="submit" variant="primary" size="md" loading={pending} className="w-full">
+        {/* Submit */}
+        <button
+          type="submit"
+          disabled={pending}
+          className="flex h-[48px] w-full items-center justify-center gap-2 rounded-[10px] text-[14px] font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+          style={{ backgroundColor: pending ? "#B5623D" : "#C4704A" }}
+          onMouseEnter={(e) => {
+            if (!pending) e.currentTarget.style.backgroundColor = "#B5623D";
+          }}
+          onMouseLeave={(e) => {
+            if (!pending) e.currentTarget.style.backgroundColor = "#C4704A";
+          }}
+        >
+          {pending ? (
+            <>
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              Creando cuenta...
+            </>
+          ) : (
+            <>
               Crear cuenta
-            </Button>
-          </form>
+              <ArrowRight size={16} strokeWidth={2} />
+            </>
+          )}
+        </button>
+      </form>
 
-          <p className="mt-6 text-center text-sm text-text-tertiary">
-            ¿Ya tienes cuenta?{" "}
-            <Link href="/login" className="text-accent hover:underline">
-              Iniciar sesión
-            </Link>
-          </p>
-        </>
-      )}
-    </Card>
+      {/* Mobile nav link */}
+      <p className="mt-6 text-center text-[13px] lg:hidden" style={{ color: "#888780" }}>
+        Ya tienes cuenta?{" "}
+        <Link
+          href="/login"
+          className="font-semibold"
+          style={{ color: "#C4704A" }}
+        >
+          Iniciar sesión
+        </Link>
+      </p>
+
+      {/* Footer terms */}
+      <p className="mt-8 text-center text-[11px]" style={{ color: "#B0A48F" }}>
+        Al crear tu cuenta aceptas los{" "}
+        <span className="cursor-pointer" style={{ color: "#C4704A" }}>
+          Términos
+        </span>{" "}
+        y la{" "}
+        <span className="cursor-pointer" style={{ color: "#C4704A" }}>
+          Política de Privacidad
+        </span>
+      </p>
+    </div>
   );
 }

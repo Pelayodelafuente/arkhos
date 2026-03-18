@@ -1,64 +1,164 @@
 "use client";
 
-import { useActionState } from "react";
+import { useState, useActionState } from "react";
 import Link from "next/link";
 import { login, type AuthState } from "../actions";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
+import { ArrowRight, Eye, EyeOff } from "lucide-react";
 
 const initialState: AuthState = { error: null, success: null };
 
 export default function LoginPage() {
   const [state, formAction, pending] = useActionState(login, initialState);
+  const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <Card padding="lg">
-      <h2 className="mb-6 text-center font-heading text-2xl text-foreground">
-        Iniciar sesión
-      </h2>
+    <div className="relative">
+      {/* Top nav link — desktop */}
+      <div className="mb-10 hidden text-right lg:block">
+        <span className="text-[13px]" style={{ color: "#888780" }}>
+          No tienes cuenta?{" "}
+        </span>
+        <Link
+          href="/register"
+          className="text-[13px] font-semibold transition-colors hover:opacity-80"
+          style={{ color: "#C4704A" }}
+        >
+          Registrarse
+        </Link>
+      </div>
 
-      <form action={formAction} className="space-y-4">
-        <Input
-          label="Email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          required
-          placeholder="tu@email.com"
-        />
+      {/* Title */}
+      <h1
+        className="font-heading text-foreground"
+        style={{ fontSize: 26, lineHeight: 1.2 }}
+      >
+        Bienvenido
+      </h1>
+      <p className="mt-2 text-[14px]" style={{ color: "#888780" }}>
+        Introduce tus credenciales para acceder a tu espacio de trabajo.
+      </p>
 
-        <Input
-          label="Contraseña"
-          name="password"
-          type="password"
-          autoComplete="current-password"
-          required
-          placeholder="••••••••"
-        />
+      {/* Form */}
+      <form action={formAction} className="mt-8 space-y-5">
+        {/* Email */}
+        <div className="flex flex-col gap-1.5">
+          <label
+            htmlFor="email"
+            className="text-[12px] font-semibold"
+            style={{ color: "#3D3630" }}
+          >
+            Email
+          </label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            required
+            placeholder="tu@email.com"
+            className="auth-input"
+          />
+        </div>
 
+        {/* Password */}
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center justify-between">
+            <label
+              htmlFor="password"
+              className="text-[12px] font-semibold"
+              style={{ color: "#3D3630" }}
+            >
+              Contraseña
+            </label>
+            <Link
+              href="/reset-password"
+              className="text-[11px] transition-colors hover:opacity-80"
+              style={{ color: "#C4704A" }}
+            >
+              ¿Olvidaste tu contraseña?
+            </Link>
+          </div>
+          <div className="relative">
+            <input
+              id="password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
+              required
+              placeholder="••••••••"
+              className="auth-input pr-11"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary transition-colors hover:text-foreground"
+              tabIndex={-1}
+              aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+            >
+              {showPassword ? (
+                <EyeOff size={16} strokeWidth={1.5} />
+              ) : (
+                <Eye size={16} strokeWidth={1.5} />
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Error */}
         {state.error && (
-          <p className="text-sm text-red-600">{state.error}</p>
+          <p className="text-[13px] text-red-600">{state.error}</p>
         )}
 
-        <Button type="submit" variant="primary" size="md" loading={pending} className="w-full">
-          Iniciar sesión
-        </Button>
+        {/* Submit */}
+        <button
+          type="submit"
+          disabled={pending}
+          className="flex h-[48px] w-full items-center justify-center gap-2 rounded-[10px] text-[14px] font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+          style={{ backgroundColor: pending ? "#B5623D" : "#C4704A" }}
+          onMouseEnter={(e) => {
+            if (!pending) e.currentTarget.style.backgroundColor = "#B5623D";
+          }}
+          onMouseLeave={(e) => {
+            if (!pending) e.currentTarget.style.backgroundColor = "#C4704A";
+          }}
+        >
+          {pending ? (
+            <>
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              Entrando...
+            </>
+          ) : (
+            <>
+              Iniciar sesión
+              <ArrowRight size={16} strokeWidth={2} />
+            </>
+          )}
+        </button>
       </form>
 
-      <div className="mt-6 space-y-2 text-center text-sm">
-        <p className="text-text-tertiary">
-          ¿No tienes cuenta?{" "}
-          <Link href="/register" className="text-accent hover:underline">
-            Crear cuenta
-          </Link>
-        </p>
-        <p>
-          <Link href="/reset-password" className="text-text-tertiary hover:text-accent">
-            ¿Olvidaste tu contraseña?
-          </Link>
-        </p>
-      </div>
-    </Card>
+      {/* Mobile nav link */}
+      <p className="mt-6 text-center text-[13px] lg:hidden" style={{ color: "#888780" }}>
+        No tienes cuenta?{" "}
+        <Link
+          href="/register"
+          className="font-semibold"
+          style={{ color: "#C4704A" }}
+        >
+          Registrarse
+        </Link>
+      </p>
+
+      {/* Footer terms */}
+      <p className="mt-8 text-center text-[11px]" style={{ color: "#B0A48F" }}>
+        Al iniciar sesión aceptas los{" "}
+        <span className="cursor-pointer" style={{ color: "#C4704A" }}>
+          Términos
+        </span>{" "}
+        y la{" "}
+        <span className="cursor-pointer" style={{ color: "#C4704A" }}>
+          Política de Privacidad
+        </span>
+      </p>
+    </div>
   );
 }
