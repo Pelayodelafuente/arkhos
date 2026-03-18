@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "engram": {
+      "command": "C:\\Users\\PC\\bin\\engram.exe",
+      "args": ["mcp", "--tools=agent"],
+      "env": {
+        "USERPROFILE": "C:\\Users\\PC",
+        "HOME": "C:\\Users\\PC",
+        "ENGRAM_DB_PATH": "C:\\Users\\PC\\.engram\\engram.db"
+      }
+    },
+    "context7": {
+      "command": "C:\\Program Files\\nodejs\\npx.cmd",
+      "args": ["-y", "@upstash/context7-mcp@latest"],
+      "env": {
+        "USERPROFILE": "C:\\Users\\PC",
+        "HOME": "C:\\Users\\PC"
+      }
+    }
+  }
+}
