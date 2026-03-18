@@ -33,10 +33,12 @@ src/
     (dashboard)/     → layout compartido + módulos + settings/security
   components/
     ui/              → component library (barrel: ui/index.ts)
-    layout/          → Sidebar.tsx, topbar.tsx, mobile-drawer.tsx, bottom-nav.tsx
-    modules/         → proyectos/, (markets/, patrimonio/, gastos/ — próximos)
-  lib/supabase/      → client.ts, server.ts, types.ts, projects.ts, activity.ts
-  stores/            → ui-store.ts, projects-store.ts
+    layout/          → Sidebar.tsx, topbar.tsx, mobile-drawer.tsx, bottom-nav.tsx, NavigationProgress.tsx
+    modules/         → proyectos/, expenses/, (markets/, patrimonio/ — próximos)
+  lib/
+    supabase/        → client.ts, server.ts, types.ts, projects.ts, activity.ts, expenses.ts
+    animations.ts    → constantes de animación (easings, duraciones, stagger)
+  stores/            → ui-store.ts, projects-store.ts, expenses-store.ts
   types/             → projects.ts
   proxy.ts           → middleware de sesión (exporta proxy(), no middleware.ts)
 supabase/migrations/ → 001_initial, 002_projects, 003_refinements
@@ -77,6 +79,18 @@ Tailwind tokens: `bg-background`, `bg-sand`, `bg-card`, `bg-accent`, `text-foreg
 
 Principios: flat (sin sombras), sin degradados, máximo whitespace.
 `rounded-xl` cards · `rounded-md` inputs/buttons.
+
+### Animaciones (CSS variables — globals.css)
+
+```
+Easings:    --ease-out-expo cubic-bezier(0.16,1,0.3,1) | --ease-spring cubic-bezier(0.34,1.56,0.64,1)
+Duraciones: --transition-fast 150ms | --transition-normal 250ms | --transition-slow 400ms
+```
+
+Clases CSS disponibles: `animate-fade-in-up`, `animate-fade-in`, `animate-scale-in`,
+`animate-slide-in-right`, `animate-slide-out-right`, `dot-pulse-active`.
+Constantes TS: importar desde `@/lib/animations` (EASE_OUT_EXPO, DURATION_NORMAL, etc.).
+Regla: solo animar `transform` y `opacity`. Respetar `prefers-reduced-motion` siempre.
 
 ---
 
