@@ -12,7 +12,7 @@ interface AnimatedLogoProps {
 }
 
 export function AnimatedLogo({ compact = false }: AnimatedLogoProps) {
-  const iconSize = compact ? 48 : 72;
+  const iconSize = compact ? 48 : 96;
 
   return (
     <div className="relative flex flex-col items-center justify-center">
@@ -20,8 +20,8 @@ export function AnimatedLogo({ compact = false }: AnimatedLogoProps) {
       <div
         className="relative flex items-center justify-center"
         style={{
-          width: compact ? 160 : 280,
-          height: compact ? 160 : 280,
+          width: compact ? 160 : 380,
+          height: compact ? 160 : 380,
         }}
       >
         {/* Orbit rings */}
@@ -66,7 +66,9 @@ export function AnimatedLogo({ compact = false }: AnimatedLogoProps) {
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
             style={{
-              filter: "drop-shadow(0 0 30px rgba(196, 112, 74, 0.35))",
+              filter: compact
+                ? "drop-shadow(0 0 30px rgba(196, 112, 74, 0.35))"
+                : "drop-shadow(0 0 40px rgba(196, 112, 74, 0.35))",
             }}
           >
             <path
@@ -112,7 +114,7 @@ export function AnimatedLogo({ compact = false }: AnimatedLogoProps) {
         <span
           className="font-heading leading-none"
           style={{
-            fontSize: compact ? 22 : 32,
+            fontSize: compact ? 22 : 42,
             color: "#FAF7F2",
           }}
         >
@@ -120,7 +122,7 @@ export function AnimatedLogo({ compact = false }: AnimatedLogoProps) {
         </span>
         {!compact && (
           <span
-            className="mt-2 text-[11px] uppercase tracking-[0.2em]"
+            className="mt-2 text-[13px] uppercase tracking-[0.2em]"
             style={{ color: "rgba(250, 247, 242, 0.3)" }}
           >
             Personal management platform
@@ -129,7 +131,7 @@ export function AnimatedLogo({ compact = false }: AnimatedLogoProps) {
       </div>
 
       {/* Module dots */}
-      <div className={`flex items-center gap-3 ${compact ? "mt-3" : "mt-6"}`}>
+      <div className={`flex items-center ${compact ? "gap-3 mt-3" : "gap-4 mt-8"}`}>
         {MODULE_DOTS.map((dot) => (
           <div
             key={dot.label}
@@ -138,8 +140,8 @@ export function AnimatedLogo({ compact = false }: AnimatedLogoProps) {
               {
                 "--dot-color": dot.color,
                 animationDelay: dot.delay,
-                width: 6,
-                height: 6,
+                width: compact ? 6 : 8,
+                height: compact ? 6 : 8,
                 borderRadius: "50%",
                 backgroundColor: dot.color,
               } as React.CSSProperties

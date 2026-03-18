@@ -107,22 +107,22 @@ mark {
 }
 
 .auth-orbit-1 {
-  width: 240px;
-  height: 240px;
+  width: 330px;
+  height: 330px;
   border: 0.5px solid rgba(196, 112, 74, 0.06);
   animation: auth-spin-cw 25s linear infinite;
 }
 
 .auth-orbit-2 {
-  width: 160px;
-  height: 160px;
+  width: 220px;
+  height: 220px;
   border: 0.5px solid rgba(196, 112, 74, 0.09);
   animation: auth-spin-ccw 18s linear infinite;
 }
 
 .auth-orbit-3 {
-  width: 110px;
-  height: 110px;
+  width: 150px;
+  height: 150px;
   border: 0.5px solid rgba(196, 112, 74, 0.12);
   animation: auth-spin-cw 12s linear infinite;
 }
@@ -161,29 +161,29 @@ mark {
 }
 
 .auth-orb-track-1 {
-  width: 240px;
-  height: 240px;
+  width: 330px;
+  height: 330px;
   transform: translate(-50%, -50%);
   animation: auth-spin-cw 20s linear infinite;
 }
 
 .auth-orb-track-2 {
-  width: 160px;
-  height: 160px;
+  width: 220px;
+  height: 220px;
   transform: translate(-50%, -50%);
   animation: auth-spin-ccw 14s linear infinite;
 }
 
 .auth-orb-track-3 {
-  width: 110px;
-  height: 110px;
+  width: 150px;
+  height: 150px;
   transform: translate(-50%, -50%);
   animation: auth-spin-cw 10s linear infinite;
 }
 
 .auth-orb-track-4 {
-  width: 160px;
-  height: 160px;
+  width: 220px;
+  height: 220px;
   transform: translate(-50%, -50%);
   animation: auth-spin-cw 22s linear infinite;
 }
@@ -196,6 +196,15 @@ mark {
   border-radius: 50%;
   background-color: rgba(196, 112, 74, 0.6);
   box-shadow: 0 0 6px rgba(196, 112, 74, 0.4);
+}
+
+/* Glass card for mobile auth overlay */
+.auth-glass-card {
+  background-color: rgba(250, 247, 242, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(226, 217, 202, 0.5);
+  border-radius: 16px;
 }
 
 /* Fade in up */

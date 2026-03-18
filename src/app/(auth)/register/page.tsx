@@ -64,20 +64,6 @@ export default function RegisterPage() {
 
   return (
     <div className="relative">
-      {/* Top nav link — desktop */}
-      <div className="mb-10 hidden text-right lg:block">
-        <span className="text-[13px]" style={{ color: "#888780" }}>
-          Ya tienes cuenta?{" "}
-        </span>
-        <Link
-          href="/login"
-          className="text-[13px] font-semibold transition-colors hover:opacity-80"
-          style={{ color: "#C4704A" }}
-        >
-          Iniciar sesión
-        </Link>
-      </div>
-
       {/* Title */}
       <h1
         className="font-heading text-foreground"
@@ -238,28 +224,16 @@ export default function RegisterPage() {
         </button>
       </form>
 
-      {/* Mobile nav link */}
-      <p className="mt-6 text-center text-[13px] lg:hidden" style={{ color: "#888780" }}>
+      {/* Login link */}
+      <p className="mt-4 text-center text-[13px]" style={{ color: "#888780" }}>
         Ya tienes cuenta?{" "}
         <Link
           href="/login"
-          className="font-semibold"
+          className="font-semibold transition-colors hover:opacity-80"
           style={{ color: "#C4704A" }}
         >
           Iniciar sesión
         </Link>
-      </p>
-
-      {/* Footer terms */}
-      <p className="mt-8 text-center text-[11px]" style={{ color: "#B0A48F" }}>
-        Al crear tu cuenta aceptas los{" "}
-        <span className="cursor-pointer" style={{ color: "#C4704A" }}>
-          Términos
-        </span>{" "}
-        y la{" "}
-        <span className="cursor-pointer" style={{ color: "#C4704A" }}>
-          Política de Privacidad
-        </span>
       </p>
     </div>
   );

@@ -184,7 +184,14 @@ Skills del proyecto en `.claude/skills/`:
 | `ui` | Componentes UI, diseño visual | Componentes disponibles, tokens, patrones |
 | `supabase` | DB, auth, migrations, RLS | Cliente correcto por contexto, RLS policies, MFA |
 
-Plugins instalados: `frontend-design`, `feature-dev`, `skill-creator`, `simplify`, `loop`.
+Plugins instalados: `frontend-design`, `skill-creator`, `simplify`, `loop`.
+(`feature-dev` desinstalado — sustituido por el suite `sdd-*`)
+
+### Prioridad de skills UI
+
+Cuando `frontend-design` y `ui` entren en conflicto:
+- **`ui` tiene prioridad absoluta** — es el design system específico de Arkhos (tokens, componentes, paleta).
+- `frontend-design` aporta criterio estético genérico y se aplica solo donde `ui` no dicta nada concreto.
 
 ### Regla de auto-mejora
 

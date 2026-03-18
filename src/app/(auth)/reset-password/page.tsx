@@ -25,18 +25,6 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="relative">
-      {/* Back link — desktop */}
-      <div className="mb-10 hidden lg:block">
-        <Link
-          href="/login"
-          className="inline-flex items-center gap-1.5 text-[13px] transition-colors hover:opacity-80"
-          style={{ color: "#888780" }}
-        >
-          <ArrowLeft size={14} strokeWidth={1.5} />
-          Volver al login
-        </Link>
-      </div>
-
       {/* Title */}
       <h1
         className="font-heading text-foreground"
@@ -104,8 +92,8 @@ export default function ResetPasswordPage() {
         </button>
       </form>
 
-      {/* Mobile back link */}
-      <p className="mt-6 text-center lg:hidden">
+      {/* Back to login link */}
+      <p className="mt-4 text-center">
         <Link
           href="/login"
           className="inline-flex items-center gap-1.5 text-[13px] transition-colors hover:opacity-80"
