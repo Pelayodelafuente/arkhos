@@ -93,7 +93,10 @@ export function MfaSettings({ enrolledFactor }: MfaSettingsProps) {
       {hasFactor && step === "idle" && (
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-green-500" />
+            <span
+              className="h-2 w-2 rounded-full bg-green-500 dot-pulse-active"
+              style={{ "--dot-color": "rgba(34, 197, 94, 0.4)" } as React.CSSProperties}
+            />
             <span className="text-sm font-medium text-foreground">Activo</span>
           </div>
           <Button variant="danger" size="sm" loading={loading} onClick={handleUnenroll}>

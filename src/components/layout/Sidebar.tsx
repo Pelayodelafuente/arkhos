@@ -65,7 +65,7 @@ export function Sidebar({ userName }: SidebarProps) {
               <li key={href}>
                 <Link
                   href={href}
-                  className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
+                  className={`group flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
                     isActive
                       ? "bg-accent text-[#FBF0EA]"
                       : "text-text-secondary hover:bg-border hover:text-foreground"
@@ -73,18 +73,23 @@ export function Sidebar({ userName }: SidebarProps) {
                 >
                   {dot ? (
                     <span
-                      className="h-2 w-2 flex-shrink-0 rounded-full"
-                      style={{ backgroundColor: isActive ? "#FBF0EA" : dot }}
+                      className={`h-2 w-2 flex-shrink-0 rounded-full ${isActive ? "dot-pulse-active" : ""}`}
+                      style={{
+                        backgroundColor: isActive ? "#FBF0EA" : dot,
+                        "--dot-color": dot,
+                      } as React.CSSProperties}
                     />
                   ) : (
                     <span className="h-2 w-2 flex-shrink-0" />
                   )}
-                  <Icon
-                    size={16}
-                    strokeWidth={1.75}
-                    className="flex-shrink-0"
-                  />
-                  {label}
+                  <span className="flex items-center gap-2 transition-transform duration-150 group-hover:translate-x-[2px]">
+                    <Icon
+                      size={16}
+                      strokeWidth={1.75}
+                      className="flex-shrink-0"
+                    />
+                    {label}
+                  </span>
                 </Link>
               </li>
             );

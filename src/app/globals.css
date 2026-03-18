@@ -29,6 +29,13 @@
 
   /* Sombras (solo modales) */
   --shadow-modal: 0 4px 20px rgba(26, 23, 20, 0.08);
+
+  /* Animation system */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --transition-fast: 150ms;
+  --transition-normal: 250ms;
+  --transition-slow: 400ms;
 }
 
 @theme inline {
@@ -292,6 +299,124 @@ mark {
   border-color: #DC2626;
 }
 
+/* ══════════════════════════════════════
+   App — Global Animations
+   ══════════════════════════════════════ */
+
+/* Fade in up — reusable entry animation */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up var(--transition-normal) var(--ease-out-expo) both;
+}
+
+/* Fade in — simple opacity */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fade-in var(--transition-normal) var(--ease-out-expo) both;
+}
+
+/* Fade out */
+@keyframes fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* Scale in — for modals */
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scale-in var(--transition-normal) var(--ease-out-expo) both;
+}
+
+/* Slide in from right — for toasts */
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 300ms var(--ease-spring) both;
+}
+
+/* Slide out to right */
+@keyframes slide-out-right {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+.animate-slide-out-right {
+  animation: slide-out-right 200ms var(--ease-out-expo) both;
+}
+
+/* Slide in from left — for drawer */
+@keyframes slide-in-left {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes slide-out-left {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+
+/* Module dot pulse — active module only */
+@keyframes dot-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--dot-color, rgba(196,112,74,0.4)); }
+  50% { box-shadow: 0 0 0 4px transparent; }
+}
+
+.dot-pulse-active {
+  animation: dot-pulse 3s ease-in-out infinite;
+}
+
+/* Navigation progress bar */
+@keyframes progress-indeterminate {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(0%); }
+  100% { transform: translateX(200%); }
+}
+
+/* Toast auto-dismiss progress */
+@keyframes toast-progress {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .auth-logo-float,
@@ -316,5 +441,20 @@ mark {
 
   .auth-vertex-pulse {
     opacity: 0.85;
+  }
+
+  .animate-fade-in-up,
+  .animate-fade-in,
+  .animate-scale-in,
+  .animate-slide-in-right,
+  .animate-slide-out-right,
+  .dot-pulse-active {
+    animation: none !important;
+  }
+
+  .animate-fade-in-up,
+  .animate-fade-in,
+  .animate-scale-in {
+    opacity: 1;
   }
 }

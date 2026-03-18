@@ -66,37 +66,46 @@ export default async function DashboardPage() {
     <div>
       {/* Greeting */}
       <div className="mb-8">
-        <h1 className="font-heading text-3xl text-foreground">
+        <h1 className="animate-fade-in-up font-heading text-3xl text-foreground">
           {greeting}{firstName ? `, ${firstName}` : ""}
         </h1>
-        <p className="mt-1 text-sm text-text-tertiary">
+        <p
+          className="animate-fade-in-up mt-1 text-sm text-text-tertiary"
+          style={{ animationDelay: "100ms" }}
+        >
           Aquí tienes el resumen de tu centro de mando.
         </p>
       </div>
 
       {/* Module cards */}
       <div className="mb-10 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {moduleCards.map(({ name, href, icon: Icon, color, preview }) => (
-          <Card key={name} clickable padding="sm">
-            <Link href={href} className="block p-2">
-              <div className="mb-4 flex items-center gap-3">
-                <span
-                  className="h-2 w-2 flex-shrink-0 rounded-full"
-                  style={{ backgroundColor: color }}
-                />
-                <div className="flex items-center gap-2">
-                  <Icon size={15} strokeWidth={1.75} className="text-text-tertiary" />
-                  <span className="text-sm font-medium text-text-secondary">{name}</span>
+        {moduleCards.map(({ name, href, icon: Icon, color, preview }, index) => (
+          <div
+            key={name}
+            className="animate-fade-in-up"
+            style={{ animationDelay: `${150 + index * 100}ms` }}
+          >
+            <Card clickable padding="sm">
+              <Link href={href} className="block p-2 transition-transform duration-200 hover:-translate-y-[2px]">
+                <div className="mb-4 flex items-center gap-3">
+                  <span
+                    className="h-2 w-2 flex-shrink-0 rounded-full"
+                    style={{ backgroundColor: color }}
+                  />
+                  <div className="flex items-center gap-2">
+                    <Icon size={15} strokeWidth={1.75} className="text-text-tertiary" />
+                    <span className="text-sm font-medium text-text-secondary">{name}</span>
+                  </div>
                 </div>
-              </div>
-              <p className="font-mono text-xl text-foreground">{preview}</p>
-            </Link>
-          </Card>
+                <p className="font-mono text-xl text-foreground">{preview}</p>
+              </Link>
+            </Card>
+          </div>
         ))}
       </div>
 
       {/* Recent activity */}
-      <div>
+      <div className="animate-fade-in-up" style={{ animationDelay: "550ms" }}>
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-text-tertiary">
           Actividad reciente
         </h2>

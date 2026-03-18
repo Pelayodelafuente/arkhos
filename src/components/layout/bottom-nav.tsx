@@ -28,7 +28,12 @@ export function BottomNav() {
               isActive ? "text-accent" : "text-text-tertiary"
             }`}
           >
-            <Icon size={20} strokeWidth={1.75} />
+            <span
+              className="transition-transform duration-200"
+              style={isActive ? { transform: "scale(1.1)", transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)" } : undefined}
+            >
+              <Icon size={20} strokeWidth={1.75} />
+            </span>
             <span>{label}</span>
           </Link>
         );

@@ -18,7 +18,7 @@ function ToastItem({ toast }: { toast: Toast }) {
 
   return (
     <div
-      className="flex w-80 items-start gap-3 rounded-xl border border-border bg-card p-4"
+      className="animate-slide-in-right relative flex w-80 items-start gap-3 overflow-hidden rounded-xl border border-border bg-card p-4"
       style={{ boxShadow: "var(--shadow-modal)" }}
     >
       <span
@@ -35,6 +35,16 @@ function ToastItem({ toast }: { toast: Toast }) {
       >
         <X size={13} strokeWidth={2} />
       </button>
+      {/* Auto-dismiss progress */}
+      <div className="absolute bottom-0 left-0 right-0 h-[2px] overflow-hidden rounded-b-xl">
+        <div
+          className="h-full origin-left"
+          style={{
+            backgroundColor: color,
+            animation: "toast-progress 4s linear forwards",
+          }}
+        />
+      </div>
     </div>
   );
 }
@@ -45,7 +55,7 @@ export function ToastProvider() {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed right-4 top-4 z-[100] flex flex-col gap-2">
+    <div className="fixed right-4 top-4 z-[100] flex flex-col gap-2 transition-all duration-200">
       {toasts.map((toast: Toast) => (
         <ToastItem key={toast.id} toast={toast} />
       ))}

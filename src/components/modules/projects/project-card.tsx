@@ -33,7 +33,7 @@ export function ProjectCard({ project, searchQuery = "" }: ProjectCardProps) {
 
   return (
     <Link href={`/proyectos/${project.id}`}>
-      <div className="group rounded-xl border border-border bg-card p-5 transition-colors hover:border-accent">
+      <div className="group rounded-xl border border-border bg-card p-5 transition-all duration-200 hover:-translate-y-[3px] hover:border-accent">
         {/* Header row */}
         <div className="mb-3 flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -41,11 +41,11 @@ export function ProjectCard({ project, searchQuery = "" }: ProjectCardProps) {
               <img
                 src={project.logo_url}
                 alt=""
-                className="h-9 w-9 flex-shrink-0 rounded-lg border border-border object-cover"
+                className="h-9 w-9 flex-shrink-0 rounded-lg border border-border object-cover transition-transform duration-200 group-hover:scale-105"
               />
             ) : (
               <div
-                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg transition-colors"
+                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg transition-transform duration-200 group-hover:scale-105"
                 style={{ backgroundColor: "rgba(196,112,74,0.1)" }}
               >
                 <ProjectIcon icon={project.icon} size={18} className="text-accent" />

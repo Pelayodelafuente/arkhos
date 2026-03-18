@@ -27,12 +27,12 @@ export function Modal({ open, onClose, title, children, className = "" }: ModalP
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Overlay */}
       <div
-        className="absolute inset-0 bg-foreground/30 backdrop-blur-sm"
+        className="animate-fade-in absolute inset-0 bg-foreground/30 backdrop-blur-sm"
         onClick={onClose}
       />
       {/* Card */}
       <div
-        className={`relative z-10 w-full max-w-md rounded-xl bg-card p-6 ${className}`}
+        className={`animate-scale-in relative z-10 w-full max-w-md rounded-xl bg-card p-6 ${className}`}
         style={{ boxShadow: "var(--shadow-modal)" }}
       >
         {title && (

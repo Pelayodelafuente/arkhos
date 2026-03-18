@@ -8,7 +8,8 @@ export function ProjectsLoading() {
       {Array.from({ length: 4 }).map((_, i) => (
         <div
           key={i}
-          className="rounded-xl border border-border bg-card p-5"
+          className="animate-fade-in-up rounded-xl border border-border bg-card p-5"
+          style={{ animationDelay: `${i * 75}ms` }}
         >
           <div className="mb-3 flex items-start gap-3">
             <Skeleton rounded="lg" className="h-9 w-9 flex-shrink-0" />

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { X, Home, FolderKanban, TrendingUp, Wallet, CreditCard, Shield, BookOpen } from "lucide-react";
@@ -23,24 +24,57 @@ interface MobileDrawerProps {
 
 export function MobileDrawer({ open, onClose, userName }: MobileDrawerProps) {
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
+  const [closing, setClosing] = useState(false);
 
-  if (!open) return null;
+  useEffect(() => {
+    if (open) {
+      setMounted(true);
+      setClosing(false);
+    }
+  }, [open]);
+
+  const handleClose = useCallback(() => {
+    setClosing(true);
+    setTimeout(() => {
+      setMounted(false);
+      setClosing(false);
+      onClose();
+    }, 250);
+  }, [onClose]);
+
+  if (!mounted) return null;
 
   return (
     <>
-      {/* Overlay */}
+      {/* Overlay with fade + blur */}
       <div
-        className="fixed inset-0 z-40 bg-foreground/20 lg:hidden"
-        onClick={onClose}
+        className="fixed inset-0 z-40 lg:hidden"
+        style={{
+          backgroundColor: "rgba(26, 23, 20, 0.2)",
+          backdropFilter: "blur(4px)",
+          WebkitBackdropFilter: "blur(4px)",
+          animation: closing
+            ? "fade-out 200ms var(--ease-out-expo) forwards"
+            : "fade-in 200ms var(--ease-out-expo) forwards",
+        }}
+        onClick={handleClose}
       />
 
-      {/* Drawer */}
-      <div className="fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col bg-sand lg:hidden">
+      {/* Drawer panel */}
+      <div
+        className="fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col bg-sand lg:hidden"
+        style={{
+          animation: closing
+            ? "slide-out-left 250ms var(--ease-out-expo) forwards"
+            : "slide-in-left 250ms var(--ease-out-expo) forwards",
+        }}
+      >
         <div className="flex items-center justify-between px-5 py-6">
           <ArkhosLogo size="sm" />
           <button
-            onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-md text-text-secondary hover:bg-border"
+            onClick={handleClose}
+            className="flex h-8 w-8 items-center justify-center rounded-md text-text-secondary transition-colors duration-150 hover:bg-border"
             aria-label="Cerrar menú"
           >
             <X size={18} strokeWidth={1.75} />
@@ -56,8 +90,8 @@ export function MobileDrawer({ open, onClose, userName }: MobileDrawerProps) {
                 <li key={href}>
                   <Link
                     href={href}
-                    onClick={onClose}
-                    className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
+                    onClick={handleClose}
+                    className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
                       isActive
                         ? "bg-accent text-[#FBF0EA]"
                         : "text-text-secondary hover:bg-border hover:text-foreground"
@@ -65,8 +99,11 @@ export function MobileDrawer({ open, onClose, userName }: MobileDrawerProps) {
                   >
                     {dot ? (
                       <span
-                        className="h-2 w-2 flex-shrink-0 rounded-full"
-                        style={{ backgroundColor: isActive ? "#FBF0EA" : dot }}
+                        className={`h-2 w-2 flex-shrink-0 rounded-full ${isActive ? "dot-pulse-active" : ""}`}
+                        style={{
+                          backgroundColor: isActive ? "#FBF0EA" : dot,
+                          "--dot-color": dot,
+                        } as React.CSSProperties}
                       />
                     ) : (
                       <span className="h-2 w-2 flex-shrink-0" />
@@ -86,7 +123,7 @@ export function MobileDrawer({ open, onClose, userName }: MobileDrawerProps) {
             href="/docs"
             target="_blank"
             rel="noopener noreferrer"
-            onClick={onClose}
+            onClick={handleClose}
             className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-text-tertiary transition-colors hover:bg-border hover:text-accent"
           >
             <span className="h-2 w-2 flex-shrink-0" />
@@ -99,8 +136,8 @@ export function MobileDrawer({ open, onClose, userName }: MobileDrawerProps) {
         <div className="border-t border-border px-3 py-3">
           <Link
             href="/settings/security"
-            onClick={onClose}
-            className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
+            onClick={handleClose}
+            className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
               pathname === "/settings/security"
                 ? "bg-accent text-[#FBF0EA]"
                 : "text-text-secondary hover:bg-border hover:text-foreground"
