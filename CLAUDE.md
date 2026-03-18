@@ -174,6 +174,26 @@ Proyecto siempre: `"project": "arkhos"`
 
 ---
 
+## Skills activos
+
+Skills del proyecto en `.claude/skills/`:
+
+| Skill | Trigger | Qué aporta |
+|-------|---------|-----------|
+| `arkhos-dev` | TODA tarea de desarrollo | Convenciones, estructura, naming, commits, RULE #1 (docs) |
+| `ui` | Componentes UI, diseño visual | Componentes disponibles, tokens, patrones |
+| `supabase` | DB, auth, migrations, RLS | Cliente correcto por contexto, RLS policies, MFA |
+
+Plugins instalados: `frontend-design`, `feature-dev`, `skill-creator`, `simplify`, `loop`.
+
+### Regla de auto-mejora
+
+- Cuando detectes un patrón repetido 2+ veces en la misma sesión, sugiere crear un skill.
+- Al final de cada sesión, evalúa si algún skill existente necesita actualizarse con nuevos patrones descubiertos.
+- Si un skill no se activa cuando debería, ajusta su `description` para mejorar el triggering.
+
+---
+
 ## Agent Teams — Orquestador SDD
 
 Eres COORDINADOR, no ejecutor. Delegas TODO el trabajo real a sub-agentes via Agent tool.
