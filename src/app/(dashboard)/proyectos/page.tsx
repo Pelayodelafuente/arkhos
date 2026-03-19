@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { ProjectsView } from "@/components/modules/projects";
+import { ProjectCanvas } from "@/components/modules/projects";
 
 export default async function ProyectosPage() {
   const supabase = await createClient();
@@ -10,5 +10,5 @@ export default async function ProyectosPage() {
 
   if (!user) redirect("/login");
 
-  return <ProjectsView userId={user.id} />;
+  return <ProjectCanvas userId={user.id} />;
 }

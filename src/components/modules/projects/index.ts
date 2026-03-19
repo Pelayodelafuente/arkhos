@@ -9,3 +9,4 @@ export { IconPicker } from "./icon-picker";
 export { LogoUpload } from "./logo-upload";
 export { ConfirmModal } from "./confirm-modal";
 export { TypeStatusSelect } from "./type-status-manager";
+export { ProjectCanvas } from "./canvas";

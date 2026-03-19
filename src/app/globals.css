@@ -417,6 +417,23 @@ mark {
   to { transform: scaleX(0); }
 }
 
+/* Canvas: fadeIn (used by minimap/zoom with delay) */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Canvas: ghost cursor path */
+@keyframes cursorPath {
+  0%   { top: 105%; left: 18%; opacity: 0; }
+  5%   { opacity: 1; }
+  20%  { top: 48%; left: 28%; }
+  50%  { top: 38%; left: 52%; }
+  80%  { top: 52%; left: 74%; }
+  95%  { opacity: 1; }
+  100% { top: 105%; left: 82%; opacity: 0; }
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .auth-logo-float,

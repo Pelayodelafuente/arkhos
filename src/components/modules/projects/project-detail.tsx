@@ -33,6 +33,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { motion } from "framer-motion";
 import { Button, Progress, Modal, Skeleton } from "@/components/ui";
 import { useProjectsStore } from "@/stores/projects-store";
 import { useUIStore } from "@/stores/ui-store";
@@ -53,6 +54,56 @@ import { StatusBadge } from "./status-badge";
 import { ProjectModal } from "./project-modal";
 import { ExportModal } from "./export-modal";
 import { ConfirmModal } from "./confirm-modal";
+
+// ─── Framer Motion variants ──────────
+const EASE_OUT = [0.22, 1, 0.36, 1] as [number, number, number, number];
+
+const pageVariants = {
+  hidden: { opacity: 0, y: 8 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.35, ease: EASE_OUT },
+  },
+};
+
+const phaseContainerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.06,
+    },
+  },
+};
+
+const phaseItemVariants = {
+  hidden: { opacity: 0, x: -8 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.3, ease: EASE_OUT },
+  },
+};
+
+const taskContainerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.03,
+    },
+  },
+};
+
+const taskItemVariants = {
+  hidden: { opacity: 0, y: 4 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.2, ease: EASE_OUT },
+  },
+};
 
 // ─── Debounce helper ──────────────────
 
@@ -304,7 +355,11 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
   }
 
   return (
-    <div>
+    <motion.div
+      variants={pageVariants}
+      initial="hidden"
+      animate="visible"
+    >
       {/* Back link */}
       <Link
         href="/proyectos"
@@ -411,7 +466,12 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
 
       {/* ═══ PROGRESS VIEW ═══ */}
       {viewTab === "progress" && (
-        <div className="space-y-3">
+        <motion.div
+          className="space-y-3"
+          variants={phaseContainerVariants}
+          initial="hidden"
+          animate="visible"
+        >
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -423,8 +483,8 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
               disabled={isMobile}
             >
               {project.phases.map((phase, idx) => (
+                <motion.div key={phase.id} variants={phaseItemVariants}>
                 <SortablePhaseItem
-                  key={phase.id}
                   phase={phase}
                   idx={idx}
                   totalPhases={project.phases.length}
@@ -461,6 +521,7 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
                   onMovePhase={(dir) => movePhase(idx, dir)}
                   onMoveTask={(taskIdx, dir) => moveTask(phase.id, taskIdx, dir)}
                 />
+                </motion.div>
               ))}
             </SortableContext>
           </DndContext>
@@ -506,7 +567,7 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
               Añadir fase
             </button>
           )}
-        </div>
+        </motion.div>
       )}
 
       {/* Diagram view */}
@@ -572,7 +633,7 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
 
       {/* Export modal */}
       <ExportModal project={project} />
-    </div>
+    </motion.div>
   );
 }
 
@@ -672,7 +733,7 @@ function SortablePhaseItem({
   const statusConfig = PHASE_STATUS_CONFIG[phase.status];
 
   return (
-    <div ref={setNodeRef} style={style} className="rounded-xl border border-border bg-card">
+    <div ref={setNodeRef} style={style} className="rounded-xl border border-border bg-card transition-[transform,box-shadow] duration-150 ease-out hover:translate-x-0.5 hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
       {/* Phase header */}
       <div className="flex w-full items-center gap-3 p-4">
         {/* Drag handle or mobile arrows */}
@@ -816,10 +877,15 @@ function SortablePhaseItem({
               strategy={verticalListSortingStrategy}
               disabled={isMobile}
             >
-              <div className="space-y-1">
+              <motion.div
+                className="space-y-1"
+                variants={taskContainerVariants}
+                initial="hidden"
+                animate="visible"
+              >
                 {phase.tasks.map((task, taskIdx) => (
+                  <motion.div key={task.id} variants={taskItemVariants}>
                   <SortableTaskItem
-                    key={task.id}
                     task={task}
                     taskIdx={taskIdx}
                     totalTasks={phase.tasks.length}
@@ -838,8 +904,9 @@ function SortablePhaseItem({
                     debouncedEditTask={debouncedEditTask}
                     onMoveTask={(dir) => onMoveTask(taskIdx, dir)}
                   />
+                  </motion.div>
                 ))}
-              </div>
+              </motion.div>
             </SortableContext>
           </DndContext>
 

@@ -128,11 +128,14 @@ ArkhosLogo    size: sm|md|lg
 
 - **Data layer**: `src/lib/supabase/projects.ts` — 27 funciones tipadas
 - **Store**: `src/stores/projects-store.ts` — optimistic updates + rollback + Toast
+- **Canvas store**: `src/stores/canvas-store.ts` — posiciones ventanas, zoom, selección, localStorage
 - **Selectores**: `useFilteredProjects()`, `useProjectsByStatus(statuses[])`
 - **Tipos/estados**: dinámicos por usuario (`project_types`, `project_statuses`)
 - **Drag & drop**: `reorderPhasesAction`, `reorderTasksAction` en store
 - **Logo**: Supabase Storage bucket `project-logos` — `{userId}/{projectId}.{ext}`
 - **Búsqueda**: debounce 300ms, filtro name/stack/tags, highlight `<mark>`
+- **Canvas**: `/proyectos` renderiza `ProjectCanvas` — 5 ventanas arrastrables con Framer Motion
+- **API Routes IA**: `/api/projects/analyze` + `/api/projects/chat` — streaming Anthropic SDK
 - **Docs**: `docs/modules/PROJECTS.md` — schema, data layer, store, componentes
 
 ---

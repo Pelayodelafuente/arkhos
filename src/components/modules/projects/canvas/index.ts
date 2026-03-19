@@ -1,0 +1,12 @@
+export { CanvasGhostCursor } from './canvas-ghost-cursor';
+export { CanvasGrid } from './canvas-grid';
+export { CanvasMinimap } from './canvas-minimap';
+export { CanvasTopbar } from './canvas-topbar';
+export { CanvasWindow } from './canvas-window';
+export { CanvasZoom } from './canvas-zoom';
+export { ProjectCanvas } from './project-canvas';
+export { WindowAnalysis } from './window-analysis';
+export { WindowChat } from './window-chat';
+export { WindowContext } from './window-context';
+export { WindowProjects } from './window-projects';
+export { WindowStats } from './window-stats';
