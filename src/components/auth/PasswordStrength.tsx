@@ -16,7 +16,7 @@ function getStrength(password: string): number {
 }
 
 const LABELS = ["", "Débil", "Media", "Fuerte", "Muy fuerte"];
-const COLORS = ["", "#DC2626", "#E57A1A", "#5B8C6A", "#3D7A4A"];
+const COLORS = ["", "#DC2626", "#C9A96E", "#8AAC7E", "#4D6845"];
 
 export function PasswordStrength({ password }: PasswordStrengthProps) {
   const strength = getStrength(password);
@@ -34,7 +34,7 @@ export function PasswordStrength({ password }: PasswordStrengthProps) {
               backgroundColor:
                 segment <= strength
                   ? COLORS[strength]
-                  : "rgba(226, 217, 202, 0.5)",
+                  : "rgba(30, 34, 25, 0.5)",
             }}
           />
         ))}

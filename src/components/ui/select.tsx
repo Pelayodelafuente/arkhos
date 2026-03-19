@@ -32,10 +32,10 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           <select
             ref={ref}
             id={selectId}
-            className={`w-full appearance-none rounded-md border bg-card px-3 py-2 pr-8 text-sm text-foreground outline-none transition-colors ${
+            className={`w-full appearance-none rounded-md border bg-background px-3 py-2 pr-8 text-sm text-foreground outline-none transition-colors ${
               error
                 ? "border-red-400 focus:border-red-500"
-                : "border-border focus:border-accent"
+                : "border-border focus:border-sage-dim"
             } ${className}`}
             {...props}
           >

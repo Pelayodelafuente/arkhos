@@ -63,21 +63,22 @@ docs/modules/        → PROJECTS.md
 
 ---
 
-## Paleta de colores (CSS variables — globals.css)
+## Paleta de colores — Obsidian Sage (CSS variables — globals.css)
 
 ```
-Fondos:    --bg-cream #FAF7F2 | --bg-sand #F0EBE1 | --bg-card #FFFFFF
-Textos:    --text-primary #1A1714 | --text-secondary #3D3630 | --text-tertiary #888780
-Bordes:    --border-stone #E2D9CA (1px solid)
-Acento:    --accent-terracotta #C4704A
-Módulos:   proyectos #C4704A | patrimonio #5B8C6A | gastos #4A7A9B | mercados #9B7A4A
-Sombras:   --shadow-modal 0 4px 20px rgba(26,23,20,0.08) — solo modales
+Fondos:    --bg #0F110E | --surface #141712 | --surface-2 #181C16
+Bordes:    --border #1E2219 | --border-2 #252B20
+Acento:    --sage #8AAC7E | --sage-dim #4D6845 | --sage-glow rgba(138,172,126,0.12)
+Textos:    --cream #F2EDDF | --cream-dim #BDB89F | --cream-mute #6B6F62
+Gold:      --gold #C9A96E | --gold-dim rgba(201,169,110,0.15)
+Módulos:   proyectos #8AAC7E | mercados #7AACCC | patrimonio #C9A96E | gastos #C87A8A
+Sombras:   --shadow-modal 0 4px 20px rgba(0,0,0,0.3) — solo modales
 ```
 
-Tailwind tokens: `bg-background`, `bg-sand`, `bg-card`, `bg-accent`, `text-foreground`,
-`text-text-secondary`, `text-text-tertiary`, `border-border`, `text-accent`.
+Tailwind tokens: `bg-background`, `bg-surface`, `bg-surface-2`, `bg-card`, `bg-accent`, `text-foreground`,
+`text-text-secondary`, `text-text-tertiary`, `border-border`, `border-border-2`, `text-accent`.
 
-Principios: flat (sin sombras), sin degradados, máximo whitespace.
+Principios: dark base, sage como acento (nunca fondo sólido), cream sobre obsidian.
 `rounded-xl` cards · `rounded-md` inputs/buttons.
 
 ### Animaciones (CSS variables — globals.css)
@@ -96,9 +97,15 @@ Regla: solo animar `transform` y `opacity`. Respetar `prefers-reduced-motion` si
 
 ## Tipografías
 
-- `font-heading` — DM Serif Display (títulos/display)
-- `font-sans` — Plus Jakarta Sans (interfaz/texto)
-- `font-mono` — JetBrains Mono (datos/código/números)
+- `font-display` / `font-heading` — Outfit 200 (display) / 700 (labels, badges, buttons)
+- `font-sans` — Instrument Sans 300–500 (interfaz/texto)
+- `font-mono` — DM Mono 300–400 (código/datos/timestamps)
+
+### Tracking tipográfico
+- Outfit 200 display: `tracking-[0.20em]`–`tracking-[0.28em]`
+- Outfit 700 labels: `tracking-[0.18em]`–`tracking-[0.24em]`
+- Instrument Sans body: normal
+- DM Mono: `tracking-[0.08em]`–`tracking-[0.12em]`
 
 ---
 
@@ -112,7 +119,7 @@ Card          padding: sm|md|lg  clickable?
 Input         label  error  forwardRef  useId
 Select        label  error  options: {value,label}[]
 Textarea      label  error  forwardRef  resize-y
-Badge         variant: terracotta|green|blue|gold|gray
+Badge         variant: terracotta|sage|green|blue|gold|gray
 Modal         title  onClose — Escape + click-outside + X
 Toast         useToast() → .success(msg) .error(msg) .info(msg)
 Skeleton      animate-pulse  className para dimensiones

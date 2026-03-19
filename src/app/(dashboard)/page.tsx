@@ -8,28 +8,28 @@ const moduleCards = [
     name: "Proyectos",
     href: "/proyectos",
     icon: FolderKanban,
-    color: "#C4704A",
+    color: "#8AAC7E",
     preview: "0 proyectos activos",
   },
   {
     name: "Mercados",
     href: "/mercados",
     icon: TrendingUp,
-    color: "#9B7A4A",
+    color: "#7AACCC",
     preview: "BTC $—",
   },
   {
     name: "Patrimonio",
     href: "/patrimonio",
     icon: Wallet,
-    color: "#5B8C6A",
+    color: "#C9A96E",
     preview: "€— total",
   },
   {
     name: "Gastos",
     href: "/gastos",
     icon: CreditCard,
-    color: "#4A7A9B",
+    color: "#C87A8A",
     preview: "€— este mes",
   },
 ] as const;
@@ -66,7 +66,7 @@ export default async function DashboardPage() {
     <div>
       {/* Greeting */}
       <div className="mb-8">
-        <h1 className="animate-fade-in-up font-heading text-3xl text-foreground">
+        <h1 className="animate-fade-in-up font-display text-3xl text-foreground">
           {greeting}{firstName ? `, ${firstName}` : ""}
         </h1>
         <p

@@ -14,11 +14,11 @@ export function Topbar({ userName }: TopbarProps) {
 
   return (
     <>
-      <header className="flex h-14 items-center justify-between border-b border-border bg-background px-4 lg:hidden">
+      <header className="flex h-14 items-center justify-between border-b border-border bg-surface-2 px-4 lg:hidden">
         <ArkhosLogo size="sm" />
         <button
           onClick={() => setOpen(true)}
-          className="flex h-9 w-9 items-center justify-center rounded-md text-text-secondary hover:bg-sand"
+          className="flex h-9 w-9 items-center justify-center rounded-md text-text-secondary hover:bg-surface"
           aria-label="Abrir menú"
         >
           <Menu size={20} strokeWidth={1.75} />

@@ -23,7 +23,7 @@ export function ProjectsToolbar({ statuses }: ProjectsToolbarProps) {
   }, [localSearch, setFilters]);
 
   const statusOptions: Array<{ value: string; label: string; color: string }> = [
-    { value: "all", label: "Todos", color: "#888780" },
+    { value: "all", label: "Todos", color: "#6B6F62" },
     ...statuses.map((s) => ({
       value: s.name,
       label: s.name,

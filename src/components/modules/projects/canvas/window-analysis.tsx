@@ -58,21 +58,21 @@ function StepRow({
   animDelay: number;
 }) {
   const dotStyle: Record<StepStatus, React.CSSProperties> = {
-    done: { background: '#7a9b76' },
+    done: { background: '#8AAC7E' },
     active: {
-      background: '#C4704A',
+      background: '#8AAC7E',
       animation: 'analysis-pulse 2s ease-in-out infinite',
     },
     pending: {
       background: 'transparent',
-      border: '1.5px solid #D4C8B8',
+      border: '1.5px solid #252B20',
     },
   };
 
   const textClass: Record<StepStatus, string> = {
-    done: 'text-[#b0a090] line-through',
-    active: 'text-[#C4704A] font-semibold',
-    pending: 'text-[#ccc]',
+    done: 'text-[#6B6F62] line-through',
+    active: 'text-[#8AAC7E] font-semibold',
+    pending: 'text-[#4A4D44]',
   };
 
   return (
@@ -92,7 +92,7 @@ function StepRow({
           className="absolute left-[8px] top-[20px] w-px"
           style={{
             height: 'calc(100% - 8px)',
-            background: '#E2D9CA',
+            background: '#1E2219',
             transformOrigin: 'top',
           }}
         />
@@ -320,7 +320,7 @@ export function WindowAnalysis() {
       {(streamedText || isStreaming) && (
         <div
           ref={scrollRef}
-          className="max-h-[140px] overflow-y-auto rounded-md border border-border bg-sand/50 p-2"
+          className="max-h-[140px] overflow-y-auto rounded-md border border-border bg-surface-2 p-2"
         >
           <p className="whitespace-pre-wrap font-sans text-[11px] leading-relaxed text-text-secondary">
             {streamedText}

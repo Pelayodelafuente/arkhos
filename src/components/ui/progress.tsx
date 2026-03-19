@@ -9,7 +9,7 @@ export function Progress({ value, showLabel = false, className = "" }: ProgressP
 
   return (
     <div className={`flex items-center gap-3 ${className}`}>
-      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-sand">
+      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-border-2">
         <div
           className="h-full rounded-full bg-accent transition-all duration-300"
           style={{ width: `${clamped}%` }}

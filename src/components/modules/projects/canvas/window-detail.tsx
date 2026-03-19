@@ -57,7 +57,7 @@ function TaskRow({ task }: { task: PhaseTask }) {
 
   return (
     <div
-      className="group flex items-center gap-[6px] rounded-md px-[6px] py-[3px] transition-colors duration-150 hover:bg-[rgba(196,112,74,0.04)]"
+      className="group flex items-center gap-[6px] rounded-md px-[6px] py-[3px] transition-colors duration-150 hover:bg-[rgba(138,172,126,0.04)]"
     >
       {/* Checkbox */}
       <button
@@ -65,8 +65,8 @@ function TaskRow({ task }: { task: PhaseTask }) {
         onClick={() => editTask(task.id, { done: !task.done })}
         className="flex h-[14px] w-[14px] shrink-0 items-center justify-center rounded-[3px] border transition-colors duration-150"
         style={{
-          borderColor: task.done ? '#5B8C6A' : '#E2D9CA',
-          background: task.done ? '#5B8C6A' : 'transparent',
+          borderColor: task.done ? '#8AAC7E' : '#252B20',
+          background: task.done ? '#8AAC7E' : 'transparent',
         }}
       >
         {task.done && (
@@ -86,7 +86,7 @@ function TaskRow({ task }: { task: PhaseTask }) {
       <span
         className="flex-1 truncate text-[11px] leading-tight"
         style={{
-          color: task.done ? '#888780' : '#3D3630',
+          color: task.done ? '#6B6F62' : '#F2EDDF',
           textDecoration: task.done ? 'line-through' : 'none',
         }}
       >
@@ -97,7 +97,7 @@ function TaskRow({ task }: { task: PhaseTask }) {
       {stale && (
         <AlertCircle
           className="h-[11px] w-[11px] shrink-0"
-          style={{ color: '#9B7A4A' }}
+          style={{ color: '#C9A96E' }}
         />
       )}
 
@@ -136,7 +136,7 @@ function AddTaskInline({ phaseId }: { phaseId: string }) {
 
   return (
     <div className="flex items-center gap-[4px] px-[6px] py-[2px]">
-      <Plus className="h-[10px] w-[10px] shrink-0" style={{ color: '#888780' }} />
+      <Plus className="h-[10px] w-[10px] shrink-0" style={{ color: '#6B6F62' }} />
       <input
         type="text"
         value={value}
@@ -144,7 +144,7 @@ function AddTaskInline({ phaseId }: { phaseId: string }) {
         onKeyDown={handleKeyDown}
         onBlur={submit}
         placeholder="Añadir tarea..."
-        className="flex-1 border-none bg-transparent text-[11px] leading-tight text-[#3D3630] outline-none placeholder:text-[#888780]"
+        className="flex-1 border-none bg-transparent text-[11px] leading-tight text-[#F2EDDF] outline-none placeholder:text-[#6B6F62]"
       />
     </div>
   );
@@ -168,12 +168,12 @@ function PhaseSection({ phase }: { phase: ProjectPhase }) {
     <div className="flex flex-col">
       {/* Phase header */}
       <div
-        className="flex cursor-pointer items-center gap-[6px] rounded-md px-[4px] py-[4px] transition-colors duration-150 hover:bg-[rgba(196,112,74,0.05)]"
+        className="flex cursor-pointer items-center gap-[6px] rounded-md px-[4px] py-[4px] transition-colors duration-150 hover:bg-[rgba(138,172,126,0.06)]"
         onClick={() => setExpanded(!expanded)}
       >
         <Icon
           className="h-[12px] w-[12px] shrink-0"
-          style={{ color: '#888780' }}
+          style={{ color: '#6B6F62' }}
         />
 
         {/* Status dot (clickable to cycle) */}
@@ -191,7 +191,7 @@ function PhaseSection({ phase }: { phase: ProjectPhase }) {
         {/* Phase name */}
         <span
           className="flex-1 truncate text-[11px] font-medium leading-tight"
-          style={{ color: '#1A1714' }}
+          style={{ color: '#F2EDDF' }}
         >
           {phase.name}
         </span>
@@ -199,7 +199,7 @@ function PhaseSection({ phase }: { phase: ProjectPhase }) {
         {/* Task count */}
         <span
           className="shrink-0 font-mono text-[10px]"
-          style={{ color: '#888780' }}
+          style={{ color: '#6B6F62' }}
         >
           {doneCount}/{totalCount}
         </span>
@@ -207,7 +207,7 @@ function PhaseSection({ phase }: { phase: ProjectPhase }) {
 
       {/* Tasks (expanded) */}
       {expanded && (
-        <div className="ml-[14px] flex flex-col gap-[1px] border-l border-[#E2D9CA] pl-[6px]">
+        <div className="ml-[14px] flex flex-col gap-[1px] border-l border-[#1E2219] pl-[6px]">
           {phase.tasks
             .slice()
             .sort((a, b) => a.sort_order - b.sort_order)
@@ -255,8 +255,8 @@ function AddPhaseButton({ projectId }: { projectId: string }) {
       <button
         type="button"
         onClick={() => setAdding(true)}
-        className="flex items-center gap-[4px] rounded-md px-[6px] py-[4px] text-[11px] transition-colors duration-150 hover:bg-[rgba(196,112,74,0.05)]"
-        style={{ color: '#888780' }}
+        className="flex items-center gap-[4px] rounded-md px-[6px] py-[4px] text-[11px] transition-colors duration-150 hover:bg-[rgba(138,172,126,0.06)]"
+        style={{ color: '#6B6F62' }}
       >
         <Plus className="h-[11px] w-[11px]" />
         Añadir fase
@@ -266,7 +266,7 @@ function AddPhaseButton({ projectId }: { projectId: string }) {
 
   return (
     <div className="flex items-center gap-[4px] px-[6px] py-[3px]">
-      <Plus className="h-[10px] w-[10px] shrink-0" style={{ color: '#C4704A' }} />
+      <Plus className="h-[10px] w-[10px] shrink-0" style={{ color: '#8AAC7E' }} />
       <input
         type="text"
         value={value}
@@ -275,7 +275,7 @@ function AddPhaseButton({ projectId }: { projectId: string }) {
         onBlur={submit}
         autoFocus
         placeholder="Nombre de la fase..."
-        className="flex-1 border-none bg-transparent text-[11px] font-medium leading-tight text-[#1A1714] outline-none placeholder:text-[#888780]"
+        className="flex-1 border-none bg-transparent text-[11px] font-medium leading-tight text-[#F2EDDF] outline-none placeholder:text-[#6B6F62]"
       />
     </div>
   );
@@ -291,7 +291,7 @@ export function WindowDetail() {
   if (!selectedProjectId || !activeProject || activeProject.id !== selectedProjectId) {
     return (
       <div className="flex h-full items-center justify-center px-4 py-6">
-        <span className="text-center text-[11px]" style={{ color: '#888780' }}>
+        <span className="text-center text-[11px]" style={{ color: '#6B6F62' }}>
           Selecciona un proyecto
         </span>
       </div>
@@ -310,7 +310,7 @@ export function WindowDetail() {
         <div className="flex items-center gap-[6px]">
           <span
             className="flex-1 truncate text-[12px] font-semibold leading-tight"
-            style={{ color: '#1A1714' }}
+            style={{ color: '#F2EDDF' }}
           >
             {activeProject.name}
           </span>
@@ -324,7 +324,7 @@ export function WindowDetail() {
       </div>
 
       {/* Divider */}
-      <div className="h-px" style={{ background: '#E2D9CA' }} />
+      <div className="h-px" style={{ background: '#1E2219' }} />
 
       {/* Phases list */}
       <div className="flex flex-col gap-[2px]">

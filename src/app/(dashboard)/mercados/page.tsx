@@ -9,12 +9,12 @@ export default function MercadosPage() {
       <div className="animate-fade-in-up mb-8 flex items-center gap-3">
         <div
           className="flex h-10 w-10 items-center justify-center rounded-md"
-          style={{ backgroundColor: "#9B7A4A" }}
+          style={{ backgroundColor: "#7AACCC" }}
         >
           <TrendingUp size={20} strokeWidth={1.75} className="text-white" />
         </div>
         <div>
-          <h1 className="font-heading text-2xl text-foreground">Mercados</h1>
+          <h1 className="font-display text-2xl text-foreground">Mercados</h1>
         </div>
         <Badge variant="gold">Fase 4</Badge>
       </div>
@@ -44,9 +44,9 @@ export default function MercadosPage() {
             </div>
             {/* Skeleton bars */}
             <div className="mt-4 space-y-2">
-              <div className="h-2 w-full rounded-full bg-sand" />
-              <div className="h-2 w-3/4 rounded-full bg-sand" />
-              <div className="h-2 w-1/2 rounded-full bg-sand" />
+              <div className="h-2 w-full rounded-full bg-surface-2" />
+              <div className="h-2 w-3/4 rounded-full bg-surface-2" />
+              <div className="h-2 w-1/2 rounded-full bg-surface-2" />
             </div>
             {/* Watermark icon */}
             <div className="absolute -bottom-2 -right-2 opacity-[0.04]">

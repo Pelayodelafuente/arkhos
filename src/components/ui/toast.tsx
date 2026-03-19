@@ -7,9 +7,9 @@ const variantConfig: Record<
   ToastVariant,
   { icon: typeof Info; color: string; bg: string }
 > = {
-  success: { icon: CheckCircle, color: "#5B8C6A", bg: "rgba(91,140,106,0.08)" },
+  success: { icon: CheckCircle, color: "#8AAC7E", bg: "rgba(138,172,126,0.08)" },
   error:   { icon: XCircle,     color: "#DC2626", bg: "rgba(220,38,38,0.08)" },
-  info:    { icon: Info,        color: "#C4704A", bg: "rgba(196,112,74,0.08)" },
+  info:    { icon: Info,        color: "#8AAC7E", bg: "rgba(138,172,126,0.08)" },
 };
 
 function ToastItem({ toast }: { toast: Toast }) {

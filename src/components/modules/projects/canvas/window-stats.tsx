@@ -65,20 +65,20 @@ function StatCard({ data, animateDelay }: { data: StatCardData; animateDelay: nu
     return () => clearTimeout(timer);
   }, [animateDelay]);
 
-  const barColor = data.barColor ?? '#C4704A';
+  const barColor = data.barColor ?? '#8AAC7E';
 
   return (
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        background: '#F5F0EA',
+        background: '#181C16',
         borderRadius: 9,
         padding: '10px 10px 8px',
         cursor: 'default',
         transition: 'transform 0.15s ease, box-shadow 0.15s ease',
         transform: hovered ? 'translateY(-2px)' : undefined,
-        boxShadow: hovered ? '0 4px 12px rgba(0,0,0,0.06)' : undefined,
+        boxShadow: hovered ? '0 4px 12px rgba(0,0,0,0.15)' : undefined,
       }}
     >
       {/* Label */}
@@ -86,7 +86,7 @@ function StatCard({ data, animateDelay }: { data: StatCardData; animateDelay: nu
         className="font-sans font-semibold uppercase"
         style={{
           fontSize: 9,
-          color: '#aaa',
+          color: '#6B6F62',
           letterSpacing: 0.4,
           marginBottom: 4,
         }}
@@ -99,7 +99,7 @@ function StatCard({ data, animateDelay }: { data: StatCardData; animateDelay: nu
         className="font-mono font-bold"
         style={{
           fontSize: 23,
-          color: '#2a2a2a',
+          color: '#F2EDDF',
           lineHeight: 1,
         }}
       >
@@ -111,7 +111,7 @@ function StatCard({ data, animateDelay }: { data: StatCardData; animateDelay: nu
         className="font-sans"
         style={{
           fontSize: 9,
-          color: '#aaa',
+          color: '#6B6F62',
           marginTop: 2,
         }}
       >
@@ -123,7 +123,7 @@ function StatCard({ data, animateDelay }: { data: StatCardData; animateDelay: nu
         style={{
           height: 3,
           borderRadius: 2,
-          background: '#E2D9CA',
+          background: '#252B20',
           marginTop: 7,
           overflow: 'hidden',
         }}
@@ -184,7 +184,7 @@ function computeStats(project: Project): StatCardData[] {
       value: highPriorityTasks,
       sub: 'Urgentes',
       barPercent: highBarPercent,
-      barColor: '#E07050',
+      barColor: '#C87A8A',
     },
   ];
 }

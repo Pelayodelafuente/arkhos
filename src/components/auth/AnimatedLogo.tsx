@@ -1,10 +1,10 @@
 "use client";
 
 const MODULE_DOTS = [
-  { color: "#C4704A", label: "Proyectos", delay: "0.6s" },
-  { color: "#9B7A4A", label: "Mercados", delay: "0.75s" },
-  { color: "#5B8C6A", label: "Patrimonio", delay: "0.9s" },
-  { color: "#4A7A9B", label: "Gastos", delay: "1.05s" },
+  { color: "#8AAC7E", label: "Proyectos", delay: "0.6s" },
+  { color: "#7AACCC", label: "Mercados", delay: "0.75s" },
+  { color: "#C9A96E", label: "Patrimonio", delay: "0.9s" },
+  { color: "#C87A8A", label: "Gastos", delay: "1.05s" },
 ];
 
 interface AnimatedLogoProps {
@@ -67,13 +67,13 @@ export function AnimatedLogo({ compact = false }: AnimatedLogoProps) {
             xmlns="http://www.w3.org/2000/svg"
             style={{
               filter: compact
-                ? "drop-shadow(0 0 30px rgba(196, 112, 74, 0.35))"
-                : "drop-shadow(0 0 40px rgba(196, 112, 74, 0.35))",
+                ? "drop-shadow(0 0 30px rgba(138, 172, 126, 0.35))"
+                : "drop-shadow(0 0 40px rgba(138, 172, 126, 0.35))",
             }}
           >
             <path
               d="M36 6 L6 62 L18 62 L36 26 L54 62 L66 62 Z"
-              stroke="#C4704A"
+              stroke="#8AAC7E"
               strokeWidth="3"
               strokeLinejoin="round"
               strokeLinecap="round"
@@ -84,7 +84,7 @@ export function AnimatedLogo({ compact = false }: AnimatedLogoProps) {
               y1="48"
               x2="57"
               y2="48"
-              stroke="#C4704A"
+              stroke="#8AAC7E"
               strokeWidth="3"
               strokeLinecap="round"
             />
@@ -93,7 +93,7 @@ export function AnimatedLogo({ compact = false }: AnimatedLogoProps) {
               y1="38"
               x2="51"
               y2="38"
-              stroke="#C4704A"
+              stroke="#8AAC7E"
               strokeWidth="3"
               strokeLinecap="round"
               opacity="0.5"
@@ -102,7 +102,7 @@ export function AnimatedLogo({ compact = false }: AnimatedLogoProps) {
               cx="36"
               cy="18"
               r="2.5"
-              fill="#C4704A"
+              fill="#8AAC7E"
               className="auth-vertex-pulse"
             />
           </svg>
@@ -112,10 +112,10 @@ export function AnimatedLogo({ compact = false }: AnimatedLogoProps) {
       {/* Text below logo */}
       <div className={`flex flex-col items-center ${compact ? "mt-1" : "mt-2"}`}>
         <span
-          className="font-heading leading-none"
+          className="font-display leading-none"
           style={{
             fontSize: compact ? 22 : 42,
-            color: "#FAF7F2",
+            color: "#F2EDDF",
           }}
         >
           Arkhos
@@ -123,7 +123,7 @@ export function AnimatedLogo({ compact = false }: AnimatedLogoProps) {
         {!compact && (
           <span
             className="mt-2 text-[13px] uppercase tracking-[0.2em]"
-            style={{ color: "rgba(250, 247, 242, 0.3)" }}
+            style={{ color: "rgba(20, 23, 18, 0.3)" }}
           >
             Personal management platform
           </span>

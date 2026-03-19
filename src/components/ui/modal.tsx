@@ -54,7 +54,7 @@ export function Modal({ open, onClose, title, children, className = "" }: ModalP
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="absolute inset-0 bg-foreground/30 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={onClose}
           />
           {/* Card */}
@@ -71,7 +71,7 @@ export function Modal({ open, onClose, title, children, className = "" }: ModalP
                 <h2 className="font-heading text-xl text-foreground">{title}</h2>
                 <button
                   onClick={onClose}
-                  className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md text-text-tertiary transition-colors hover:bg-sand hover:text-foreground"
+                  className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md text-text-tertiary transition-colors hover:bg-surface-2 hover:text-foreground"
                   aria-label="Cerrar"
                 >
                   <X size={16} strokeWidth={1.75} />

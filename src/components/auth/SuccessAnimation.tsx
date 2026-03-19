@@ -21,14 +21,14 @@ export function SuccessAnimation({ email, onBack }: SuccessAnimationProps) {
             cx="32"
             cy="32"
             r="28"
-            stroke="#C4704A"
+            stroke="#8AAC7E"
             strokeWidth="2.5"
             fill="none"
             className="auth-draw-circle"
           />
           <path
             d="M20 33 L28 41 L44 25"
-            stroke="#C4704A"
+            stroke="#8AAC7E"
             strokeWidth="2.5"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -39,12 +39,12 @@ export function SuccessAnimation({ email, onBack }: SuccessAnimationProps) {
       </div>
 
       <h3
-        className="font-heading text-xl text-foreground"
+        className="font-display text-xl text-foreground"
         style={{ fontSize: 22 }}
       >
         Enlace enviado
       </h3>
-      <p className="mt-2 text-sm" style={{ color: "#888780" }}>
+      <p className="mt-2 text-sm" style={{ color: "#6B6F62" }}>
         Revisa tu bandeja de entrada en{" "}
         <span className="font-medium text-foreground">{email}</span>
       </p>

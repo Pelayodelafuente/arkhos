@@ -14,8 +14,8 @@ const CATEGORY_ICONS = [
 
 const COLOR_PRESETS = [
   "#E50914", "#6e40c9", "#3693F5", "#1DB954", "#000000",
-  "#0572EC", "#F24E1E", "#FF6363", "#4A7A9B", "#9B7A4A",
-  "#5B8C6A", "#C4704A",
+  "#0572EC", "#F24E1E", "#FF6363", "#C87A8A", "#7AACCC",
+  "#C9A96E", "#8AAC7E",
 ]
 
 interface CategoryManagerProps {
@@ -35,13 +35,13 @@ export function CategoryManager({ open, onClose, userId }: CategoryManagerProps)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [name, setName] = useState("")
   const [icon, setIcon] = useState("zap")
-  const [color, setColor] = useState("#4A7A9B")
+  const [color, setColor] = useState("#C87A8A")
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
   const resetForm = () => {
     setName("")
     setIcon("zap")
-    setColor("#4A7A9B")
+    setColor("#C87A8A")
     setShowForm(false)
     setEditingId(null)
   }
@@ -93,7 +93,7 @@ export function CategoryManager({ open, onClose, userId }: CategoryManagerProps)
           {categories.map((cat) => (
             <div
               key={cat.id}
-              className="flex items-center gap-3 rounded-lg px-3 py-2 transition-colors hover:bg-sand"
+              className="flex items-center gap-3 rounded-lg px-3 py-2 transition-colors hover:bg-surface-2"
             >
               {/* Icon + Color */}
               <div

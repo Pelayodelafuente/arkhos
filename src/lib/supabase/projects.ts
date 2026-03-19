@@ -134,7 +134,7 @@ export async function createProjectType(
       user_id: userId,
       name: input.name,
       icon: input.icon ?? 'Box',
-      color: input.color ?? '#888780',
+      color: input.color ?? '#6B6F62',
       sort_order: input.sort_order ?? 0,
     })
     .select()
@@ -174,7 +174,7 @@ export async function createProjectStatus(
     .insert({
       user_id: userId,
       name: input.name,
-      color: input.color ?? '#888780',
+      color: input.color ?? '#6B6F62',
       is_default: input.is_default ?? false,
       sort_order: input.sort_order ?? 0,
     })
@@ -210,7 +210,7 @@ export async function seedUserDefaults(
       user_id: userId,
       name: t.name,
       icon: t.icon ?? 'Box',
-      color: t.color ?? '#888780',
+      color: t.color ?? '#6B6F62',
       sort_order: i,
     }));
     await client.from('project_types').insert(inserts);
@@ -220,7 +220,7 @@ export async function seedUserDefaults(
     const inserts = defaults.statuses.map((s, i) => ({
       user_id: userId,
       name: s.name,
-      color: s.color ?? '#888780',
+      color: s.color ?? '#6B6F62',
       is_default: s.is_default ?? false,
       sort_order: i,
     }));
