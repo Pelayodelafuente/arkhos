@@ -1,43 +1,34 @@
 @import "tailwindcss";
 
 /* ══════════════════════════════════════
-   Arkhos — Obsidian Sage · Variante B
+   Arkhos — Brand Identity Variables
    ══════════════════════════════════════ */
-
-@import url('https://fonts.bunny.net/css?family=outfit:200,300,400,500,600,700,800|instrument-sans:300,300i,400,400i,500,600|dm-mono:300,400,500&display=swap');
 
 :root {
   /* Fondos */
-  --bg: #0F110E;
-  --surface: #141712;
-  --surface-2: #181C16;
-
-  /* Bordes */
-  --border: #1E2219;
-  --border-2: #252B20;
-
-  /* Acento sage */
-  --sage: #8AAC7E;
-  --sage-dim: #4D6845;
-  --sage-glow: rgba(138,172,126,0.12);
+  --bg-cream: #FAF7F2;
+  --bg-sand: #F0EBE1;
+  --bg-card: #FFFFFF;
 
   /* Textos */
-  --cream: #F2EDDF;
-  --cream-dim: #BDB89F;
-  --cream-mute: #6B6F62;
+  --text-primary: #1A1714;
+  --text-secondary: #3D3630;
+  --text-tertiary: #888780;
 
-  /* Gold */
-  --gold: #C9A96E;
-  --gold-dim: rgba(201,169,110,0.15);
+  /* Bordes */
+  --border-stone: #E2D9CA;
+
+  /* Acento */
+  --accent-terracotta: #C4704A;
 
   /* Colores por módulo */
-  --mod-proyectos: #8AAC7E;
-  --mod-mercados: #7AACCC;
-  --mod-patrimonio: #C9A96E;
-  --mod-gastos: #C87A8A;
+  --module-proyectos: #C4704A;
+  --module-patrimonio: #5B8C6A;
+  --module-gastos: #4A7A9B;
+  --module-mercados: #9B7A4A;
 
-  /* Sombras */
-  --shadow-modal: 0 4px 20px rgba(0, 0, 0, 0.3);
+  /* Sombras (solo modales) */
+  --shadow-modal: 0 4px 20px rgba(26, 23, 20, 0.08);
 
   /* Animation system */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -49,52 +40,41 @@
 
 @theme inline {
   /* Fondos */
-  --color-background: var(--bg);
-  --color-foreground: var(--cream);
-  --color-card: var(--surface);
-  --color-sand: var(--surface-2);
-  --color-surface: var(--surface);
-  --color-surface-2: var(--surface-2);
+  --color-background: var(--bg-cream);
+  --color-foreground: var(--text-primary);
+  --color-card: var(--bg-card);
+  --color-sand: var(--bg-sand);
 
   /* Bordes */
-  --color-border: var(--border);
-  --color-border-2: var(--border-2);
+  --color-border: var(--border-stone);
 
   /* Acento */
-  --color-accent: var(--sage);
-  --color-sage: var(--sage);
-  --color-sage-dim: var(--sage-dim);
+  --color-accent: var(--accent-terracotta);
 
   /* Textos */
-  --color-text-secondary: var(--cream-dim);
-  --color-text-tertiary: var(--cream-mute);
-
-  /* Gold */
-  --color-gold: var(--gold);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
 
   /* Módulos */
-  --color-proyectos: var(--mod-proyectos);
-  --color-patrimonio: var(--mod-patrimonio);
-  --color-gastos: var(--mod-gastos);
-  --color-mercados: var(--mod-mercados);
+  --color-proyectos: var(--module-proyectos);
+  --color-patrimonio: var(--module-patrimonio);
+  --color-gastos: var(--module-gastos);
+  --color-mercados: var(--module-mercados);
 
-  /* Tipografías */
-  --font-display: 'Outfit', sans-serif;
-  --font-sans: 'Instrument Sans', sans-serif;
-  --font-mono: 'DM Mono', monospace;
-  --font-heading: 'Outfit', sans-serif;
+  /* Tipografías — referencia directa a next/font variables (evita ciclos) */
+  --font-sans: var(--font-plus-jakarta-sans), "Plus Jakarta Sans", sans-serif;
+  --font-mono: var(--font-jetbrains-mono), "JetBrains Mono", monospace;
+  --font-heading: var(--font-dm-serif-display), "DM Serif Display", serif;
 }
 
 body {
-  background-color: var(--bg);
-  color: var(--cream);
+  background-color: var(--bg-cream);
+  color: var(--text-primary);
   font-family: var(--font-sans);
-  font-weight: 300;
-  line-height: 1.7;
 }
 
 mark {
-  background-color: rgba(138, 172, 126, 0.2);
+  background-color: rgba(196, 112, 74, 0.2);
   color: inherit;
   border-radius: 2px;
   padding: 0 1px;
@@ -136,35 +116,35 @@ mark {
 .auth-orbit-1 {
   width: 330px;
   height: 330px;
-  border: 0.5px solid rgba(138, 172, 126, 0.06);
+  border: 0.5px solid rgba(196, 112, 74, 0.06);
   animation: auth-spin-cw 25s linear infinite;
 }
 
 .auth-orbit-2 {
   width: 220px;
   height: 220px;
-  border: 0.5px solid rgba(138, 172, 126, 0.09);
+  border: 0.5px solid rgba(196, 112, 74, 0.09);
   animation: auth-spin-ccw 18s linear infinite;
 }
 
 .auth-orbit-3 {
   width: 150px;
   height: 150px;
-  border: 0.5px solid rgba(138, 172, 126, 0.12);
+  border: 0.5px solid rgba(196, 112, 74, 0.12);
   animation: auth-spin-cw 12s linear infinite;
 }
 
 .auth-orbit-1-compact {
   width: 130px;
   height: 130px;
-  border: 0.5px solid rgba(138, 172, 126, 0.06);
+  border: 0.5px solid rgba(196, 112, 74, 0.06);
   animation: auth-spin-cw 25s linear infinite;
 }
 
 .auth-orbit-2-compact {
   width: 90px;
   height: 90px;
-  border: 0.5px solid rgba(138, 172, 126, 0.09);
+  border: 0.5px solid rgba(196, 112, 74, 0.09);
   animation: auth-spin-ccw 18s linear infinite;
 }
 
@@ -178,7 +158,7 @@ mark {
   to { transform: translate(-50%, -50%) rotate(-360deg); }
 }
 
-/* Orb tracks */
+/* Orb tracks — absolute positioned divs that rotate and carry an orb */
 .auth-orb-track {
   position: absolute;
   top: 50%;
@@ -221,16 +201,16 @@ mark {
   left: 50%;
   transform: translateX(-50%);
   border-radius: 50%;
-  background-color: rgba(138, 172, 126, 0.6);
-  box-shadow: 0 0 6px rgba(138, 172, 126, 0.4);
+  background-color: rgba(196, 112, 74, 0.6);
+  box-shadow: 0 0 6px rgba(196, 112, 74, 0.4);
 }
 
 /* Glass card for mobile auth overlay */
 .auth-glass-card {
-  background-color: rgba(20, 23, 18, 0.88);
+  background-color: rgba(250, 247, 242, 0.88);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(30, 34, 25, 0.5);
+  border: 1px solid rgba(226, 217, 202, 0.5);
   border-radius: 16px;
 }
 
@@ -253,7 +233,7 @@ mark {
 
 /* Module dot pulse */
 @keyframes auth-pulse-dot {
-  0%, 100% { box-shadow: 0 0 0 0 var(--dot-color, rgba(138,172,126,0.4)); }
+  0%, 100% { box-shadow: 0 0 0 0 var(--dot-color, rgba(196,112,74,0.4)); }
   50% { box-shadow: 0 0 0 4px transparent; }
 }
 
@@ -261,7 +241,7 @@ mark {
   animation: auth-pulse-dot 3s ease-in-out infinite;
 }
 
-/* Success animation */
+/* Success animation — draw circle then check */
 @keyframes auth-draw-circle {
   from { stroke-dashoffset: 176; }
   to { stroke-dashoffset: 0; }
@@ -294,21 +274,21 @@ mark {
   height: 46px;
   width: 100%;
   border-radius: 10px;
-  border: 1px solid var(--border);
-  background-color: var(--bg);
+  border: 1px solid #E2D9CA;
+  background-color: white;
   padding: 0 14px;
   font-size: 14px;
-  color: var(--cream);
+  color: #1A1714;
   outline: none;
   transition: border-color 0.2s;
 }
 
 .auth-input::placeholder {
-  color: var(--cream-mute);
+  color: #B0A48F;
 }
 
 .auth-input:focus {
-  border-color: var(--sage-dim);
+  border-color: #C4704A;
 }
 
 .auth-input-error {
@@ -323,7 +303,7 @@ mark {
    App — Global Animations
    ══════════════════════════════════════ */
 
-/* Fade in up */
+/* Fade in up — reusable entry animation */
 @keyframes fade-in-up {
   from {
     opacity: 0;
@@ -339,7 +319,7 @@ mark {
   animation: fade-in-up var(--transition-normal) var(--ease-out-expo) both;
 }
 
-/* Fade in */
+/* Fade in — simple opacity */
 @keyframes fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -355,7 +335,7 @@ mark {
   to { opacity: 0; }
 }
 
-/* Scale in */
+/* Scale in — for modals */
 @keyframes scale-in {
   from {
     opacity: 0;
@@ -371,7 +351,7 @@ mark {
   animation: scale-in var(--transition-normal) var(--ease-out-expo) both;
 }
 
-/* Slide in from right */
+/* Slide in from right — for toasts */
 @keyframes slide-in-right {
   from {
     opacity: 0;
@@ -403,7 +383,7 @@ mark {
   animation: slide-out-right 200ms var(--ease-out-expo) both;
 }
 
-/* Slide in/out left — drawer */
+/* Slide in from left — for drawer */
 @keyframes slide-in-left {
   from { transform: translateX(-100%); }
   to { transform: translateX(0); }
@@ -414,9 +394,9 @@ mark {
   to { transform: translateX(-100%); }
 }
 
-/* Module dot pulse */
+/* Module dot pulse — active module only */
 @keyframes dot-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 var(--dot-color, rgba(138,172,126,0.4)); }
+  0%, 100% { box-shadow: 0 0 0 0 var(--dot-color, rgba(196,112,74,0.4)); }
   50% { box-shadow: 0 0 0 4px transparent; }
 }
 
@@ -437,10 +417,21 @@ mark {
   to { transform: scaleX(0); }
 }
 
-/* Canvas: fadeIn */
+/* Canvas: fadeIn (used by minimap/zoom with delay) */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+/* Canvas: ghost cursor path */
+@keyframes cursorPath {
+  0%   { top: 105%; left: 18%; opacity: 0; }
+  5%   { opacity: 1; }
+  20%  { top: 48%; left: 28%; }
+  50%  { top: 38%; left: 52%; }
+  80%  { top: 52%; left: 74%; }
+  95%  { opacity: 1; }
+  100% { top: 105%; left: 82%; opacity: 0; }
 }
 
 /* Reduced motion */

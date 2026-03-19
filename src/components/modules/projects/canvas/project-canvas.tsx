@@ -46,19 +46,19 @@ export function ProjectCanvas({ userId }: ProjectCanvasProps) {
       <div
         className="relative z-10 flex h-12 shrink-0 items-center gap-3 px-4"
         style={{
-          background: 'rgba(20,23,18,0.85)',
+          background: 'rgba(250,247,242,0.85)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
-          borderBottom: '0.5px solid #1E2219',
+          borderBottom: '0.5px solid #E2D9CA',
         }}
       >
         <span
           className="font-heading text-[15px] font-bold"
-          style={{ color: '#8AAC7E', letterSpacing: '-0.3px' }}
+          style={{ color: '#C4704A', letterSpacing: '-0.3px' }}
         >
           Arkhos
         </span>
-        <div className="h-[15px] w-px" style={{ background: '#1E2219' }} />
+        <div className="h-[15px] w-px" style={{ background: '#E2D9CA' }} />
         <span className="text-[12px] font-medium text-text-tertiary">
           Proyectos
         </span>

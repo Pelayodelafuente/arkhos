@@ -26,7 +26,7 @@ export function ArkhosLogo({
       <ArkhosIcon size={icon} />
       {showText && (
         <span
-          className={`font-display font-extralight tracking-[0.28em] uppercase leading-none text-foreground ${text}`}
+          className={`font-heading leading-none text-foreground ${text}`}
         >
           Arkhos
         </span>

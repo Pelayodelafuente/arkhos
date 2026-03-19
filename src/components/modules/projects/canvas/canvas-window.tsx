@@ -22,9 +22,9 @@ interface CanvasWindowProps {
 // ─── Constants ───────────────────────
 
 const BADGE_STYLES: Record<CanvasWindowBadge['variant'], { bg: string; color: string }> = {
-  terracotta: { bg: 'rgba(138,172,126,0.12)', color: '#8AAC7E' },
-  green: { bg: 'rgba(138,172,126,0.15)', color: '#8AAC7E' },
-  gray: { bg: 'rgba(107,111,98,0.15)', color: '#6B6F62' },
+  terracotta: { bg: 'rgba(196,112,74,0.12)', color: '#C4704A' },
+  green: { bg: 'rgba(122,155,118,0.15)', color: '#4a7a46' },
+  gray: { bg: 'rgba(136,135,128,0.12)', color: '#888780' },
 };
 
 // ─── Component ───────────────────────
@@ -50,10 +50,10 @@ export function CanvasWindow({
     <div
       className={`flex flex-col overflow-hidden ${className}`}
       style={{
-        background: 'rgba(20,23,18,0.97)',
-        border: '0.5px solid #1E2219',
+        background: 'rgba(255,252,248,0.97)',
+        border: '0.5px solid #E2D9CA',
         borderRadius: 14,
-        boxShadow: '0 8px 32px rgba(0,0,0,0.2), 0 1px 4px rgba(0,0,0,0.05)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.09), 0 1px 4px rgba(0,0,0,0.05)',
         transition: 'box-shadow 200ms ease',
       }}
     >
@@ -62,8 +62,8 @@ export function CanvasWindow({
         className="flex items-center gap-2"
         style={{
           padding: '10px 12px 9px',
-          borderBottom: isMinimized ? 'none' : '0.5px solid #1E2219',
-          background: 'rgba(24,28,22,0.6)',
+          borderBottom: isMinimized ? 'none' : '0.5px solid #EDE8E0',
+          background: 'rgba(250,247,242,0.6)',
           borderRadius: isMinimized ? 14 : '14px 14px 0 0',
           cursor: 'default',
           userSelect: 'none',
@@ -79,7 +79,6 @@ export function CanvasWindow({
             style={{
               background: '#FF5F57',
               border: '0.5px solid rgba(0,0,0,0.08)',
-              opacity: 0.7,
             }}
           />
           <span
@@ -87,7 +86,6 @@ export function CanvasWindow({
             style={{
               background: '#FEBC2E',
               border: '0.5px solid rgba(0,0,0,0.08)',
-              opacity: 0.7,
             }}
           />
           <span
@@ -95,7 +93,6 @@ export function CanvasWindow({
             style={{
               background: '#28C840',
               border: '0.5px solid rgba(0,0,0,0.08)',
-              opacity: 0.7,
             }}
           />
         </div>
@@ -103,7 +100,7 @@ export function CanvasWindow({
         {/* Title */}
         <span
           className="select-none text-[11px] font-semibold"
-          style={{ color: '#BDB89F' }}
+          style={{ color: '#6a5a4a' }}
         >
           {title}
         </span>
@@ -137,7 +134,7 @@ export function CanvasWindow({
             className="flex h-[22px] w-[22px] items-center justify-center"
             style={{
               borderRadius: 5,
-              border: '0.5px solid #252B20',
+              border: '0.5px solid #E2D9CA',
               background: 'transparent',
             }}
             onClick={(e) => {

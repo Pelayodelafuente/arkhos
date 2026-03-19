@@ -9,12 +9,12 @@ export default function PatrimonioPage() {
       <div className="animate-fade-in-up mb-8 flex items-center gap-3">
         <div
           className="flex h-10 w-10 items-center justify-center rounded-md"
-          style={{ backgroundColor: "#C9A96E" }}
+          style={{ backgroundColor: "#5B8C6A" }}
         >
           <Wallet size={20} strokeWidth={1.75} className="text-white" />
         </div>
         <div>
-          <h1 className="font-display text-2xl text-foreground">Patrimonio</h1>
+          <h1 className="font-heading text-2xl text-foreground">Patrimonio</h1>
         </div>
         <Badge variant="green">Fase 5</Badge>
       </div>
@@ -43,9 +43,9 @@ export default function PatrimonioPage() {
               <span className="text-xs font-medium">{label}</span>
             </div>
             <div className="mt-4 space-y-2">
-              <div className="h-2 w-full rounded-full bg-surface-2" />
-              <div className="h-2 w-3/4 rounded-full bg-surface-2" />
-              <div className="h-2 w-1/2 rounded-full bg-surface-2" />
+              <div className="h-2 w-full rounded-full bg-sand" />
+              <div className="h-2 w-3/4 rounded-full bg-sand" />
+              <div className="h-2 w-1/2 rounded-full bg-sand" />
             </div>
             <div className="absolute -bottom-2 -right-2 opacity-[0.04]">
               <Wallet size={64} strokeWidth={1} />

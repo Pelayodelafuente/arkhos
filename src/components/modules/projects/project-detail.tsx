@@ -381,13 +381,13 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
           ) : (
             <div
               className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl"
-              style={{ backgroundColor: "rgba(138,172,126,0.1)" }}
+              style={{ backgroundColor: "rgba(196,112,74,0.1)" }}
             >
               <ProjectIcon icon={project.icon} size={24} className="text-accent" />
             </div>
           )}
           <div>
-            <h1 className="font-display text-2xl text-foreground">{project.name}</h1>
+            <h1 className="font-heading text-2xl text-foreground">{project.name}</h1>
             <div className="mt-1 flex flex-wrap items-center gap-2">
               <StatusBadge
                 status={project.status}
@@ -419,7 +419,7 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
           {project.stack.map((tech) => (
             <span
               key={tech}
-              className="rounded-md bg-surface-2 px-2 py-0.5 text-[10px] font-medium text-text-secondary"
+              className="rounded-md bg-sand px-2 py-0.5 text-[10px] font-medium text-text-secondary"
             >
               {tech}
             </span>
@@ -836,7 +836,7 @@ function SortablePhaseItem({
         {/* Status cycle */}
         <button
           onClick={() => onCycleStatus(phase.id, phase.status)}
-          className="rounded-md p-1 text-text-tertiary transition-colors hover:bg-surface-2 hover:text-foreground"
+          className="rounded-md p-1 text-text-tertiary transition-colors hover:bg-sand hover:text-foreground"
           title="Cambiar estado"
         >
           <span
@@ -993,7 +993,7 @@ function SortableTaskItem({
 
   return (
     <div ref={setNodeRef} style={style}>
-      <div className="group flex items-start gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-surface-2/30">
+      <div className="group flex items-start gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-sand/30">
         {/* Drag handle or mobile arrows */}
         {isMobile ? (
           <div className="mt-0.5 flex flex-col gap-0">
@@ -1192,7 +1192,7 @@ function PhaseDiagram({ phases }: { phases: PhaseListProps }) {
                     y1={y + nodeHeight / 2}
                     x2={x + nodeWidth + gapX - 8}
                     y2={y + nodeHeight / 2}
-                    stroke="#1E2219"
+                    stroke="#E2D9CA"
                     strokeWidth={1.5}
                   />
                   <polygon
@@ -1201,7 +1201,7 @@ function PhaseDiagram({ phases }: { phases: PhaseListProps }) {
                     },${y + nodeHeight / 2} ${x + nodeWidth + gapX - 8},${
                       y + nodeHeight / 2 + 4
                     }`}
-                    fill="#1E2219"
+                    fill="#E2D9CA"
                   />
                 </>
               )}
@@ -1215,13 +1215,13 @@ function PhaseDiagram({ phases }: { phases: PhaseListProps }) {
                 )}
               </circle>
               <text
-                x={x + 28} y={y + nodeHeight / 2 + 1} fill="#F2EDDF" fontSize={11}
+                x={x + 28} y={y + nodeHeight / 2 + 1} fill="#1A1714" fontSize={11}
                 fontFamily="Plus Jakarta Sans, sans-serif" dominantBaseline="middle"
               >
                 {phase.name.length > 14 ? phase.name.slice(0, 14) + "..." : phase.name}
               </text>
               <text
-                x={x + nodeWidth - 12} y={y + nodeHeight / 2 + 1} fill="#6B6F62" fontSize={9}
+                x={x + nodeWidth - 12} y={y + nodeHeight / 2 + 1} fill="#888780" fontSize={9}
                 fontFamily="JetBrains Mono, monospace" textAnchor="end" dominantBaseline="middle"
               >
                 {phase.tasks.filter((t) => t.done).length}/{phase.tasks.length}
@@ -1230,14 +1230,14 @@ function PhaseDiagram({ phases }: { phases: PhaseListProps }) {
           );
         })}
         {[
-          { color: "#8AAC7E", label: "Completada" },
-          { color: "#8AAC7E", label: "En progreso" },
-          { color: "#6B6F62", label: "Pendiente" },
+          { color: "#5B8C6A", label: "Completada" },
+          { color: "#C4704A", label: "En progreso" },
+          { color: "#888780", label: "Pendiente" },
         ].map((item, i) => (
           <g key={item.label}>
             <circle cx={10 + i * 100} cy={12} r={4} fill={item.color} />
             <text
-              x={20 + i * 100} y={12} fill="#6B6F62" fontSize={9}
+              x={20 + i * 100} y={12} fill="#888780" fontSize={9}
               fontFamily="Plus Jakarta Sans, sans-serif" dominantBaseline="middle"
             >
               {item.label}
@@ -1286,7 +1286,7 @@ function PhaseFlowGraph({ phases }: { phases: PhaseListProps }) {
                 <line
                   x1={x + nodeW / 2} y1={y + nodePositions[i].totalHeight}
                   x2={x + nodeW / 2} y2={nodePositions[i + 1].y}
-                  stroke="#1E2219" strokeWidth={1.5} strokeDasharray="4,4"
+                  stroke="#E2D9CA" strokeWidth={1.5} strokeDasharray="4,4"
                 />
               )}
               <rect
@@ -1299,7 +1299,7 @@ function PhaseFlowGraph({ phases }: { phases: PhaseListProps }) {
                 )}
               </circle>
               <text
-                x={x + 28} y={y + nodeH / 2} fill="#F2EDDF" fontSize={12}
+                x={x + 28} y={y + nodeH / 2} fill="#1A1714" fontSize={12}
                 fontFamily="Plus Jakarta Sans, sans-serif" fontWeight={500} dominantBaseline="middle"
               >
                 {phase.name}
@@ -1310,12 +1310,12 @@ function PhaseFlowGraph({ phases }: { phases: PhaseListProps }) {
                   <g key={task.id}>
                     <rect
                       x={x + 16} y={taskY} width={nodeW - 32} height={taskH - 4} rx={4}
-                      fill={task.done ? "#8AAC7E14" : "#141712"}
-                      stroke={task.done ? "#8AAC7E" : "#1E2219"} strokeWidth={1}
+                      fill={task.done ? "#5B8C6A14" : "#FAF7F2"}
+                      stroke={task.done ? "#5B8C6A" : "#E2D9CA"} strokeWidth={1}
                     />
                     <text
                       x={x + 28} y={taskY + (taskH - 4) / 2}
-                      fill={task.done ? "#8AAC7E" : "#BDB89F"} fontSize={10}
+                      fill={task.done ? "#5B8C6A" : "#3D3630"} fontSize={10}
                       fontFamily="Plus Jakarta Sans, sans-serif" dominantBaseline="middle"
                     >
                       {task.done ? "\u2713 " : ""}

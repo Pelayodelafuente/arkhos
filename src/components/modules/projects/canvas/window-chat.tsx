@@ -58,17 +58,17 @@ function MessageBubble({ message }: { message: ChatMessage }) {
         style={
           isUser
             ? {
-                background: '#8AAC7E',
-                color: '#0F110E',
+                background: '#C4704A',
+                color: '#fff',
                 borderRadius: '10px 3px 10px 10px',
               }
             : {
-                background: 'rgba(30,34,25,0.75)',
+                background: 'rgba(237,232,224,0.75)',
                 backdropFilter: 'blur(8px)',
-                border: '0.5px solid rgba(138,172,126,0.15)',
+                border: '0.5px solid rgba(255,255,255,0.7)',
                 borderRadius: '3px 10px 10px 10px',
-                boxShadow: '0 4px 14px rgba(0,0,0,0.2)',
-                color: '#BDB89F',
+                boxShadow: '0 4px 14px rgba(0,0,0,0.06)',
+                color: '#3a2a2a',
               }
         }
       >
@@ -79,7 +79,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
             style={{
               borderRadius: '10px 3px 10px 10px',
               background:
-                'radial-gradient(ellipse at bottom, rgba(138,172,126,0.15), transparent)',
+                'radial-gradient(ellipse at bottom, rgba(255,255,255,0.15), transparent)',
             }}
           />
         )}
@@ -271,18 +271,18 @@ export function WindowChat() {
           placeholder={
             activeProject ? 'Escribe tu mensaje...' : 'Cargando proyecto...'
           }
-          className="flex-1 rounded-[8px] bg-[rgba(30,34,25,0.8)] px-[10px] py-[6px] font-sans text-[11px] text-text-secondary outline-none transition-all duration-150 placeholder:text-text-tertiary disabled:opacity-50"
+          className="flex-1 rounded-[8px] bg-[rgba(250,247,242,0.8)] px-[10px] py-[6px] font-sans text-[11px] text-text-secondary outline-none transition-all duration-150 placeholder:text-text-tertiary disabled:opacity-50"
           style={{
-            border: '0.5px solid #252B20',
+            border: '0.5px solid #D4C8B8',
             backdropFilter: 'blur(4px)',
           }}
           onFocus={(e) => {
-            e.currentTarget.style.borderColor = 'rgba(138,172,126,0.5)';
+            e.currentTarget.style.borderColor = 'rgba(196,112,74,0.5)';
             e.currentTarget.style.boxShadow =
-              '0 0 0 3px rgba(138,172,126,0.08)';
+              '0 0 0 3px rgba(196,112,74,0.08)';
           }}
           onBlur={(e) => {
-            e.currentTarget.style.borderColor = '#252B20';
+            e.currentTarget.style.borderColor = '#D4C8B8';
             e.currentTarget.style.boxShadow = 'none';
           }}
         />
@@ -292,19 +292,19 @@ export function WindowChat() {
           disabled={isStreaming || !input.trim()}
           className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[8px] transition-all duration-150 hover:scale-[1.07] disabled:opacity-40 disabled:hover:scale-100"
           style={{
-            background: '#8AAC7E',
+            background: '#C4704A',
           }}
           onMouseEnter={(e) => {
             if (!(e.currentTarget as HTMLButtonElement).disabled) {
               (e.currentTarget as HTMLButtonElement).style.background =
-                '#7A9C6E';
+                '#b05e3a';
             }
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = '#8AAC7E';
+            (e.currentTarget as HTMLButtonElement).style.background = '#C4704A';
           }}
         >
-          <Send className="h-[13px] w-[13px] text-[#0F110E]" />
+          <Send className="h-[13px] w-[13px] text-white" />
         </button>
       </div>
     </div>

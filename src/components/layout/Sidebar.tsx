@@ -31,25 +31,25 @@ const navItems = [
     label: "Proyectos",
     href: "/proyectos",
     icon: FolderKanban,
-    dot: "#8AAC7E",
+    dot: "#C4704A",
   },
   {
     label: "Mercados",
     href: "/mercados",
     icon: TrendingUp,
-    dot: "#7AACCC",
+    dot: "#9B7A4A",
   },
   {
     label: "Patrimonio",
     href: "/patrimonio",
     icon: Wallet,
-    dot: "#C9A96E",
+    dot: "#5B8C6A",
   },
   {
     label: "Gastos",
     href: "/gastos",
     icon: CreditCard,
-    dot: "#C87A8A",
+    dot: "#4A7A9B",
   },
 ] as const;
 
@@ -69,7 +69,7 @@ export function Sidebar({ userName }: SidebarProps) {
 
   return (
     <aside
-      className="flex h-screen flex-col border-r border-border bg-surface"
+      className="flex h-screen flex-col border-r border-border bg-sand"
       style={{
         width: collapsed ? 56 : 240,
         transition: "width 250ms cubic-bezier(0.16,1,0.3,1)",
@@ -94,7 +94,7 @@ export function Sidebar({ userName }: SidebarProps) {
           <button
             type="button"
             onClick={toggleCollapsed}
-            className="flex items-center justify-center rounded-md text-text-tertiary transition-colors hover:bg-surface-2 hover:text-foreground"
+            className="flex items-center justify-center rounded-md text-text-tertiary transition-colors hover:bg-border hover:text-foreground"
             style={{ width: 28, height: 28 }}
             title="Colapsar sidebar"
           >
@@ -109,7 +109,7 @@ export function Sidebar({ userName }: SidebarProps) {
           <button
             type="button"
             onClick={toggleCollapsed}
-            className="flex items-center justify-center rounded-md text-text-tertiary transition-colors hover:bg-surface-2 hover:text-foreground"
+            className="flex items-center justify-center rounded-md text-text-tertiary transition-colors hover:bg-border hover:text-foreground"
             style={{ width: 32, height: 28 }}
             title="Expandir sidebar"
           >
@@ -131,14 +131,13 @@ export function Sidebar({ userName }: SidebarProps) {
                   href={href}
                   className={`group flex items-center rounded-md text-sm font-medium transition-all duration-200 ${
                     isActive
-                      ? "text-accent"
-                      : "text-text-secondary hover:bg-surface-2 hover:text-foreground"
+                      ? "bg-accent text-[#FBF0EA]"
+                      : "text-text-secondary hover:bg-border hover:text-foreground"
                   }`}
                   style={{
                     gap: collapsed ? 0 : 12,
                     padding: collapsed ? "10px 0" : "10px 12px",
                     justifyContent: collapsed ? "center" : "flex-start",
-                    ...(isActive ? { background: "rgba(138,172,126,0.12)" } : {}),
                   }}
                   title={collapsed ? label : undefined}
                 >
@@ -146,7 +145,7 @@ export function Sidebar({ userName }: SidebarProps) {
                     <span
                       className={`h-2 w-2 flex-shrink-0 rounded-full ${isActive ? "dot-pulse-active" : ""}`}
                       style={{
-                        backgroundColor: dot,
+                        backgroundColor: isActive ? "#FBF0EA" : dot,
                         "--dot-color": dot,
                       } as React.CSSProperties}
                     />
@@ -180,7 +179,7 @@ export function Sidebar({ userName }: SidebarProps) {
             href="/docs"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-text-tertiary transition-colors hover:bg-surface-2 hover:text-accent"
+            className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-text-tertiary transition-colors hover:bg-border hover:text-accent"
           >
             <span className="h-2 w-2 flex-shrink-0" />
             <BookOpen size={16} strokeWidth={1.75} className="flex-shrink-0" />
@@ -198,14 +197,13 @@ export function Sidebar({ userName }: SidebarProps) {
           href="/settings/security"
           className={`flex items-center rounded-md text-sm font-medium transition-colors ${
             pathname === "/settings/security"
-              ? "text-accent"
-              : "text-text-secondary hover:bg-surface-2 hover:text-foreground"
+              ? "bg-accent text-[#FBF0EA]"
+              : "text-text-secondary hover:bg-border hover:text-foreground"
           }`}
           style={{
             gap: collapsed ? 0 : 12,
             padding: collapsed ? "10px 0" : "10px 12px",
             justifyContent: collapsed ? "center" : "flex-start",
-            ...(pathname === "/settings/security" ? { background: "rgba(138,172,126,0.12)" } : {}),
           }}
           title={collapsed ? "Seguridad" : undefined}
         >

@@ -38,7 +38,7 @@ function ProjectFolder({ logoUrl, isHovered }: { logoUrl: string | null; isHover
         width: 40,
         height: 32,
         borderRadius: 5,
-        background: '#8AAC7E',
+        background: '#C4704A',
         position: 'relative',
         transition: 'transform 0.2s ease',
         transform: isHovered ? 'translateX(-2px) rotate(-5deg)' : undefined,
@@ -53,7 +53,7 @@ function ProjectFolder({ logoUrl, isHovered }: { logoUrl: string | null; isHover
           left: 3,
           width: 13,
           height: 7,
-          background: '#8AAC7E',
+          background: '#C4704A',
           borderRadius: '3px 3px 0 0',
           opacity: 0.72,
         }}
@@ -86,14 +86,14 @@ function ProjectCard({
         borderRadius: 9,
         padding: '9px 6px',
         border: isActive
-          ? '1px solid rgba(138,172,126,0.38)'
+          ? '1px solid rgba(196,112,74,0.38)'
           : hovered
-            ? '1px solid rgba(138,172,126,0.22)'
+            ? '1px solid rgba(196,112,74,0.22)'
             : '1px solid transparent',
         background: isActive
-          ? 'rgba(138,172,126,0.10)'
+          ? 'rgba(196,112,74,0.10)'
           : hovered
-            ? 'rgba(138,172,126,0.06)'
+            ? 'rgba(196,112,74,0.06)'
             : 'transparent',
         transition: 'all 0.18s ease',
         transform: hovered && !isActive ? 'translateY(-2px)' : undefined,
@@ -106,7 +106,7 @@ function ProjectCard({
         className="font-sans font-medium leading-tight"
         style={{
           fontSize: 9,
-          color: '#BDB89F',
+          color: '#6a5a4a',
           textAlign: 'center',
           lineHeight: 1.2,
           maxWidth: 70,
@@ -189,21 +189,21 @@ export function WindowProjects({ userId }: WindowProjectsProps) {
       <div
         className="flex items-center gap-[6px]"
         style={{
-          background: '#0F110E',
-          border: '0.5px solid #1E2219',
+          background: '#F5F0EA',
+          border: '0.5px solid #D4C8B8',
           borderRadius: 7,
           padding: '6px 9px',
           fontSize: 11,
         }}
       >
-        <Search size={12} style={{ color: '#6B6F62', flexShrink: 0 }} />
+        <Search size={12} style={{ color: '#aaa', flexShrink: 0 }} />
         <input
           type="text"
           placeholder="Buscar proyecto..."
           value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
-          className="w-full border-none bg-transparent font-sans text-[11px] outline-none placeholder:text-[#6B6F62]"
-          style={{ color: '#F2EDDF' }}
+          className="w-full border-none bg-transparent font-sans text-[11px] outline-none placeholder:text-[#aaa]"
+          style={{ color: '#3D3630' }}
         />
       </div>
 
@@ -239,9 +239,9 @@ export function WindowProjects({ userId }: WindowProjectsProps) {
           style={{
             padding: 6,
             borderRadius: 6,
-            border: '0.5px solid #252B20',
+            border: '0.5px solid #D4C8B8',
             background: 'transparent',
-            color: '#BDB89F',
+            color: '#6a5a4a',
             transition: 'all 0.13s ease',
           }}
           onClick={() => {
@@ -257,8 +257,8 @@ export function WindowProjects({ userId }: WindowProjectsProps) {
             padding: 6,
             borderRadius: 6,
             border: 'none',
-            background: '#8AAC7E',
-            color: '#0F110E',
+            background: '#C4704A',
+            color: '#fff',
             transition: 'all 0.13s ease',
           }}
           onClick={handleOpen}

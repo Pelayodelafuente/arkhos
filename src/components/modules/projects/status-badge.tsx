@@ -6,7 +6,7 @@ interface StatusBadgeProps {
   className?: string;
 }
 
-export function StatusBadge({ status, color = "#6B6F62", className = "" }: StatusBadgeProps) {
+export function StatusBadge({ status, color = "#888780", className = "" }: StatusBadgeProps) {
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${className}`}

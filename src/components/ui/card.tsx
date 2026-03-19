@@ -26,7 +26,7 @@ export function Card({
       onClick={onClick}
       className={`rounded-xl border border-border bg-card ${paddingClasses[padding]} ${
         isClickable
-          ? "cursor-pointer transition-colors hover:border-sage-dim"
+          ? "cursor-pointer transition-colors hover:border-accent"
           : ""
       } ${className}`}
       {...props}

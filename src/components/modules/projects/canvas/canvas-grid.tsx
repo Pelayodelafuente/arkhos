@@ -35,8 +35,8 @@ export function CanvasGrid() {
       className="pointer-events-none absolute inset-0"
       style={{
         backgroundImage: [
-          'linear-gradient(to right, rgba(138,172,126,0.06) 1px, transparent 1px)',
-          'linear-gradient(to bottom, rgba(138,172,126,0.06) 1px, transparent 1px)',
+          'linear-gradient(to right, rgba(196,112,74,0.09) 1px, transparent 1px)',
+          'linear-gradient(to bottom, rgba(196,112,74,0.09) 1px, transparent 1px)',
         ].join(', '),
         backgroundSize: '44px 44px',
         backgroundPosition: '22px 22px',

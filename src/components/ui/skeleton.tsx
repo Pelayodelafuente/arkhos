@@ -18,7 +18,7 @@ export function Skeleton({
 }: SkeletonProps) {
   return (
     <div
-      className={`animate-pulse bg-surface-2 ${roundedClasses[rounded]} ${className}`}
+      className={`animate-pulse bg-sand ${roundedClasses[rounded]} ${className}`}
       {...props}
     />
   );

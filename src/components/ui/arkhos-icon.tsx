@@ -16,7 +16,7 @@ export function ArkhosIcon({ size = 32, className }: ArkhosIconProps) {
       {/* A shape */}
       <path
         d="M36 6 L6 62 L18 62 L36 26 L54 62 L66 62 Z"
-        stroke="#8AAC7E"
+        stroke="#C4704A"
         strokeWidth="3"
         strokeLinejoin="round"
         strokeLinecap="round"
@@ -28,7 +28,7 @@ export function ArkhosIcon({ size = 32, className }: ArkhosIconProps) {
         y1="48"
         x2="57"
         y2="48"
-        stroke="#8AAC7E"
+        stroke="#C4704A"
         strokeWidth="3"
         strokeLinecap="round"
       />
@@ -38,13 +38,13 @@ export function ArkhosIcon({ size = 32, className }: ArkhosIconProps) {
         y1="38"
         x2="51"
         y2="38"
-        stroke="#8AAC7E"
+        stroke="#C4704A"
         strokeWidth="3"
         strokeLinecap="round"
         opacity="0.5"
       />
       {/* Vertex dot */}
-      <circle cx="36" cy="18" r="2.5" fill="#8AAC7E" opacity="0.7" />
+      <circle cx="36" cy="18" r="2.5" fill="#C4704A" opacity="0.7" />
     </svg>
   );
 }

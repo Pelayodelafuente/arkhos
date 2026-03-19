@@ -193,7 +193,7 @@ export function ProjectModal({
     closeModal();
   }
 
-  const statusColor = localStatuses.find((s) => s.name === status)?.color ?? "#6B6F62";
+  const statusColor = localStatuses.find((s) => s.name === status)?.color ?? "#888780";
 
   return (
     <Modal
@@ -204,7 +204,7 @@ export function ProjectModal({
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Preview */}
-        <div className="flex items-center gap-3 rounded-lg border border-border bg-surface-2 p-3">
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-sand/40 p-3">
           {logoUrl ? (
             <img
               src={logoUrl}
@@ -214,13 +214,13 @@ export function ProjectModal({
           ) : (
             <div
               className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg"
-              style={{ backgroundColor: "rgba(138,172,126,0.1)" }}
+              style={{ backgroundColor: "rgba(196,112,74,0.1)" }}
             >
               <ProjectIcon icon={icon} size={20} className="text-accent" />
             </div>
           )}
           <div className="min-w-0 flex-1">
-            <p className="truncate font-display text-base text-foreground">
+            <p className="truncate font-heading text-base text-foreground">
               {name || "Nombre del proyecto"}
             </p>
             <p className="text-xs text-text-tertiary">{type}</p>
@@ -281,7 +281,7 @@ export function ProjectModal({
             {stack.map((tech) => (
               <span
                 key={tech}
-                className="inline-flex items-center gap-1 rounded-md bg-surface-2 px-2 py-0.5 text-xs text-text-secondary"
+                className="inline-flex items-center gap-1 rounded-md bg-sand px-2 py-0.5 text-xs text-text-secondary"
               >
                 {tech}
                 <button

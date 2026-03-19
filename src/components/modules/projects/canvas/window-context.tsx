@@ -67,7 +67,7 @@ export function WindowContext() {
           key={row.label}
           className="flex items-center justify-between rounded-md px-[8px] py-[5px]"
           style={{
-            background: 'rgba(24,28,22,0.4)',
+            background: 'rgba(240,235,225,0.4)',
           }}
         >
           <span className="text-[10px] font-medium text-text-tertiary">
@@ -76,7 +76,7 @@ export function WindowContext() {
           <div className="flex items-center gap-[6px]">
             <span
               className="max-w-[140px] truncate font-mono text-[10px]"
-              style={{ color: '#F2EDDF' }}
+              style={{ color: '#3D3630' }}
               title={row.value}
             >
               {row.value}
@@ -85,8 +85,8 @@ export function WindowContext() {
               <span
                 className="h-[5px] w-[5px] shrink-0 rounded-full"
                 style={{
-                  background: '#8AAC7E',
-                  boxShadow: '0 0 4px rgba(138,172,126,0.6)',
+                  background: '#7a9b76',
+                  boxShadow: '0 0 4px rgba(122,155,118,0.6)',
                   animation: 'ctx-pulse 2s ease-in-out infinite',
                 }}
               />
@@ -98,8 +98,8 @@ export function WindowContext() {
       {/* Keyframes */}
       <style>{`
         @keyframes ctx-pulse {
-          0%, 100% { opacity: 1; box-shadow: 0 0 4px rgba(138,172,126,0.6); }
-          50% { opacity: 0.5; box-shadow: 0 0 8px rgba(138,172,126,0.9); }
+          0%, 100% { opacity: 1; box-shadow: 0 0 4px rgba(122,155,118,0.6); }
+          50% { opacity: 0.5; box-shadow: 0 0 8px rgba(122,155,118,0.9); }
         }
       `}</style>
     </div>

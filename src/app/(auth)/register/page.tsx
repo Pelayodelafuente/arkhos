@@ -29,14 +29,14 @@ export default function RegisterPage() {
               cx="32"
               cy="32"
               r="28"
-              stroke="#8AAC7E"
+              stroke="#C4704A"
               strokeWidth="2.5"
               fill="none"
               className="auth-draw-circle"
             />
             <path
               d="M20 33 L28 41 L44 25"
-              stroke="#8AAC7E"
+              stroke="#C4704A"
               strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -45,16 +45,16 @@ export default function RegisterPage() {
             />
           </svg>
         </div>
-        <h3 className="font-display text-[22px] text-foreground">
+        <h3 className="font-heading text-[22px] text-foreground">
           Cuenta creada
         </h3>
-        <p className="mt-2 text-[14px]" style={{ color: "#6B6F62" }}>
+        <p className="mt-2 text-[14px]" style={{ color: "#888780" }}>
           {state.success}
         </p>
         <Link
           href="/login"
           className="mt-6 inline-flex h-[46px] w-full items-center justify-center rounded-[10px] border text-[14px] font-semibold transition-colors hover:border-accent hover:text-accent"
-          style={{ borderColor: "#1E2219", color: "#BDB89F" }}
+          style={{ borderColor: "#E2D9CA", color: "#3D3630" }}
         >
           Ir a iniciar sesión
         </Link>
@@ -66,12 +66,12 @@ export default function RegisterPage() {
     <div className="relative">
       {/* Title */}
       <h1
-        className="font-display text-foreground"
+        className="font-heading text-foreground"
         style={{ fontSize: 26, lineHeight: 1.2 }}
       >
         Crear cuenta
       </h1>
-      <p className="mt-2 text-[14px]" style={{ color: "#6B6F62" }}>
+      <p className="mt-2 text-[14px]" style={{ color: "#888780" }}>
         Empieza a gestionar tus proyectos, mercados y patrimonio.
       </p>
 
@@ -82,7 +82,7 @@ export default function RegisterPage() {
           <label
             htmlFor="fullName"
             className="text-[12px] font-semibold"
-            style={{ color: "#BDB89F" }}
+            style={{ color: "#3D3630" }}
           >
             Nombre completo
           </label>
@@ -102,7 +102,7 @@ export default function RegisterPage() {
           <label
             htmlFor="email"
             className="text-[12px] font-semibold"
-            style={{ color: "#BDB89F" }}
+            style={{ color: "#3D3630" }}
           >
             Email
           </label>
@@ -122,7 +122,7 @@ export default function RegisterPage() {
           <label
             htmlFor="password"
             className="text-[12px] font-semibold"
-            style={{ color: "#BDB89F" }}
+            style={{ color: "#3D3630" }}
           >
             Contraseña
           </label>
@@ -161,7 +161,7 @@ export default function RegisterPage() {
           <label
             htmlFor="confirmPassword"
             className="text-[12px] font-semibold"
-            style={{ color: "#BDB89F" }}
+            style={{ color: "#3D3630" }}
           >
             Confirmar contraseña
           </label>
@@ -202,12 +202,12 @@ export default function RegisterPage() {
           type="submit"
           disabled={pending}
           className="flex h-[48px] w-full items-center justify-center gap-2 rounded-[10px] text-[14px] font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-          style={{ backgroundColor: pending ? "#799E6D" : "#8AAC7E" }}
+          style={{ backgroundColor: pending ? "#B5623D" : "#C4704A" }}
           onMouseEnter={(e) => {
-            if (!pending) e.currentTarget.style.backgroundColor = "#799E6D";
+            if (!pending) e.currentTarget.style.backgroundColor = "#B5623D";
           }}
           onMouseLeave={(e) => {
-            if (!pending) e.currentTarget.style.backgroundColor = "#8AAC7E";
+            if (!pending) e.currentTarget.style.backgroundColor = "#C4704A";
           }}
         >
           {pending ? (
@@ -225,12 +225,12 @@ export default function RegisterPage() {
       </form>
 
       {/* Login link */}
-      <p className="mt-4 text-center text-[13px]" style={{ color: "#6B6F62" }}>
+      <p className="mt-4 text-center text-[13px]" style={{ color: "#888780" }}>
         Ya tienes cuenta?{" "}
         <Link
           href="/login"
           className="font-semibold transition-colors hover:opacity-80"
-          style={{ color: "#8AAC7E" }}
+          style={{ color: "#C4704A" }}
         >
           Iniciar sesión
         </Link>

@@ -5,20 +5,18 @@ export type BadgeVariant =
   | "green"
   | "blue"
   | "gold"
-  | "gray"
-  | "sage";
+  | "gray";
 
 interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   variant?: BadgeVariant;
 }
 
 const variantStyles: Record<BadgeVariant, { bg: string; text: string }> = {
-  terracotta: { bg: "rgba(138,172,126,0.12)", text: "#8AAC7E" },
-  green:      { bg: "rgba(138,172,126,0.15)", text: "#8AAC7E" },
-  blue:       { bg: "rgba(122,172,204,0.12)", text: "#7AACCC" },
-  gold:       { bg: "rgba(201,169,110,0.15)", text: "#C9A96E" },
-  gray:       { bg: "rgba(107,111,98,0.15)", text: "#6B6F62" },
-  sage:       { bg: "rgba(138,172,126,0.12)", text: "#8AAC7E" },
+  terracotta: { bg: "rgba(196,112,74,0.12)", text: "#C4704A" },
+  green:      { bg: "rgba(91,140,106,0.12)", text: "#5B8C6A" },
+  blue:       { bg: "rgba(74,122,155,0.12)", text: "#4A7A9B" },
+  gold:       { bg: "rgba(155,122,74,0.12)", text: "#9B7A4A" },
+  gray:       { bg: "rgba(136,135,128,0.12)", text: "#888780" },
 };
 
 export function Badge({

@@ -13,16 +13,16 @@ export type TaskPriority = (typeof TASK_PRIORITIES)[number];
 // ─── Phase/Task status display config ─
 
 export const PHASE_STATUS_CONFIG: Record<PhaseStatus, { label: string; color: string }> = {
-  pending: { label: 'Pendiente', color: '#6B6F62' },
-  'in-progress': { label: 'En progreso', color: '#8AAC7E' },
-  done: { label: 'Completada', color: '#8AAC7E' },
+  pending: { label: 'Pendiente', color: '#888780' },
+  'in-progress': { label: 'En progreso', color: '#C4704A' },
+  done: { label: 'Completada', color: '#5B8C6A' },
 };
 
 export const TASK_PRIORITY_CONFIG: Record<TaskPriority, { label: string; color: string }> = {
-  none: { label: 'Sin prioridad', color: '#6B6F62' },
-  low: { label: 'Baja', color: '#8AAC7E' },
-  medium: { label: 'Media', color: '#C9A96E' },
-  high: { label: 'Alta', color: '#C87A8A' },
+  none: { label: 'Sin prioridad', color: '#888780' },
+  low: { label: 'Baja', color: '#4A7A9B' },
+  medium: { label: 'Media', color: '#9B7A4A' },
+  high: { label: 'Alta', color: '#C4704A' },
 };
 
 // ─── Dynamic project type / status ────
@@ -64,14 +64,14 @@ export interface CreateProjectStatusInput {
 // ─── Default seeds for new users ──────
 
 export const DEFAULT_PROJECT_TYPES: Omit<CreateProjectTypeInput, 'sort_order'>[] = [
-  { name: 'Web', icon: 'Globe', color: '#8AAC7E' },
+  { name: 'Web', icon: 'Globe', color: '#4A7A9B' },
 ];
 
 export const DEFAULT_PROJECT_STATUSES: Omit<CreateProjectStatusInput, 'sort_order'>[] = [
-  { name: 'Idea', color: '#6B6F62', is_default: true },
-  { name: 'Activo', color: '#8AAC7E' },
-  { name: 'Pausado', color: '#C9A96E' },
-  { name: 'Completado', color: '#8AAC7E' },
+  { name: 'Idea', color: '#888780', is_default: true },
+  { name: 'Activo', color: '#5B8C6A' },
+  { name: 'Pausado', color: '#9B7A4A' },
+  { name: 'Completado', color: '#4A7A9B' },
 ];
 
 // ─── Icon picker categories ──────────

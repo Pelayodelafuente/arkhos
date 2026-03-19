@@ -8,9 +8,9 @@ import { ProjectIcon } from "./project-icon";
 // ─── Color picker presets ─────────────
 
 const COLOR_PRESETS = [
-  "#8AAC7E", "#C87A8A", "#C9A96E", "#6B6F62",
-  "#7C9B5C", "#9B8ABF", "#BF7A7A", "#5C8F9B",
-  "#7AAC8E", "#9B6B8A", "#BFA86E", "#5CBFAF",
+  "#C4704A", "#5B8C6A", "#4A7A9B", "#9B7A4A",
+  "#888780", "#7C5CBF", "#BF5C5C", "#5C8FBF",
+  "#4A9B7A", "#9B4A7A", "#BFA05C", "#5CBFBF",
 ];
 
 const DEFAULT_ICONS_FOR_TYPES = [

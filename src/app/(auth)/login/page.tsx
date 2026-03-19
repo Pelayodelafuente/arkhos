@@ -15,12 +15,12 @@ export default function LoginPage() {
     <div className="relative">
       {/* Title */}
       <h1
-        className="font-display text-foreground"
+        className="font-heading text-foreground"
         style={{ fontSize: 26, lineHeight: 1.2 }}
       >
         Bienvenido
       </h1>
-      <p className="mt-2 text-[14px]" style={{ color: "#6B6F62" }}>
+      <p className="mt-2 text-[14px]" style={{ color: "#888780" }}>
         Introduce tus credenciales para acceder a tu espacio de trabajo.
       </p>
 
@@ -31,7 +31,7 @@ export default function LoginPage() {
           <label
             htmlFor="email"
             className="text-[12px] font-semibold"
-            style={{ color: "#BDB89F" }}
+            style={{ color: "#3D3630" }}
           >
             Email
           </label>
@@ -52,14 +52,14 @@ export default function LoginPage() {
             <label
               htmlFor="password"
               className="text-[12px] font-semibold"
-              style={{ color: "#BDB89F" }}
+              style={{ color: "#3D3630" }}
             >
               Contraseña
             </label>
             <Link
               href="/reset-password"
               className="text-[11px] transition-colors hover:opacity-80"
-              style={{ color: "#8AAC7E" }}
+              style={{ color: "#C4704A" }}
             >
               ¿Olvidaste tu contraseña?
             </Link>
@@ -100,12 +100,12 @@ export default function LoginPage() {
           type="submit"
           disabled={pending}
           className="flex h-[48px] w-full items-center justify-center gap-2 rounded-[10px] text-[14px] font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-          style={{ backgroundColor: pending ? "#799E6D" : "#8AAC7E" }}
+          style={{ backgroundColor: pending ? "#B5623D" : "#C4704A" }}
           onMouseEnter={(e) => {
-            if (!pending) e.currentTarget.style.backgroundColor = "#799E6D";
+            if (!pending) e.currentTarget.style.backgroundColor = "#B5623D";
           }}
           onMouseLeave={(e) => {
-            if (!pending) e.currentTarget.style.backgroundColor = "#8AAC7E";
+            if (!pending) e.currentTarget.style.backgroundColor = "#C4704A";
           }}
         >
           {pending ? (
@@ -123,12 +123,12 @@ export default function LoginPage() {
       </form>
 
       {/* Register link */}
-      <p className="mt-4 text-center text-[13px]" style={{ color: "#6B6F62" }}>
+      <p className="mt-4 text-center text-[13px]" style={{ color: "#888780" }}>
         No tienes cuenta?{" "}
         <Link
           href="/register"
           className="font-semibold transition-colors hover:opacity-80"
-          style={{ color: "#8AAC7E" }}
+          style={{ color: "#C4704A" }}
         >
           Registrarse
         </Link>
