@@ -1,11 +1,24 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, FolderKanban, TrendingUp, Wallet, CreditCard, Shield, BookOpen } from "lucide-react";
+import {
+  Home,
+  FolderKanban,
+  TrendingUp,
+  Wallet,
+  CreditCard,
+  Shield,
+  BookOpen,
+  PanelLeftClose,
+  PanelLeftOpen,
+} from "lucide-react";
 import { ArkhosLogo } from "@/components/ui/arkhos-logo";
+import { ArkhosIcon } from "@/components/ui/arkhos-icon";
 import { Button } from "@/components/ui/button";
 import { logout } from "@/app/(auth)/actions";
+import { useUIStore } from "@/stores/ui-store";
 
 const navItems = [
   {
@@ -46,16 +59,67 @@ interface SidebarProps {
 
 export function Sidebar({ userName }: SidebarProps) {
   const pathname = usePathname();
+  const collapsed = useUIStore((s) => s.sidebarCollapsed);
+  const toggleCollapsed = useUIStore((s) => s.toggleSidebarCollapsed);
+  const loadSidebarState = useUIStore((s) => s.loadSidebarState);
+
+  useEffect(() => {
+    loadSidebarState();
+  }, [loadSidebarState]);
 
   return (
-    <aside className="flex h-screen w-[260px] flex-col border-r border-border bg-sand">
-      {/* Logo */}
-      <div className="px-5 py-6">
-        <ArkhosLogo size="sm" />
+    <aside
+      className="flex h-screen flex-col border-r border-border bg-sand"
+      style={{
+        width: collapsed ? 56 : 240,
+        transition: "width 250ms cubic-bezier(0.16,1,0.3,1)",
+        overflow: "hidden",
+      }}
+    >
+      {/* Logo + collapse toggle */}
+      <div
+        className="flex items-center"
+        style={{
+          padding: collapsed ? "16px 0" : "16px 20px",
+          justifyContent: collapsed ? "center" : "space-between",
+          minHeight: 56,
+        }}
+      >
+        {collapsed ? (
+          <ArkhosIcon size={22} />
+        ) : (
+          <ArkhosLogo size="sm" />
+        )}
+        {!collapsed && (
+          <button
+            type="button"
+            onClick={toggleCollapsed}
+            className="flex items-center justify-center rounded-md text-text-tertiary transition-colors hover:bg-border hover:text-foreground"
+            style={{ width: 28, height: 28 }}
+            title="Colapsar sidebar"
+          >
+            <PanelLeftClose size={15} strokeWidth={1.75} />
+          </button>
+        )}
       </div>
 
+      {/* Expand button when collapsed */}
+      {collapsed && (
+        <div className="flex justify-center pb-2">
+          <button
+            type="button"
+            onClick={toggleCollapsed}
+            className="flex items-center justify-center rounded-md text-text-tertiary transition-colors hover:bg-border hover:text-foreground"
+            style={{ width: 32, height: 28 }}
+            title="Expandir sidebar"
+          >
+            <PanelLeftOpen size={15} strokeWidth={1.75} />
+          </button>
+        </div>
+      )}
+
       {/* Nav */}
-      <nav className="flex-1 px-3">
+      <nav className="flex-1" style={{ padding: collapsed ? "0 6px" : "0 12px" }}>
         <ul className="space-y-0.5">
           {navItems.map(({ label, href, icon: Icon, dot }) => {
             const isActive =
@@ -65,13 +129,19 @@ export function Sidebar({ userName }: SidebarProps) {
               <li key={href}>
                 <Link
                   href={href}
-                  className={`group flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
+                  className={`group flex items-center rounded-md text-sm font-medium transition-all duration-200 ${
                     isActive
                       ? "bg-accent text-[#FBF0EA]"
                       : "text-text-secondary hover:bg-border hover:text-foreground"
                   }`}
+                  style={{
+                    gap: collapsed ? 0 : 12,
+                    padding: collapsed ? "10px 0" : "10px 12px",
+                    justifyContent: collapsed ? "center" : "flex-start",
+                  }}
+                  title={collapsed ? label : undefined}
                 >
-                  {dot ? (
+                  {!collapsed && dot ? (
                     <span
                       className={`h-2 w-2 flex-shrink-0 rounded-full ${isActive ? "dot-pulse-active" : ""}`}
                       style={{
@@ -79,16 +149,21 @@ export function Sidebar({ userName }: SidebarProps) {
                         "--dot-color": dot,
                       } as React.CSSProperties}
                     />
-                  ) : (
+                  ) : !collapsed ? (
                     <span className="h-2 w-2 flex-shrink-0" />
-                  )}
-                  <span className="flex items-center gap-2 transition-transform duration-150 group-hover:translate-x-[2px]">
+                  ) : null}
+                  <span
+                    className="flex items-center gap-2 transition-transform duration-150 group-hover:translate-x-[2px]"
+                    style={{
+                      transform: collapsed ? "none" : undefined,
+                    }}
+                  >
                     <Icon
-                      size={16}
+                      size={collapsed ? 18 : 16}
                       strokeWidth={1.75}
                       className="flex-shrink-0"
                     />
-                    {label}
+                    {!collapsed && label}
                   </span>
                 </Link>
               </li>
@@ -98,46 +173,68 @@ export function Sidebar({ userName }: SidebarProps) {
       </nav>
 
       {/* Docs */}
-      <div className="px-3 pb-1">
-        <a
-          href="/docs"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-text-tertiary transition-colors hover:bg-border hover:text-accent"
-        >
-          <span className="h-2 w-2 flex-shrink-0" />
-          <BookOpen size={16} strokeWidth={1.75} className="flex-shrink-0" />
-          Documentación
-        </a>
-      </div>
+      {!collapsed && (
+        <div className="px-3 pb-1">
+          <a
+            href="/docs"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-text-tertiary transition-colors hover:bg-border hover:text-accent"
+          >
+            <span className="h-2 w-2 flex-shrink-0" />
+            <BookOpen size={16} strokeWidth={1.75} className="flex-shrink-0" />
+            Documentación
+          </a>
+        </div>
+      )}
 
       {/* Settings */}
-      <div className="border-t border-border px-3 py-3">
+      <div
+        className="border-t border-border"
+        style={{ padding: collapsed ? "8px 6px" : "12px 12px" }}
+      >
         <Link
           href="/settings/security"
-          className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
+          className={`flex items-center rounded-md text-sm font-medium transition-colors ${
             pathname === "/settings/security"
               ? "bg-accent text-[#FBF0EA]"
               : "text-text-secondary hover:bg-border hover:text-foreground"
           }`}
+          style={{
+            gap: collapsed ? 0 : 12,
+            padding: collapsed ? "10px 0" : "10px 12px",
+            justifyContent: collapsed ? "center" : "flex-start",
+          }}
+          title={collapsed ? "Seguridad" : undefined}
         >
-          <span className="h-2 w-2 flex-shrink-0" />
-          <Shield size={16} strokeWidth={1.75} className="flex-shrink-0" />
-          Seguridad
+          {!collapsed && <span className="h-2 w-2 flex-shrink-0" />}
+          <Shield size={collapsed ? 18 : 16} strokeWidth={1.75} className="flex-shrink-0" />
+          {!collapsed && "Seguridad"}
         </Link>
       </div>
 
       {/* User + logout */}
-      <div className="border-t border-border px-4 py-4">
-        <p
-          className="mb-2 truncate text-xs text-text-tertiary"
-          title={userName}
-        >
-          {userName}
-        </p>
+      <div
+        className="border-t border-border"
+        style={{ padding: collapsed ? "12px 6px" : "16px 16px" }}
+      >
+        {!collapsed && (
+          <p
+            className="mb-2 truncate text-xs text-text-tertiary"
+            title={userName}
+          >
+            {userName}
+          </p>
+        )}
         <form action={logout}>
-          <Button type="submit" variant="secondary" size="sm" className="w-full">
-            Cerrar sesión
+          <Button
+            type="submit"
+            variant="secondary"
+            size="sm"
+            className={collapsed ? "w-full px-0" : "w-full"}
+            title={collapsed ? "Cerrar sesión" : undefined}
+          >
+            {collapsed ? "×" : "Cerrar sesión"}
           </Button>
         </form>
       </div>

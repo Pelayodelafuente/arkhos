@@ -19,6 +19,11 @@ export interface UIStore {
   closeSidebar: () => void;
   toggleSidebar: () => void;
 
+  // Desktop sidebar collapsed
+  sidebarCollapsed: boolean;
+  toggleSidebarCollapsed: () => void;
+  loadSidebarState: () => void;
+
   // Toasts
   toasts: Toast[];
   addToast: (message: string, variant?: ToastVariant) => void;
@@ -36,6 +41,26 @@ export const useUIStore = create<UIStore>((set) => ({
   openSidebar: () => set({ sidebarOpen: true }),
   closeSidebar: () => set({ sidebarOpen: false }),
   toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
+
+  // Desktop sidebar collapsed
+  sidebarCollapsed: false,
+  toggleSidebarCollapsed: () => {
+    set((s) => {
+      const next = !s.sidebarCollapsed;
+      try {
+        localStorage.setItem('arkhos-sidebar-collapsed', JSON.stringify(next));
+      } catch { /* ignore */ }
+      return { sidebarCollapsed: next };
+    });
+  },
+  loadSidebarState: () => {
+    try {
+      const raw = localStorage.getItem('arkhos-sidebar-collapsed');
+      if (raw !== null) {
+        set({ sidebarCollapsed: JSON.parse(raw) as boolean });
+      }
+    } catch { /* ignore */ }
+  },
 
   // Toasts
   toasts: [],

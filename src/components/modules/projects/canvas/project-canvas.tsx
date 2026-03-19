@@ -1,19 +1,18 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
+import { Plus } from 'lucide-react';
+import { Button } from '@/components/ui';
 import { useCanvasStore } from '@/stores/canvas-store';
 import { useProjectsStore } from '@/stores/projects-store';
-import { CanvasGhostCursor } from './canvas-ghost-cursor';
+import { useUIStore } from '@/stores/ui-store';
 import { CanvasGrid } from './canvas-grid';
-import { CanvasMinimap } from './canvas-minimap';
-import { CanvasTopbar } from './canvas-topbar';
 import { CanvasWindow } from './canvas-window';
-import { CanvasZoom } from './canvas-zoom';
-import { WindowAnalysis } from './window-analysis';
-import { WindowChat } from './window-chat';
-import { WindowContext } from './window-context';
 import { WindowProjects } from './window-projects';
 import { WindowStats } from './window-stats';
+import { WindowDetail } from './window-detail';
+import { WindowContext } from './window-context';
+import { WindowAIPlaceholder } from './window-ai-placeholder';
 
 // ─── Types ───────────────────────────
 
@@ -24,115 +23,121 @@ interface ProjectCanvasProps {
 // ─── Component ───────────────────────
 
 export function ProjectCanvas({ userId }: ProjectCanvasProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const loadLayout = useCanvasStore((s) => s.loadLayout);
-  const saveLayout = useCanvasStore((s) => s.saveLayout);
-  const zoom = useCanvasStore((s) => s.zoom);
-  const positions = useCanvasStore((s) => s.positions);
   const selectedProjectId = useCanvasStore((s) => s.selectedProjectId);
-
   const fetchProjects = useProjectsStore((s) => s.fetchProjects);
   const projects = useProjectsStore((s) => s.projects);
+  const openModal = useUIStore((s) => s.openModal);
 
-  // Load layout and projects on mount
+  // Load projects on mount
   useEffect(() => {
-    loadLayout(userId);
     fetchProjects(userId);
-  }, [userId, loadLayout, fetchProjects]);
-
-  // Save layout when positions or zoom change
-  useEffect(() => {
-    saveLayout(userId);
-  }, [positions, zoom, userId, saveLayout]);
+  }, [userId, fetchProjects]);
 
   // Derive selected project name for stats window title
-  const analysisBadge = useCanvasStore((s) => s.analysisBadge);
-
   const selectedProject = projects.find((p) => p.id === selectedProjectId);
   const statsTitle = selectedProject ? selectedProject.name : 'Stats del proyecto';
 
   return (
-    <div
-      ref={containerRef}
-      className="relative h-[calc(100vh-var(--topbar-height,0px))] w-full select-none overflow-hidden bg-background"
-    >
+    <div className="relative flex h-full flex-col overflow-hidden">
       {/* Background grid */}
       <CanvasGrid />
 
-      {/* Floating topbar */}
-      <CanvasTopbar />
-
-      {/* Zoomable canvas area */}
+      {/* Topbar */}
       <div
-        className="absolute inset-0 origin-top-left"
+        className="relative z-10 flex h-12 shrink-0 items-center gap-3 px-4"
         style={{
-          transform: `scale(${zoom / 100})`,
+          background: 'rgba(250,247,242,0.85)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          borderBottom: '0.5px solid #E2D9CA',
         }}
       >
-        {/* Window: Projects list */}
-        <CanvasWindow
-          id="projects"
-          title="Mis proyectos"
-          width={212}
-          index={0}
-          dragConstraintsRef={containerRef}
+        <span
+          className="font-heading text-[15px] font-bold"
+          style={{ color: '#C4704A', letterSpacing: '-0.3px' }}
         >
-          <WindowProjects userId={userId} />
-        </CanvasWindow>
+          Arkhos
+        </span>
+        <div className="h-[15px] w-px" style={{ background: '#E2D9CA' }} />
+        <span className="text-[12px] font-medium text-text-tertiary">
+          Proyectos
+        </span>
 
-        {/* Window: Stats */}
-        <CanvasWindow
-          id="stats"
-          title={statsTitle}
-          badge={{ text: `${projects.length} proyectos`, variant: 'terracotta' }}
-          width={220}
-          index={1}
-          dragConstraintsRef={containerRef}
-        >
-          <WindowStats />
-        </CanvasWindow>
-
-        {/* Window: AI Analysis */}
-        <CanvasWindow
-          id="analysis"
-          title="Análisis IA"
-          badge={analysisBadge}
-          width={220}
-          index={2}
-          dragConstraintsRef={containerRef}
-        >
-          <WindowAnalysis />
-        </CanvasWindow>
-
-        {/* Window: Active context */}
-        <CanvasWindow
-          id="context"
-          title="Contexto activo"
-          width={200}
-          index={3}
-          dragConstraintsRef={containerRef}
-        >
-          <WindowContext />
-        </CanvasWindow>
-
-        {/* Window: Chat */}
-        <CanvasWindow
-          id="chat"
-          title="Chat con el proyecto"
-          badge={{ text: '\u03B2', variant: 'gray' }}
-          width={234}
-          index={4}
-          dragConstraintsRef={containerRef}
-        >
-          <WindowChat />
-        </CanvasWindow>
+        <div className="ml-auto flex items-center gap-2">
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => openModal('new-project')}
+          >
+            <Plus className="mr-1.5 h-3.5 w-3.5" />
+            Nuevo proyecto
+          </Button>
+        </div>
       </div>
 
-      {/* Canvas overlays (outside zoom wrapper) */}
-      <CanvasMinimap />
-      <CanvasZoom />
-      <CanvasGhostCursor />
+      {/* 3-column layout (stacks vertically below 1200px) */}
+      <div className="canvas-columns relative z-10 min-h-0 flex-1 gap-3 overflow-y-auto overflow-x-hidden p-3">
+        {/* Left column: Projects + Stats */}
+        <div className="canvas-col-left flex flex-col gap-3 overflow-y-auto">
+          <CanvasWindow id="projects" title="Mis proyectos">
+            <WindowProjects userId={userId} />
+          </CanvasWindow>
+
+          <CanvasWindow
+            id="stats"
+            title={statsTitle}
+            badge={{ text: `${projects.length} proyectos`, variant: 'terracotta' }}
+          >
+            <WindowStats />
+          </CanvasWindow>
+        </div>
+
+        {/* Center column: Project detail */}
+        <div className="canvas-col-center flex min-w-0 flex-col overflow-y-auto">
+          <CanvasWindow id="detail" title="Detalle del proyecto" className="flex-1">
+            <WindowDetail />
+          </CanvasWindow>
+        </div>
+
+        {/* Right column: Context + AI placeholder */}
+        <div className="canvas-col-right flex flex-col gap-3 overflow-y-auto">
+          <CanvasWindow id="context" title="Contexto activo">
+            <WindowContext />
+          </CanvasWindow>
+
+          <CanvasWindow
+            id="ai"
+            title="Inteligencia Artificial"
+            badge={{ text: 'Próximamente', variant: 'gray' }}
+          >
+            <WindowAIPlaceholder />
+          </CanvasWindow>
+        </div>
+      </div>
+
+      {/* Responsive styles */}
+      <style>{`
+        .canvas-columns {
+          display: flex;
+        }
+        .canvas-col-left { width: 280px; flex-shrink: 0; }
+        .canvas-col-center { flex: 1; }
+        .canvas-col-right { width: 280px; flex-shrink: 0; }
+
+        @media (max-width: 1199px) {
+          .canvas-columns {
+            flex-direction: column;
+            overflow-y: auto;
+          }
+          .canvas-col-left,
+          .canvas-col-center,
+          .canvas-col-right {
+            width: 100%;
+            flex-shrink: unset;
+            overflow-y: visible;
+          }
+        }
+      `}</style>
     </div>
   );
 }
