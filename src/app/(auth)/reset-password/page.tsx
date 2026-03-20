@@ -74,11 +74,11 @@ export default function ResetPasswordPage() {
 
         <h3
           className="font-heading text-[22px]"
-          style={{ color: "var(--auth-text)" }}
+          style={{ color: "var(--text-primary)" }}
         >
           Revisa tu bandeja
         </h3>
-        <p className="mt-2 text-[14px]" style={{ color: "var(--auth-gray)" }}>
+        <p className="mt-2 text-[14px]" style={{ color: "var(--text-tertiary)" }}>
           Enviamos un enlace a{" "}
           <span style={{ color: "var(--auth-copper)" }}>{email}</span>
         </p>
@@ -86,7 +86,7 @@ export default function ResetPasswordPage() {
         {/* Countdown / resend */}
         <div className="mt-4">
           {!canResend ? (
-            <p className="text-[12px]" style={{ color: "var(--auth-gray)" }}>
+            <p className="text-[12px]" style={{ color: "var(--text-tertiary)" }}>
               ¿No lo recibiste? Reenviar en 00:{String(countdown).padStart(2, "0")}
             </p>
           ) : (
@@ -113,7 +113,7 @@ export default function ResetPasswordPage() {
       >
         ¿Perdiste el acceso?
       </h1>
-      <p className="mt-2 text-[14px]" style={{ color: "var(--auth-gray)" }}>
+      <p className="mt-2 text-[14px]" style={{ color: "var(--text-tertiary)" }}>
         Te enviaremos un enlace mágico
       </p>
 
@@ -131,7 +131,7 @@ export default function ResetPasswordPage() {
         />
 
         {state.error && (
-          <p className="text-[13px] text-red-400">{state.error}</p>
+          <p className="text-[13px] text-red-600">{state.error}</p>
         )}
 
         <AuthButton type="submit" loading={pending}>
@@ -143,7 +143,7 @@ export default function ResetPasswordPage() {
         <Link
           href="/login"
           className="inline-flex items-center gap-1.5 text-[13px] transition-colors hover:opacity-80"
-          style={{ color: "var(--auth-gray)" }}
+          style={{ color: "var(--text-tertiary)" }}
         >
           <ArrowLeft size={14} strokeWidth={1.5} />
           Volver al login

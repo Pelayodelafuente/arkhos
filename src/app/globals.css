@@ -162,12 +162,12 @@ mark {
   animation: auth-draw-check 0.4s ease-out 0.7s forwards;
 }
 
-/* Autofill override for dark inputs */
+/* Autofill override for auth panel */
 .auth-dark input:-webkit-autofill,
 .auth-dark input:-webkit-autofill:hover,
 .auth-dark input:-webkit-autofill:focus {
-  -webkit-box-shadow: 0 0 0 30px #07070F inset;
-  -webkit-text-fill-color: #F0EDE8;
+  -webkit-box-shadow: 0 0 0 30px #FAF7F2 inset;
+  -webkit-text-fill-color: #1A1714;
   caret-color: #D4845A;
   transition: background-color 5000s ease-in-out 0s;
 }

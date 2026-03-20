@@ -126,11 +126,11 @@ export default function RegisterPage() {
         </div>
         <h3
           className="font-heading text-[22px]"
-          style={{ color: "var(--auth-text)" }}
+          style={{ color: "var(--text-primary)" }}
         >
           Cuenta creada
         </h3>
-        <p className="mt-2 text-[14px]" style={{ color: "var(--auth-gray)" }}>
+        <p className="mt-2 text-[14px]" style={{ color: "var(--text-tertiary)" }}>
           {state.success}
         </p>
         <Link href="/login" className="mt-6 w-full">
@@ -153,7 +153,7 @@ export default function RegisterPage() {
               className="flex h-2 w-2 items-center justify-center rounded-full transition-all duration-300"
               style={{
                 backgroundColor:
-                  step >= s ? "var(--auth-copper)" : "var(--auth-surface)",
+                  step >= s ? "var(--auth-copper)" : "rgba(226, 217, 202, 0.2)",
                 border:
                   step >= s ? "none" : "1px solid var(--auth-border)",
                 boxShadow:
@@ -167,7 +167,7 @@ export default function RegisterPage() {
                 className="mx-2 h-px w-8 transition-colors duration-300"
                 style={{
                   backgroundColor:
-                    step > s ? "var(--auth-copper)" : "var(--auth-border)",
+                    step > s ? "var(--auth-copper)" : "var(--border-stone)",
                 }}
               />
             )}
@@ -192,7 +192,7 @@ export default function RegisterPage() {
             >
               ¿Cómo te llamamos?
             </h1>
-            <p className="mt-1.5 text-[14px]" style={{ color: "var(--auth-gray)" }}>
+            <p className="mt-1.5 text-[14px]" style={{ color: "var(--text-tertiary)" }}>
               Empecemos con lo básico
             </p>
 
@@ -221,7 +221,7 @@ export default function RegisterPage() {
               />
             </div>
 
-            {error && <p className="mt-3 text-[13px] text-red-400">{error}</p>}
+            {error && <p className="mt-3 text-[13px] text-red-600">{error}</p>}
 
             <div className="mt-6">
               <AuthButton type="button" onClick={nextStep}>
@@ -229,7 +229,7 @@ export default function RegisterPage() {
               </AuthButton>
             </div>
 
-            <p className="mt-4 text-center text-[13px]" style={{ color: "var(--auth-gray)" }}>
+            <p className="mt-4 text-center text-[13px]" style={{ color: "var(--text-tertiary)" }}>
               ¿Ya tienes cuenta?{" "}
               <Link
                 href="/login"
@@ -258,7 +258,7 @@ export default function RegisterPage() {
             >
               Protege tu acceso
             </h1>
-            <p className="mt-1.5 text-[14px]" style={{ color: "var(--auth-gray)" }}>
+            <p className="mt-1.5 text-[14px]" style={{ color: "var(--text-tertiary)" }}>
               Elige una contraseña segura
             </p>
 
@@ -280,7 +280,7 @@ export default function RegisterPage() {
                       type="button"
                       onClick={() => setShowPassword((v) => !v)}
                       className="transition-colors"
-                      style={{ color: "var(--auth-gray)" }}
+                      style={{ color: "var(--text-tertiary)" }}
                       tabIndex={-1}
                     >
                       {showPassword ? (
@@ -291,7 +291,7 @@ export default function RegisterPage() {
                     </button>
                   }
                 />
-                <PasswordStrength password={password} dark />
+                <PasswordStrength password={password} />
               </div>
               <AuthInput
                 id="confirmPassword"
@@ -309,7 +309,7 @@ export default function RegisterPage() {
                     type="button"
                     onClick={() => setShowConfirm((v) => !v)}
                     className="transition-colors"
-                    style={{ color: "var(--auth-gray)" }}
+                    style={{ color: "var(--text-tertiary)" }}
                     tabIndex={-1}
                   >
                     {showConfirm ? (
@@ -322,7 +322,7 @@ export default function RegisterPage() {
               />
             </div>
 
-            {error && <p className="mt-3 text-[13px] text-red-400">{error}</p>}
+            {error && <p className="mt-3 text-[13px] text-red-600">{error}</p>}
 
             <div className="mt-6 flex gap-3">
               <AuthButton variant="ghost" type="button" onClick={prevStep}>
@@ -352,7 +352,7 @@ export default function RegisterPage() {
             >
               ¿Qué quieres controlar primero?
             </h1>
-            <p className="mt-1.5 text-[14px]" style={{ color: "var(--auth-gray)" }}>
+            <p className="mt-1.5 text-[14px]" style={{ color: "var(--text-tertiary)" }}>
               Puedes cambiar esto después
             </p>
 
@@ -367,10 +367,10 @@ export default function RegisterPage() {
                     onClick={() => setPreferredModule(selected ? "" : mod.id)}
                     className="relative flex flex-col items-center gap-2 rounded-xl p-4 transition-all duration-200"
                     style={{
-                      border: `1px solid ${selected ? mod.color : "var(--auth-border)"}`,
+                      border: `1px solid ${selected ? mod.color : "var(--border-stone)"}`,
                       backgroundColor: selected
                         ? `${mod.color}10`
-                        : "var(--auth-surface)",
+                        : "rgba(226, 217, 202, 0.2)",
                       boxShadow: selected
                         ? `0 0 16px ${mod.color}20`
                         : "none",
@@ -400,7 +400,7 @@ export default function RegisterPage() {
               })}
             </div>
 
-            {error && <p className="mt-3 text-[13px] text-red-400">{error}</p>}
+            {error && <p className="mt-3 text-[13px] text-red-600">{error}</p>}
 
             <div className="mt-6 flex gap-3">
               <AuthButton variant="ghost" type="button" onClick={prevStep}>

@@ -67,8 +67,7 @@ export function AuthBrand() {
         style={{
           fontSize: 10,
           letterSpacing: "0.3em",
-          color: "var(--auth-gray)",
-          opacity: 0.35,
+          color: "rgba(250, 247, 242, 0.5)",
         }}
       >
         Personal command center

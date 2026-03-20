@@ -19,7 +19,7 @@ export const AuthInput = forwardRef<HTMLInputElement, AuthInputProps>(
           size={18}
           strokeWidth={1.5}
           className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors duration-200"
-          style={{ color: "var(--auth-gray)" }}
+          style={{ color: "var(--text-tertiary)" }}
         />
 
         {/* Input */}
@@ -27,12 +27,14 @@ export const AuthInput = forwardRef<HTMLInputElement, AuthInputProps>(
           ref={ref}
           id={id}
           placeholder=" "
-          className={`peer h-[48px] w-full rounded-xl border bg-transparent pl-10 pr-${rightElement ? "11" : "4"} pt-4 pb-1 text-[14px] outline-none transition-all duration-200`}
+          className={`peer h-[48px] w-full rounded-xl border bg-transparent pl-10 text-[14px] outline-none transition-all duration-200 ${rightElement ? "pr-11" : "pr-4"}`}
           style={{
-            color: "var(--auth-text)",
-            borderColor: error ? "#DC2626" : "var(--auth-border)",
+            color: "var(--text-primary)",
+            borderColor: error ? "#DC2626" : "var(--border-stone)",
             caretColor: "var(--auth-copper)",
             animation: error ? "auth-shake 0.4s ease-out" : undefined,
+            paddingTop: 14,
+            paddingBottom: 6,
           }}
           {...props}
         />
@@ -40,8 +42,11 @@ export const AuthInput = forwardRef<HTMLInputElement, AuthInputProps>(
         {/* Floating label */}
         <label
           htmlFor={id}
-          className="pointer-events-none absolute left-10 top-1/2 -translate-y-1/2 text-[14px] transition-all duration-200 peer-focus:top-[13px] peer-focus:-translate-y-0 peer-focus:text-[11px] peer-[&:not(:placeholder-shown)]:top-[13px] peer-[&:not(:placeholder-shown)]:-translate-y-0 peer-[&:not(:placeholder-shown)]:text-[11px]"
-          style={{ color: "var(--auth-gray)" }}
+          className="pointer-events-none absolute left-10 text-[13px] transition-all duration-200 peer-focus:top-[6px] peer-focus:text-[10px] peer-[&:not(:placeholder-shown)]:top-[6px] peer-[&:not(:placeholder-shown)]:text-[10px]"
+          style={{
+            color: "var(--text-tertiary)",
+            top: 14,
+          }}
         >
           {label}
         </label>

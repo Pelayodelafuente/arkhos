@@ -51,10 +51,10 @@ export default function AuthLayout({
           style={{
             backdropFilter: "blur(24px) saturate(180%)",
             WebkitBackdropFilter: "blur(24px) saturate(180%)",
-            background: "rgba(255, 255, 255, 0.03)",
-            border: "1px solid rgba(255, 255, 255, 0.08)",
+            background: "#FAF7F2",
+            border: "1px solid rgba(226, 217, 202, 0.6)",
             boxShadow:
-              "0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(212, 132, 90, 0.05) inset, 0 1px 0 rgba(255, 255, 255, 0.05) inset",
+              "0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(212, 132, 90, 0.05) inset",
             animation: "auth-panel-enter 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both",
           }}
         >
@@ -64,7 +64,7 @@ export default function AuthLayout({
         {/* Footer */}
         <p
           className="mt-8 text-center text-[11px]"
-          style={{ color: "rgba(250, 247, 242, 0.15)" }}
+          style={{ color: "rgba(250, 247, 242, 0.35)" }}
         >
           Built by Pelayo de la Fuente
         </p>

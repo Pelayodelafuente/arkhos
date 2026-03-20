@@ -12,13 +12,13 @@ export const AuthButton = forwardRef<HTMLButtonElement, AuthButtonProps>(
     const isDisabled = disabled || loading;
 
     const base =
-      "relative h-[48px] w-full rounded-xl font-mono text-[13px] font-semibold tracking-wide transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--auth-copper)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--auth-bg)] disabled:cursor-not-allowed disabled:opacity-50 overflow-hidden";
+      "relative h-[48px] w-full rounded-xl font-mono text-[13px] font-semibold tracking-wide transition-all duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--auth-copper)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--auth-bg)] disabled:cursor-not-allowed disabled:opacity-50 overflow-hidden cursor-pointer";
 
     const variants = {
       primary:
-        "text-white hover:translate-y-[-2px] hover:shadow-[0_8px_24px_rgba(212,132,90,0.3)]",
+        "text-white hover:translate-y-[-3px] hover:scale-[1.02] hover:shadow-[0_12px_28px_rgba(212,132,90,0.35),0_0_16px_rgba(212,132,90,0.15)] active:translate-y-[-1px] active:scale-[1.005]",
       secondary:
-        "border text-[var(--auth-text)] hover:bg-[rgba(255,255,255,0.06)]",
+        "border text-[var(--text-secondary)] hover:border-[var(--auth-copper)] hover:text-[var(--auth-copper)] hover:bg-[rgba(212,132,90,0.04)]",
       ghost:
         "text-[var(--auth-copper)] hover:bg-[rgba(212,132,90,0.08)]",
     };

@@ -55,11 +55,11 @@ export default function VerifyMfaPage() {
     <div className="relative">
       <h1
         className="font-heading"
-        style={{ fontSize: 26, lineHeight: 1.2, color: "var(--auth-text)" }}
+        style={{ fontSize: 26, lineHeight: 1.2, color: "var(--text-primary)" }}
       >
         Verificación de seguridad
       </h1>
-      <p className="mt-2 text-[14px]" style={{ color: "var(--auth-gray)" }}>
+      <p className="mt-2 text-[14px]" style={{ color: "var(--text-secondary)" }}>
         Introduce el código de 6 dígitos de tu app de autenticación.
       </p>
 
@@ -76,7 +76,7 @@ export default function VerifyMfaPage() {
           type="button"
           onClick={handleLogout}
           className="inline-flex items-center gap-1.5 text-[12px] transition-colors hover:opacity-80"
-          style={{ color: "var(--auth-gray)" }}
+          style={{ color: "var(--text-tertiary)" }}
         >
           <LogOut size={12} strokeWidth={1.5} />
           ¿No tienes acceso? Cerrar sesión
