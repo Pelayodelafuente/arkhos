@@ -1,9 +1,10 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts"
 import { useExpensesStore } from "@/stores/expenses-store"
 import { formatCurrency, groupByCategory, getMonthlyEquivalent } from "@/lib/gastos-utils"
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion"
 import { ServiceAvatar } from "../ServiceAvatar"
 
 type Tab = 'distribution' | 'evolution' | 'heatmap'
@@ -49,6 +50,20 @@ export default function ChartContent() {
   )
 }
 
+// ─── Animated Counter ──────────────
+
+function AnimatedCounter({ value, format }: { value: number; format: (n: number) => string }) {
+  const motionValue = useMotionValue(0)
+  const spring = useSpring(motionValue, { stiffness: 80, damping: 25 })
+  const display = useTransform(spring, (v) => format(v))
+
+  useEffect(() => {
+    motionValue.set(value)
+  }, [value, motionValue])
+
+  return <motion.span>{display}</motion.span>
+}
+
 // ─── Distribution (Donut) ───────────
 
 import type { SubscriptionWithCategory } from "@/types/expenses"
@@ -82,6 +97,9 @@ function DistributionChart({ subscriptions }: { subscriptions: SubscriptionWithC
               paddingAngle={2}
               dataKey="value"
               strokeWidth={0}
+              animationBegin={0}
+              animationDuration={800}
+              animationEasing="ease-out"
             >
               {chartData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.color} />
@@ -91,7 +109,9 @@ function DistributionChart({ subscriptions }: { subscriptions: SubscriptionWithC
         </ResponsiveContainer>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="font-mono text-[10px] text-text-tertiary">TOTAL/MES</span>
-          <span className="font-heading text-lg text-foreground">{formatCurrency(total)}</span>
+          <span className="font-heading text-lg text-foreground">
+            <AnimatedCounter value={total} format={formatCurrency} />
+          </span>
         </div>
       </div>
 
@@ -103,7 +123,7 @@ function DistributionChart({ subscriptions }: { subscriptions: SubscriptionWithC
               <span className="h-3 w-3 rounded-full flex-shrink-0" style={{ backgroundColor: entry.color }} />
               <span className="flex-1 text-[13px] text-foreground truncate">{entry.name}</span>
               <div className="text-right flex-shrink-0">
-                <span className="font-mono text-[13px] text-foreground">{formatCurrency(entry.value)}</span>
+                <span className="font-mono text-[13px] text-foreground"><AnimatedCounter value={entry.value} format={formatCurrency} /></span>
                 <span className="ml-1 font-mono text-[10px] text-text-tertiary">{pct}%</span>
               </div>
             </div>

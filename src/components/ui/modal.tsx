@@ -23,6 +23,7 @@ const cardVariants = {
     opacity: 0,
     scale: 0.95,
     transition: { duration: 0.15, ease: EASE_OUT },
+    pointerEvents: "none" as const,
   },
 };
 
@@ -47,14 +48,14 @@ export function Modal({ open, onClose, title, children, className = "" }: ModalP
   return (
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
           {/* Overlay */}
           <motion.div
             variants={overlayVariants}
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="absolute inset-0 bg-foreground/30 backdrop-blur-sm"
+            className="absolute inset-0 z-[60] bg-foreground/30 backdrop-blur-sm"
             onClick={onClose}
           />
           {/* Card */}
@@ -63,7 +64,7 @@ export function Modal({ open, onClose, title, children, className = "" }: ModalP
             initial="hidden"
             animate="visible"
             exit="exit"
-            className={`relative z-10 w-full max-w-md rounded-xl bg-card p-6 ${className}`}
+            className={`relative z-[61] w-full max-w-md overflow-hidden rounded-xl bg-card p-6 ${className}`}
             style={{ boxShadow: "var(--shadow-modal)" }}
           >
             {title && (

@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react"
 import { ChevronDown, CreditCard, MoreHorizontal, Pencil, Pause, Play, Plus } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import { Card, Badge, Button } from "@/components/ui"
 import { useExpensesStore, useFilteredSubscriptions } from "@/stores/expenses-store"
 import { ServiceAvatar } from "./ServiceAvatar"
@@ -66,25 +66,43 @@ export function SubscriptionList({ onEdit, onNew }: SubscriptionListProps) {
       </div>
 
       <Card padding="sm">
-        {listViewMode === 'category' ? (
-          <CategoryView
-            subscriptions={filtered}
-            searchQuery={searchQuery}
-            collapsedCategories={collapsedCategories}
-            toggleCategoryCollapse={toggleCategoryCollapse}
-            onEdit={onEdit}
-            toggleActive={toggleActive}
-            notAmortizeYearly={notAmortizeYearly}
-          />
-        ) : (
-          <ChronologicalView
-            subscriptions={filtered}
-            searchQuery={searchQuery}
-            onEdit={onEdit}
-            toggleActive={toggleActive}
-            notAmortizeYearly={notAmortizeYearly}
-          />
-        )}
+        <AnimatePresence mode="wait">
+          {listViewMode === 'category' ? (
+            <motion.div
+              key="category"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+            >
+              <CategoryView
+                subscriptions={filtered}
+                searchQuery={searchQuery}
+                collapsedCategories={collapsedCategories}
+                toggleCategoryCollapse={toggleCategoryCollapse}
+                onEdit={onEdit}
+                toggleActive={toggleActive}
+                notAmortizeYearly={notAmortizeYearly}
+              />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="chronological"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+            >
+              <ChronologicalView
+                subscriptions={filtered}
+                searchQuery={searchQuery}
+                onEdit={onEdit}
+                toggleActive={toggleActive}
+                notAmortizeYearly={notAmortizeYearly}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </Card>
     </div>
   )
@@ -126,7 +144,11 @@ function CategoryView({
         return (
           <div key={key}>
             {/* Category header */}
-            <button
+            <motion.button
+              initial={{ opacity: 0, y: 6 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
               onClick={() => toggleCategoryCollapse(key)}
               className="flex w-full items-center gap-3 px-3 py-2 hover:bg-sand/30 rounded-lg transition-colors select-none"
             >
@@ -153,7 +175,7 @@ function CategoryView({
               <span className="text-xs font-mono font-semibold text-foreground flex-shrink-0">
                 {formatCurrency(groupTotal)}
               </span>
-            </button>
+            </motion.button>
 
             {/* Items */}
             <AnimatePresence initial={false}>
@@ -165,9 +187,10 @@ function CategoryView({
                   transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
                   className="overflow-hidden"
                 >
-                  {group.subscriptions.map((sub) => (
+                  {group.subscriptions.map((sub, idx) => (
                     <SubscriptionRow
                       key={sub.id}
+                      index={idx}
                       subscription={sub}
                       searchQuery={searchQuery}
                       onEdit={() => onEdit(sub)}
@@ -208,9 +231,10 @@ function ChronologicalView({
 
   return (
     <div className="divide-y divide-border">
-      {sorted.map((sub) => (
+      {sorted.map((sub, idx) => (
         <SubscriptionRow
           key={sub.id}
+          index={idx}
           subscription={sub}
           searchQuery={searchQuery}
           onEdit={() => onEdit(sub)}
@@ -225,18 +249,21 @@ function ChronologicalView({
 // ─── Subscription Row ───────────────
 
 function SubscriptionRow({
+  index = 0,
   subscription,
   searchQuery,
   onEdit,
   onToggleActive,
   notAmortizeYearly,
 }: {
+  index?: number
   subscription: SubscriptionWithCategory
   searchQuery: string
   onEdit: () => void
   onToggleActive: () => void
   notAmortizeYearly: boolean
 }) {
+  const prefersReducedMotion = useReducedMotion()
   const isPaused = subscription.status === 'paused'
   const isCancelled = subscription.status === 'cancelled'
   const isTrial = subscription.status === 'trial'
@@ -250,8 +277,14 @@ function SubscriptionRow({
       : subscription.amount
 
   return (
-    <div
-      className={`group flex items-center gap-3 px-3 py-3 transition-colors hover:bg-[rgba(240,235,225,0.35)] cursor-pointer ${
+    <motion.div
+      {...(prefersReducedMotion ? {} : {
+        initial: { opacity: 0, y: 8 },
+        whileInView: { opacity: 1, y: 0 },
+        viewport: { once: true, margin: "-20px" },
+        transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1], delay: index * 0.04 },
+      })}
+      className={`group flex items-center gap-3 px-3 py-3 transition-all hover:bg-[rgba(240,235,225,0.5)] hover:-translate-y-[1px] hover:shadow-[0_4px_16px_rgba(26,23,20,0.06)] cursor-pointer ${
         isInactive ? 'opacity-50' : ''
       }`}
       onClick={onEdit}
@@ -321,7 +354,7 @@ function SubscriptionRow({
       )}
 
       {/* Hover actions */}
-      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+      <div className="flex items-center gap-1 opacity-0 translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 flex-shrink-0">
         <button
           onClick={(e) => { e.stopPropagation(); onEdit() }}
           className="flex h-7 w-7 items-center justify-center rounded-md text-text-tertiary hover:bg-sand hover:text-foreground transition-colors"
@@ -335,7 +368,7 @@ function SubscriptionRow({
           {isPaused ? <Play size={13} strokeWidth={1.75} /> : <Pause size={13} strokeWidth={1.75} />}
         </button>
       </div>
-    </div>
+    </motion.div>
   )
 }
 

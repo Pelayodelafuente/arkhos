@@ -1,15 +1,32 @@
 "use client"
 
-import { useState, useMemo, useRef, useEffect, useCallback } from "react"
+import { useMemo, useRef, useEffect, useCallback } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui"
 import { useExpensesStore } from "@/stores/expenses-store"
 import { getCalendarDays, getSubscriptionsForDay } from "@/utils/expenses-calendar"
 import { ExpenseCalendarCell } from "./ExpenseCalendarCell"
+import { ExpenseLegend } from "./ExpenseLegend"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 
 const WEEKDAY_LABELS = ["Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom"]
+
+const slideVariants = {
+  enter: (direction: number) => ({
+    x: direction > 0 ? 40 : -40,
+    opacity: 0,
+  }),
+  center: {
+    x: 0,
+    opacity: 1,
+  },
+  exit: (direction: number) => ({
+    x: direction > 0 ? -40 : 40,
+    opacity: 0,
+  }),
+}
 
 interface ExpenseCalendarProps {
   onNewWithDay?: (day: number) => void
@@ -17,14 +34,15 @@ interface ExpenseCalendarProps {
 
 export function ExpenseCalendar({ onNewWithDay }: ExpenseCalendarProps) {
   const now = new Date()
-  const [year, setYear] = useState(now.getFullYear())
-  const [month, setMonth] = useState(now.getMonth() + 1)
-  const [slideDirection, setSlideDirection] = useState<'left' | 'right' | null>(null)
+  const directionRef = useRef(1)
 
   const calendarRef = useRef<HTMLDivElement>(null)
   const subscriptions = useExpensesStore((s) => s.subscriptions)
   const selectedDay = useExpensesStore((s) => s.selectedDay)
   const setSelectedDay = useExpensesStore((s) => s.setSelectedDay)
+  const year = useExpensesStore((s) => s.viewedYear)
+  const month = useExpensesStore((s) => s.viewedMonth)
+  const setViewedMonth = useExpensesStore((s) => s.setViewedMonth)
 
   const days = useMemo(() => getCalendarDays(year, month), [year, month])
 
@@ -46,38 +64,33 @@ export function ExpenseCalendar({ onNewWithDay }: ExpenseCalendarProps) {
   }, [setSelectedDay])
 
   const prevMonth = useCallback(() => {
-    setSlideDirection('right')
-    setTimeout(() => {
-      if (month === 1) {
-        setMonth(12)
-        setYear((y) => y - 1)
-      } else {
-        setMonth((m) => m - 1)
-      }
-      setSlideDirection(null)
-    }, 50)
-  }, [month])
+    directionRef.current = -1
+    if (month === 1) {
+      setViewedMonth(year - 1, 12)
+    } else {
+      setViewedMonth(year, month - 1)
+    }
+  }, [month, year, setViewedMonth])
 
   const nextMonth = useCallback(() => {
-    setSlideDirection('left')
-    setTimeout(() => {
-      if (month === 12) {
-        setMonth(1)
-        setYear((y) => y + 1)
-      } else {
-        setMonth((m) => m + 1)
-      }
-      setSlideDirection(null)
-    }, 50)
-  }, [month])
+    directionRef.current = 1
+    if (month === 12) {
+      setViewedMonth(year + 1, 1)
+    } else {
+      setViewedMonth(year, month + 1)
+    }
+  }, [month, year, setViewedMonth])
+
+  const goToToday = useCallback(() => {
+    const today = new Date()
+    setViewedMonth(today.getFullYear(), today.getMonth() + 1)
+  }, [setViewedMonth])
 
   const handleDayClick = useCallback((day: number, hasSubs: boolean) => {
     if (hasSubs) {
       setSelectedDay(selectedDay === day ? null : day)
     } else {
-      // BUG-02: Click on empty day opens new subscription modal with day pre-filled
       setSelectedDay(null)
-      onNewWithDay?.(day)
     }
   }, [selectedDay, setSelectedDay, onNewWithDay])
 
@@ -126,39 +139,41 @@ export function ExpenseCalendar({ onNewWithDay }: ExpenseCalendarProps) {
       </div>
 
       {/* Calendar grid with slide animation */}
-      <div
-        className="grid grid-cols-7 gap-1 sm:gap-2 transition-all duration-300"
-        style={{
-          opacity: slideDirection ? 0.3 : 1,
-          transform: slideDirection === 'left'
-            ? 'translateX(-8px)'
-            : slideDirection === 'right'
-              ? 'translateX(8px)'
-              : 'translateX(0)',
-          transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
-        }}
-      >
-        {days.map((day, index) => {
-          const daySubs = getSubscriptionsForDay(subscriptions, day.day, year, month)
-          const filteredSubs = day.isCurrentMonth ? daySubs : []
-          // Column index (0-6) for popover positioning
-          const colIndex = index % 7
+      <AnimatePresence mode="wait" custom={directionRef.current}>
+        <motion.div
+          key={`${year}-${month}`}
+          custom={directionRef.current}
+          variants={slideVariants}
+          initial="enter"
+          animate="center"
+          exit="exit"
+          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          className="grid grid-cols-7 gap-1 sm:gap-2"
+        >
+          {days.map((day, index) => {
+            const daySubs = getSubscriptionsForDay(subscriptions, day.day, year, month)
+            const filteredSubs = day.isCurrentMonth ? daySubs : []
+            // Column index (0-6) for popover positioning
+            const colIndex = index % 7
 
-          return (
-            <ExpenseCalendarCell
-              key={day.date}
-              day={day}
-              subscriptions={filteredSubs}
-              isSelected={selectedDay === day.day && day.isCurrentMonth}
-              isToday={isCurrentMonth && day.day === today && day.isCurrentMonth}
-              onDayClick={handleDayClick}
-              month={month}
-              year={year}
-              colIndex={colIndex}
-            />
-          )
-        })}
-      </div>
+            return (
+              <ExpenseCalendarCell
+                key={day.date}
+                day={day}
+                subscriptions={filteredSubs}
+                isSelected={selectedDay === day.day && day.isCurrentMonth}
+                isToday={isCurrentMonth && day.day === today && day.isCurrentMonth}
+                onDayClick={handleDayClick}
+                month={month}
+                year={year}
+                colIndex={colIndex}
+              />
+            )
+          })}
+        </motion.div>
+      </AnimatePresence>
+
+      <ExpenseLegend onGoToToday={goToToday} />
     </div>
   )
 }

@@ -1,21 +1,20 @@
 "use client"
 
 import { useEffect, useState, useCallback, useRef } from "react"
-import { Plus, Settings, Search, Sparkles, ListOrdered, Download, X } from "lucide-react"
+import { motion } from "framer-motion"
+import { Plus, Settings, Search, Sparkles, Download, X } from "lucide-react"
 import { Button } from "@/components/ui"
 import { useExpensesStore } from "@/stores/expenses-store"
 import { KPICards } from "./KPICards"
 import { BudgetBar } from "./BudgetBar"
 import { AlertBanner } from "./AlertBanner"
 import { ExpenseCalendar } from "./ExpenseCalendar"
-import { ExpenseLegend } from "./ExpenseLegend"
 import { SubscriptionList } from "./SubscriptionList"
 import { CycleFilterToggle } from "./CycleFilterToggle"
 import { ExpenseChartDialog } from "./ExpenseChartDialog"
 import { SubscriptionModal } from "./SubscriptionModal"
 import { CategoryManager } from "./CategoryManager"
 import { SmartAddModal } from "./SmartAddModal"
-import { AuditModal } from "./AuditModal"
 import { ShortcutsModal } from "./ShortcutsModal"
 import { GastosLoading } from "./GastosLoading"
 import { exportToCSV } from "@/lib/gastos-utils"
@@ -43,7 +42,6 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
   const [prefilledDay, setPrefilledDay] = useState<number | null>(null)
   const [categoryManagerOpen, setCategoryManagerOpen] = useState(false)
   const [smartAddOpen, setSmartAddOpen] = useState(false)
-  const [auditOpen, setAuditOpen] = useState(false)
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
 
   const searchRef = useRef<HTMLInputElement>(null)
@@ -87,7 +85,6 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
         case 'Escape':
           setModalOpen(false)
           setSmartAddOpen(false)
-          setAuditOpen(false)
           setShortcutsOpen(false)
           setCategoryManagerOpen(false)
           break
@@ -189,17 +186,6 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
         {/* Chart */}
         <ExpenseChartDialog />
 
-        {/* Audit */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setAuditOpen(true)}
-          className="border border-border"
-        >
-          <ListOrdered size={16} strokeWidth={1.75} />
-          <span className="hidden sm:inline">Auditoría</span>
-        </Button>
-
         {/* CSV Export */}
         <Button
           variant="ghost"
@@ -217,20 +203,21 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
           <span className="hidden sm:inline text-xs text-text-secondary whitespace-nowrap">
             Precio anual completo
           </span>
-          <button
+          <motion.button
             role="switch"
             aria-checked={notAmortizeYearly}
             onClick={() => setNotAmortizeYearly(!notAmortizeYearly)}
             className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
               notAmortizeYearly ? "bg-accent" : "bg-border"
             }`}
+            whileTap={{ scale: 0.95 }}
           >
-            <span
-              className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform duration-200 ${
-                notAmortizeYearly ? "translate-x-[18px]" : "translate-x-[3px]"
-              }`}
+            <motion.span
+              className="inline-block h-3.5 w-3.5 rounded-full bg-white shadow"
+              animate={{ x: notAmortizeYearly ? 18 : 3 }}
+              transition={{ type: "spring", stiffness: 500, damping: 30 }}
             />
-          </button>
+          </motion.button>
         </label>
 
         {/* CTA */}
@@ -257,7 +244,6 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
           <div className="animate-fade-in-up" style={{ animationDelay: '200ms' }}>
             <ExpenseCalendar onNewWithDay={handleNewWithDay} />
           </div>
-          <ExpenseLegend />
           <div className="animate-fade-in-up" style={{ animationDelay: '300ms' }}>
             <SubscriptionList onEdit={handleEdit} onNew={handleNew} />
           </div>
@@ -281,10 +267,6 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
         open={smartAddOpen}
         onClose={() => setSmartAddOpen(false)}
         userId={userId}
-      />
-      <AuditModal
-        open={auditOpen}
-        onClose={() => setAuditOpen(false)}
       />
       <ShortcutsModal
         open={shortcutsOpen}

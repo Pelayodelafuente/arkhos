@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef, useCallback, useEffect } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import { createPortal } from "react-dom"
 import { Drawer } from "vaul"
 import type { CalendarDay, SubscriptionWithCategory } from "@/types/expenses"
@@ -142,6 +143,11 @@ export function ExpenseCalendarCell({
 
   const cellContent = (
     <div ref={cellRef} className={cellClasses} onClick={handleClick}>
+      {/* Today animated ring */}
+      {isToday && (
+        <span className="absolute inset-0 rounded-xl ring-2 ring-[var(--module-gastos)]/30 animate-pulse pointer-events-none"
+              style={{ animationDuration: '3s' }} />
+      )}
       {/* Day number */}
       <div className="flex items-center justify-end gap-0.5">
         <span
@@ -185,22 +191,30 @@ export function ExpenseCalendarCell({
       )}
 
       {/* Desktop popover via portal */}
-      {!isMobile && popoverOpen && hasSubs && typeof document !== 'undefined' &&
+      {!isMobile && hasSubs && typeof document !== 'undefined' &&
         createPortal(
-          <div
-            ref={popoverRef}
-            style={popoverStyle}
-            className="rounded-2xl border border-border bg-card overflow-hidden animate-scale-in"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <ExpensePopupContent
-              day={day.day}
-              month={month}
-              year={year}
-              subscriptions={subscriptions}
-              onClose={() => setPopoverOpen(false)}
-            />
-          </div>,
+          <AnimatePresence>
+            {popoverOpen && (
+              <motion.div
+                ref={popoverRef}
+                style={popoverStyle}
+                initial={{ opacity: 0, scale: 0.92, y: 8 }}
+                animate={{ opacity: 1, scale: 1, y: 0, boxShadow: '0 8px 32px rgba(26,23,20,0.12)' }}
+                exit={{ opacity: 0, scale: 0.96, y: 4 }}
+                transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                className="rounded-2xl border border-border bg-card overflow-hidden"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <ExpensePopupContent
+                  day={day.day}
+                  month={month}
+                  year={year}
+                  subscriptions={subscriptions}
+                  onClose={() => setPopoverOpen(false)}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>,
           document.body
         )
       }

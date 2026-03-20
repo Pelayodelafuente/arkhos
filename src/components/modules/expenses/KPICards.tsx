@@ -1,18 +1,62 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useEffect } from "react"
 import { Wallet, CalendarClock, FolderOpen, RotateCcw } from "lucide-react"
-import { Card } from "@/components/ui"
+import { motion, useSpring, useTransform, useMotionValue, useReducedMotion } from "framer-motion"
 import { useExpensesStore, useExpenseSummary } from "@/stores/expenses-store"
 import { formatCurrency, getNextBillingSubscription, getMostExpensiveCategory, getNextAnnualRenewal, getDaysUntilBilling } from "@/lib/gastos-utils"
 import { ServiceAvatar } from "./ServiceAvatar"
 
+const MONTH_NAMES = [
+  'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+  'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
+]
+
+function AnimatedNumber({ value, format }: { value: number; format?: (n: number) => string }) {
+  const motionValue = useMotionValue(0)
+  const spring = useSpring(motionValue, { stiffness: 100, damping: 30 })
+  const display = useTransform(spring, (v) => format ? format(v) : v.toFixed(2))
+
+  useEffect(() => {
+    motionValue.set(value)
+  }, [value, motionValue])
+
+  return <motion.span>{display}</motion.span>
+}
+
+const glassStyle = {
+  background: 'rgba(255,255,255,0.6)',
+  backdropFilter: 'blur(12px)',
+  WebkitBackdropFilter: 'blur(12px)',
+  border: '1px solid rgba(255,255,255,0.3)',
+  boxShadow: '0 4px 24px rgba(26,23,20,0.06)',
+} as const
+
 export function KPICards() {
   const subscriptions = useExpensesStore((s) => s.subscriptions)
   const notAmortizeYearly = useExpensesStore((s) => s.notAmortizeYearly)
+  const viewedYear = useExpensesStore((s) => s.viewedYear)
+  const viewedMonth = useExpensesStore((s) => s.viewedMonth)
   const summary = useExpenseSummary()
+  const shouldReduce = useReducedMotion()
 
-  const nextBilling = useMemo(() => getNextBillingSubscription(subscriptions), [subscriptions])
+  const now = new Date()
+  const isCurrentMonth = viewedYear === now.getFullYear() && viewedMonth === now.getMonth() + 1
+
+  const nextBilling = useMemo(() => {
+    if (isCurrentMonth) {
+      return getNextBillingSubscription(subscriptions)
+    }
+    // For non-current month, find first billing in that month
+    const active = subscriptions.filter((s) => s.status === 'active')
+    if (active.length === 0) return null
+    const daysInMonth = new Date(viewedYear, viewedMonth, 0).getDate()
+    const sorted = [...active]
+      .map((s) => ({ sub: s, effectiveDay: Math.min(s.billing_day, daysInMonth) }))
+      .sort((a, b) => a.effectiveDay - b.effectiveDay)
+    return sorted[0]?.sub ?? null
+  }, [subscriptions, isCurrentMonth, viewedYear, viewedMonth])
+
   const topCategory = useMemo(() => getMostExpensiveCategory(subscriptions), [subscriptions])
   const nextRenewal = useMemo(() => getNextAnnualRenewal(subscriptions), [subscriptions])
 
@@ -22,12 +66,26 @@ export function KPICards() {
 
   const totalLabel = notAmortizeYearly ? 'GASTO ANUAL' : 'GASTO MENSUAL'
 
-  const nextBillingDays = nextBilling ? getDaysUntilBilling(nextBilling.billing_day) : null
+  const nextBillingDays = nextBilling && isCurrentMonth ? getDaysUntilBilling(nextBilling.billing_day) : null
+
+  const cardMotionProps = (index: number) =>
+    shouldReduce
+      ? {}
+      : {
+          initial: { opacity: 0, y: 12, scale: 0.96 },
+          animate: { opacity: 1, y: 0, scale: 1 },
+          transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] as const, delay: index * 0.08 },
+          whileHover: { y: -2, boxShadow: '0 8px 32px rgba(26,23,20,0.10)' },
+        }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       {/* Card 1: Total */}
-      <Card padding="md" className="relative overflow-hidden">
+      <motion.div
+        {...cardMotionProps(0)}
+        className="relative overflow-hidden rounded-xl p-4"
+        style={glassStyle}
+      >
         <div className="flex items-center gap-2 mb-2">
           <div className="h-4 w-0.5 rounded-full bg-[var(--module-gastos)]" />
           <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-tertiary font-semibold">
@@ -35,7 +93,7 @@ export function KPICards() {
           </span>
         </div>
         <p className="font-heading text-2xl text-foreground">
-          {formatCurrency(displayTotal)}
+          <AnimatedNumber value={displayTotal} format={formatCurrency} />
         </p>
         <p className="text-xs text-text-tertiary mt-1">
           de {summary.countActive} suscripciones activas
@@ -45,14 +103,21 @@ export function KPICards() {
           strokeWidth={0.75}
           className="absolute -right-1 -bottom-1 text-foreground/[0.04]"
         />
-      </Card>
+      </motion.div>
 
       {/* Card 2: Next billing */}
-      <Card padding="md" className={`relative overflow-hidden ${nextBillingDays === 0 ? 'border-accent/30 bg-[rgba(196,112,74,0.04)]' : ''}`}>
+      <motion.div
+        {...cardMotionProps(1)}
+        className={`relative overflow-hidden rounded-xl p-4 ${nextBillingDays === 0 ? 'border-accent/30 bg-[rgba(196,112,74,0.04)]' : ''}`}
+        style={{
+          ...glassStyle,
+          ...(nextBillingDays === 0 ? { border: '1px solid rgba(196,112,74,0.3)', background: 'rgba(196,112,74,0.04)' } : {}),
+        }}
+      >
         <div className="flex items-center gap-2 mb-2">
           <div className="h-4 w-0.5 rounded-full bg-[var(--module-gastos)]" />
           <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-tertiary font-semibold">
-            PRÓXIMO COBRO
+            {isCurrentMonth ? 'PRÓXIMO COBRO' : `PRIMER COBRO · ${MONTH_NAMES[viewedMonth - 1]?.toUpperCase()}`}
           </span>
         </div>
         {nextBilling ? (
@@ -69,13 +134,17 @@ export function KPICards() {
               </span>
             </div>
             <p className="text-xs text-text-tertiary mt-1">
-              {formatCurrency(nextBilling.amount)} —{' '}
-              {nextBillingDays === 0 ? (
-                <span className="text-accent font-semibold">hoy</span>
-              ) : nextBillingDays === 1 ? (
-                <span className="text-amber-600 font-medium">mañana</span>
+              <AnimatedNumber value={nextBilling.amount} format={formatCurrency} /> —{' '}
+              {isCurrentMonth ? (
+                nextBillingDays === 0 ? (
+                  <span className="text-accent font-semibold">hoy</span>
+                ) : nextBillingDays === 1 ? (
+                  <span className="text-amber-600 font-medium">mañana</span>
+                ) : (
+                  `en ${nextBillingDays} días`
+                )
               ) : (
-                `en ${nextBillingDays} días`
+                `día ${nextBilling.billing_day} de ${MONTH_NAMES[viewedMonth - 1]}`
               )}
             </p>
           </>
@@ -87,10 +156,14 @@ export function KPICards() {
           strokeWidth={0.75}
           className="absolute -right-1 -bottom-1 text-foreground/[0.04]"
         />
-      </Card>
+      </motion.div>
 
       {/* Card 3: Top category */}
-      <Card padding="md" className="relative overflow-hidden">
+      <motion.div
+        {...cardMotionProps(2)}
+        className="relative overflow-hidden rounded-xl p-4"
+        style={glassStyle}
+      >
         <div className="flex items-center gap-2 mb-2">
           <div className="h-4 w-0.5 rounded-full bg-[var(--module-gastos)]" />
           <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-tertiary font-semibold">
@@ -103,7 +176,7 @@ export function KPICards() {
               {topCategory.category?.name ?? 'Sin categoría'}
             </p>
             <p className="text-xs text-text-tertiary mt-1">
-              {formatCurrency(topCategory.total)}/mes — {topCategory.count} servicio{topCategory.count !== 1 ? 's' : ''}
+              <AnimatedNumber value={topCategory.total} format={formatCurrency} />/mes — {topCategory.count} servicio{topCategory.count !== 1 ? 's' : ''}
             </p>
           </>
         ) : (
@@ -114,10 +187,14 @@ export function KPICards() {
           strokeWidth={0.75}
           className="absolute -right-1 -bottom-1 text-foreground/[0.04]"
         />
-      </Card>
+      </motion.div>
 
       {/* Card 4: Next renewal */}
-      <Card padding="md" className="relative overflow-hidden">
+      <motion.div
+        {...cardMotionProps(3)}
+        className="relative overflow-hidden rounded-xl p-4"
+        style={glassStyle}
+      >
         <div className="flex items-center gap-2 mb-2">
           <div className="h-4 w-0.5 rounded-full bg-[var(--module-gastos)]" />
           <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-tertiary font-semibold">
@@ -138,7 +215,7 @@ export function KPICards() {
               </span>
             </div>
             <p className="text-xs text-text-tertiary mt-1">
-              {formatCurrency(nextRenewal.subscription.amount)} en {nextRenewal.daysUntil} días
+              <AnimatedNumber value={nextRenewal.subscription.amount} format={formatCurrency} /> en {nextRenewal.daysUntil} días
             </p>
           </>
         ) : (
@@ -149,7 +226,7 @@ export function KPICards() {
           strokeWidth={0.75}
           className="absolute -right-1 -bottom-1 text-foreground/[0.04]"
         />
-      </Card>
+      </motion.div>
     </div>
   )
 }

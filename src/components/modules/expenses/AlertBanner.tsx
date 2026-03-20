@@ -1,7 +1,8 @@
 "use client"
 
 import { useMemo, useState, useEffect } from "react"
-import { X } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
+import { X, Bell } from "lucide-react"
 import { useExpensesStore } from "@/stores/expenses-store"
 import { getDaysUntilBilling, formatCurrency, isBillingToday, isBillingTomorrow } from "@/lib/gastos-utils"
 import { ServiceAvatar } from "./ServiceAvatar"
@@ -36,6 +37,24 @@ function dismissAlert(alertId: string) {
   const dismissed = getDismissed()
   dismissed[alertId] = Date.now()
   localStorage.setItem(DISMISS_KEY, JSON.stringify(dismissed))
+}
+
+const gradientByType = {
+  today: 'linear-gradient(90deg, rgba(196,112,74,0.10), rgba(196,112,74,0.03))',
+  tomorrow: 'linear-gradient(90deg, rgba(245,158,11,0.10), rgba(245,158,11,0.03))',
+  renewal: 'linear-gradient(90deg, rgba(74,122,155,0.10), rgba(74,122,155,0.03))',
+}
+
+const borderByType = {
+  today: 'border-accent/30',
+  tomorrow: 'border-amber-200',
+  renewal: 'border-[rgba(74,122,155,0.3)]',
+}
+
+const amountColorByType = {
+  today: 'text-accent',
+  tomorrow: 'text-amber-600',
+  renewal: 'text-[var(--module-gastos)]',
 }
 
 export function AlertBanner() {
@@ -112,23 +131,31 @@ export function AlertBanner() {
 
   return (
     <div className="space-y-2">
-      {visibleAlerts.map((alert) => {
-        const bgClass = alert.type === 'today'
-          ? 'bg-[rgba(196,112,74,0.08)] border-accent/30'
-          : alert.type === 'tomorrow'
-            ? 'bg-amber-50 border-amber-200'
-            : 'bg-[rgba(74,122,155,0.08)] border-[rgba(74,122,155,0.3)]'
-
-        return (
-          <div
+      <AnimatePresence>
+        {visibleAlerts.map((alert) => (
+          <motion.div
             key={alert.id}
-            className={`rounded-xl border px-4 py-3 flex items-center gap-3 ${bgClass}`}
+            initial={{ opacity: 0, y: -16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            className={`rounded-xl border px-4 py-3 flex items-center gap-3 ${borderByType[alert.type]}`}
+            style={{ background: gradientByType[alert.type] }}
           >
-            {alert.type === 'today' && (
+            {alert.type === 'today' ? (
               <span className="relative flex h-2.5 w-2.5 flex-shrink-0">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
                 <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-accent" />
               </span>
+            ) : (
+              <motion.span
+                initial={{ rotate: 0 }}
+                animate={{ rotate: [0, -8, 8, -8, 8, 0] }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="flex-shrink-0"
+              >
+                <Bell size={14} strokeWidth={1.75} className="text-text-secondary" />
+              </motion.span>
             )}
             <div className="flex items-center gap-2 flex-1 min-w-0">
               {alert.subscriptions.slice(0, 2).map((sub) => (
@@ -143,7 +170,7 @@ export function AlertBanner() {
               <span className="text-sm text-foreground truncate">{alert.message}</span>
             </div>
             {alert.total !== undefined && (
-              <span className="font-mono text-sm font-semibold text-foreground flex-shrink-0">
+              <span className={`font-mono text-sm font-bold flex-shrink-0 ${amountColorByType[alert.type]}`}>
                 {formatCurrency(alert.total)}
               </span>
             )}
@@ -153,9 +180,9 @@ export function AlertBanner() {
             >
               <X size={14} strokeWidth={1.75} />
             </button>
-          </div>
-        )
-      })}
+          </motion.div>
+        ))}
+      </AnimatePresence>
     </div>
   )
 }

@@ -24,15 +24,15 @@ export function CycleFilterToggle() {
             onClick={() => setCycleFilter(opt.value)}
             className={`relative rounded-[17px] px-4 py-1.5 text-xs font-medium transition-colors duration-200 ${
               isActive
-                ? "text-foreground font-bold"
+                ? "text-card font-semibold"
                 : "text-text-tertiary hover:text-text-secondary"
             }`}
           >
             {isActive && (
               <motion.div
                 layoutId="cycle-indicator"
-                className="absolute inset-0 rounded-[17px] bg-card"
-                style={{ boxShadow: "0 1px 3px rgba(26,23,20,0.06)" }}
+                className="absolute inset-0 rounded-[17px] bg-foreground"
+                style={{ boxShadow: "0 1px 4px rgba(26,23,20,0.10)" }}
                 transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
               />
             )}

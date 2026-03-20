@@ -1,6 +1,10 @@
 "use client"
 
-export function ExpenseLegend() {
+interface ExpenseLegendProps {
+  onGoToToday?: () => void
+}
+
+export function ExpenseLegend({ onGoToToday }: ExpenseLegendProps) {
   const today = new Date().getDate()
 
   return (
@@ -18,14 +22,18 @@ export function ExpenseLegend() {
       </div>
 
       {/* Today */}
-      <div className="flex items-center gap-1.5">
+      <button
+        type="button"
+        onClick={() => onGoToToday?.()}
+        className="-mx-2 -my-1 flex cursor-pointer items-center gap-1.5 rounded-lg px-2 py-1 transition-colors hover:bg-sand"
+      >
         <span className="flex h-5 w-5 items-center justify-center rounded border border-border bg-sand">
           <span className="font-mono text-[9px] font-extrabold text-accent">
             {today}
           </span>
         </span>
         <span className="text-[12px] text-text-tertiary">Hoy</span>
-      </div>
+      </button>
     </div>
   )
 }

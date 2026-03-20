@@ -59,6 +59,8 @@ interface ExpensesState {
   priceHistory: Map<string, PriceHistoryEntry[]>
   listViewMode: 'category' | 'chronological'
   collapsedCategories: Set<string>
+  viewedYear: number
+  viewedMonth: number
 }
 
 interface ExpensesActions {
@@ -81,6 +83,7 @@ interface ExpensesActions {
   updateStatus: (id: string, status: SubscriptionStatus) => Promise<void>
   setListViewMode: (mode: 'category' | 'chronological') => void
   toggleCategoryCollapse: (categoryId: string) => void
+  setViewedMonth: (year: number, month: number) => void
 }
 
 type ExpensesStore = ExpensesState & ExpensesActions
@@ -100,6 +103,8 @@ export const useExpensesStore = create<ExpensesStore>((set, get) => ({
   priceHistory: new Map(),
   listViewMode: 'category',
   collapsedCategories: new Set(),
+  viewedYear: new Date().getFullYear(),
+  viewedMonth: new Date().getMonth() + 1,
 
   // ── Fetch ───────────────────────────
 
@@ -403,6 +408,8 @@ export const useExpensesStore = create<ExpensesStore>((set, get) => ({
   setNotAmortizeYearly: (value) => set({ notAmortizeYearly: value }),
 
   setListViewMode: (mode) => set({ listViewMode: mode }),
+
+  setViewedMonth: (year, month) => set({ viewedYear: year, viewedMonth: month }),
 
   toggleCategoryCollapse: (categoryId) => {
     set((s) => {
