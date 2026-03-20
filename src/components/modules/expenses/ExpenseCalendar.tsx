@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useRef, useEffect, useCallback } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui"
 import { useExpensesStore } from "@/stores/expenses-store"
@@ -11,11 +11,17 @@ import { es } from "date-fns/locale"
 
 const WEEKDAY_LABELS = ["Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom"]
 
-export function ExpenseCalendar() {
+interface ExpenseCalendarProps {
+  onNewWithDay?: (day: number) => void
+}
+
+export function ExpenseCalendar({ onNewWithDay }: ExpenseCalendarProps) {
   const now = new Date()
   const [year, setYear] = useState(now.getFullYear())
-  const [month, setMonth] = useState(now.getMonth() + 1) // 1-based
+  const [month, setMonth] = useState(now.getMonth() + 1)
+  const [slideDirection, setSlideDirection] = useState<'left' | 'right' | null>(null)
 
+  const calendarRef = useRef<HTMLDivElement>(null)
   const subscriptions = useExpensesStore((s) => s.subscriptions)
   const selectedDay = useExpensesStore((s) => s.selectedDay)
   const setSelectedDay = useExpensesStore((s) => s.setSelectedDay)
@@ -23,37 +29,60 @@ export function ExpenseCalendar() {
   const days = useMemo(() => getCalendarDays(year, month), [year, month])
 
   const today = now.getDate()
-  const isCurrentMonth =
-    now.getFullYear() === year && now.getMonth() + 1 === month
+  const isCurrentMonth = now.getFullYear() === year && now.getMonth() + 1 === month
 
   const monthLabel = format(new Date(year, month - 1, 1), "MMMM", { locale: es })
-  // Capitalize first letter
   const monthDisplay = monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1)
 
-  const prevMonth = () => {
-    if (month === 1) {
-      setMonth(12)
-      setYear((y) => y - 1)
-    } else {
-      setMonth((m) => m - 1)
+  // BUG-03: Click outside clears selection
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (calendarRef.current && !calendarRef.current.contains(e.target as Node)) {
+        setSelectedDay(null)
+      }
     }
-  }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [setSelectedDay])
 
-  const nextMonth = () => {
-    if (month === 12) {
-      setMonth(1)
-      setYear((y) => y + 1)
+  const prevMonth = useCallback(() => {
+    setSlideDirection('right')
+    setTimeout(() => {
+      if (month === 1) {
+        setMonth(12)
+        setYear((y) => y - 1)
+      } else {
+        setMonth((m) => m - 1)
+      }
+      setSlideDirection(null)
+    }, 50)
+  }, [month])
+
+  const nextMonth = useCallback(() => {
+    setSlideDirection('left')
+    setTimeout(() => {
+      if (month === 12) {
+        setMonth(1)
+        setYear((y) => y + 1)
+      } else {
+        setMonth((m) => m + 1)
+      }
+      setSlideDirection(null)
+    }, 50)
+  }, [month])
+
+  const handleDayClick = useCallback((day: number, hasSubs: boolean) => {
+    if (hasSubs) {
+      setSelectedDay(selectedDay === day ? null : day)
     } else {
-      setMonth((m) => m + 1)
+      // BUG-02: Click on empty day opens new subscription modal with day pre-filled
+      setSelectedDay(null)
+      onNewWithDay?.(day)
     }
-  }
-
-  const handleDayClick = (day: number) => {
-    setSelectedDay(selectedDay === day ? null : day)
-  }
+  }, [selectedDay, setSelectedDay, onNewWithDay])
 
   return (
-    <div>
+    <div ref={calendarRef}>
       {/* Header */}
       <div className="mb-4 flex items-center justify-between">
         <Button
@@ -96,17 +125,24 @@ export function ExpenseCalendar() {
         ))}
       </div>
 
-      {/* Calendar grid */}
-      <div className="grid grid-cols-7 gap-1 sm:gap-2">
-        {days.map((day) => {
-          const daySubs = getSubscriptionsForDay(
-            subscriptions,
-            day.day,
-            year,
-            month
-          )
-          // Only show subscriptions for days in current month
+      {/* Calendar grid with slide animation */}
+      <div
+        className="grid grid-cols-7 gap-1 sm:gap-2 transition-all duration-300"
+        style={{
+          opacity: slideDirection ? 0.3 : 1,
+          transform: slideDirection === 'left'
+            ? 'translateX(-8px)'
+            : slideDirection === 'right'
+              ? 'translateX(8px)'
+              : 'translateX(0)',
+          transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
+        }}
+      >
+        {days.map((day, index) => {
+          const daySubs = getSubscriptionsForDay(subscriptions, day.day, year, month)
           const filteredSubs = day.isCurrentMonth ? daySubs : []
+          // Column index (0-6) for popover positioning
+          const colIndex = index % 7
 
           return (
             <ExpenseCalendarCell
@@ -118,6 +154,7 @@ export function ExpenseCalendar() {
               onDayClick={handleDayClick}
               month={month}
               year={year}
+              colIndex={colIndex}
             />
           )
         })}

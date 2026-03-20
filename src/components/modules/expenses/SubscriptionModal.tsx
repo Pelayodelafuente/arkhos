@@ -31,6 +31,7 @@ interface SubscriptionModalProps {
   onClose: () => void
   userId: string
   subscription?: SubscriptionWithCategory | null
+  prefilledDay?: number | null
 }
 
 export function SubscriptionModal({
@@ -38,6 +39,7 @@ export function SubscriptionModal({
   onClose,
   userId,
   subscription,
+  prefilledDay,
 }: SubscriptionModalProps) {
   const addSubscription = useExpensesStore((s) => s.addSubscription)
   const editSubscription = useExpensesStore((s) => s.editSubscription)
@@ -80,7 +82,10 @@ export function SubscriptionModal({
     } else {
       resetForm()
     }
-  }, [subscription, open])
+    if (prefilledDay !== null && prefilledDay !== undefined) {
+      setBillingDay(String(prefilledDay))
+    }
+  }, [subscription, open, prefilledDay])
 
   const resetForm = useCallback(() => {
     setName("")

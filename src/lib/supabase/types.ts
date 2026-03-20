@@ -1,4 +1,4 @@
-// Supabase Database types — aligned with migrations 001 + 002 + 003
+// Supabase Database types — aligned with migrations 001 + 002 + 003 + 004 + 005
 
 export type Json =
   | string
@@ -297,6 +297,196 @@ export interface Database {
             columns: ["task_id"];
             isOneToOne: false;
             referencedRelation: "phase_tasks";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      expense_categories: {
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          icon: string;
+          color: string;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          name: string;
+          icon: string;
+          color: string;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          name?: string;
+          icon?: string;
+          color?: string;
+          sort_order?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "expense_categories_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      subscriptions: {
+        Row: {
+          id: string;
+          user_id: string;
+          category_id: string | null;
+          name: string;
+          icon: string;
+          color: string;
+          amount: number;
+          currency: string;
+          cycle: string;
+          billing_day: number;
+          is_active: boolean;
+          status: string;
+          trial_ends_at: string | null;
+          service_key: string | null;
+          url: string | null;
+          notes: string | null;
+          started_at: string | null;
+          cancelled_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          category_id?: string | null;
+          name: string;
+          icon: string;
+          color: string;
+          amount: number;
+          currency?: string;
+          cycle: string;
+          billing_day: number;
+          is_active?: boolean;
+          status?: string;
+          trial_ends_at?: string | null;
+          service_key?: string | null;
+          url?: string | null;
+          notes?: string | null;
+          started_at?: string | null;
+        };
+        Update: {
+          category_id?: string | null;
+          name?: string;
+          icon?: string;
+          color?: string;
+          amount?: number;
+          currency?: string;
+          cycle?: string;
+          billing_day?: number;
+          is_active?: boolean;
+          status?: string;
+          trial_ends_at?: string | null;
+          service_key?: string | null;
+          url?: string | null;
+          notes?: string | null;
+          started_at?: string | null;
+          cancelled_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "subscriptions_category_id_fkey";
+            columns: ["category_id"];
+            isOneToOne: false;
+            referencedRelation: "expense_categories";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      subscription_price_history: {
+        Row: {
+          id: string;
+          subscription_id: string;
+          user_id: string;
+          old_amount: number;
+          new_amount: number;
+          changed_at: string;
+        };
+        Insert: {
+          id?: string;
+          subscription_id: string;
+          user_id: string;
+          old_amount: number;
+          new_amount: number;
+          changed_at?: string;
+        };
+        Update: {
+          old_amount?: number;
+          new_amount?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "subscription_price_history_subscription_id_fkey";
+            columns: ["subscription_id"];
+            isOneToOne: false;
+            referencedRelation: "subscriptions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "subscription_price_history_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      user_gastos_settings: {
+        Row: {
+          user_id: string;
+          monthly_budget: number | null;
+          default_currency: string;
+          show_annual_prices: boolean;
+          list_view_mode: string;
+          collapsed_categories: string[];
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          monthly_budget?: number | null;
+          default_currency?: string;
+          show_annual_prices?: boolean;
+          list_view_mode?: string;
+          collapsed_categories?: string[];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          monthly_budget?: number | null;
+          default_currency?: string;
+          show_annual_prices?: boolean;
+          list_view_mode?: string;
+          collapsed_categories?: string[];
+        };
+        Relationships: [
+          {
+            foreignKeyName: "user_gastos_settings_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: true;
+            referencedRelation: "profiles";
             referencedColumns: ["id"];
           },
         ];

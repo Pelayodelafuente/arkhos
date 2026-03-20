@@ -1,6 +1,6 @@
 // ══════════════════════════════════════
-// Arkhos — Expenses Data Layer
-// Módulo Gastos: expense_categories + subscriptions
+// Arkhos — Expenses Data Layer (v2)
+// Módulo Gastos: expense_categories + subscriptions + price_history + settings
 // ══════════════════════════════════════
 
 import { createBrowserClient } from '@supabase/ssr'
@@ -12,7 +12,11 @@ import type {
   SubscriptionInsert,
   SubscriptionUpdate,
   SubscriptionWithCategory,
+  SubscriptionStatus,
   ExpenseSummary,
+  PriceHistoryEntry,
+  UserGastosSettings,
+  UserGastosSettingsUpdate,
 } from '@/types/expenses'
 
 // ─── Client factory ───────────────────
@@ -123,6 +127,7 @@ export async function getActiveSubscriptions(userId: string): Promise<Subscripti
     .select('*, category:expense_categories(*)')
     .eq('user_id', userId)
     .eq('is_active', true)
+    .eq('status', 'active')
     .order('billing_day', { ascending: true })
 
   if (error) throw new ExpensesError('Error fetching active subscriptions', error.message)
@@ -160,6 +165,9 @@ export async function createSubscription(data: SubscriptionInsert): Promise<Subs
       cycle: data.cycle,
       billing_day: data.billing_day,
       is_active: data.is_active ?? true,
+      status: data.status ?? 'active',
+      trial_ends_at: data.trial_ends_at ?? null,
+      service_key: data.service_key ?? null,
       url: data.url ?? null,
       notes: data.notes ?? null,
       started_at: data.started_at ?? null,
@@ -200,9 +208,10 @@ export async function toggleSubscriptionActive(
   isActive: boolean
 ): Promise<Subscription> {
   const client = createClient()
+  const status: SubscriptionStatus = isActive ? 'active' : 'paused'
   const { data: row, error } = await client
     .from('subscriptions')
-    .update({ is_active: isActive })
+    .update({ is_active: isActive, status })
     .eq('id', id)
     .select()
     .single()
@@ -210,6 +219,78 @@ export async function toggleSubscriptionActive(
   if (error) throw new ExpensesError('Error toggling subscription active state', error.message)
   if (!row) throw new ExpensesError('Error toggling subscription: no data returned')
   return row as Subscription
+}
+
+export async function updateSubscriptionStatus(
+  id: string,
+  status: SubscriptionStatus
+): Promise<Subscription> {
+  const client = createClient()
+  const isActive = status === 'active' || status === 'trial'
+  const { data: row, error } = await client
+    .from('subscriptions')
+    .update({ status, is_active: isActive })
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) throw new ExpensesError('Error updating subscription status', error.message)
+  if (!row) throw new ExpensesError('Error updating subscription status: no data returned')
+  return row as Subscription
+}
+
+// ══════════════════════════════════════
+// PRICE HISTORY
+// ══════════════════════════════════════
+
+export async function getPriceHistory(subscriptionId: string): Promise<PriceHistoryEntry[]> {
+  const client = createClient()
+  const { data, error } = await client
+    .from('subscription_price_history')
+    .select('*')
+    .eq('subscription_id', subscriptionId)
+    .order('changed_at', { ascending: false })
+
+  if (error) throw new ExpensesError('Error fetching price history', error.message)
+  return (data ?? []) as PriceHistoryEntry[]
+}
+
+// ══════════════════════════════════════
+// USER GASTOS SETTINGS
+// ══════════════════════════════════════
+
+export async function getUserGastosSettings(userId: string): Promise<UserGastosSettings | null> {
+  const client = createClient()
+  const { data, error } = await client
+    .from('user_gastos_settings')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  if (error) throw new ExpensesError('Error fetching user gastos settings', error.message)
+  return (data as UserGastosSettings) ?? null
+}
+
+export async function upsertUserGastosSettings(
+  userId: string,
+  data: UserGastosSettingsUpdate
+): Promise<UserGastosSettings> {
+  const client = createClient()
+  const { data: row, error } = await client
+    .from('user_gastos_settings')
+    .upsert(
+      {
+        user_id: userId,
+        ...data,
+      },
+      { onConflict: 'user_id' }
+    )
+    .select()
+    .single()
+
+  if (error) throw new ExpensesError('Error upserting user gastos settings', error.message)
+  if (!row) throw new ExpensesError('Error upserting user gastos settings: no data returned')
+  return row as UserGastosSettings
 }
 
 // ══════════════════════════════════════
@@ -242,5 +323,6 @@ export async function getExpenseSummary(userId: string): Promise<ExpenseSummary>
     totalMonthlyEstimate,
     countMonthly,
     countAnnual,
+    countActive: active.length,
   }
 }

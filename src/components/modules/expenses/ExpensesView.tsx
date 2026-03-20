@@ -1,18 +1,24 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
-import { Plus, Settings, Search } from "lucide-react"
+import { useEffect, useState, useCallback, useRef } from "react"
+import { Plus, Settings, Search, Sparkles, ListOrdered, Download, X } from "lucide-react"
 import { Button } from "@/components/ui"
 import { useExpensesStore } from "@/stores/expenses-store"
-import { ExpenseSummaryCard } from "./ExpenseSummaryCard"
+import { KPICards } from "./KPICards"
+import { BudgetBar } from "./BudgetBar"
+import { AlertBanner } from "./AlertBanner"
 import { ExpenseCalendar } from "./ExpenseCalendar"
 import { ExpenseLegend } from "./ExpenseLegend"
 import { SubscriptionList } from "./SubscriptionList"
 import { CycleFilterToggle } from "./CycleFilterToggle"
 import { ExpenseChartDialog } from "./ExpenseChartDialog"
-import { SmartAddButton } from "./SmartAddButton"
 import { SubscriptionModal } from "./SubscriptionModal"
 import { CategoryManager } from "./CategoryManager"
+import { SmartAddModal } from "./SmartAddModal"
+import { AuditModal } from "./AuditModal"
+import { ShortcutsModal } from "./ShortcutsModal"
+import { GastosLoading } from "./GastosLoading"
+import { exportToCSV } from "@/lib/gastos-utils"
 import type { SubscriptionWithCategory } from "@/types/expenses"
 
 const AMORTIZE_STORAGE_KEY = "arkhos-expense-amortize"
@@ -24,59 +30,105 @@ interface ExpensesViewProps {
 export function ExpensesView({ userId }: ExpensesViewProps) {
   const fetchSubscriptions = useExpensesStore((s) => s.fetchSubscriptions)
   const fetchCategories = useExpensesStore((s) => s.fetchCategories)
+  const fetchSettings = useExpensesStore((s) => s.fetchSettings)
   const setSearchQuery = useExpensesStore((s) => s.setSearchQuery)
   const isLoading = useExpensesStore((s) => s.isLoading)
   const notAmortizeYearly = useExpensesStore((s) => s.notAmortizeYearly)
   const setNotAmortizeYearly = useExpensesStore((s) => s.setNotAmortizeYearly)
+  const subscriptions = useExpensesStore((s) => s.subscriptions)
 
   const [localSearch, setLocalSearch] = useState("")
   const [modalOpen, setModalOpen] = useState(false)
   const [editingSub, setEditingSub] = useState<SubscriptionWithCategory | null>(null)
+  const [prefilledDay, setPrefilledDay] = useState<number | null>(null)
   const [categoryManagerOpen, setCategoryManagerOpen] = useState(false)
+  const [smartAddOpen, setSmartAddOpen] = useState(false)
+  const [auditOpen, setAuditOpen] = useState(false)
+  const [shortcutsOpen, setShortcutsOpen] = useState(false)
 
-  // Restore amortization preference from localStorage on mount
+  const searchRef = useRef<HTMLInputElement>(null)
+
+  // Restore amortization preference
   useEffect(() => {
     const stored = localStorage.getItem(AMORTIZE_STORAGE_KEY)
-    if (stored !== null) {
-      setNotAmortizeYearly(stored === "true")
-    }
+    if (stored !== null) setNotAmortizeYearly(stored === "true")
   }, [setNotAmortizeYearly])
 
-  // Persist amortization preference to localStorage on change
+  // Persist amortization preference
   useEffect(() => {
     localStorage.setItem(AMORTIZE_STORAGE_KEY, notAmortizeYearly.toString())
   }, [notAmortizeYearly])
 
+  // Fetch data
   useEffect(() => {
     fetchSubscriptions(userId)
     fetchCategories(userId)
-  }, [userId, fetchSubscriptions, fetchCategories])
+    fetchSettings(userId)
+  }, [userId, fetchSubscriptions, fetchCategories, fetchSettings])
 
   // Debounced search
   useEffect(() => {
-    const t = setTimeout(() => setSearchQuery(localSearch), 300)
+    const t = setTimeout(() => setSearchQuery(localSearch), 150)
     return () => clearTimeout(t)
   }, [localSearch, setSearchQuery])
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement).tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+
+      switch (e.key) {
+        case 'n': setEditingSub(null); setPrefilledDay(null); setModalOpen(true); break
+        case 's':
+        case '/': e.preventDefault(); searchRef.current?.focus(); break
+        case 'g': break // Handled by ExpenseChartDialog internally
+        case '?': setShortcutsOpen(true); break
+        case 'Escape':
+          setModalOpen(false)
+          setSmartAddOpen(false)
+          setAuditOpen(false)
+          setShortcutsOpen(false)
+          setCategoryManagerOpen(false)
+          break
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
   const handleNew = useCallback(() => {
     setEditingSub(null)
+    setPrefilledDay(null)
+    setModalOpen(true)
+  }, [])
+
+  const handleNewWithDay = useCallback((day: number) => {
+    setEditingSub(null)
+    setPrefilledDay(day)
     setModalOpen(true)
   }, [])
 
   const handleEdit = useCallback((sub: SubscriptionWithCategory) => {
     setEditingSub(sub)
+    setPrefilledDay(null)
     setModalOpen(true)
   }, [])
 
   const handleCloseModal = useCallback(() => {
     setModalOpen(false)
     setEditingSub(null)
+    setPrefilledDay(null)
   }, [])
+
+  const handleExportCSV = useCallback(() => {
+    exportToCSV(subscriptions, 'arkhos-gastos')
+  }, [subscriptions])
 
   return (
     <div>
       {/* Header */}
-      <div className="mb-6">
+      <div className="mb-6 animate-fade-in-up">
         <h1 className="font-heading text-2xl text-foreground">Gastos</h1>
         <p className="mt-1 text-sm text-text-tertiary">
           Control de suscripciones y gastos recurrentes
@@ -84,11 +136,10 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
       </div>
 
       {/* Toolbar */}
-      <div className="mb-6 flex flex-wrap items-center gap-3">
-        {/* Left: Cycle filter */}
+      <div className="mb-6 flex flex-wrap items-center gap-3 animate-fade-in-up" style={{ animationDelay: '50ms' }}>
         <CycleFilterToggle />
 
-        {/* Center: Search + Smart Add */}
+        {/* Search */}
         <div className="relative flex-1 min-w-[200px]">
           <Search
             size={15}
@@ -96,17 +147,35 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
             className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary"
           />
           <input
+            ref={searchRef}
             type="text"
-            placeholder="Buscar suscripcion..."
+            placeholder="Buscar suscripción..."
             value={localSearch}
             onChange={(e) => setLocalSearch(e.target.value)}
-            className="w-full rounded-md border border-border bg-card py-2 pl-9 pr-3 text-sm text-foreground placeholder:text-text-tertiary focus:border-accent focus:outline-none"
+            className="w-full rounded-md border border-border bg-card py-2 pl-9 pr-8 text-sm text-foreground placeholder:text-text-tertiary focus:border-accent focus:outline-none"
           />
+          {localSearch && (
+            <button
+              onClick={() => { setLocalSearch(""); setSearchQuery("") }}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-foreground"
+            >
+              <X size={14} strokeWidth={1.75} />
+            </button>
+          )}
         </div>
 
-        <SmartAddButton />
+        {/* Smart Add */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setSmartAddOpen(true)}
+          className="border border-border"
+        >
+          <Sparkles size={14} strokeWidth={1.75} />
+          <span className="hidden sm:inline">Smart Add</span>
+        </Button>
 
-        {/* Right: Actions */}
+        {/* Categories */}
         <Button
           variant="ghost"
           size="sm"
@@ -114,10 +183,34 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
           className="border border-border"
         >
           <Settings size={16} strokeWidth={1.75} />
-          <span className="hidden sm:inline">Categorias</span>
+          <span className="hidden sm:inline">Categorías</span>
         </Button>
 
+        {/* Chart */}
         <ExpenseChartDialog />
+
+        {/* Audit */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setAuditOpen(true)}
+          className="border border-border"
+        >
+          <ListOrdered size={16} strokeWidth={1.75} />
+          <span className="hidden sm:inline">Auditoría</span>
+        </Button>
+
+        {/* CSV Export */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleExportCSV}
+          className="border border-border"
+          disabled={subscriptions.length === 0}
+        >
+          <Download size={16} strokeWidth={1.75} />
+          <span className="hidden sm:inline">CSV</span>
+        </Button>
 
         {/* Amortization toggle */}
         <label className="flex items-center gap-2 cursor-pointer select-none">
@@ -140,21 +233,34 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
           </button>
         </label>
 
+        {/* CTA */}
         <Button variant="primary" size="sm" onClick={handleNew}>
           <Plus size={16} strokeWidth={1.75} />
-          <span className="hidden sm:inline">Suscripcion</span>
+          <span className="hidden sm:inline">Suscripción</span>
         </Button>
       </div>
 
       {/* Main content */}
       {isLoading ? (
-        <LoadingSkeleton />
+        <GastosLoading />
       ) : (
         <div className="space-y-6">
-          <ExpenseSummaryCard />
-          <ExpenseCalendar />
+          <div className="animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+            <AlertBanner />
+          </div>
+          <div className="animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+            <BudgetBar userId={userId} />
+          </div>
+          <div className="animate-fade-in-up" style={{ animationDelay: '130ms' }}>
+            <KPICards />
+          </div>
+          <div className="animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+            <ExpenseCalendar onNewWithDay={handleNewWithDay} />
+          </div>
           <ExpenseLegend />
-          <SubscriptionList onEdit={handleEdit} onNew={handleNew} />
+          <div className="animate-fade-in-up" style={{ animationDelay: '300ms' }}>
+            <SubscriptionList onEdit={handleEdit} onNew={handleNew} />
+          </div>
         </div>
       )}
 
@@ -164,22 +270,26 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
         onClose={handleCloseModal}
         userId={userId}
         subscription={editingSub}
+        prefilledDay={prefilledDay}
       />
       <CategoryManager
         open={categoryManagerOpen}
         onClose={() => setCategoryManagerOpen(false)}
         userId={userId}
       />
-    </div>
-  )
-}
-
-function LoadingSkeleton() {
-  return (
-    <div className="space-y-6">
-      <div className="h-[120px] animate-pulse rounded-xl bg-sand" />
-      <div className="h-[380px] animate-pulse rounded-xl bg-sand" />
-      <div className="h-[200px] animate-pulse rounded-xl bg-sand" />
+      <SmartAddModal
+        open={smartAddOpen}
+        onClose={() => setSmartAddOpen(false)}
+        userId={userId}
+      />
+      <AuditModal
+        open={auditOpen}
+        onClose={() => setAuditOpen(false)}
+      />
+      <ShortcutsModal
+        open={shortcutsOpen}
+        onClose={() => setShortcutsOpen(false)}
+      />
     </div>
   )
 }
