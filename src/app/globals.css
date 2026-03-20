@@ -475,3 +475,69 @@ mark {
     opacity: 1;
   }
 }
+
+/* ─── Canvas Node Prose (markdown rendering) ─── */
+.canvas-node-prose h1,
+.canvas-node-prose h2,
+.canvas-node-prose h3,
+.canvas-node-prose h4,
+.canvas-node-prose h5,
+.canvas-node-prose h6 {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0.25em 0;
+}
+
+.canvas-node-prose p {
+  margin: 0.15em 0;
+}
+
+.canvas-node-prose strong {
+  font-weight: 600;
+}
+
+.canvas-node-prose em {
+  font-style: italic;
+}
+
+.canvas-node-prose code {
+  font-family: var(--font-mono);
+  background: rgba(0, 0, 0, 0.06);
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+.canvas-node-prose pre {
+  background: rgba(0, 0, 0, 0.04);
+  padding: 0.4em;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.canvas-node-prose pre code {
+  background: none;
+  padding: 0;
+}
+
+.canvas-node-prose ul,
+.canvas-node-prose ol {
+  padding-left: 1.2em;
+  margin: 0.2em 0;
+}
+
+.canvas-node-prose li {
+  margin: 0.1em 0;
+}
+
+.canvas-node-prose a {
+  color: var(--accent-terracotta);
+  text-decoration: underline;
+}
+
+.canvas-node-prose blockquote {
+  border-left: 2px solid var(--border-stone);
+  padding-left: 0.6em;
+  color: var(--text-tertiary);
+  margin: 0.2em 0;
+}

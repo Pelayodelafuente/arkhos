@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import { Plus, BookOpen, Layout } from "lucide-react"
 import { Button } from "@/components/ui"
 import { useNotesStore } from "@/stores/notes-store"
@@ -22,6 +22,7 @@ export function NotesView({ initialNotes, initialCanvas, userId }: Props) {
   const initCanvas = useNotesStore((s) => s.initCanvas)
   const addNote = useNotesStore((s) => s.addNote)
   const addNoteToCanvas = useNotesStore((s) => s.addNoteToCanvas)
+  const syncNotesToCanvas = useNotesStore((s) => s.syncNotesToCanvas)
   const notes = useNotesStore((s) => s.notes)
   const viewMode = useNotesStore((s) => s.viewMode)
   const setViewMode = useNotesStore((s) => s.setViewMode)
@@ -29,6 +30,7 @@ export function NotesView({ initialNotes, initialCanvas, userId }: Props) {
   const [modalOpen, setModalOpen] = useState(false)
   const [editingNote, setEditingNote] = useState<Note | null>(null)
   const [pendingCanvasPos, setPendingCanvasPos] = useState<{ x: number; y: number } | null>(null)
+  const prevNoteCount = useRef(notes.length)
 
   // Hydrate store with server data
   useEffect(() => {
@@ -48,12 +50,6 @@ export function NotesView({ initialNotes, initialCanvas, userId }: Props) {
     setModalOpen(true)
   }, [])
 
-  const handleCloseModal = useCallback(() => {
-    setModalOpen(false)
-    setEditingNote(null)
-    setPendingCanvasPos(null)
-  }, [])
-
   // Canvas: edit a note by noteId
   const handleCanvasEditNote = useCallback((noteId: string) => {
     const note = notes.find((n) => n.id === noteId)
@@ -68,27 +64,14 @@ export function NotesView({ initialNotes, initialCanvas, userId }: Props) {
   const handleCanvasNewNote = useCallback((pos: { x: number; y: number }) => {
     setEditingNote(null)
     setPendingCanvasPos(pos)
+    prevNoteCount.current = notes.length
     setModalOpen(true)
-  }, [])
-
-  // After modal saves a new note, add it to the canvas if it was created from the canvas
-  const handleModalClose = useCallback(() => {
-    setModalOpen(false)
-    setEditingNote(null)
-    setPendingCanvasPos(null)
-  }, [])
-
-  // We need to intercept the modal's onClose to check if a new note was created from canvas
-  // The NoteModal handles saving internally via the store. We watch for new notes being added.
-  const lastNoteCountRef = useCallback(() => {
-    return notes.length
   }, [notes.length])
 
-  // Track when modal closes to add newly created notes to canvas
-  const handleModalCloseWithCanvasSync = useCallback(() => {
-    if (pendingCanvasPos && viewMode === 'canvas') {
-      // The note was just created by the modal — find the most recently added note
-      // Since addNote prepends to the array, it will be at index 0
+  // After modal saves a new note from canvas, add it to canvas at the pending position
+  const handleModalClose = useCallback(() => {
+    if (pendingCanvasPos && viewMode === "canvas" && notes.length > prevNoteCount.current) {
+      // New note was added (prepended to array, at index 0)
       const latestNote = notes[0]
       if (latestNote) {
         addNoteToCanvas(latestNote.id, pendingCanvasPos)
@@ -99,16 +82,22 @@ export function NotesView({ initialNotes, initialCanvas, userId }: Props) {
     setPendingCanvasPos(null)
   }, [pendingCanvasPos, viewMode, notes, addNoteToCanvas])
 
+  // Switch to canvas view: init + sync
+  const handleSwitchToCanvas = useCallback(() => {
+    setViewMode("canvas")
+    initCanvas(userId)
+  }, [setViewMode, initCanvas, userId])
+
   // Keyboard shortcut: Ctrl+N = new note
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+      if ((e.ctrlKey || e.metaKey) && e.key === "n") {
         e.preventDefault()
         handleNew()
       }
     }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
+    window.addEventListener("keydown", handler)
+    return () => window.removeEventListener("keydown", handler)
   }, [handleNew])
 
   return (
@@ -126,18 +115,18 @@ export function NotesView({ initialNotes, initialCanvas, userId }: Props) {
             {/* View toggle */}
             <div className="flex items-center rounded-lg bg-sand p-0.5">
               <button
-                onClick={() => setViewMode('list')}
+                onClick={() => setViewMode("list")}
                 className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-                  viewMode === 'list' ? 'bg-foreground text-card shadow-sm' : 'text-text-tertiary hover:text-text-secondary'
+                  viewMode === "list" ? "bg-foreground text-card shadow-sm" : "text-text-tertiary hover:text-text-secondary"
                 }`}
               >
                 <BookOpen size={13} strokeWidth={1.75} />
                 Lista
               </button>
               <button
-                onClick={() => { setViewMode('canvas'); initCanvas(userId) }}
+                onClick={handleSwitchToCanvas}
                 className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-                  viewMode === 'canvas' ? 'bg-foreground text-card shadow-sm' : 'text-text-tertiary hover:text-text-secondary'
+                  viewMode === "canvas" ? "bg-foreground text-card shadow-sm" : "text-text-tertiary hover:text-text-secondary"
                 }`}
               >
                 <Layout size={13} strokeWidth={1.75} />
@@ -153,19 +142,19 @@ export function NotesView({ initialNotes, initialCanvas, userId }: Props) {
       </div>
 
       {/* Toolbar (list only) */}
-      {viewMode === 'list' && (
-        <div className="mb-6 animate-fade-in-up" style={{ animationDelay: '50ms' }}>
+      {viewMode === "list" && (
+        <div className="mb-6 animate-fade-in-up" style={{ animationDelay: "50ms" }}>
           <NotesToolbar />
         </div>
       )}
 
       {/* Content */}
-      {viewMode === 'list' ? (
-        <div className="animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+      {viewMode === "list" ? (
+        <div className="animate-fade-in-up" style={{ animationDelay: "100ms" }}>
           <NotesList onEdit={handleEdit} onNew={handleNew} />
         </div>
       ) : (
-        <div className="animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+        <div className="animate-fade-in-up" style={{ animationDelay: "100ms" }}>
           <NotesCanvas
             userId={userId}
             onEditNote={handleCanvasEditNote}
@@ -177,7 +166,7 @@ export function NotesView({ initialNotes, initialCanvas, userId }: Props) {
       {/* Modal */}
       <NoteModal
         open={modalOpen}
-        onClose={handleModalCloseWithCanvasSync}
+        onClose={handleModalClose}
         userId={userId}
         note={editingNote}
       />
