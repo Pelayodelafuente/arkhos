@@ -188,7 +188,7 @@ export default function RegisterPage() {
           >
             <h1
               className="font-heading"
-              style={{ fontSize: 24, color: "var(--auth-text)" }}
+              style={{ fontSize: 24, color: "var(--text-primary)" }}
             >
               ¿Cómo te llamamos?
             </h1>
@@ -254,7 +254,7 @@ export default function RegisterPage() {
           >
             <h1
               className="font-heading"
-              style={{ fontSize: 24, color: "var(--auth-text)" }}
+              style={{ fontSize: 24, color: "var(--text-primary)" }}
             >
               Protege tu acceso
             </h1>
@@ -348,7 +348,7 @@ export default function RegisterPage() {
           >
             <h1
               className="font-heading"
-              style={{ fontSize: 24, color: "var(--auth-text)" }}
+              style={{ fontSize: 24, color: "var(--text-primary)" }}
             >
               ¿Qué quieres controlar primero?
             </h1>

@@ -109,7 +109,7 @@ export default function ResetPasswordPage() {
     <div className="relative">
       <h1
         className="font-heading"
-        style={{ fontSize: 26, lineHeight: 1.2, color: "var(--auth-text)" }}
+        style={{ fontSize: 26, lineHeight: 1.2, color: "var(--text-primary)" }}
       >
         ¿Perdiste el acceso?
       </h1>
