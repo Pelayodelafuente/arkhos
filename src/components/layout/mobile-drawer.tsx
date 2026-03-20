@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { X, Home, FolderKanban, TrendingUp, Wallet, CreditCard, Shield, BookOpen } from "lucide-react";
+import { X, Home, FolderKanban, StickyNote, TrendingUp, Wallet, CreditCard, Shield, BookOpen } from "lucide-react";
 import { ArkhosLogo } from "@/components/ui/arkhos-logo";
 import { Button } from "@/components/ui/button";
 import { logout } from "@/app/(auth)/actions";
@@ -11,6 +11,7 @@ import { logout } from "@/app/(auth)/actions";
 const navItems = [
   { label: "Inicio", href: "/", icon: Home, dot: null },
   { label: "Proyectos", href: "/proyectos", icon: FolderKanban, dot: "#C4704A" },
+  { label: "Notas", href: "/notas", icon: StickyNote, dot: "#7a9b76" },
   { label: "Mercados", href: "/mercados", icon: TrendingUp, dot: "#9B7A4A" },
   { label: "Patrimonio", href: "/patrimonio", icon: Wallet, dot: "#5B8C6A" },
   { label: "Gastos", href: "/gastos", icon: CreditCard, dot: "#4A7A9B" },

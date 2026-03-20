@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   Home,
   FolderKanban,
+  StickyNote,
   TrendingUp,
   Wallet,
   CreditCard,
@@ -32,6 +33,12 @@ const navItems = [
     href: "/proyectos",
     icon: FolderKanban,
     dot: "#C4704A",
+  },
+  {
+    label: "Notas",
+    href: "/notas",
+    icon: StickyNote,
+    dot: "#7a9b76",
   },
   {
     label: "Mercados",

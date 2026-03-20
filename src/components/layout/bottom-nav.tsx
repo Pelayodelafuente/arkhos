@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, FolderKanban, TrendingUp, Wallet, CreditCard } from "lucide-react";
+import { Home, FolderKanban, StickyNote, TrendingUp, Wallet, CreditCard } from "lucide-react";
 
 const navItems = [
   { label: "Inicio", href: "/", icon: Home },
   { label: "Proyectos", href: "/proyectos", icon: FolderKanban },
+  { label: "Notas", href: "/notas", icon: StickyNote },
   { label: "Mercados", href: "/mercados", icon: TrendingUp },
   { label: "Patrimonio", href: "/patrimonio", icon: Wallet },
   { label: "Gastos", href: "/gastos", icon: CreditCard },

@@ -1,4 +1,4 @@
-// Supabase Database types — aligned with migrations 001 + 002 + 003 + 004 + 005
+// Supabase Database types — aligned with migrations 001 + 002 + 003 + 004 + 005 + 006
 
 export type Json =
   | string
@@ -487,6 +487,205 @@ export interface Database {
             columns: ["user_id"];
             isOneToOne: true;
             referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      notes: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          content: string;
+          color: string;
+          icon: string;
+          is_pinned: boolean;
+          word_count: number;
+          tags: string[];
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          title?: string;
+          content?: string;
+          color?: string;
+          icon?: string;
+          is_pinned?: boolean;
+          word_count?: number;
+          tags?: string[];
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          title?: string;
+          content?: string;
+          color?: string;
+          icon?: string;
+          is_pinned?: boolean;
+          word_count?: number;
+          tags?: string[];
+          sort_order?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "notes_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      note_canvases: {
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          description: string;
+          is_default: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          name?: string;
+          description?: string;
+          is_default?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          name?: string;
+          description?: string;
+          is_default?: boolean;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "note_canvases_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      canvas_nodes: {
+        Row: {
+          id: string;
+          canvas_id: string;
+          note_id: string | null;
+          node_type: string;
+          pos_x: number;
+          pos_y: number;
+          width: number;
+          height: number;
+          content: string;
+          url: string;
+          label: string;
+          color: string;
+          z_index: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          canvas_id: string;
+          note_id?: string | null;
+          node_type?: string;
+          pos_x?: number;
+          pos_y?: number;
+          width?: number;
+          height?: number;
+          content?: string;
+          url?: string;
+          label?: string;
+          color?: string;
+          z_index?: number;
+          created_at?: string;
+        };
+        Update: {
+          note_id?: string | null;
+          node_type?: string;
+          pos_x?: number;
+          pos_y?: number;
+          width?: number;
+          height?: number;
+          content?: string;
+          url?: string;
+          label?: string;
+          color?: string;
+          z_index?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "canvas_nodes_canvas_id_fkey";
+            columns: ["canvas_id"];
+            isOneToOne: false;
+            referencedRelation: "note_canvases";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "canvas_nodes_note_id_fkey";
+            columns: ["note_id"];
+            isOneToOne: false;
+            referencedRelation: "notes";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      canvas_edges: {
+        Row: {
+          id: string;
+          canvas_id: string;
+          from_node_id: string;
+          to_node_id: string;
+          label: string;
+          color: string;
+          from_side: string;
+          to_side: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          canvas_id: string;
+          from_node_id: string;
+          to_node_id: string;
+          label?: string;
+          color?: string;
+          from_side?: string;
+          to_side?: string;
+          created_at?: string;
+        };
+        Update: {
+          label?: string;
+          color?: string;
+          from_side?: string;
+          to_side?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "canvas_edges_canvas_id_fkey";
+            columns: ["canvas_id"];
+            isOneToOne: false;
+            referencedRelation: "note_canvases";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "canvas_edges_from_node_id_fkey";
+            columns: ["from_node_id"];
+            isOneToOne: false;
+            referencedRelation: "canvas_nodes";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "canvas_edges_to_node_id_fkey";
+            columns: ["to_node_id"];
+            isOneToOne: false;
+            referencedRelation: "canvas_nodes";
             referencedColumns: ["id"];
           },
         ];
