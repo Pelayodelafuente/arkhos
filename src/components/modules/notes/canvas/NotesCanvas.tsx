@@ -14,6 +14,25 @@ const SNAP_THRESHOLD = 8
 const MIN_NODE_W = 150
 const MIN_NODE_H = 80
 
+function isNodeVisible(
+  node: CanvasNode,
+  viewport: CanvasViewport,
+  containerW: number,
+  containerH: number,
+  margin: number = 100
+): boolean {
+  const screenX = node.pos_x * viewport.scale + viewport.offsetX
+  const screenY = node.pos_y * viewport.scale + viewport.offsetY
+  const screenW = node.width * viewport.scale
+  const screenH = node.height * viewport.scale
+  return (
+    screenX + screenW > -margin &&
+    screenX < containerW + margin &&
+    screenY + screenH > -margin &&
+    screenY < containerH + margin
+  )
+}
+
 interface Props {
   userId: string
   onEditNote: (noteId: string) => void
@@ -58,6 +77,15 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
   const toggleNodeLocked = useNotesStore((s) => s.toggleNodeLocked)
   const rubberBand = useNotesStore((s) => s.rubberBand)
   const setRubberBand = useNotesStore((s) => s.setRubberBand)
+  const pushHistory = useNotesStore((s) => s.pushHistory)
+  const undo = useNotesStore((s) => s.undo)
+  const redo = useNotesStore((s) => s.redo)
+  const copySelectedNodes = useNotesStore((s) => s.copySelectedNodes)
+  const pasteNodes = useNotesStore((s) => s.pasteNodes)
+  const duplicateSelectedNodes = useNotesStore((s) => s.duplicateSelectedNodes)
+  const history = useNotesStore((s) => s.history)
+  const historyIndex = useNotesStore((s) => s.historyIndex)
+  const clipboard = useNotesStore((s) => s.clipboard)
 
   // ─── Refs & local state ─────────────
   const containerRef = useRef<HTMLDivElement>(null)
@@ -85,6 +113,10 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
   const lastDragPos = useRef({ x: 0, y: 0 })
 
   const nodeMap = useMemo(() => new Map(nodes.map((n) => [n.id, n])), [nodes])
+  const visibleNodes = useMemo(
+    () => nodes.filter((n) => isNodeVisible(n, viewport, containerSize.w, containerSize.h)),
+    [nodes, viewport, containerSize.w, containerSize.h]
+  )
 
   // ─── Container size ─────────────────
   useEffect(() => {
@@ -252,7 +284,24 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
       const dy = (clientY - lastDragPos.current.y) / viewport.scale
       lastDragPos.current = { x: clientX, y: clientY }
       moveSelectedNodes(dx, dy)
-      setSnapGuides([])
+
+      // Apply snap to the anchor node
+      if (snapEnabled && dragNodeId) {
+        const anchorNode = nodeMap.get(dragNodeId)
+        if (anchorNode) {
+          const { guides, snappedX, snappedY } = calculateSnapGuides(
+            dragNodeId, anchorNode.pos_x, anchorNode.pos_y, anchorNode.width, anchorNode.height
+          )
+          const snapDx = snappedX - anchorNode.pos_x
+          const snapDy = snappedY - anchorNode.pos_y
+          if (snapDx !== 0 || snapDy !== 0) {
+            moveSelectedNodes(snapDx, snapDy)
+          }
+          setSnapGuides(guides)
+        }
+      } else {
+        setSnapGuides([])
+      }
       return
     }
 
@@ -276,6 +325,7 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
 
   const handleNodeDragEnd = useCallback(() => {
     if (dragNodeId) {
+      pushHistory()
       if (isMultiDrag) {
         persistSelectedNodePositions()
       } else {
@@ -287,7 +337,7 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
     setDragNodeId(null)
     setIsMultiDrag(false)
     setSnapGuides([])
-  }, [dragNodeId, isMultiDrag, nodeMap, persistNodePos, persistSelectedNodePositions, setSnapGuides])
+  }, [dragNodeId, isMultiDrag, nodeMap, persistNodePos, persistSelectedNodePositions, setSnapGuides, pushHistory])
 
   // ─── RESIZE ─────────────────────────
   const handleResizeStart = useCallback((nodeId: string, handle: string, e: React.MouseEvent) => {
@@ -321,9 +371,12 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
   }, [isResizing, viewport.scale, updateNodePos, updateNodeSize])
 
   const handleResizeEnd = useCallback(() => {
+    if (resizeRef.current) {
+      pushHistory()
+    }
     setIsResizing(false)
     resizeRef.current = null
-  }, [])
+  }, [pushHistory])
 
   // ─── CONNECTION DRAG ────────────────
   const handleConnectionStart = useCallback((nodeId: string, side: string) => {
@@ -786,7 +839,7 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
 
       {/* Nodes HTML layer */}
       <div className="absolute inset-0" style={{ zIndex: 2, pointerEvents: "none" }}>
-        {nodes.map((node) => (
+        {visibleNodes.map((node) => (
           <div key={node.id} data-node-id={node.id} style={{ pointerEvents: "auto" }}>
             <CanvasNodeComponent
               node={node}
@@ -833,6 +886,12 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
         onFitAll={fitAllNodes}
         snapEnabled={snapEnabled}
         onToggleSnap={toggleSnap}
+        onUndo={undo}
+        onRedo={redo}
+        onDuplicate={duplicateSelectedNodes}
+        canUndo={historyIndex > 0}
+        canRedo={historyIndex < history.length - 1}
+        hasSelection={selectedNodeIds.size > 0}
       />
 
       {/* Selection count indicator */}
@@ -858,6 +917,11 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
           onToggleLock={handleContextToggleLock}
           onEditNote={handleContextEdit}
           isNodeLocked={contextMenu.nodeId ? (nodeMap.get(contextMenu.nodeId)?.locked ?? false) : false}
+          onCopy={copySelectedNodes}
+          onPaste={() => pasteNodes()}
+          onDuplicate={duplicateSelectedNodes}
+          hasSelection={selectedNodeIds.size > 0}
+          hasClipboard={clipboard !== null && clipboard.nodes.length > 0}
         />
       )}
     </div>

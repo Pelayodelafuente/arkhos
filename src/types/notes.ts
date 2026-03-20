@@ -118,6 +118,13 @@ export const NOTE_COLOR_CONFIG: { value: NoteColor; bg: string; border: string; 
   { value: 'gold', bg: '#faf5ec', border: '#C4974A', label: 'Gold' },
 ]
 
+// ─── History Entry ────────────────────
+
+export interface HistoryEntry {
+  nodes: CanvasNode[]
+  edges: CanvasEdge[]
+}
+
 export const EDGE_COLOR_CONFIG: Record<string, string> = {
   default: '#B0A48F',
   sage: '#7a9b76',

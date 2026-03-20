@@ -1,13 +1,21 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
-import { Trash2 } from "lucide-react"
+import { useState, useEffect, useRef, useMemo } from "react"
+import { Trash2, Eye, Code } from "lucide-react"
 import * as LucideIcons from "lucide-react"
+import { marked } from "marked"
 import { Modal, Button } from "@/components/ui"
 import { useNotesStore, useAllTags } from "@/stores/notes-store"
 import { NoteColorPicker } from "./NoteColorPicker"
 import { TagInput } from "./TagInput"
 import type { Note, NoteColor } from "@/types/notes"
+
+// ─── Marked config ────────────────────────────
+marked.use({ breaks: true, gfm: true })
+
+function sanitizeHtml(html: string): string {
+  return html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
+}
 
 // Common icons for notes
 const NOTE_ICONS = [
@@ -39,6 +47,7 @@ export function NoteModal({ open, onClose, userId, note }: Props) {
   const [saving, setSaving] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [showIcons, setShowIcons] = useState(false)
+  const [showPreview, setShowPreview] = useState(false)
 
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -60,6 +69,7 @@ export function NoteModal({ open, onClose, userId, note }: Props) {
     }
     setConfirmDelete(false)
     setShowIcons(false)
+    setShowPreview(false)
   }, [note, open])
 
   // Auto-save for existing notes (debounce 800ms)
@@ -102,6 +112,11 @@ export function NoteModal({ open, onClose, userId, note }: Props) {
     setSaving(false)
     onClose()
   }
+
+  const previewHtml = useMemo(
+    () => sanitizeHtml(marked.parse(content) as string),
+    [content],
+  )
 
   const wordCount = content.trim().split(/\s+/).filter(Boolean).length
 
@@ -154,14 +169,46 @@ export function NoteModal({ open, onClose, userId, note }: Props) {
         {/* Color picker */}
         <NoteColorPicker value={color} onChange={setColor} />
 
-        {/* Content editor */}
-        <textarea
-          ref={textareaRef}
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder="Escribe tu nota... (Markdown soportado)"
-          className="w-full rounded-md border border-border bg-card px-3 py-2.5 font-mono text-sm text-foreground placeholder:text-text-tertiary focus:border-[#7a9b76] focus:outline-none resize-none min-h-[200px]"
-        />
+        {/* Content editor / preview toggle */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-1 rounded-lg bg-sand/30 p-0.5 w-fit">
+            <button
+              type="button"
+              onClick={() => setShowPreview(false)}
+              className={`flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors ${
+                !showPreview ? 'text-foreground bg-sand' : 'text-text-tertiary hover:text-text-secondary'
+              }`}
+            >
+              <Code size={12} strokeWidth={1.75} />
+              Editar
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowPreview(true)}
+              className={`flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors ${
+                showPreview ? 'text-foreground bg-sand' : 'text-text-tertiary hover:text-text-secondary'
+              }`}
+            >
+              <Eye size={12} strokeWidth={1.75} />
+              Vista previa
+            </button>
+          </div>
+
+          {showPreview ? (
+            <div
+              className="w-full rounded-md border border-border bg-card px-3 py-2.5 text-sm text-foreground leading-relaxed min-h-[200px] overflow-y-auto [&_h1]:text-lg [&_h1]:font-bold [&_h1]:mb-2 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:mb-1.5 [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:mb-1 [&_a]:text-[#7a9b76] [&_a]:underline [&_code]:bg-sand [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:font-mono [&_code]:text-xs [&_pre]:bg-sand [&_pre]:p-3 [&_pre]:rounded-md [&_pre]:overflow-x-auto [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4 [&_blockquote]:border-l-2 [&_blockquote]:border-[#7a9b76] [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-text-secondary [&_p]:mb-2 [&_pre_code]:bg-transparent [&_pre_code]:p-0"
+              dangerouslySetInnerHTML={{ __html: previewHtml || '<span class="text-text-tertiary">Sin contenido</span>' }}
+            />
+          ) : (
+            <textarea
+              ref={textareaRef}
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Escribe tu nota... (Markdown soportado)"
+              className="w-full rounded-md border border-border bg-card px-3 py-2.5 font-mono text-sm text-foreground placeholder:text-text-tertiary focus:border-[#7a9b76] focus:outline-none resize-none min-h-[200px]"
+            />
+          )}
+        </div>
 
         {/* Tags */}
         <TagInput tags={tags} onChange={setTags} suggestions={allTags} />

@@ -1,6 +1,6 @@
 "use client"
 
-import { Minus, Plus, Maximize2, Grid3X3, StickyNote } from "lucide-react"
+import { Minus, Plus, Maximize2, Grid3X3, StickyNote, Undo2, Redo2, Copy } from "lucide-react"
 import { useNotesStore } from "@/stores/notes-store"
 
 interface Props {
@@ -8,9 +8,18 @@ interface Props {
   onFitAll: () => void
   snapEnabled: boolean
   onToggleSnap: () => void
+  onUndo: () => void
+  onRedo: () => void
+  onDuplicate: () => void
+  canUndo: boolean
+  canRedo: boolean
+  hasSelection: boolean
 }
 
-export function CanvasToolbar({ onNewNote, onFitAll, snapEnabled, onToggleSnap }: Props) {
+export function CanvasToolbar({
+  onNewNote, onFitAll, snapEnabled, onToggleSnap,
+  onUndo, onRedo, onDuplicate, canUndo, canRedo, hasSelection,
+}: Props) {
   const viewport = useNotesStore((s) => s.viewport)
   const setViewport = useNotesStore((s) => s.setViewport)
 
@@ -25,6 +34,36 @@ export function CanvasToolbar({ onNewNote, onFitAll, snapEnabled, onToggleSnap }
 
   return (
     <div className="absolute bottom-4 right-4 z-30 flex items-center gap-1 rounded-xl border border-border bg-card/90 backdrop-blur-sm px-1.5 py-1 shadow-sm">
+      {/* Undo / Redo */}
+      <button
+        onClick={onUndo}
+        disabled={!canUndo}
+        className={`${btnBase} ${!canUndo ? "opacity-30 cursor-not-allowed" : ""}`}
+        title="Deshacer"
+      >
+        <Undo2 size={14} strokeWidth={1.75} />
+      </button>
+      <button
+        onClick={onRedo}
+        disabled={!canRedo}
+        className={`${btnBase} ${!canRedo ? "opacity-30 cursor-not-allowed" : ""}`}
+        title="Rehacer"
+      >
+        <Redo2 size={14} strokeWidth={1.75} />
+      </button>
+
+      {/* Duplicate */}
+      <button
+        onClick={onDuplicate}
+        disabled={!hasSelection}
+        className={`${btnBase} ${!hasSelection ? "opacity-30 cursor-not-allowed" : ""}`}
+        title="Duplicar seleccion"
+      >
+        <Copy size={14} strokeWidth={1.75} />
+      </button>
+
+      <div className="mx-0.5 h-4 w-px bg-border" />
+
       {/* Zoom controls */}
       <button onClick={zoomOut} className={btnBase} title="Alejar">
         <Minus size={14} strokeWidth={1.75} />

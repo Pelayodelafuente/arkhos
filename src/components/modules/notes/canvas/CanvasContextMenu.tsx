@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import { StickyNote, Type, Square, Pencil, Lock, Unlock, Trash2 } from "lucide-react"
+import { StickyNote, Type, Square, Pencil, Lock, Unlock, Trash2, Copy, CopyPlus, ClipboardPaste } from "lucide-react"
 
 interface Props {
   x: number
@@ -17,6 +17,11 @@ interface Props {
   onToggleLock: (id: string) => void
   onEditNote: (nodeId: string) => void
   isNodeLocked: boolean
+  onCopy: () => void
+  onPaste: () => void
+  onDuplicate: () => void
+  hasSelection: boolean
+  hasClipboard: boolean
 }
 
 interface MenuItem {
@@ -40,6 +45,11 @@ export function CanvasContextMenu({
   onToggleLock,
   onEditNote,
   isNodeLocked,
+  onCopy,
+  onPaste,
+  onDuplicate,
+  hasSelection,
+  hasClipboard,
 }: Props) {
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -81,12 +91,31 @@ export function CanvasContextMenu({
     },
   ]
 
+  // Add paste option to canvas menu if clipboard has content
+  if (hasClipboard) {
+    canvasItems.push({
+      label: "Pegar",
+      icon: <ClipboardPaste size={14} strokeWidth={1.75} />,
+      onClick: () => { onPaste(); onClose() },
+    })
+  }
+
   const nodeItems: MenuItem[] = targetNodeId
     ? [
         {
           label: "Editar",
           icon: <Pencil size={14} strokeWidth={1.75} />,
           onClick: () => { onEditNote(targetNodeId); onClose() },
+        },
+        {
+          label: "Copiar",
+          icon: <Copy size={14} strokeWidth={1.75} />,
+          onClick: () => { onCopy(); onClose() },
+        },
+        {
+          label: "Duplicar",
+          icon: <CopyPlus size={14} strokeWidth={1.75} />,
+          onClick: () => { onDuplicate(); onClose() },
         },
         {
           label: isNodeLocked ? "Desbloquear" : "Bloquear",

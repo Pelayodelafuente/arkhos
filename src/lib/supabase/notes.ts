@@ -514,3 +514,37 @@ export async function deleteEdge(edgeId: string): Promise<void> {
   const { error } = await client.from('canvas_edges').delete().eq('id', edgeId)
   if (error) throw new NotesError('Error deleting edge', error.message)
 }
+
+// ══════════════════════════════════════
+// EXPORT / IMPORT
+// ══════════════════════════════════════
+
+export async function exportCanvasToJSON(canvasId: string): Promise<string> {
+  const { canvas, nodes, edges } = await getCanvasWithNodes(canvasId)
+  const exportData = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    canvas: { name: canvas.name, description: canvas.description },
+    nodes: nodes.map((n) => ({
+      id: n.id,
+      node_type: n.node_type,
+      pos_x: n.pos_x,
+      pos_y: n.pos_y,
+      width: n.width,
+      height: n.height,
+      content: n.node_type === 'note' ? (n.note?.content ?? n.content) : n.content,
+      label: n.node_type === 'note' ? (n.note?.title ?? n.label) : n.label,
+      color: n.color,
+      url: n.url,
+    })),
+    edges: edges.map((e) => ({
+      from_node: e.from_node_id,
+      to_node: e.to_node_id,
+      label: e.label,
+      color: e.color,
+      from_side: e.from_side,
+      to_side: e.to_side,
+    })),
+  }
+  return JSON.stringify(exportData, null, 2)
+}
