@@ -72,7 +72,7 @@ export function MfaCodeInput({ value, onChange }: MfaCodeInputProps) {
           onChange={(e) => handleChange(i, e.target.value.replace(/\D/g, ""))}
           onKeyDown={(e) => handleKeyDown(i, e)}
           onPaste={handlePaste}
-          className="h-[48px] w-[40px] rounded-[10px] border border-border bg-white text-center font-mono text-2xl font-semibold text-foreground outline-none transition-colors focus:border-accent sm:h-[56px] sm:w-[48px]"
+          className="mfa-code-input h-[48px] w-[40px] rounded-[10px] border border-border bg-white text-center font-mono text-2xl font-semibold text-foreground outline-none transition-colors focus:border-accent sm:h-[56px] sm:w-[48px]"
         />
       ))}
     </div>

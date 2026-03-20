@@ -1,77 +1,74 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { ParticleCanvas } from "@/components/auth/ParticleCanvas";
-import { AnimatedLogo } from "@/components/auth/AnimatedLogo";
+import { NoiseOverlay } from "@/components/auth/NoiseOverlay";
+import { AuthBrand } from "@/components/auth/AuthBrand";
 
 export default function AuthLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
   return (
-    <>
-      {/* ═══ Desktop layout: split 50/50 ═══ */}
-      <div className="hidden min-h-screen lg:flex">
-        {/* Left panel — cosmic */}
-        <div
-          className="relative flex flex-1 items-center justify-center overflow-hidden"
-          style={{ backgroundColor: "#08080D" }}
-        >
-          {/* Ambient gradient overlays */}
-          <div
-            className="pointer-events-none absolute inset-0"
-            style={{
-              background:
-                "radial-gradient(ellipse at 30% 20%, rgba(196,112,74,0.07) 0%, transparent 60%), radial-gradient(ellipse at 70% 80%, rgba(122,155,118,0.04) 0%, transparent 60%)",
-            }}
-          />
-
-          <ParticleCanvas particleCount={100} />
-
-          <div className="relative z-10">
-            <AnimatedLogo />
-          </div>
-
-          <p
-            className="absolute bottom-7 left-0 right-0 text-center text-[11px]"
-            style={{ color: "rgba(250, 247, 242, 0.15)" }}
-          >
-            Built by Pelayo de la Fuente
-          </p>
-        </div>
-
-        {/* Right panel — form */}
-        <div className="flex flex-1 flex-col bg-background">
-          <div className="flex flex-1 items-center justify-center overflow-y-auto px-10">
-            <div className="w-full max-w-[400px]">{children}</div>
-          </div>
-        </div>
-      </div>
-
-      {/* ═══ Mobile layout: cosmic background + glass card ═══ */}
+    <div
+      className="auth-dark relative flex min-h-screen flex-col items-center justify-center overflow-hidden"
+      style={{ backgroundColor: "var(--auth-bg)" }}
+    >
+      {/* Ambient gradient overlays */}
       <div
-        className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-5 py-10 lg:hidden"
-        style={{ backgroundColor: "#08080D" }}
-      >
-        {/* Ambient gradient overlays */}
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse at 30% 20%, rgba(212,132,90,0.06) 0%, transparent 60%), radial-gradient(ellipse at 70% 80%, rgba(122,155,118,0.03) 0%, transparent 60%)",
+        }}
+      />
+
+      <ParticleCanvas
+        particleCount={isMobile ? 35 : 100}
+        mouseInteraction={!isMobile}
+        starCount={5}
+        connectionDistance={120}
+      />
+      <NoiseOverlay />
+
+      {/* Centered content */}
+      <div className="relative z-10 flex w-full flex-col items-center px-4 py-10 md:px-0">
+        <AuthBrand />
+
+        {/* Glassmorphism panel */}
         <div
-          className="pointer-events-none absolute inset-0"
+          className="mt-8 w-full max-w-[420px] rounded-[20px] px-7 py-8 md:px-9 md:py-10"
           style={{
-            background:
-              "radial-gradient(ellipse at 30% 20%, rgba(196,112,74,0.07) 0%, transparent 60%), radial-gradient(ellipse at 70% 80%, rgba(122,155,118,0.04) 0%, transparent 60%)",
+            backdropFilter: "blur(24px) saturate(180%)",
+            WebkitBackdropFilter: "blur(24px) saturate(180%)",
+            background: "rgba(255, 255, 255, 0.03)",
+            border: "1px solid rgba(255, 255, 255, 0.08)",
+            boxShadow:
+              "0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(212, 132, 90, 0.05) inset, 0 1px 0 rgba(255, 255, 255, 0.05) inset",
+            animation: "auth-panel-enter 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both",
           }}
-        />
-
-        <ParticleCanvas particleCount={50} />
-
-        {/* Compact logo above card */}
-        <div className="relative z-10 mb-6">
-          <AnimatedLogo compact />
-        </div>
-
-        {/* Glass card with form */}
-        <div className="auth-glass-card relative z-10 w-full max-w-[400px] px-6 py-8">
+        >
           {children}
         </div>
+
+        {/* Footer */}
+        <p
+          className="mt-8 text-center text-[11px]"
+          style={{ color: "rgba(250, 247, 242, 0.15)" }}
+        >
+          Built by Pelayo de la Fuente
+        </p>
       </div>
-    </>
+    </div>
   );
 }

@@ -81,73 +81,54 @@ mark {
 }
 
 /* ══════════════════════════════════════
-   Auth — Animations & Components
+   Auth — Dark Glassmorphism Theme
    ══════════════════════════════════════ */
 
-/* Logo float */
-@keyframes auth-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+.auth-dark {
+  --auth-bg: #07070F;
+  --auth-copper: #D4845A;
+  --auth-copper-dark: #A85C35;
+  --auth-copper-glow: rgba(212, 132, 90, 0.15);
+  --auth-text: #F0EDE8;
+  --auth-gray: #6B7280;
+  --auth-surface: rgba(255, 255, 255, 0.04);
+  --auth-border: rgba(255, 255, 255, 0.08);
 }
 
-.auth-logo-float {
-  animation: auth-float 5s ease-in-out infinite;
+/* Shimmer sweep for buttons */
+@keyframes auth-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(160%); }
 }
 
-/* Vertex pulse */
-@keyframes auth-vertex-pulse {
-  0%, 100% { opacity: 0.7; }
-  50% { opacity: 1; }
+/* Glow pulse for logo */
+@keyframes auth-glow-pulse {
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(212, 132, 90, 0.4)); }
+  50% { filter: drop-shadow(0 0 20px rgba(212, 132, 90, 0.6)); }
 }
 
-.auth-vertex-pulse {
-  animation: auth-vertex-pulse 2.5s ease-in-out infinite;
+/* Shake for error */
+@keyframes auth-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
 }
 
-/* Orbit rings */
-.auth-orbit {
-  position: absolute;
-  border-radius: 50%;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+/* Panel entry */
+@keyframes auth-panel-enter {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
-.auth-orbit-1 {
-  width: 330px;
-  height: 330px;
-  border: 0.5px solid rgba(196, 112, 74, 0.06);
-  animation: auth-spin-cw 25s linear infinite;
-}
-
-.auth-orbit-2 {
-  width: 220px;
-  height: 220px;
-  border: 0.5px solid rgba(196, 112, 74, 0.09);
-  animation: auth-spin-ccw 18s linear infinite;
-}
-
-.auth-orbit-3 {
-  width: 150px;
-  height: 150px;
-  border: 0.5px solid rgba(196, 112, 74, 0.12);
-  animation: auth-spin-cw 12s linear infinite;
-}
-
-.auth-orbit-1-compact {
-  width: 130px;
-  height: 130px;
-  border: 0.5px solid rgba(196, 112, 74, 0.06);
-  animation: auth-spin-cw 25s linear infinite;
-}
-
-.auth-orbit-2-compact {
-  width: 90px;
-  height: 90px;
-  border: 0.5px solid rgba(196, 112, 74, 0.09);
-  animation: auth-spin-ccw 18s linear infinite;
-}
-
+/* Spin for orbit circles */
 @keyframes auth-spin-cw {
   from { transform: translate(-50%, -50%) rotate(0deg); }
   to { transform: translate(-50%, -50%) rotate(360deg); }
@@ -156,89 +137,6 @@ mark {
 @keyframes auth-spin-ccw {
   from { transform: translate(-50%, -50%) rotate(0deg); }
   to { transform: translate(-50%, -50%) rotate(-360deg); }
-}
-
-/* Orb tracks — absolute positioned divs that rotate and carry an orb */
-.auth-orb-track {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-.auth-orb-track-1 {
-  width: 330px;
-  height: 330px;
-  transform: translate(-50%, -50%);
-  animation: auth-spin-cw 20s linear infinite;
-}
-
-.auth-orb-track-2 {
-  width: 220px;
-  height: 220px;
-  transform: translate(-50%, -50%);
-  animation: auth-spin-ccw 14s linear infinite;
-}
-
-.auth-orb-track-3 {
-  width: 150px;
-  height: 150px;
-  transform: translate(-50%, -50%);
-  animation: auth-spin-cw 10s linear infinite;
-}
-
-.auth-orb-track-4 {
-  width: 220px;
-  height: 220px;
-  transform: translate(-50%, -50%);
-  animation: auth-spin-cw 22s linear infinite;
-}
-
-.auth-orb {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  border-radius: 50%;
-  background-color: rgba(196, 112, 74, 0.6);
-  box-shadow: 0 0 6px rgba(196, 112, 74, 0.4);
-}
-
-/* Glass card for mobile auth overlay */
-.auth-glass-card {
-  background-color: rgba(250, 247, 242, 0.88);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(226, 217, 202, 0.5);
-  border-radius: 16px;
-}
-
-/* Fade in up */
-@keyframes auth-fade-in-up {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.auth-fade-in-up {
-  opacity: 0;
-  animation: auth-fade-in-up 0.5s ease-out forwards;
-}
-
-/* Module dot pulse */
-@keyframes auth-pulse-dot {
-  0%, 100% { box-shadow: 0 0 0 0 var(--dot-color, rgba(196,112,74,0.4)); }
-  50% { box-shadow: 0 0 0 4px transparent; }
-}
-
-.auth-module-dot {
-  animation: auth-pulse-dot 3s ease-in-out infinite;
 }
 
 /* Success animation — draw circle then check */
@@ -264,39 +162,25 @@ mark {
   animation: auth-draw-check 0.4s ease-out 0.7s forwards;
 }
 
-.auth-success-check {
-  opacity: 0;
-  animation: auth-fade-in-up 0.3s ease-out 0.1s forwards;
+/* Autofill override for dark inputs */
+.auth-dark input:-webkit-autofill,
+.auth-dark input:-webkit-autofill:hover,
+.auth-dark input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 30px #07070F inset;
+  -webkit-text-fill-color: #F0EDE8;
+  caret-color: #D4845A;
+  transition: background-color 5000s ease-in-out 0s;
 }
 
-/* Auth input styling */
-.auth-input {
-  height: 46px;
-  width: 100%;
-  border-radius: 10px;
-  border: 1px solid #E2D9CA;
-  background-color: white;
-  padding: 0 14px;
-  font-size: 14px;
-  color: #1A1714;
-  outline: none;
-  transition: border-color 0.2s;
+/* MFA code input dark override */
+.auth-dark .mfa-code-input {
+  background-color: transparent;
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #F0EDE8;
 }
 
-.auth-input::placeholder {
-  color: #B0A48F;
-}
-
-.auth-input:focus {
-  border-color: #C4704A;
-}
-
-.auth-input-error {
-  border-color: #DC2626;
-}
-
-.auth-input-error:focus {
-  border-color: #DC2626;
+.auth-dark .mfa-code-input:focus {
+  border-color: #D4845A;
 }
 
 /* ══════════════════════════════════════
@@ -436,28 +320,10 @@ mark {
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  .auth-logo-float,
-  .auth-vertex-pulse,
-  .auth-orbit-1,
-  .auth-orbit-2,
-  .auth-orbit-3,
-  .auth-orbit-1-compact,
-  .auth-orbit-2-compact,
-  .auth-orb-track-1,
-  .auth-orb-track-2,
-  .auth-orb-track-3,
-  .auth-orb-track-4,
-  .auth-module-dot {
+  .auth-draw-circle,
+  .auth-draw-check {
     animation: none !important;
-  }
-
-  .auth-fade-in-up {
-    opacity: 1;
-    animation: none !important;
-  }
-
-  .auth-vertex-pulse {
-    opacity: 0.85;
+    stroke-dashoffset: 0;
   }
 
   .animate-fade-in-up,
@@ -473,6 +339,12 @@ mark {
   .animate-fade-in,
   .animate-scale-in {
     opacity: 1;
+  }
+
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 

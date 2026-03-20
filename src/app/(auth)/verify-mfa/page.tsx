@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/stores/ui-store";
 import { MfaCodeInput } from "@/components/auth/MfaCodeInput";
-import { ArrowRight, LogOut } from "lucide-react";
+import { AuthButton } from "@/components/auth/AuthButton";
+import { LogOut } from "lucide-react";
 
 export default function VerifyMfaPage() {
   const router = useRouter();
@@ -52,55 +53,30 @@ export default function VerifyMfaPage() {
 
   return (
     <div className="relative">
-      {/* Title */}
       <h1
-        className="font-heading text-foreground"
-        style={{ fontSize: 26, lineHeight: 1.2 }}
+        className="font-heading"
+        style={{ fontSize: 26, lineHeight: 1.2, color: "var(--auth-text)" }}
       >
         Verificación de seguridad
       </h1>
-      <p className="mt-2 text-[14px]" style={{ color: "#888780" }}>
+      <p className="mt-2 text-[14px]" style={{ color: "var(--auth-gray)" }}>
         Introduce el código de 6 dígitos de tu app de autenticación.
       </p>
 
-      {/* Form */}
       <form onSubmit={handleSubmit} className="mt-8 space-y-6">
         <MfaCodeInput value={code} onChange={setCode} />
 
-        {/* Submit */}
-        <button
-          type="submit"
-          disabled={loading || code.length !== 6}
-          className="flex h-[48px] w-full items-center justify-center gap-2 rounded-[10px] text-[14px] font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-          style={{ backgroundColor: loading ? "#B5623D" : "#C4704A" }}
-          onMouseEnter={(e) => {
-            if (!loading) e.currentTarget.style.backgroundColor = "#B5623D";
-          }}
-          onMouseLeave={(e) => {
-            if (!loading) e.currentTarget.style.backgroundColor = "#C4704A";
-          }}
-        >
-          {loading ? (
-            <>
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-              Verificando...
-            </>
-          ) : (
-            <>
-              Verificar
-              <ArrowRight size={16} strokeWidth={2} />
-            </>
-          )}
-        </button>
+        <AuthButton type="submit" disabled={code.length !== 6} loading={loading}>
+          Verificar
+        </AuthButton>
       </form>
 
-      {/* Logout link */}
       <p className="mt-6 text-center">
         <button
           type="button"
           onClick={handleLogout}
           className="inline-flex items-center gap-1.5 text-[12px] transition-colors hover:opacity-80"
-          style={{ color: "#B0A48F" }}
+          style={{ color: "var(--auth-gray)" }}
         >
           <LogOut size={12} strokeWidth={1.5} />
           ¿No tienes acceso? Cerrar sesión

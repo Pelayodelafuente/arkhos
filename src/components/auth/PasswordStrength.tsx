@@ -2,6 +2,7 @@
 
 interface PasswordStrengthProps {
   password: string;
+  dark?: boolean;
 }
 
 function getStrength(password: string): number {
@@ -18,7 +19,7 @@ function getStrength(password: string): number {
 const LABELS = ["", "Débil", "Media", "Fuerte", "Muy fuerte"];
 const COLORS = ["", "#DC2626", "#E57A1A", "#5B8C6A", "#3D7A4A"];
 
-export function PasswordStrength({ password }: PasswordStrengthProps) {
+export function PasswordStrength({ password, dark }: PasswordStrengthProps) {
   const strength = getStrength(password);
 
   if (!password) return null;
@@ -34,7 +35,7 @@ export function PasswordStrength({ password }: PasswordStrengthProps) {
               backgroundColor:
                 segment <= strength
                   ? COLORS[strength]
-                  : "rgba(226, 217, 202, 0.5)",
+                  : dark ? "rgba(255, 255, 255, 0.1)" : "rgba(226, 217, 202, 0.5)",
             }}
           />
         ))}

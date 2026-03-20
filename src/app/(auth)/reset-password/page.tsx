@@ -1,103 +1,149 @@
 "use client";
 
-import { useState, useActionState } from "react";
+import { useState, useEffect, useActionState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { resetPassword, type AuthState } from "../actions";
-import { SuccessAnimation } from "@/components/auth/SuccessAnimation";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { AuthInput } from "@/components/auth/AuthInput";
+import { AuthButton } from "@/components/auth/AuthButton";
+import { Mail, ArrowLeft } from "lucide-react";
 
 const initialState: AuthState = { error: null, success: null };
 
 export default function ResetPasswordPage() {
   const [state, formAction, pending] = useActionState(resetPassword, initialState);
   const [email, setEmail] = useState("");
-  const router = useRouter();
+  const [countdown, setCountdown] = useState(30);
+  const [canResend, setCanResend] = useState(false);
+
+  useEffect(() => {
+    if (!state.success) return;
+    setCountdown(30);
+    setCanResend(false);
+    const interval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          setCanResend(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [state.success]);
+
+  function handleResend() {
+    setCanResend(false);
+    const fd = new FormData();
+    fd.set("email", email);
+    formAction(fd);
+  }
 
   if (state.success) {
     return (
-      <SuccessAnimation
-        email={email}
-        onBack={() => router.push("/login")}
-      />
+      <div className="flex flex-col items-center text-center">
+        {/* Animated check */}
+        <div className="mb-6" style={{ animation: "auth-panel-enter 0.5s ease-out both" }}>
+          <svg
+            width="64"
+            height="64"
+            viewBox="0 0 64 64"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle
+              cx="32"
+              cy="32"
+              r="28"
+              stroke="var(--auth-copper)"
+              strokeWidth="2.5"
+              fill="none"
+              className="auth-draw-circle"
+            />
+            <path
+              d="M20 33 L28 41 L44 25"
+              stroke="var(--auth-copper)"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+              className="auth-draw-check"
+            />
+          </svg>
+        </div>
+
+        <h3
+          className="font-heading text-[22px]"
+          style={{ color: "var(--auth-text)" }}
+        >
+          Revisa tu bandeja
+        </h3>
+        <p className="mt-2 text-[14px]" style={{ color: "var(--auth-gray)" }}>
+          Enviamos un enlace a{" "}
+          <span style={{ color: "var(--auth-copper)" }}>{email}</span>
+        </p>
+
+        {/* Countdown / resend */}
+        <div className="mt-4">
+          {!canResend ? (
+            <p className="text-[12px]" style={{ color: "var(--auth-gray)" }}>
+              ¿No lo recibiste? Reenviar en 00:{String(countdown).padStart(2, "0")}
+            </p>
+          ) : (
+            <AuthButton variant="ghost" type="button" onClick={handleResend}>
+              Reenviar enlace
+            </AuthButton>
+          )}
+        </div>
+
+        <div className="mt-6 w-full">
+          <Link href="/login">
+            <AuthButton variant="secondary">Volver al login</AuthButton>
+          </Link>
+        </div>
+      </div>
     );
   }
 
   return (
     <div className="relative">
-      {/* Title */}
       <h1
-        className="font-heading text-foreground"
-        style={{ fontSize: 26, lineHeight: 1.2 }}
+        className="font-heading"
+        style={{ fontSize: 26, lineHeight: 1.2, color: "var(--auth-text)" }}
       >
-        Recuperar contraseña
+        ¿Perdiste el acceso?
       </h1>
-      <p className="mt-2 text-[14px]" style={{ color: "#888780" }}>
-        Te enviaremos un enlace para restablecer tu contraseña.
+      <p className="mt-2 text-[14px]" style={{ color: "var(--auth-gray)" }}>
+        Te enviaremos un enlace mágico
       </p>
 
-      {/* Form */}
       <form action={formAction} className="mt-8 space-y-5">
-        {/* Email */}
-        <div className="flex flex-col gap-1.5">
-          <label
-            htmlFor="email"
-            className="text-[12px] font-semibold"
-            style={{ color: "#3D3630" }}
-          >
-            Email
-          </label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            required
-            placeholder="tu@email.com"
-            className="auth-input"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </div>
+        <AuthInput
+          id="email"
+          name="email"
+          type="email"
+          label="Email"
+          icon={Mail}
+          autoComplete="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
 
-        {/* Error */}
         {state.error && (
-          <p className="text-[13px] text-red-600">{state.error}</p>
+          <p className="text-[13px] text-red-400">{state.error}</p>
         )}
 
-        {/* Submit */}
-        <button
-          type="submit"
-          disabled={pending}
-          className="flex h-[48px] w-full items-center justify-center gap-2 rounded-[10px] text-[14px] font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-          style={{ backgroundColor: pending ? "#B5623D" : "#C4704A" }}
-          onMouseEnter={(e) => {
-            if (!pending) e.currentTarget.style.backgroundColor = "#B5623D";
-          }}
-          onMouseLeave={(e) => {
-            if (!pending) e.currentTarget.style.backgroundColor = "#C4704A";
-          }}
-        >
-          {pending ? (
-            <>
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-              Enviando...
-            </>
-          ) : (
-            <>
-              Enviar enlace
-              <ArrowRight size={16} strokeWidth={2} />
-            </>
-          )}
-        </button>
+        <AuthButton type="submit" loading={pending}>
+          Enviar enlace
+        </AuthButton>
       </form>
 
-      {/* Back to login link */}
       <p className="mt-4 text-center">
         <Link
           href="/login"
           className="inline-flex items-center gap-1.5 text-[13px] transition-colors hover:opacity-80"
-          style={{ color: "#888780" }}
+          style={{ color: "var(--auth-gray)" }}
         >
           <ArrowLeft size={14} strokeWidth={1.5} />
           Volver al login

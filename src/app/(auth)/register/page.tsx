@@ -1,23 +1,102 @@
 "use client";
 
-import { useState, useActionState } from "react";
+import { useState, useActionState, useTransition } from "react";
 import Link from "next/link";
 import { register, type AuthState } from "../actions";
+import { AuthInput } from "@/components/auth/AuthInput";
+import { AuthButton } from "@/components/auth/AuthButton";
 import { PasswordStrength } from "@/components/auth/PasswordStrength";
-import { ArrowRight, Eye, EyeOff } from "lucide-react";
+import {
+  User,
+  Mail,
+  Lock,
+  Shield,
+  Eye,
+  EyeOff,
+  Wallet,
+  TrendingUp,
+  StickyNote,
+  LayoutGrid,
+  Check,
+  ArrowLeft,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const initialState: AuthState = { error: null, success: null };
 
+const MODULE_OPTIONS = [
+  { id: "gastos", label: "Gastos", icon: Wallet, color: "#4A7A9B" },
+  { id: "finanzas", label: "Finanzas", icon: TrendingUp, color: "#5B8C6A" },
+  { id: "notas", label: "Notas", icon: StickyNote, color: "#7a9b76" },
+  { id: "todo", label: "Todo", icon: LayoutGrid, color: "#9B7A4A" },
+];
+
+const stepVariants = {
+  enter: (direction: number) => ({ x: direction > 0 ? 60 : -60, opacity: 0 }),
+  center: { x: 0, opacity: 1 },
+  exit: (direction: number) => ({ x: direction > 0 ? -60 : 60, opacity: 0 }),
+};
+
 export default function RegisterPage() {
-  const [state, formAction, pending] = useActionState(register, initialState);
+  const [state, formAction] = useActionState(register, initialState);
+  const [, startTransition] = useTransition();
+
+  const [step, setStep] = useState(1);
+  const [direction, setDirection] = useState(1);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [preferredModule, setPreferredModule] = useState("");
+  const [clientError, setClientError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
+  function nextStep() {
+    setClientError("");
+    if (step === 1) {
+      if (!name.trim()) return setClientError("El nombre es obligatorio");
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+        return setClientError("Email no válido");
+    }
+    if (step === 2) {
+      if (password.length < 8)
+        return setClientError("Mínimo 8 caracteres");
+      if (password !== confirmPassword)
+        return setClientError("Las contraseñas no coinciden");
+    }
+    setDirection(1);
+    setStep((s) => s + 1);
+  }
+
+  function prevStep() {
+    setClientError("");
+    setDirection(-1);
+    setStep((s) => s - 1);
+  }
+
+  function handleSubmit() {
+    setClientError("");
+    setSubmitting(true);
+    if (preferredModule) {
+      try {
+        localStorage.setItem("arkhos_preferred_module", preferredModule);
+      } catch {}
+    }
+    const fd = new FormData();
+    fd.set("fullName", name);
+    fd.set("email", email);
+    fd.set("password", password);
+    fd.set("confirmPassword", confirmPassword);
+    startTransition(() => formAction(fd));
+  }
+
+  // Show success state
   if (state.success) {
     return (
       <div className="flex flex-col items-center text-center">
-        <div className="auth-success-check mb-6">
+        <div className="mb-6" style={{ animation: "auth-panel-enter 0.5s ease-out both" }}>
           <svg
             width="64"
             height="64"
@@ -29,14 +108,14 @@ export default function RegisterPage() {
               cx="32"
               cy="32"
               r="28"
-              stroke="#C4704A"
+              stroke="var(--auth-copper)"
               strokeWidth="2.5"
               fill="none"
               className="auth-draw-circle"
             />
             <path
               d="M20 33 L28 41 L44 25"
-              stroke="#C4704A"
+              stroke="var(--auth-copper)"
               strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -45,196 +124,296 @@ export default function RegisterPage() {
             />
           </svg>
         </div>
-        <h3 className="font-heading text-[22px] text-foreground">
+        <h3
+          className="font-heading text-[22px]"
+          style={{ color: "var(--auth-text)" }}
+        >
           Cuenta creada
         </h3>
-        <p className="mt-2 text-[14px]" style={{ color: "#888780" }}>
+        <p className="mt-2 text-[14px]" style={{ color: "var(--auth-gray)" }}>
           {state.success}
         </p>
-        <Link
-          href="/login"
-          className="mt-6 inline-flex h-[46px] w-full items-center justify-center rounded-[10px] border text-[14px] font-semibold transition-colors hover:border-accent hover:text-accent"
-          style={{ borderColor: "#E2D9CA", color: "#3D3630" }}
-        >
-          Ir a iniciar sesión
+        <Link href="/login" className="mt-6 w-full">
+          <AuthButton variant="secondary">Ir a iniciar sesión</AuthButton>
         </Link>
       </div>
     );
   }
 
+  // Show server error from formAction
+  const error = clientError || state.error;
+
   return (
     <div className="relative">
-      {/* Title */}
-      <h1
-        className="font-heading text-foreground"
-        style={{ fontSize: 26, lineHeight: 1.2 }}
-      >
-        Crear cuenta
-      </h1>
-      <p className="mt-2 text-[14px]" style={{ color: "#888780" }}>
-        Empieza a gestionar tus proyectos, mercados y patrimonio.
-      </p>
-
-      {/* Form */}
-      <form action={formAction} className="mt-8 space-y-5">
-        {/* Full name */}
-        <div className="flex flex-col gap-1.5">
-          <label
-            htmlFor="fullName"
-            className="text-[12px] font-semibold"
-            style={{ color: "#3D3630" }}
-          >
-            Nombre completo
-          </label>
-          <input
-            id="fullName"
-            name="fullName"
-            type="text"
-            autoComplete="name"
-            required
-            placeholder="Pelayo de la Fuente"
-            className="auth-input"
-          />
-        </div>
-
-        {/* Email */}
-        <div className="flex flex-col gap-1.5">
-          <label
-            htmlFor="email"
-            className="text-[12px] font-semibold"
-            style={{ color: "#3D3630" }}
-          >
-            Email
-          </label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            required
-            placeholder="tu@email.com"
-            className="auth-input"
-          />
-        </div>
-
-        {/* Password */}
-        <div className="flex flex-col gap-1.5">
-          <label
-            htmlFor="password"
-            className="text-[12px] font-semibold"
-            style={{ color: "#3D3630" }}
-          >
-            Contraseña
-          </label>
-          <div className="relative">
-            <input
-              id="password"
-              name="password"
-              type={showPassword ? "text" : "password"}
-              autoComplete="new-password"
-              required
-              minLength={8}
-              placeholder="Mínimo 8 caracteres"
-              className="auth-input pr-11"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+      {/* Step indicator */}
+      <div className="mb-6 flex items-center justify-center gap-0">
+        {[1, 2, 3].map((s, i) => (
+          <div key={s} className="flex items-center">
+            <div
+              className="flex h-2 w-2 items-center justify-center rounded-full transition-all duration-300"
+              style={{
+                backgroundColor:
+                  step >= s ? "var(--auth-copper)" : "var(--auth-surface)",
+                border:
+                  step >= s ? "none" : "1px solid var(--auth-border)",
+                boxShadow:
+                  step === s
+                    ? "0 0 8px rgba(212, 132, 90, 0.4)"
+                    : "none",
+              }}
             />
-            <button
-              type="button"
-              onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary transition-colors hover:text-foreground"
-              tabIndex={-1}
-              aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-            >
-              {showPassword ? (
-                <EyeOff size={16} strokeWidth={1.5} />
-              ) : (
-                <Eye size={16} strokeWidth={1.5} />
-              )}
-            </button>
+            {i < 2 && (
+              <div
+                className="mx-2 h-px w-8 transition-colors duration-300"
+                style={{
+                  backgroundColor:
+                    step > s ? "var(--auth-copper)" : "var(--auth-border)",
+                }}
+              />
+            )}
           </div>
-          <PasswordStrength password={password} />
-        </div>
+        ))}
+      </div>
 
-        {/* Confirm password */}
-        <div className="flex flex-col gap-1.5">
-          <label
-            htmlFor="confirmPassword"
-            className="text-[12px] font-semibold"
-            style={{ color: "#3D3630" }}
+      <AnimatePresence mode="wait" custom={direction}>
+        {step === 1 && (
+          <motion.div
+            key="step1"
+            custom={direction}
+            variants={stepVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
           >
-            Confirmar contraseña
-          </label>
-          <div className="relative">
-            <input
-              id="confirmPassword"
-              name="confirmPassword"
-              type={showConfirm ? "text" : "password"}
-              autoComplete="new-password"
-              required
-              minLength={8}
-              placeholder="Repite la contraseña"
-              className="auth-input pr-11"
-            />
-            <button
-              type="button"
-              onClick={() => setShowConfirm((v) => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary transition-colors hover:text-foreground"
-              tabIndex={-1}
-              aria-label={showConfirm ? "Ocultar contraseña" : "Mostrar contraseña"}
+            <h1
+              className="font-heading"
+              style={{ fontSize: 24, color: "var(--auth-text)" }}
             >
-              {showConfirm ? (
-                <EyeOff size={16} strokeWidth={1.5} />
-              ) : (
-                <Eye size={16} strokeWidth={1.5} />
-              )}
-            </button>
-          </div>
-        </div>
+              ¿Cómo te llamamos?
+            </h1>
+            <p className="mt-1.5 text-[14px]" style={{ color: "var(--auth-gray)" }}>
+              Empecemos con lo básico
+            </p>
 
-        {/* Error */}
-        {state.error && (
-          <p className="text-[13px] text-red-600">{state.error}</p>
+            <div className="mt-6 space-y-4">
+              <AuthInput
+                id="fullName"
+                name="fullName"
+                type="text"
+                label="Nombre completo"
+                icon={User}
+                autoComplete="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+              <AuthInput
+                id="email"
+                name="email"
+                type="email"
+                label="Email"
+                icon={Mail}
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+
+            {error && <p className="mt-3 text-[13px] text-red-400">{error}</p>}
+
+            <div className="mt-6">
+              <AuthButton type="button" onClick={nextStep}>
+                Continuar
+              </AuthButton>
+            </div>
+
+            <p className="mt-4 text-center text-[13px]" style={{ color: "var(--auth-gray)" }}>
+              ¿Ya tienes cuenta?{" "}
+              <Link
+                href="/login"
+                className="font-semibold transition-colors hover:opacity-80"
+                style={{ color: "var(--auth-copper)" }}
+              >
+                Iniciar sesión
+              </Link>
+            </p>
+          </motion.div>
         )}
 
-        {/* Submit */}
-        <button
-          type="submit"
-          disabled={pending}
-          className="flex h-[48px] w-full items-center justify-center gap-2 rounded-[10px] text-[14px] font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-          style={{ backgroundColor: pending ? "#B5623D" : "#C4704A" }}
-          onMouseEnter={(e) => {
-            if (!pending) e.currentTarget.style.backgroundColor = "#B5623D";
-          }}
-          onMouseLeave={(e) => {
-            if (!pending) e.currentTarget.style.backgroundColor = "#C4704A";
-          }}
-        >
-          {pending ? (
-            <>
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-              Creando cuenta...
-            </>
-          ) : (
-            <>
-              Crear cuenta
-              <ArrowRight size={16} strokeWidth={2} />
-            </>
-          )}
-        </button>
-      </form>
+        {step === 2 && (
+          <motion.div
+            key="step2"
+            custom={direction}
+            variants={stepVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <h1
+              className="font-heading"
+              style={{ fontSize: 24, color: "var(--auth-text)" }}
+            >
+              Protege tu acceso
+            </h1>
+            <p className="mt-1.5 text-[14px]" style={{ color: "var(--auth-gray)" }}>
+              Elige una contraseña segura
+            </p>
 
-      {/* Login link */}
-      <p className="mt-4 text-center text-[13px]" style={{ color: "#888780" }}>
-        Ya tienes cuenta?{" "}
-        <Link
-          href="/login"
-          className="font-semibold transition-colors hover:opacity-80"
-          style={{ color: "#C4704A" }}
-        >
-          Iniciar sesión
-        </Link>
-      </p>
+            <div className="mt-6 space-y-4">
+              <div>
+                <AuthInput
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  label="Contraseña"
+                  icon={Lock}
+                  autoComplete="new-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={8}
+                  rightElement={
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      className="transition-colors"
+                      style={{ color: "var(--auth-gray)" }}
+                      tabIndex={-1}
+                    >
+                      {showPassword ? (
+                        <EyeOff size={16} strokeWidth={1.5} />
+                      ) : (
+                        <Eye size={16} strokeWidth={1.5} />
+                      )}
+                    </button>
+                  }
+                />
+                <PasswordStrength password={password} dark />
+              </div>
+              <AuthInput
+                id="confirmPassword"
+                name="confirmPassword"
+                type={showConfirm ? "text" : "password"}
+                label="Confirmar contraseña"
+                icon={Shield}
+                autoComplete="new-password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                minLength={8}
+                rightElement={
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirm((v) => !v)}
+                    className="transition-colors"
+                    style={{ color: "var(--auth-gray)" }}
+                    tabIndex={-1}
+                  >
+                    {showConfirm ? (
+                      <EyeOff size={16} strokeWidth={1.5} />
+                    ) : (
+                      <Eye size={16} strokeWidth={1.5} />
+                    )}
+                  </button>
+                }
+              />
+            </div>
+
+            {error && <p className="mt-3 text-[13px] text-red-400">{error}</p>}
+
+            <div className="mt-6 flex gap-3">
+              <AuthButton variant="ghost" type="button" onClick={prevStep}>
+                <ArrowLeft size={16} strokeWidth={1.5} />
+                Atrás
+              </AuthButton>
+              <AuthButton type="button" onClick={nextStep}>
+                Continuar
+              </AuthButton>
+            </div>
+          </motion.div>
+        )}
+
+        {step === 3 && (
+          <motion.div
+            key="step3"
+            custom={direction}
+            variants={stepVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <h1
+              className="font-heading"
+              style={{ fontSize: 24, color: "var(--auth-text)" }}
+            >
+              ¿Qué quieres controlar primero?
+            </h1>
+            <p className="mt-1.5 text-[14px]" style={{ color: "var(--auth-gray)" }}>
+              Puedes cambiar esto después
+            </p>
+
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              {MODULE_OPTIONS.map((mod) => {
+                const selected = preferredModule === mod.id;
+                const ModIcon = mod.icon;
+                return (
+                  <button
+                    key={mod.id}
+                    type="button"
+                    onClick={() => setPreferredModule(selected ? "" : mod.id)}
+                    className="relative flex flex-col items-center gap-2 rounded-xl p-4 transition-all duration-200"
+                    style={{
+                      border: `1px solid ${selected ? mod.color : "var(--auth-border)"}`,
+                      backgroundColor: selected
+                        ? `${mod.color}10`
+                        : "var(--auth-surface)",
+                      boxShadow: selected
+                        ? `0 0 16px ${mod.color}20`
+                        : "none",
+                    }}
+                  >
+                    {selected && (
+                      <Check
+                        size={12}
+                        strokeWidth={2.5}
+                        className="absolute right-2 top-2"
+                        style={{ color: mod.color }}
+                      />
+                    )}
+                    <ModIcon
+                      size={22}
+                      strokeWidth={1.5}
+                      style={{ color: selected ? mod.color : "var(--auth-gray)" }}
+                    />
+                    <span
+                      className="text-[12px] font-medium"
+                      style={{ color: selected ? mod.color : "var(--auth-gray)" }}
+                    >
+                      {mod.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {error && <p className="mt-3 text-[13px] text-red-400">{error}</p>}
+
+            <div className="mt-6 flex gap-3">
+              <AuthButton variant="ghost" type="button" onClick={prevStep}>
+                <ArrowLeft size={16} strokeWidth={1.5} />
+                Atrás
+              </AuthButton>
+              <AuthButton type="button" onClick={handleSubmit} loading={submitting}>
+                Crear mi cuenta
+              </AuthButton>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
