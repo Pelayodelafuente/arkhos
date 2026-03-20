@@ -72,6 +72,7 @@ export function LogoUpload({ logoUrl, onUpload, onRemove }: LogoUploadProps) {
           Logo
         </label>
         <div className="flex items-center gap-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={logoUrl}
             alt="Logo del proyecto"

@@ -65,6 +65,21 @@ export function SubscriptionModal({
   const [saving, setSaving] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
+  const resetForm = useCallback(() => {
+    setName("")
+    setIcon("")
+    setColor("#4A7A9B")
+    setAmount("")
+    setCycle("monthly")
+    setBillingDay("1")
+    setCategoryId("")
+    setUrl("")
+    setNotes("")
+    setStartedAt("")
+    setErrors({})
+    setConfirmDelete(false)
+  }, [])
+
   // ── Populate on edit ────────────────
 
   useEffect(() => {
@@ -85,22 +100,7 @@ export function SubscriptionModal({
     if (prefilledDay !== null && prefilledDay !== undefined) {
       setBillingDay(String(prefilledDay))
     }
-  }, [subscription, open, prefilledDay])
-
-  const resetForm = useCallback(() => {
-    setName("")
-    setIcon("")
-    setColor("#4A7A9B")
-    setAmount("")
-    setCycle("monthly")
-    setBillingDay("1")
-    setCategoryId("")
-    setUrl("")
-    setNotes("")
-    setStartedAt("")
-    setErrors({})
-    setConfirmDelete(false)
-  }, [])
+  }, [subscription, open, prefilledDay, resetForm])
 
   // ── Service selection ───────────────
 

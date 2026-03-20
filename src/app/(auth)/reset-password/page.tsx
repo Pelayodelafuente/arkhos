@@ -17,7 +17,7 @@ export default function ResetPasswordPage() {
 
   useEffect(() => {
     if (!state.success) return;
-    setCountdown(30);
+    setCountdown(30); // eslint-disable-line react-hooks/set-state-in-effect -- countdown reset on success
     setCanResend(false);
     const interval = setInterval(() => {
       setCountdown((prev) => {

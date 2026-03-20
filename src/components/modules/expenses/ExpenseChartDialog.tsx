@@ -1,12 +1,9 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState } from "react"
 import { PieChart as PieChartIcon } from "lucide-react"
 import dynamic from "next/dynamic"
-import { Button, Modal, Badge } from "@/components/ui"
-import { useExpensesStore } from "@/stores/expenses-store"
-import { formatCurrency, groupByCategory } from "@/lib/gastos-utils"
-import { ServiceAvatar } from "./ServiceAvatar"
+import { Button, Modal } from "@/components/ui"
 
 const LazyCharts = dynamic(() => import("./charts/ChartContent"), { ssr: false })
 

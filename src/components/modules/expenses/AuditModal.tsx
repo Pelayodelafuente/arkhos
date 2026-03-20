@@ -1,12 +1,10 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { ListOrdered } from "lucide-react"
-import { Modal, Button, Progress } from "@/components/ui"
+import { Modal } from "@/components/ui"
 import { useExpensesStore } from "@/stores/expenses-store"
 import { ServiceAvatar } from "./ServiceAvatar"
 import { formatCurrency, getAnnualizedAmount } from "@/lib/gastos-utils"
-import type { SubscriptionWithCategory } from "@/types/expenses"
 
 interface AuditModalProps {
   open: boolean

@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useMemo } from "react"
-import { ChevronDown, CreditCard, MoreHorizontal, Pencil, Pause, Play, Plus } from "lucide-react"
+import { useMemo } from "react"
+import { ChevronDown, CreditCard, Pencil, Pause, Play, Plus } from "lucide-react"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import { Card, Badge, Button } from "@/components/ui"
 import { useExpensesStore, useFilteredSubscriptions } from "@/stores/expenses-store"

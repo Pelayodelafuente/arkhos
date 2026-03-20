@@ -30,7 +30,7 @@ export function MobileDrawer({ open, onClose, userName }: MobileDrawerProps) {
 
   useEffect(() => {
     if (open) {
-      setMounted(true);
+      setMounted(true); // eslint-disable-line react-hooks/set-state-in-effect -- drawer mount/unmount animation
       setClosing(false);
     }
   }, [open]);

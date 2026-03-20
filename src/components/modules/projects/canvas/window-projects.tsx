@@ -18,6 +18,7 @@ interface WindowProjectsProps {
 function ProjectFolder({ logoUrl, isHovered }: { logoUrl: string | null; isHovered: boolean }) {
   if (logoUrl) {
     return (
+      /* eslint-disable-next-line @next/next/no-img-element */
       <img
         src={logoUrl}
         alt=""

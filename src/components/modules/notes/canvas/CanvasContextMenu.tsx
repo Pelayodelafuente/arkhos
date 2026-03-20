@@ -22,7 +22,7 @@ interface Props {
   onCopy: () => void
   onPaste: () => void
   onDuplicate: () => void
-  hasSelection: boolean
+  hasSelection?: boolean
   hasClipboard: boolean
 }
 
@@ -52,7 +52,6 @@ export function CanvasContextMenu({
   onCopy,
   onPaste,
   onDuplicate,
-  hasSelection,
   hasClipboard,
 }: Props) {
   const menuRef = useRef<HTMLDivElement>(null)

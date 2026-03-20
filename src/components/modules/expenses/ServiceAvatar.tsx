@@ -1,6 +1,5 @@
 "use client"
 
-import type { ComponentType, SVGProps } from "react"
 import { findServiceById } from "@/data/subscriptionServices"
 
 interface ServiceAvatarProps {

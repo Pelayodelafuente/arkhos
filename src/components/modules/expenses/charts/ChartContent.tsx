@@ -5,7 +5,6 @@ import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, 
 import { useExpensesStore } from "@/stores/expenses-store"
 import { formatCurrency, groupByCategory, getMonthlyEquivalent } from "@/lib/gastos-utils"
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion"
-import { ServiceAvatar } from "../ServiceAvatar"
 
 type Tab = 'distribution' | 'evolution' | 'heatmap'
 

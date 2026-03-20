@@ -8,28 +8,30 @@ interface HighlightTextProps {
 export function HighlightText({ text, query }: HighlightTextProps) {
   if (!query) return <>{text}</>
 
+  let parts: string[] = [text]
+  let regex: RegExp | null = null
   try {
     const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    const regex = new RegExp(`(${escaped})`, 'gi')
-    const parts = text.split(regex)
-
-    return (
-      <>
-        {parts.map((part, i) =>
-          regex.test(part) ? (
-            <mark
-              key={i}
-              className="bg-accent/20 text-inherit rounded-sm px-0.5"
-            >
-              {part}
-            </mark>
-          ) : (
-            part
-          )
-        )}
-      </>
-    )
+    regex = new RegExp(`(${escaped})`, 'gi')
+    parts = text.split(regex)
   } catch {
-    return <>{text}</>
+    // invalid regex, use original text
   }
+
+  return (
+    <>
+      {parts.map((part, i) =>
+        regex && regex.test(part) ? (
+          <mark
+            key={i}
+            className="bg-accent/20 text-inherit rounded-sm px-0.5"
+          >
+            {part}
+          </mark>
+        ) : (
+          part
+        )
+      )}
+    </>
+  )
 }

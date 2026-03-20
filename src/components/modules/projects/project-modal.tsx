@@ -206,6 +206,7 @@ export function ProjectModal({
         {/* Preview */}
         <div className="flex items-center gap-3 rounded-lg border border-border bg-sand/40 p-3">
           {logoUrl ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
             <img
               src={logoUrl}
               alt=""

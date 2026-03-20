@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState, useEffect } from "react"
+import { useMemo, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, Bell } from "lucide-react"
 import { useExpensesStore } from "@/stores/expenses-store"
@@ -23,14 +23,6 @@ function getDismissed(): Record<string, number> {
   } catch {
     return {}
   }
-}
-
-function isDismissed(alertId: string): boolean {
-  const dismissed = getDismissed()
-  const ts = dismissed[alertId]
-  if (!ts) return false
-  // Expire after 24h
-  return Date.now() - ts < 24 * 60 * 60 * 1000
 }
 
 function dismissAlert(alertId: string) {
@@ -59,16 +51,15 @@ const amountColorByType = {
 
 export function AlertBanner() {
   const subscriptions = useExpensesStore((s) => s.subscriptions)
-  const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set())
-
-  useEffect(() => {
+  const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => {
+    if (typeof window === 'undefined') return new Set()
     const dismissed = getDismissed()
     const ids = new Set<string>()
     for (const [id, ts] of Object.entries(dismissed)) {
       if (Date.now() - ts < 24 * 60 * 60 * 1000) ids.add(id)
     }
-    setDismissedIds(ids)
-  }, [])
+    return ids
+  })
 
   const alerts = useMemo(() => {
     const result: Alert[] = []

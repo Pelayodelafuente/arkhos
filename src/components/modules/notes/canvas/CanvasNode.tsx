@@ -311,6 +311,7 @@ export function CanvasNodeComponent({
                 <span style={{ fontSize: 9 * scale }}>Error al cargar imagen</span>
               </div>
             ) : (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={node.url}
                 alt={node.label || "Imagen"}

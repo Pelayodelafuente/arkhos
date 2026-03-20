@@ -26,6 +26,7 @@ function useCountUp(target: number, duration: number = 800): number {
     prevTargetRef.current = target;
 
     if (target === 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- animation countup needs sync setState
       setCurrent(0);
       return;
     }

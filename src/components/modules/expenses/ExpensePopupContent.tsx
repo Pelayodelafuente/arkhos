@@ -1,7 +1,6 @@
 "use client"
 
 import type { SubscriptionWithCategory } from "@/types/expenses"
-import { Badge } from "@/components/ui"
 import { ServiceAvatar } from "./ServiceAvatar"
 import { formatCurrency } from "@/lib/gastos-utils"
 

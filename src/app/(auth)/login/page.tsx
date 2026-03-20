@@ -20,7 +20,7 @@ function getGreeting(): { text: string; Icon: typeof Sun } {
 export default function LoginPage() {
   const [state, formAction, pending] = useActionState(login, initialState);
   const [showPassword, setShowPassword] = useState(false);
-  const greeting = useMemo(getGreeting, []);
+  const greeting = useMemo(() => getGreeting(), []);
   const GreetingIcon = greeting.Icon;
 
   return (

@@ -7,7 +7,6 @@
 import {
   startOfMonth,
   endOfMonth,
-  eachDayOfInterval,
   getDay,
   subDays,
   addDays,

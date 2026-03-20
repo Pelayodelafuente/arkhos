@@ -34,7 +34,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { motion } from "framer-motion";
-import { Button, Progress, Modal, Skeleton } from "@/components/ui";
+import { Button, Progress, Skeleton } from "@/components/ui";
 import { useProjectsStore } from "@/stores/projects-store";
 import { useUIStore } from "@/stores/ui-store";
 import { createClient } from "@/lib/supabase/client";
@@ -192,13 +192,13 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
         .map((p) => p.id);
       setExpandedPhases(new Set(inProgress));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project?.id]);
 
   // Mobile detection for dnd fallback
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    setIsMobile(window.matchMedia("(max-width: 640px)").matches);
-  }, []);
+  const [isMobile] = useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia("(max-width: 640px)").matches : false
+  );
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -373,6 +373,7 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-3">
           {project.logo_url ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
             <img
               src={project.logo_url}
               alt=""
@@ -1260,16 +1261,16 @@ function PhaseFlowGraph({ phases }: { phases: PhaseListProps }) {
   const padding = 20;
   const gapY = 20;
 
-  let currentY = padding;
-  const nodePositions = phases.map((phase) => {
-    const y = currentY;
+  const nodePositions = phases.reduce<{ y: number; totalHeight: number }[]>((acc, phase) => {
+    const prevEnd = acc.length > 0 ? acc[acc.length - 1].y + acc[acc.length - 1].totalHeight + gapY : padding;
     const taskCount = phase.tasks.length;
     const totalHeight = nodeH + (taskCount > 0 ? taskCount * taskH + 8 : 0);
-    currentY += totalHeight + gapY;
-    return { y, totalHeight };
-  });
+    acc.push({ y: prevEnd, totalHeight });
+    return acc;
+  }, []);
 
-  const svgHeight = currentY;
+  const lastNode = nodePositions[nodePositions.length - 1];
+  const svgHeight = lastNode ? lastNode.y + lastNode.totalHeight + gapY : padding;
   const svgWidth = nodeW + padding * 2;
 
   return (

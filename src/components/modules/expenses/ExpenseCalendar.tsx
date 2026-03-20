@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useRef, useEffect, useCallback } from "react"
+import { useMemo, useState, useRef, useEffect, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui"
@@ -32,9 +32,10 @@ interface ExpenseCalendarProps {
   onNewWithDay?: (day: number) => void
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function ExpenseCalendar({ onNewWithDay }: ExpenseCalendarProps) {
   const now = new Date()
-  const directionRef = useRef(1)
+  const [direction, setDirection] = useState(1)
 
   const calendarRef = useRef<HTMLDivElement>(null)
   const subscriptions = useExpensesStore((s) => s.subscriptions)
@@ -64,22 +65,22 @@ export function ExpenseCalendar({ onNewWithDay }: ExpenseCalendarProps) {
   }, [setSelectedDay])
 
   const prevMonth = useCallback(() => {
-    directionRef.current = -1
+    setDirection(-1)
     if (month === 1) {
       setViewedMonth(year - 1, 12)
     } else {
       setViewedMonth(year, month - 1)
     }
-  }, [month, year, setViewedMonth])
+  }, [month, year, setViewedMonth, setDirection])
 
   const nextMonth = useCallback(() => {
-    directionRef.current = 1
+    setDirection(1)
     if (month === 12) {
       setViewedMonth(year + 1, 1)
     } else {
       setViewedMonth(year, month + 1)
     }
-  }, [month, year, setViewedMonth])
+  }, [month, year, setViewedMonth, setDirection])
 
   const goToToday = useCallback(() => {
     const today = new Date()
@@ -92,7 +93,7 @@ export function ExpenseCalendar({ onNewWithDay }: ExpenseCalendarProps) {
     } else {
       setSelectedDay(null)
     }
-  }, [selectedDay, setSelectedDay, onNewWithDay])
+  }, [selectedDay, setSelectedDay])
 
   return (
     <div ref={calendarRef}>
@@ -139,10 +140,10 @@ export function ExpenseCalendar({ onNewWithDay }: ExpenseCalendarProps) {
       </div>
 
       {/* Calendar grid with slide animation */}
-      <AnimatePresence mode="wait" custom={directionRef.current}>
+      <AnimatePresence mode="wait" custom={direction}>
         <motion.div
           key={`${year}-${month}`}
-          custom={directionRef.current}
+          custom={direction}
           variants={slideVariants}
           initial="enter"
           animate="center"

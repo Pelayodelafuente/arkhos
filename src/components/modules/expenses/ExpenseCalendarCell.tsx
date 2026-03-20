@@ -19,7 +19,7 @@ interface ExpenseCalendarCellProps {
   onDayClick: (day: number, hasSubs: boolean) => void
   month: number
   year: number
-  colIndex: number
+  colIndex?: number
 }
 
 export function ExpenseCalendarCell({
@@ -30,7 +30,6 @@ export function ExpenseCalendarCell({
   onDayClick,
   month,
   year,
-  colIndex,
 }: ExpenseCalendarCellProps) {
   const isMobile = useIsMobile()
   const [popoverOpen, setPopoverOpen] = useState(false)
@@ -109,16 +108,6 @@ export function ExpenseCalendarCell({
     }
   }
 
-  const handleMouseEnter = () => {
-    if (!isMobile && hasSubs && !isSelected) {
-      // Don't auto-open on hover, just show cursor
-    }
-  }
-
-  // Close popover when selection changes
-  useEffect(() => {
-    if (!isSelected) setPopoverOpen(false)
-  }, [isSelected])
 
   // Outside classes
   if (!day.isCurrentMonth) {
@@ -194,7 +183,7 @@ export function ExpenseCalendarCell({
       {!isMobile && hasSubs && typeof document !== 'undefined' &&
         createPortal(
           <AnimatePresence>
-            {popoverOpen && (
+            {isSelected && popoverOpen && (
               <motion.div
                 ref={popoverRef}
                 style={popoverStyle}

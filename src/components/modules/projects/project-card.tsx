@@ -38,6 +38,7 @@ export function ProjectCard({ project, searchQuery = "" }: ProjectCardProps) {
         <div className="mb-3 flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
             {project.logo_url ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
               <img
                 src={project.logo_url}
                 alt=""
