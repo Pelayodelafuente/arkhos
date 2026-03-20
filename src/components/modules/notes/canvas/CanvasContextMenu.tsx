@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import { StickyNote, Type, Square, Pencil, Lock, Unlock, Trash2, Copy, CopyPlus, ClipboardPaste } from "lucide-react"
+import { StickyNote, Type, Square, Pencil, Lock, Unlock, Trash2, Copy, CopyPlus, ClipboardPaste, Link, Image as ImageIcon } from "lucide-react"
 
 interface Props {
   x: number
@@ -12,6 +12,8 @@ interface Props {
   onClose: () => void
   onNewNote: (pos: { x: number; y: number }) => void
   onNewTextNode: (pos: { x: number; y: number }) => void
+  onNewUrlNode: (pos: { x: number; y: number }) => void
+  onNewImageNode: (pos: { x: number; y: number }) => void
   onNewGroup: (pos: { x: number; y: number }) => void
   onDeleteNode: (id: string) => void
   onToggleLock: (id: string) => void
@@ -40,6 +42,8 @@ export function CanvasContextMenu({
   onClose,
   onNewNote,
   onNewTextNode,
+  onNewUrlNode,
+  onNewImageNode,
   onNewGroup,
   onDeleteNode,
   onToggleLock,
@@ -83,6 +87,16 @@ export function CanvasContextMenu({
       label: "Texto rapido",
       icon: <Type size={14} strokeWidth={1.75} />,
       onClick: () => { onNewTextNode(worldPos); onClose() },
+    },
+    {
+      label: "URL rapido",
+      icon: <Link size={14} strokeWidth={1.75} />,
+      onClick: () => { onNewUrlNode(worldPos); onClose() },
+    },
+    {
+      label: "Imagen",
+      icon: <ImageIcon size={14} strokeWidth={1.75} />,
+      onClick: () => { onNewImageNode(worldPos); onClose() },
     },
     {
       label: "Crear grupo",

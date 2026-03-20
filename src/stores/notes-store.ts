@@ -25,6 +25,10 @@ function toast(message: string, variant: 'success' | 'error') {
   useUIStore.getState().addToast(message, variant)
 }
 
+// ─── Sort modes ──────────────────────
+
+export type NoteSortMode = 'recent' | 'oldest' | 'az' | 'za' | 'manual'
+
 // ─── Store interface ──────────────────
 
 interface NotesState {
@@ -34,6 +38,7 @@ interface NotesState {
   searchQuery: string
   activeTag: string | null
   viewMode: 'list' | 'canvas'
+  sortMode: NoteSortMode
 
   // Canvas
   canvas: NoteCanvas | null
@@ -92,12 +97,14 @@ interface NotesActions {
   setSearchQuery: (q: string) => void
   setActiveTag: (tag: string | null) => void
   setViewMode: (mode: 'list' | 'canvas') => void
+  setSortMode: (mode: NoteSortMode) => void
 
   // Canvas node operations (optimistic)
   addNoteToCanvas: (noteId: string, pos: { x: number; y: number }) => Promise<CanvasNode | null>
   addTextNode: (content: string, pos: { x: number; y: number }) => Promise<CanvasNode | null>
   addUrlNode: (url: string, pos: { x: number; y: number }) => Promise<CanvasNode | null>
   addGroupNode: (label: string, pos: { x: number; y: number }, size: { width: number; height: number }) => Promise<CanvasNode | null>
+  addImageNode: (imageUrl: string, pos: { x: number; y: number }, dimensions?: { width: number; height: number }) => Promise<CanvasNode | null>
   updateNodePos: (id: string, pos: { x: number; y: number }) => void
   persistNodePos: (id: string, pos: { x: number; y: number }) => Promise<void>
   updateNodeSize: (id: string, size: { width: number; height: number }) => Promise<void>
@@ -164,6 +171,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
   searchQuery: '',
   activeTag: null,
   viewMode: 'list',
+  sortMode: 'recent' as NoteSortMode,
   canvas: null,
   canvasNodes: [],
   canvasEdges: [],
@@ -346,6 +354,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
   setSearchQuery: (q) => set({ searchQuery: q }),
   setActiveTag: (tag) => set({ activeTag: tag }),
   setViewMode: (mode) => set({ viewMode: mode }),
+  setSortMode: (mode) => set({ sortMode: mode }),
 
   // ── Canvas Node Operations ─────────
 
@@ -388,6 +397,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
   addUrlNode: async (url, pos) => {
     const { canvas } = get()
     if (!canvas) return null
+    get().pushHistory()
 
     try {
       const node = await notesApi.addUrlNodeToCanvas(canvas.id, url, pos)
@@ -411,6 +421,22 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
       return node
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Error al crear grupo'
+      toast(msg, 'error')
+      return null
+    }
+  },
+
+  addImageNode: async (imageUrl, pos, dimensions) => {
+    const { canvas } = get()
+    if (!canvas) return null
+    get().pushHistory()
+
+    try {
+      const node = await notesApi.addImageNodeToCanvas(canvas.id, imageUrl, pos, dimensions)
+      set((s) => ({ canvasNodes: [...s.canvasNodes, node] }))
+      return node
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Error al crear nodo de imagen'
       toast(msg, 'error')
       return null
     }
@@ -899,12 +925,13 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
 
 /**
  * Notas filtradas por searchQuery + activeTag.
- * Pinned primero, luego por updated_at descendente.
+ * Pinned primero, luego por el modo de orden seleccionado.
  */
 export function useFilteredNotes(): Note[] {
   const notes = useNotesStore((s) => s.notes)
   const searchQuery = useNotesStore((s) => s.searchQuery)
   const activeTag = useNotesStore((s) => s.activeTag)
+  const sortMode = useNotesStore((s) => s.sortMode)
 
   let result = [...notes]
 
@@ -923,8 +950,24 @@ export function useFilteredNotes(): Note[] {
   }
 
   result.sort((a, b) => {
+    // Pinned notes always first
     if (a.is_pinned !== b.is_pinned) return a.is_pinned ? -1 : 1
-    return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+
+    switch (sortMode) {
+      case 'oldest':
+        return new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime()
+      case 'az':
+        return a.title.localeCompare(b.title, 'es')
+      case 'za':
+        return b.title.localeCompare(a.title, 'es')
+      case 'manual':
+        // sort_order ASC, fallback to updated_at DESC for notes without sort_order
+        if (a.sort_order !== b.sort_order) return a.sort_order - b.sort_order
+        return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+      case 'recent':
+      default:
+        return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+    }
   })
 
   return result

@@ -69,18 +69,30 @@ export function NotesView({ initialNotes, initialCanvas, userId }: Props) {
   }, [notes.length])
 
   // After modal saves a new note from canvas, add it to canvas at the pending position
-  const handleModalClose = useCallback(() => {
+  const handleModalClose = useCallback(async () => {
     if (pendingCanvasPos && viewMode === "canvas" && notes.length > prevNoteCount.current) {
       // New note was added (prepended to array, at index 0)
       const latestNote = notes[0]
       if (latestNote) {
-        addNoteToCanvas(latestNote.id, pendingCanvasPos)
+        // Ensure canvas is initialized before adding the note node
+        const { canvas } = useNotesStore.getState()
+        if (!canvas) {
+          await initCanvas(userId)
+        }
+        const node = await addNoteToCanvas(latestNote.id, pendingCanvasPos)
+        // If optimistic update didn't trigger, force a refresh
+        if (!node) {
+          const refreshedCanvas = useNotesStore.getState().canvas
+          if (refreshedCanvas) {
+            await useNotesStore.getState().fetchCanvas(refreshedCanvas.id)
+          }
+        }
       }
     }
     setModalOpen(false)
     setEditingNote(null)
     setPendingCanvasPos(null)
-  }, [pendingCanvasPos, viewMode, notes, addNoteToCanvas])
+  }, [pendingCanvasPos, viewMode, notes, addNoteToCanvas, initCanvas, userId])
 
   // Switch to canvas view: init + sync
   const handleSwitchToCanvas = useCallback(() => {

@@ -2,7 +2,8 @@
 
 import { useCallback, useMemo, useRef } from "react"
 import { marked } from "marked"
-import { FileText, Type, Link, Layers, Lock } from "lucide-react"
+import { useState } from "react"
+import { FileText, Type, Link, ExternalLink, Layers, Lock, Image as ImageIcon } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import * as LucideIcons from "lucide-react"
 import type { CanvasNode as CanvasNodeType, CanvasViewport } from "@/types/notes"
@@ -19,6 +20,29 @@ function sanitizeHtml(html: string): string {
 const COLOR_MAP = Object.fromEntries(
   NOTE_COLOR_CONFIG.map((c) => [c.value, { bg: c.bg, border: c.border }])
 ) as Record<string, { bg: string; border: string }>
+
+// ─── Image URL filename extractor ────────────
+function extractFilenameFromUrl(url: string): string {
+  if (!url) return ""
+  try {
+    const pathname = new URL(url).pathname
+    const segments = pathname.split("/")
+    const last = segments[segments.length - 1] ?? ""
+    // Remove timestamp prefix (e.g. "1234567890-filename.png" → "filename.png")
+    return last.replace(/^\d+-/, "").replace(/_/g, " ")
+  } catch {
+    return ""
+  }
+}
+
+function extractDomain(url: string): string {
+  if (!url) return "URL"
+  try {
+    return new URL(url).hostname
+  } catch {
+    return url
+  }
+}
 
 // ─── Resize handles ───────────────────────────
 const RESIZE_HANDLES = ["nw", "n", "ne", "e", "se", "s", "sw", "w"] as const
@@ -78,6 +102,7 @@ export function CanvasNodeComponent({
     if (node.node_type === "text") return Type
     if (node.node_type === "url") return Link
     if (node.node_type === "group") return Layers
+    if (node.node_type === "image") return ImageIcon
     if (node.node_type === "note" && node.note?.icon) {
       return (LucideIcons as unknown as Record<string, LucideIcon>)[node.note.icon] ?? FileText
     }
@@ -86,9 +111,12 @@ export function CanvasNodeComponent({
 
   // ─── Derived content ────────────────────
   const title = node.node_type === "note" ? (node.note?.title ?? "Sin titulo")
-    : node.node_type === "url" ? (node.url || "URL")
+    : node.node_type === "url" ? extractDomain(node.url || "")
     : node.node_type === "group" ? (node.label || "Grupo")
+    : node.node_type === "image" ? (node.label || extractFilenameFromUrl(node.url) || "Imagen")
     : ""
+
+  const [imageError, setImageError] = useState(false)
 
   const rawContent = node.node_type === "note"
     ? (node.note?.content ?? "")
@@ -121,6 +149,7 @@ export function CanvasNodeComponent({
   if (isGroup) {
     return (
       <div
+        className="group/node"
         style={{
           position: "absolute", left: screenX, top: screenY,
           width: screenW, height: screenH,
@@ -155,27 +184,32 @@ export function CanvasNodeComponent({
             onMouseDown={(e) => { e.stopPropagation(); onResizeStart(node.id, h, e) }} />
         ))}
 
-        {/* Connection anchors */}
-        {isSelected && (
-          <>
-            {(["top", "right", "bottom", "left"] as const).map((side) => {
-              const pos: Record<string, React.CSSProperties> = {
-                top: { top: -5, left: "50%", transform: "translateX(-50%)" },
-                bottom: { bottom: -5, left: "50%", transform: "translateX(-50%)" },
-                left: { left: -5, top: "50%", transform: "translateY(-50%)" },
-                right: { right: -5, top: "50%", transform: "translateY(-50%)" },
-              }
-              return (
-                <div key={side} style={{
-                  position: "absolute", ...pos[side],
-                  width: 10, height: 10, borderRadius: "50%",
-                  backgroundColor: "#7a9b76", border: "2px solid white",
-                  cursor: "crosshair", zIndex: 103,
-                }} onMouseDown={(e) => { e.stopPropagation(); onConnectionStart(node.id, side) }} />
-              )
-            })}
-          </>
-        )}
+        {/* Connection anchors — visible on hover and selected */}
+        {(["top", "right", "bottom", "left"] as const).map((side) => {
+          const pos: Record<string, React.CSSProperties> = {
+            top: { top: -4, left: "50%", transform: "translateX(-50%)" },
+            bottom: { bottom: -4, left: "50%", transform: "translateX(-50%)" },
+            left: { left: -4, top: "50%", transform: "translateY(-50%)" },
+            right: { right: -4, top: "50%", transform: "translateY(-50%)" },
+          }
+          const size = isSelected ? 10 : 8
+          return (
+            <div
+              key={side}
+              className={`${isSelected ? "" : "opacity-0 group-hover/node:opacity-60"}`}
+              style={{
+                position: "absolute", ...pos[side],
+                width: size, height: size, borderRadius: "50%",
+                backgroundColor: "#7a9b76", border: "2px solid white",
+                cursor: "crosshair", zIndex: 103,
+                transition: "opacity 150ms, transform 150ms",
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.transform = `${pos[side]?.transform ?? ""} scale(1.3)` }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = pos[side]?.transform as string ?? "" }}
+              onMouseDown={(e) => { e.stopPropagation(); onConnectionStart(node.id, side) }}
+            />
+          )
+        })}
       </div>
     )
   }
@@ -219,8 +253,81 @@ export function CanvasNodeComponent({
           {node.locked && <Lock size={11 * scale} style={{ color: "var(--text-tertiary)", flexShrink: 0 }} />}
         </div>
 
-        {/* Body — editing vs preview */}
-        {isEditing && node.node_type === "text" ? (
+        {/* Body — editing vs preview vs image vs url */}
+        {node.node_type === "url" ? (
+          <div style={{
+            flex: 1, display: "flex", flexDirection: "column",
+            justifyContent: "center", gap: 2 * scale,
+            borderLeft: `${2 * scale}px solid #7a9b76`,
+            paddingLeft: 6 * scale,
+            overflow: "hidden",
+          }}>
+            <span
+              className="font-heading"
+              style={{
+                fontSize: 11 * scale, fontWeight: 500,
+                color: "var(--text-primary)",
+                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+              }}
+            >
+              {title}
+            </span>
+            <span
+              className="font-mono"
+              style={{
+                fontSize: 9 * scale,
+                color: "var(--text-tertiary)",
+                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+              }}
+            >
+              {node.url}
+            </span>
+            <button
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 3 * scale,
+                fontSize: 9 * scale, color: "#7a9b76",
+                background: "none", border: "none", cursor: "pointer",
+                padding: 0, marginTop: 2 * scale,
+              }}
+              onClick={(e) => {
+                e.stopPropagation()
+                if (node.url) window.open(node.url, "_blank", "noopener,noreferrer")
+              }}
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              <ExternalLink size={10 * scale} strokeWidth={1.75} />
+              <span>Abrir</span>
+            </button>
+          </div>
+        ) : node.node_type === "image" ? (
+          <div style={{ flex: 1, overflow: "hidden", borderRadius: "0 0 8px 8px", minHeight: 0 }}>
+            {imageError ? (
+              <div style={{
+                display: "flex", flexDirection: "column", alignItems: "center",
+                justifyContent: "center", height: "100%", gap: 4 * scale,
+                color: "var(--text-tertiary)",
+              }}>
+                <ImageIcon size={24 * scale} strokeWidth={1.5} />
+                <span style={{ fontSize: 9 * scale }}>Error al cargar imagen</span>
+              </div>
+            ) : (
+              <img
+                src={node.url}
+                alt={node.label || "Imagen"}
+                loading="lazy"
+                onError={() => setImageError(true)}
+                style={{
+                  width: "100%", height: "100%",
+                  objectFit: "contain",
+                  borderRadius: "0 0 8px 8px",
+                  pointerEvents: "none",
+                  userSelect: "none",
+                }}
+                draggable={false}
+              />
+            )}
+          </div>
+        ) : isEditing && node.node_type === "text" ? (
           <textarea
             ref={textareaRef}
             autoFocus
@@ -280,27 +387,32 @@ export function CanvasNodeComponent({
         />
       ))}
 
-      {/* Connection anchor points */}
-      {isSelected && (
-        <>
-          {(["top", "right", "bottom", "left"] as const).map((side) => {
-            const pos: Record<string, React.CSSProperties> = {
-              top: { top: -5, left: "50%", transform: "translateX(-50%)" },
-              bottom: { bottom: -5, left: "50%", transform: "translateX(-50%)" },
-              left: { left: -5, top: "50%", transform: "translateY(-50%)" },
-              right: { right: -5, top: "50%", transform: "translateY(-50%)" },
-            }
-            return (
-              <div key={side} style={{
-                position: "absolute", ...pos[side],
-                width: 10, height: 10, borderRadius: "50%",
-                backgroundColor: "#7a9b76", border: "2px solid white",
-                cursor: "crosshair", zIndex: 103,
-              }} onMouseDown={(e) => { e.stopPropagation(); onConnectionStart(node.id, side) }} />
-            )
-          })}
-        </>
-      )}
+      {/* Connection anchor points — visible on hover (subtle) and selected (full) */}
+      {(["top", "right", "bottom", "left"] as const).map((side) => {
+        const pos: Record<string, React.CSSProperties> = {
+          top: { top: -4, left: "50%", transform: "translateX(-50%)" },
+          bottom: { bottom: -4, left: "50%", transform: "translateX(-50%)" },
+          left: { left: -4, top: "50%", transform: "translateY(-50%)" },
+          right: { right: -4, top: "50%", transform: "translateY(-50%)" },
+        }
+        const size = isSelected ? 10 : 8
+        return (
+          <div
+            key={side}
+            className={`${isSelected ? "" : "opacity-0 group-hover/node:opacity-60"}`}
+            style={{
+              position: "absolute", ...pos[side],
+              width: size, height: size, borderRadius: "50%",
+              backgroundColor: "#7a9b76", border: "2px solid white",
+              cursor: "crosshair", zIndex: 103,
+              transition: "opacity 150ms, transform 150ms",
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.transform = `${pos[side]?.transform ?? ""} scale(1.3)` }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = pos[side]?.transform as string ?? "" }}
+            onMouseDown={(e) => { e.stopPropagation(); onConnectionStart(node.id, side) }}
+          />
+        )
+      })}
     </div>
   )
 }

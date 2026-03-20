@@ -340,13 +340,14 @@ export async function addUrlNodeToCanvas(
   url: string,
   pos: { x: number; y: number }
 ): Promise<CanvasNode> {
+  const normalizedUrl = /^https?:\/\//i.test(url) ? url : `https://${url}`
   const client = createClient()
   const { data, error } = await client
     .from('canvas_nodes')
     .insert({
       canvas_id: canvasId,
       node_type: 'url',
-      url,
+      url: normalizedUrl,
       pos_x: pos.x,
       pos_y: pos.y,
       width: 240,
@@ -385,6 +386,61 @@ export async function addGroupNodeToCanvas(
   if (error) throw new NotesError('Error adding group to canvas', error.message)
   if (!data) throw new NotesError('Error adding group to canvas: no data returned')
   return data as CanvasNode
+}
+
+export async function addImageNodeToCanvas(
+  canvasId: string,
+  imageUrl: string,
+  pos: { x: number; y: number },
+  dimensions?: { width: number; height: number }
+): Promise<CanvasNode> {
+  const client = createClient()
+  const { data, error } = await client
+    .from('canvas_nodes')
+    .insert({
+      canvas_id: canvasId,
+      node_type: 'image',
+      url: imageUrl,
+      pos_x: pos.x,
+      pos_y: pos.y,
+      width: dimensions?.width ?? 300,
+      height: dimensions?.height ?? 200,
+    })
+    .select()
+    .single()
+
+  if (error) throw new NotesError('Error adding image node to canvas', error.message)
+  if (!data) throw new NotesError('Error adding image node to canvas: no data returned')
+  return data as CanvasNode
+}
+
+/**
+ * Upload an image to Supabase Storage for use in canvas image nodes.
+ * Bucket `note-images` must exist in Supabase dashboard with public access.
+ */
+export async function uploadCanvasImage(
+  userId: string,
+  canvasId: string,
+  file: File
+): Promise<string> {
+  const client = createClient()
+  const timestamp = Date.now()
+  const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+  const path = `${userId}/${canvasId}/${timestamp}-${sanitizedName}`
+
+  const { error: uploadError } = await client.storage
+    .from('note-images')
+    .upload(path, file)
+
+  if (uploadError) {
+    throw new NotesError('Error al subir imagen', uploadError.message)
+  }
+
+  const { data: urlData } = client.storage
+    .from('note-images')
+    .getPublicUrl(path)
+
+  return urlData.publicUrl
 }
 
 export async function updateNodePosition(

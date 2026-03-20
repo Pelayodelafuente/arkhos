@@ -6,7 +6,7 @@
 // ─── Color & Type Enums ─────────────
 
 export type NoteColor = 'default' | 'sage' | 'terracotta' | 'stone' | 'blue' | 'gold'
-export type NodeType = 'note' | 'text' | 'url' | 'group'
+export type NodeType = 'note' | 'text' | 'url' | 'group' | 'image'
 export type EdgeColor = 'default' | 'sage' | 'terracotta' | 'stone' | 'blue'
 export type EdgeSide = 'top' | 'right' | 'bottom' | 'left'
 

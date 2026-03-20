@@ -2,17 +2,21 @@
 
 import { useRef, useState, useCallback, useEffect, useMemo } from "react"
 import { useNotesStore } from "@/stores/notes-store"
+import { useUIStore } from "@/stores/ui-store"
 import { CanvasNodeComponent } from "./CanvasNode"
 import { CanvasEdgeComponent } from "./CanvasEdge"
 import { CanvasToolbar } from "./CanvasToolbar"
 import { CanvasMinimap } from "./CanvasMinimap"
 import { CanvasContextMenu } from "./CanvasContextMenu"
+import { uploadCanvasImage } from "@/lib/supabase/notes"
 import type { CanvasNode, CanvasViewport, SnapGuide } from "@/types/notes"
 
 const VIEWPORT_STORAGE_PREFIX = "arkhos:canvas:"
 const SNAP_THRESHOLD = 8
 const MIN_NODE_W = 150
 const MIN_NODE_H = 80
+const CANVAS_BOUNDS_W = 6000
+const CANVAS_BOUNDS_H = 4000
 
 function isNodeVisible(
   node: CanvasNode,
@@ -63,7 +67,9 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
   const removeEdge = useNotesStore((s) => s.removeEdge)
   const addEdge = useNotesStore((s) => s.addEdge)
   const addTextNode = useNotesStore((s) => s.addTextNode)
+  const addUrlNode = useNotesStore((s) => s.addUrlNode)
   const addGroupNode = useNotesStore((s) => s.addGroupNode)
+  const addImageNode = useNotesStore((s) => s.addImageNode)
   const fetchCanvas = useNotesStore((s) => s.fetchCanvas)
   const syncNotesToCanvas = useNotesStore((s) => s.syncNotesToCanvas)
   const snapEnabled = useNotesStore((s) => s.snapEnabled)
@@ -111,6 +117,9 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
   const hasAutoFitted = useRef(false)
   const [isMultiDrag, setIsMultiDrag] = useState(false)
   const lastDragPos = useRef({ x: 0, y: 0 })
+  const [isDraggingFile, setIsDraggingFile] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const pendingImagePosRef = useRef<{ x: number; y: number } | null>(null)
 
   const nodeMap = useMemo(() => new Map(nodes.map((n) => [n.id, n])), [nodes])
   const visibleNodes = useMemo(
@@ -568,6 +577,8 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
 
   // ─── DOUBLE CLICK ───────────────────
   const handleDoubleClick = useCallback((e: React.MouseEvent) => {
+    // If the click is on a node, let the node handle its own double-click
+    if ((e.target as HTMLElement).closest('[data-node-id]')) return
     const rect = containerRef.current?.getBoundingClientRect()
     if (!rect) return
     const worldX = (e.clientX - rect.left - viewport.offsetX) / viewport.scale
@@ -602,6 +613,12 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
   const handleContextNewGroup = useCallback((pos: { x: number; y: number }) => {
     addGroupNode("Nuevo grupo", pos, { width: 400, height: 300 })
   }, [addGroupNode])
+
+  const handleContextNewUrl = useCallback((pos: { x: number; y: number }) => {
+    const url = prompt("Introduce la URL:")
+    if (!url) return
+    addUrlNode(url, pos)
+  }, [addUrlNode])
 
   const handleContextDelete = useCallback((nodeId: string) => {
     removeNode(nodeId)
@@ -663,6 +680,91 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
     const worldY = (rect.height / 2 - viewport.offsetY) / viewport.scale
     onNewNote({ x: worldX, y: worldY })
   }, [viewport, onNewNote])
+
+  const handleAddTextNode = useCallback(() => {
+    const rect = containerRef.current?.getBoundingClientRect()
+    if (!rect) return
+    const worldX = (rect.width / 2 - viewport.offsetX) / viewport.scale
+    const worldY = (rect.height / 2 - viewport.offsetY) / viewport.scale
+    addTextNode("", { x: worldX, y: worldY })
+  }, [viewport, addTextNode])
+
+  const handleAddGroupNode = useCallback(() => {
+    const rect = containerRef.current?.getBoundingClientRect()
+    if (!rect) return
+    const worldX = (rect.width / 2 - viewport.offsetX) / viewport.scale
+    const worldY = (rect.height / 2 - viewport.offsetY) / viewport.scale
+    addGroupNode("Nuevo grupo", { x: worldX, y: worldY }, { width: 400, height: 300 })
+  }, [viewport, addGroupNode])
+
+  const handleAddUrlNode = useCallback(() => {
+    const url = prompt("Introduce la URL:")
+    if (!url) return
+    const rect = containerRef.current?.getBoundingClientRect()
+    if (!rect) return
+    const worldX = (rect.width / 2 - viewport.offsetX) / viewport.scale
+    const worldY = (rect.height / 2 - viewport.offsetY) / viewport.scale
+    addUrlNode(url, { x: worldX, y: worldY })
+  }, [viewport, addUrlNode])
+
+  // ─── IMAGE UPLOAD ─────────────────────
+  const handleImageFileSelected = useCallback(async (file: File, pos: { x: number; y: number }) => {
+    if (!canvas) return
+    try {
+      const imageUrl = await uploadCanvasImage(userId, canvas.id, file)
+      await addImageNode(imageUrl, pos)
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Error al subir imagen'
+      useUIStore.getState().addToast(msg, 'error')
+    }
+  }, [canvas, userId, addImageNode])
+
+  const handleAddImageNode = useCallback((pos?: { x: number; y: number }) => {
+    const rect = containerRef.current?.getBoundingClientRect()
+    if (!rect) return
+    const worldX = pos?.x ?? (rect.width / 2 - viewport.offsetX) / viewport.scale
+    const worldY = pos?.y ?? (rect.height / 2 - viewport.offsetY) / viewport.scale
+    pendingImagePosRef.current = { x: worldX, y: worldY }
+    fileInputRef.current?.click()
+  }, [viewport])
+
+  const handleFileInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !pendingImagePosRef.current) return
+    handleImageFileSelected(file, pendingImagePosRef.current)
+    pendingImagePosRef.current = null
+    // Reset file input so the same file can be selected again
+    e.target.value = ""
+  }, [handleImageFileSelected])
+
+  // ─── DRAG & DROP FILES ──────────────
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    if (!e.dataTransfer.types.includes("Files")) return
+    e.preventDefault()
+    e.dataTransfer.dropEffect = "copy"
+    setIsDraggingFile(true)
+  }, [])
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    // Only hide indicator when leaving the container
+    if (e.currentTarget.contains(e.relatedTarget as Node)) return
+    setIsDraggingFile(false)
+  }, [])
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDraggingFile(false)
+
+    const file = e.dataTransfer.files[0]
+    if (!file || !file.type.startsWith("image/")) return
+
+    const rect = containerRef.current?.getBoundingClientRect()
+    if (!rect) return
+    const worldX = (e.clientX - rect.left - viewport.offsetX) / viewport.scale
+    const worldY = (e.clientY - rect.top - viewport.offsetY) / viewport.scale
+
+    handleImageFileSelected(file, { x: worldX, y: worldY })
+  }, [viewport, handleImageFileSelected])
 
   // ─── KEYBOARD ───────────────────────
   useEffect(() => {
@@ -741,7 +843,35 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
       onTouchEnd={handleTouchEnd}
       onDoubleClick={handleDoubleClick}
       onContextMenu={handleContextMenu}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
     >
+      {/* Hidden file input for image upload */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFileInputChange}
+      />
+
+      {/* Drag & drop file overlay */}
+      {isDraggingFile && (
+        <div
+          className="absolute inset-0 z-40 flex items-center justify-center pointer-events-none"
+          style={{
+            border: "2px dashed var(--accent-terracotta)",
+            borderRadius: 12,
+            backgroundColor: "rgba(196,112,74,0.06)",
+          }}
+        >
+          <div className="rounded-xl bg-card/90 backdrop-blur-sm border border-border px-6 py-4 text-center">
+            <p className="text-sm text-text-secondary font-medium">Soltar imagen aqui</p>
+          </div>
+        </div>
+      )}
+
       {/* Grid background */}
       <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 0 }}>
         <defs>
@@ -758,6 +888,34 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
         </defs>
         <rect width="100%" height="100%" fill="var(--bg-cream)" />
         <rect width="100%" height="100%" fill="url(#grid)" />
+        {/* Soft canvas bounds indicator */}
+        {(() => {
+          const bx = viewport.offsetX
+          const by = viewport.offsetY
+          const bw = CANVAS_BOUNDS_W * viewport.scale
+          const bh = CANVAS_BOUNDS_H * viewport.scale
+          return (
+            <>
+              {/* Darkened area outside bounds — top */}
+              <rect x={0} y={0} width="100%" height={Math.max(0, by)} fill="rgba(0,0,0,0.02)" />
+              {/* Darkened area outside bounds — bottom */}
+              <rect x={0} y={by + bh} width="100%" height={`calc(100% - ${by + bh}px)`} fill="rgba(0,0,0,0.02)" />
+              {/* Darkened area outside bounds — left */}
+              <rect x={0} y={by} width={Math.max(0, bx)} height={bh} fill="rgba(0,0,0,0.02)" />
+              {/* Darkened area outside bounds — right */}
+              <rect x={bx + bw} y={by} width={`calc(100% - ${bx + bw}px)`} height={bh} fill="rgba(0,0,0,0.02)" />
+              {/* Dashed border */}
+              <rect
+                x={bx} y={by} width={bw} height={bh}
+                fill="none"
+                stroke="rgba(0,0,0,0.06)"
+                strokeWidth={1}
+                strokeDasharray="8 4"
+                rx={4}
+              />
+            </>
+          )
+        })()}
       </svg>
 
       {/* Snap guides */}
@@ -812,14 +970,34 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
         </g>
         {/* Connecting line (Bezier preview) */}
         {connectingLine && (
-          <path
-            d={`M ${connectingLine.fromX} ${connectingLine.fromY} C ${connectingLine.fromX + 60} ${connectingLine.fromY} ${connectingLine.toX - 60} ${connectingLine.toY} ${connectingLine.toX} ${connectingLine.toY}`}
-            stroke="#7a9b76"
-            strokeWidth={2}
-            fill="none"
-            strokeDasharray="6 3"
-            opacity={0.7}
-          />
+          <>
+            {/* Glow layer */}
+            <path
+              d={`M ${connectingLine.fromX} ${connectingLine.fromY} C ${connectingLine.fromX + 60} ${connectingLine.fromY} ${connectingLine.toX - 60} ${connectingLine.toY} ${connectingLine.toX} ${connectingLine.toY}`}
+              stroke="#7a9b76"
+              strokeWidth={6}
+              fill="none"
+              opacity={0.15}
+              strokeLinecap="round"
+            />
+            {/* Main line */}
+            <path
+              d={`M ${connectingLine.fromX} ${connectingLine.fromY} C ${connectingLine.fromX + 60} ${connectingLine.fromY} ${connectingLine.toX - 60} ${connectingLine.toY} ${connectingLine.toX} ${connectingLine.toY}`}
+              stroke="#7a9b76"
+              strokeWidth={2}
+              fill="none"
+              strokeDasharray="6 3"
+              opacity={0.85}
+            />
+            {/* Endpoint circle */}
+            <circle
+              cx={connectingLine.toX}
+              cy={connectingLine.toY}
+              r={4}
+              fill="#7a9b76"
+              opacity={0.85}
+            />
+          </>
         )}
       </svg>
 
@@ -883,6 +1061,10 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
       {/* Toolbar */}
       <CanvasToolbar
         onNewNote={handleNewNote}
+        onAddTextNode={handleAddTextNode}
+        onAddUrlNode={handleAddUrlNode}
+        onAddImageNode={() => handleAddImageNode()}
+        onAddGroupNode={handleAddGroupNode}
         onFitAll={fitAllNodes}
         snapEnabled={snapEnabled}
         onToggleSnap={toggleSnap}
@@ -912,6 +1094,8 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
           onClose={() => setContextMenu(null)}
           onNewNote={onNewNote}
           onNewTextNode={handleContextNewText}
+          onNewUrlNode={handleContextNewUrl}
+          onNewImageNode={(pos) => handleAddImageNode(pos)}
           onNewGroup={handleContextNewGroup}
           onDeleteNode={handleContextDelete}
           onToggleLock={handleContextToggleLock}

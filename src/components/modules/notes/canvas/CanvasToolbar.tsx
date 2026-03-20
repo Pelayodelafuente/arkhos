@@ -1,10 +1,14 @@
 "use client"
 
-import { Minus, Plus, Maximize2, Grid3X3, StickyNote, Undo2, Redo2, Copy } from "lucide-react"
+import { Minus, Plus, Maximize2, Grid3X3, StickyNote, Undo2, Redo2, Copy, Type, SquareDashed, Link, Image as ImageIcon } from "lucide-react"
 import { useNotesStore } from "@/stores/notes-store"
 
 interface Props {
   onNewNote: () => void
+  onAddTextNode: () => void
+  onAddUrlNode: () => void
+  onAddImageNode?: () => void
+  onAddGroupNode: () => void
   onFitAll: () => void
   snapEnabled: boolean
   onToggleSnap: () => void
@@ -17,7 +21,7 @@ interface Props {
 }
 
 export function CanvasToolbar({
-  onNewNote, onFitAll, snapEnabled, onToggleSnap,
+  onNewNote, onAddTextNode, onAddUrlNode, onAddImageNode, onAddGroupNode, onFitAll, snapEnabled, onToggleSnap,
   onUndo, onRedo, onDuplicate, canUndo, canRedo, hasSelection,
 }: Props) {
   const viewport = useNotesStore((s) => s.viewport)
@@ -100,6 +104,26 @@ export function CanvasToolbar({
       {/* New note */}
       <button onClick={onNewNote} className={btnBase} title="Nueva nota">
         <StickyNote size={14} strokeWidth={1.75} />
+      </button>
+
+      {/* Text node */}
+      <button onClick={onAddTextNode} className={btnBase} title="Nodo de texto">
+        <Type size={14} strokeWidth={1.75} />
+      </button>
+
+      {/* URL node */}
+      <button onClick={onAddUrlNode} className={btnBase} title="Nodo URL">
+        <Link size={14} strokeWidth={1.75} />
+      </button>
+
+      {/* Image node */}
+      <button onClick={onAddImageNode} className={btnBase} title="Nodo de imagen">
+        <ImageIcon size={14} strokeWidth={1.75} />
+      </button>
+
+      {/* Group node */}
+      <button onClick={onAddGroupNode} className={btnBase} title="Nodo de grupo">
+        <SquareDashed size={14} strokeWidth={1.75} />
       </button>
     </div>
   )
