@@ -2,7 +2,6 @@ import { createClient } from "@/lib/supabase/server";
 import { FolderKanban, TrendingUp, Wallet, CreditCard } from "lucide-react";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
-import CommandCenter from "@/components/dashboard/CommandCenterWrapper";
 
 const moduleCards = [
   {
@@ -65,9 +64,17 @@ export default async function DashboardPage() {
 
   return (
     <div>
-      {/* Command Center 3D Hero */}
+      {/* Greeting */}
       <div className="mb-8">
-        <CommandCenter userName={firstName || greeting} />
+        <h1 className="animate-fade-in-up font-heading text-3xl text-foreground">
+          {greeting}{firstName ? `, ${firstName}` : ""}
+        </h1>
+        <p
+          className="animate-fade-in-up mt-1 text-sm text-text-tertiary"
+          style={{ animationDelay: "100ms" }}
+        >
+          Aquí tienes el resumen de tu centro de mando.
+        </p>
       </div>
 
       {/* Module cards */}
