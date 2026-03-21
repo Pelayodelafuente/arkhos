@@ -4,6 +4,7 @@
 // Multi-select, sync, resize, inline editing
 // ══════════════════════════════════════
 
+import { useMemo } from 'react'
 import { create } from 'zustand'
 import type {
   Note,
@@ -1156,21 +1157,24 @@ export function useFilteredNotes(): Note[] {
 /**
  * Canvas search: returns matching node IDs for the current search query.
  */
-export function useCanvasSearchResults() {
-  return useNotesStore(state => {
-    const query = state.canvasSearchQuery.toLowerCase().trim()
-    if (!query) return { matchingIds: null, query: '' }
+export function useCanvasSearchResults(): { matchingIds: Set<string> | null; query: string } {
+  const query = useNotesStore(state => state.canvasSearchQuery)
+  const canvasNodes = useNotesStore(state => state.canvasNodes)
+
+  return useMemo(() => {
+    const q = query.toLowerCase().trim()
+    if (!q) return { matchingIds: null, query: '' }
     const matchingIds = new Set<string>()
-    for (const node of state.canvasNodes) {
+    for (const node of canvasNodes) {
       const title = node.note?.title || node.label || ''
       const content = node.note?.content || node.content || ''
       const url = node.url || ''
-      if (title.toLowerCase().includes(query) || content.toLowerCase().includes(query) || url.toLowerCase().includes(query)) {
+      if (title.toLowerCase().includes(q) || content.toLowerCase().includes(q) || url.toLowerCase().includes(q)) {
         matchingIds.add(node.id)
       }
     }
-    return { matchingIds, query }
-  })
+    return { matchingIds, query: q }
+  }, [query, canvasNodes])
 }
 
 /**

@@ -207,7 +207,11 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
     if (!el) return
     const ro = new ResizeObserver((entries) => {
       const { width, height } = entries[0].contentRect
-      setContainerSize({ w: width, h: height })
+      setContainerSize(prev =>
+        prev.w === Math.round(width) && prev.h === Math.round(height)
+          ? prev
+          : { w: Math.round(width), h: Math.round(height) }
+      )
     })
     ro.observe(el)
     return () => ro.disconnect()
