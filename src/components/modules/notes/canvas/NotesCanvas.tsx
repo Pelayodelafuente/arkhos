@@ -256,6 +256,8 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
   }, [nodes.length, containerSize.w])
 
   // Wheel: always zoom, native event with passive:false
+  const viewportRef = useRef(viewport)
+  viewportRef.current = viewport
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
@@ -267,16 +269,17 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
       const rect = el.getBoundingClientRect()
       const mouseX = e.clientX - rect.left
       const mouseY = e.clientY - rect.top
+      const vp = viewportRef.current
 
       if (e.shiftKey) {
-        setViewport({ offsetX: viewport.offsetX - e.deltaY })
+        setViewport({ ...vp, offsetX: vp.offsetX - e.deltaY })
         return
       }
 
       const isTrackpadPinch = e.ctrlKey && Math.abs(e.deltaY) < 10
       const zoomSensitivity = isTrackpadPinch ? 0.01 : 0.001
       const delta = -e.deltaY * zoomSensitivity
-      const { scale, offsetX, offsetY } = viewport
+      const { scale, offsetX, offsetY } = vp
       const newScale = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, scale + delta * scale))
       const worldX = (mouseX - offsetX) / scale
       const worldY = (mouseY - offsetY) / scale
@@ -286,7 +289,8 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
     }
     el.addEventListener("wheel", handler, { passive: false })
     return () => el.removeEventListener("wheel", handler)
-  }, [viewport, setViewport])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setViewport])
 
   const calculateSnapGuides = useCallback((
     movingId: string, x: number, y: number, w: number, h: number
