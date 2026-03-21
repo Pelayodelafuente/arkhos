@@ -51,3 +51,7 @@ Thumbs.db
 
 # SDD
 .atl/
+
+# Visual Auditor
+playwright/.auth/
+reports/
