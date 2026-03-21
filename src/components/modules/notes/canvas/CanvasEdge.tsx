@@ -1,16 +1,20 @@
 "use client"
 
-import type { CanvasEdge as CanvasEdgeType, CanvasNode } from "@/types/notes"
+import { useState, useCallback } from "react"
+import type { CanvasEdge as CanvasEdgeType, CanvasNode, EdgeSide } from "@/types/notes"
 
+// ─── Edge Colors ─────────────────────────
 const EDGE_COLORS: Record<string, string> = {
   default: '#B0A48F',
   sage: '#7a9b76',
   terracotta: '#C4704A',
   stone: '#8A7A6A',
   blue: '#6B8CC4',
+  gold: '#C4AA4A',
 }
 
-interface Props {
+// ─── Props ───────────────────────────────
+interface CanvasEdgeProps {
   edge: CanvasEdgeType
   nodes: Map<string, CanvasNode>
   scale: number
@@ -19,9 +23,19 @@ interface Props {
   isSelected: boolean
   onSelect: (id: string) => void
   onDelete: (id: string) => void
+  onEditLabel: (id: string) => void
+  onContextMenu: (id: string, e: React.MouseEvent) => void
 }
 
-function getAnchorPoint(node: CanvasNode, side: string, scale: number, offsetX: number, offsetY: number) {
+// ─── Geometry Helpers ────────────────────
+
+function getAnchorPoint(
+  node: CanvasNode,
+  side: EdgeSide,
+  scale: number,
+  offsetX: number,
+  offsetY: number
+): { x: number; y: number } {
   const x = node.pos_x * scale + offsetX
   const y = node.pos_y * scale + offsetY
   const w = node.width * scale
@@ -36,7 +50,12 @@ function getAnchorPoint(node: CanvasNode, side: string, scale: number, offsetX: 
   }
 }
 
-function getBezierPath(from: { x: number; y: number }, to: { x: number; y: number }, fromSide: string, toSide: string) {
+function getBezierPath(
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+  fromSide: EdgeSide,
+  toSide: EdgeSide
+): { path: string; cp1: { x: number; y: number }; cp2: { x: number; y: number } } {
   const dist = Math.max(Math.abs(to.x - from.x), Math.abs(to.y - from.y)) * 0.4
   const minDist = 40
   const cp = Math.max(dist, minDist)
@@ -56,24 +75,114 @@ function getBezierPath(from: { x: number; y: number }, to: { x: number; y: numbe
     case 'top': cp2y -= cp; break
   }
 
-  return `M ${from.x} ${from.y} C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${to.x} ${to.y}`
+  return {
+    path: `M ${from.x} ${from.y} C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${to.x} ${to.y}`,
+    cp1: { x: cp1x, y: cp1y },
+    cp2: { x: cp2x, y: cp2y },
+  }
 }
 
-export function CanvasEdgeComponent({ edge, nodes, scale, offsetX, offsetY, isSelected, onSelect, onDelete }: Props) {
+/** Cubic Bezier midpoint at t=0.5: B(0.5) = 0.125*P0 + 0.375*C1 + 0.375*C2 + 0.125*P3 */
+function bezierMidpoint(
+  from: { x: number; y: number },
+  cp1: { x: number; y: number },
+  cp2: { x: number; y: number },
+  to: { x: number; y: number }
+): { x: number; y: number } {
+  return {
+    x: 0.125 * from.x + 0.375 * cp1.x + 0.375 * cp2.x + 0.125 * to.x,
+    y: 0.125 * from.y + 0.375 * cp1.y + 0.375 * cp2.y + 0.125 * to.y,
+  }
+}
+
+/** Get tangent angle at t=1 for arrowhead direction */
+function bezierTangentAtEnd(
+  cp2: { x: number; y: number },
+  to: { x: number; y: number }
+): number {
+  return Math.atan2(to.y - cp2.y, to.x - cp2.x)
+}
+
+/** Build arrowhead triangle path at destination */
+function arrowHeadPath(
+  to: { x: number; y: number },
+  angle: number,
+  size: number
+): string {
+  const ax = to.x - size * Math.cos(angle - Math.PI / 7)
+  const ay = to.y - size * Math.sin(angle - Math.PI / 7)
+  const bx = to.x - size * Math.cos(angle + Math.PI / 7)
+  const by = to.y - size * Math.sin(angle + Math.PI / 7)
+  return `M ${to.x} ${to.y} L ${ax} ${ay} L ${bx} ${by} Z`
+}
+
+// ─── Component ───────────────────────────
+
+export function CanvasEdgeComponent({
+  edge,
+  nodes,
+  scale,
+  offsetX,
+  offsetY,
+  isSelected,
+  onSelect,
+  onDelete,
+  onEditLabel,
+  onContextMenu,
+}: CanvasEdgeProps) {
+  const [isHovered, setIsHovered] = useState(false)
+
   const fromNode = nodes.get(edge.from_node_id)
   const toNode = nodes.get(edge.to_node_id)
   if (!fromNode || !toNode) return null
 
-  const from = getAnchorPoint(fromNode, edge.from_side, scale, offsetX, offsetY)
-  const to = getAnchorPoint(toNode, edge.to_side, scale, offsetX, offsetY)
-  const path = getBezierPath(from, to, edge.from_side, edge.to_side)
+  const fromSide: EdgeSide = edge.from_side ?? 'right'
+  const toSide: EdgeSide = edge.to_side ?? 'left'
+
+  const from = getAnchorPoint(fromNode, fromSide, scale, offsetX, offsetY)
+  const to = getAnchorPoint(toNode, toSide, scale, offsetX, offsetY)
+  const { path, cp1, cp2 } = getBezierPath(from, to, fromSide, toSide)
   const color = EDGE_COLORS[edge.color] ?? EDGE_COLORS.default
 
-  const midX = (from.x + to.x) / 2
-  const midY = (from.y + to.y) / 2
+  const mid = bezierMidpoint(from, cp1, cp2, to)
+  const angle = bezierTangentAtEnd(cp2, to)
+  const arrowSize = 6 * (isSelected ? 1.15 : 1)
+  const arrow = arrowHeadPath(to, angle, arrowSize)
+
+  // Stroke widths
+  const strokeWidth = isSelected ? 3 / scale : isHovered ? 2 / scale : 1.5 / scale
+  const opacity = isSelected ? 1 : isHovered ? 0.8 : 0.6
+
+  // Delete button radius
+  const btnR = 10 / scale
+
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
+    onSelect(edge.id)
+  }, [edge.id, onSelect])
+
+  const handleDoubleClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
+    onEditLabel(edge.id)
+  }, [edge.id, onEditLabel])
+
+  const handleContextMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    onContextMenu(edge.id, e)
+  }, [edge.id, onContextMenu])
+
+  const handleDelete = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
+    onDelete(edge.id)
+  }, [edge.id, onDelete])
 
   return (
-    <g>
+    <g
+      data-edge-id={edge.id}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       {/* Invisible fat path for easier clicking */}
       <path
         d={path}
@@ -81,32 +190,86 @@ export function CanvasEdgeComponent({ edge, nodes, scale, offsetX, offsetY, isSe
         strokeWidth={16}
         fill="none"
         className="cursor-pointer"
-        onClick={(e) => { e.stopPropagation(); onSelect(edge.id) }}
+        onClick={handleClick}
+        onDoubleClick={handleDoubleClick}
+        onContextMenu={handleContextMenu}
       />
+
+      {/* Hover highlight path */}
+      {(isHovered || isSelected) && (
+        <path
+          d={path}
+          stroke={color}
+          strokeWidth={(isSelected ? 6 : 4) / scale}
+          fill="none"
+          strokeLinecap="round"
+          opacity={0.12}
+          style={{ pointerEvents: 'none' }}
+        />
+      )}
+
       {/* Visible path */}
       <path
         d={path}
         stroke={color}
-        strokeWidth={isSelected ? 2.5 : 1.5}
+        strokeWidth={strokeWidth}
         fill="none"
         strokeLinecap="round"
-        opacity={isSelected ? 1 : 0.6}
+        opacity={opacity}
         className="transition-all duration-150"
+        style={{ pointerEvents: 'none' }}
       />
-      {/* Arrow head at destination */}
-      <circle cx={to.x} cy={to.y} r={3 * (isSelected ? 1.2 : 1)} fill={color} opacity={isSelected ? 1 : 0.6} />
+
+      {/* Arrowhead at destination */}
+      <path
+        d={arrow}
+        fill={color}
+        opacity={opacity}
+        style={{ pointerEvents: 'none' }}
+      />
+
       {/* Label */}
       {edge.label && (
-        <text x={midX} y={midY - 8} textAnchor="middle" className="text-[10px] fill-text-secondary" style={{ fontSize: 10 }}>
+        <text
+          x={mid.x}
+          y={mid.y - 8 / scale}
+          textAnchor="middle"
+          fill="#3D3630"
+          fontSize={(isSelected ? 13 : 12) / scale}
+          fontFamily="Plus Jakarta Sans, sans-serif"
+          style={{ pointerEvents: 'none' }}
+        >
           {edge.label}
         </text>
       )}
-      {/* Delete button on selected */}
+
+      {/* Delete button when selected */}
       {isSelected && (
-        <g className="cursor-pointer" onClick={(e) => { e.stopPropagation(); onDelete(edge.id) }}>
-          <circle cx={midX} cy={midY} r={10} fill="white" stroke={color} strokeWidth={1.5} />
-          <line x1={midX - 3} y1={midY - 3} x2={midX + 3} y2={midY + 3} stroke="#e74c3c" strokeWidth={1.5} />
-          <line x1={midX + 3} y1={midY - 3} x2={midX - 3} y2={midY + 3} stroke="#e74c3c" strokeWidth={1.5} />
+        <g className="cursor-pointer" onClick={handleDelete}>
+          <circle
+            cx={mid.x}
+            cy={mid.y}
+            r={btnR}
+            fill="white"
+            stroke={color}
+            strokeWidth={1.5 / scale}
+          />
+          <line
+            x1={mid.x - 3 / scale}
+            y1={mid.y - 3 / scale}
+            x2={mid.x + 3 / scale}
+            y2={mid.y + 3 / scale}
+            stroke="#e74c3c"
+            strokeWidth={1.5 / scale}
+          />
+          <line
+            x1={mid.x + 3 / scale}
+            y1={mid.y - 3 / scale}
+            x2={mid.x - 3 / scale}
+            y2={mid.y + 3 / scale}
+            stroke="#e74c3c"
+            strokeWidth={1.5 / scale}
+          />
         </g>
       )}
     </g>

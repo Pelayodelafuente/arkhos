@@ -9,6 +9,16 @@ export type NoteColor = 'default' | 'sage' | 'terracotta' | 'stone' | 'blue' | '
 export type NodeType = 'note' | 'text' | 'url' | 'group' | 'image'
 export type EdgeColor = 'default' | 'sage' | 'terracotta' | 'stone' | 'blue'
 export type EdgeSide = 'top' | 'right' | 'bottom' | 'left'
+export type NoteSortMode = 'recent' | 'oldest' | 'az' | 'za' | 'color' | 'tag' | 'manual'
+
+// ─── Canvas Bounds ────────────────────
+
+export const CANVAS_BOUNDS = {
+  minX: 0,
+  minY: 0,
+  maxX: 4000,
+  maxY: 3000,
+} as const
 
 // ─── Notes ──────────────────────────
 

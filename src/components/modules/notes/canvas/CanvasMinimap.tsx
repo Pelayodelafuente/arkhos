@@ -2,7 +2,7 @@
 
 import { useCallback, useRef, useState } from "react"
 import type { CanvasNode, CanvasViewport } from "@/types/notes"
-import { NOTE_COLOR_CONFIG } from "@/types/notes"
+import { NOTE_COLOR_CONFIG, CANVAS_BOUNDS } from "@/types/notes"
 
 interface Props {
   nodes: CanvasNode[]
@@ -14,7 +14,6 @@ interface Props {
 
 const MINIMAP_W = 200
 const MINIMAP_H = 140
-const PADDING = 20
 
 function getColorForNode(color: string): string {
   const cfg = NOTE_COLOR_CONFIG.find((c) => c.value === color)
@@ -31,26 +30,9 @@ export function CanvasMinimap({
   const minimapRef = useRef<HTMLDivElement>(null)
   const [dragging, setDragging] = useState(false)
 
-  // Calculate bounding box of all nodes
-  const bounds = (() => {
-    if (nodes.length === 0) {
-      return { minX: 0, minY: 0, maxX: 1000, maxY: 700 }
-    }
-    let minX = Infinity
-    let minY = Infinity
-    let maxX = -Infinity
-    let maxY = -Infinity
-    for (const node of nodes) {
-      minX = Math.min(minX, node.pos_x)
-      minY = Math.min(minY, node.pos_y)
-      maxX = Math.max(maxX, node.pos_x + node.width)
-      maxY = Math.max(maxY, node.pos_y + node.height)
-    }
-    return { minX: minX - PADDING, minY: minY - PADDING, maxX: maxX + PADDING, maxY: maxY + PADDING }
-  })()
-
-  const worldW = bounds.maxX - bounds.minX
-  const worldH = bounds.maxY - bounds.minY
+  // Use CANVAS_BOUNDS as the fixed world area
+  const worldW = CANVAS_BOUNDS.maxX - CANVAS_BOUNDS.minX
+  const worldH = CANVAS_BOUNDS.maxY - CANVAS_BOUNDS.minY
 
   // Scale to fit minimap
   const scaleX = MINIMAP_W / worldW
@@ -58,8 +40,8 @@ export function CanvasMinimap({
   const mapScale = Math.min(scaleX, scaleY)
 
   const toMinimap = (wx: number, wy: number) => ({
-    x: (wx - bounds.minX) * mapScale,
-    y: (wy - bounds.minY) * mapScale,
+    x: (wx - CANVAS_BOUNDS.minX) * mapScale,
+    y: (wy - CANVAS_BOUNDS.minY) * mapScale,
   })
 
   // Viewport rectangle in world coordinates
@@ -81,15 +63,15 @@ export function CanvasMinimap({
       const my = e.clientY - rect.top
 
       // Convert minimap coords to world coords (center viewport there)
-      const worldX = mx / mapScale + bounds.minX
-      const worldY = my / mapScale + bounds.minY
+      const worldX = mx / mapScale + CANVAS_BOUNDS.minX
+      const worldY = my / mapScale + CANVAS_BOUNDS.minY
 
       onViewportChange({
         offsetX: -(worldX - vpWorldW / 2) * viewport.scale,
         offsetY: -(worldY - vpWorldH / 2) * viewport.scale,
       })
     },
-    [mapScale, bounds.minX, bounds.minY, vpWorldW, vpWorldH, viewport.scale, onViewportChange]
+    [mapScale, vpWorldW, vpWorldH, viewport.scale, onViewportChange]
   )
 
   const onPointerDown = useCallback(
@@ -119,10 +101,16 @@ export function CanvasMinimap({
     <div
       ref={minimapRef}
       className="absolute bottom-4 left-4 z-30 overflow-hidden rounded-xl border border-border bg-card/90 backdrop-blur-sm"
-      style={{ width: MINIMAP_W, height: MINIMAP_H, cursor: dragging ? "grabbing" : "grab" }}
+      style={{
+        width: MINIMAP_W,
+        height: MINIMAP_H,
+        cursor: dragging ? "grabbing" : "grab",
+      }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
+      role="img"
+      aria-label="Minimapa del canvas"
     >
       {/* Node rectangles */}
       {nodes.map((node) => {

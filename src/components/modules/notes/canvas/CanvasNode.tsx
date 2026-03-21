@@ -1,8 +1,7 @@
 "use client"
 
-import { useCallback, useMemo, useRef } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { marked } from "marked"
-import { useState } from "react"
 import { FileText, Type, Link, ExternalLink, Layers, Lock, Image as ImageIcon } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import * as LucideIcons from "lucide-react"
@@ -21,6 +20,16 @@ const COLOR_MAP = Object.fromEntries(
   NOTE_COLOR_CONFIG.map((c) => [c.value, { bg: c.bg, border: c.border }])
 ) as Record<string, { bg: string; border: string }>
 
+// ─── Group background map (semi-transparent) ──
+const GROUP_BG_MAP: Record<string, string> = {
+  default: "rgba(176, 164, 143, 0.08)",
+  sage: "rgba(122, 155, 118, 0.08)",
+  gold: "rgba(196, 170, 74, 0.08)",
+  terracotta: "rgba(196, 112, 74, 0.08)",
+  stone: "rgba(138, 122, 106, 0.08)",
+  blue: "rgba(107, 140, 196, 0.08)",
+}
+
 // ─── Image URL filename extractor ────────────
 function extractFilenameFromUrl(url: string): string {
   if (!url) return ""
@@ -28,7 +37,6 @@ function extractFilenameFromUrl(url: string): string {
     const pathname = new URL(url).pathname
     const segments = pathname.split("/")
     const last = segments[segments.length - 1] ?? ""
-    // Remove timestamp prefix (e.g. "1234567890-filename.png" → "filename.png")
     return last.replace(/^\d+-/, "").replace(/_/g, " ")
   } catch {
     return ""
@@ -67,12 +75,23 @@ function getHandleStyle(handle: string): React.CSSProperties {
   return { ...base, ...map[handle] }
 }
 
+// ─── Connection handle positions ──────────────
+const CONNECTION_POS: Record<string, React.CSSProperties> = {
+  top: { top: -6, left: "50%", transform: "translateX(-50%)" },
+  bottom: { bottom: -6, left: "50%", transform: "translateX(-50%)" },
+  left: { left: -6, top: "50%", transform: "translateY(-50%)" },
+  right: { right: -6, top: "50%", transform: "translateY(-50%)" },
+}
+
 // ─── Props ────────────────────────────────────
 interface Props {
   node: CanvasNodeType
   viewport: CanvasViewport
   isSelected: boolean
   isEditing: boolean
+  isConnectionTarget?: boolean
+  searchDimmed?: boolean
+  allNodes?: CanvasNodeType[]
   onSelect: (id: string, additive: boolean) => void
   onDragStart: (id: string, e: React.MouseEvent | React.TouchEvent) => void
   onDoubleClick: (node: CanvasNodeType) => void
@@ -84,10 +103,14 @@ interface Props {
 // ─── Component ────────────────────────────────
 export function CanvasNodeComponent({
   node, viewport, isSelected, isEditing,
+  isConnectionTarget = false, searchDimmed = false, allNodes,
   onSelect, onDragStart, onDoubleClick,
   onConnectionStart, onResizeStart, onContentChange,
 }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const [editingLabel, setEditingLabel] = useState(false)
+  const [labelValue, setLabelValue] = useState(node.label || "")
+  const labelInputRef = useRef<HTMLInputElement>(null)
   const { scale, offsetX, offsetY } = viewport
 
   const colors = COLOR_MAP[node.color] ?? COLOR_MAP.default
@@ -96,6 +119,8 @@ export function CanvasNodeComponent({
   const screenW = node.width * scale
   const screenH = node.height * scale
   const isGroup = node.node_type === "group"
+
+  const [imageError, setImageError] = useState(false)
 
   // ─── Icon resolution ────────────────────
   const NodeIcon: LucideIcon = useMemo(() => {
@@ -116,8 +141,6 @@ export function CanvasNodeComponent({
     : node.node_type === "image" ? (node.label || extractFilenameFromUrl(node.url) || "Imagen")
     : ""
 
-  const [imageError, setImageError] = useState(false)
-
   const rawContent = node.node_type === "note"
     ? (node.note?.content ?? "")
     : node.content
@@ -127,12 +150,49 @@ export function CanvasNodeComponent({
     [rawContent],
   )
 
+  // ─── Group: count contained nodes ───────
+  const groupNodeCount = useMemo(() => {
+    if (!isGroup || !allNodes) return 0
+    const gx = node.pos_x
+    const gy = node.pos_y
+    const gw = node.width
+    const gh = node.height
+    return allNodes.filter((n) => {
+      if (n.id === node.id) return false
+      if (n.node_type === "group") return false
+      const cx = n.pos_x + n.width / 2
+      const cy = n.pos_y + n.height / 2
+      return cx >= gx && cx <= gx + gw && cy >= gy && cy <= gy + gh
+    }).length
+  }, [isGroup, allNodes, node.id, node.pos_x, node.pos_y, node.width, node.height])
+
+  // ─── Auto-focus textarea on edit ────────
+  useEffect(() => {
+    if (isEditing && node.node_type === "text" && textareaRef.current) {
+      textareaRef.current.focus()
+    }
+  }, [isEditing, node.node_type])
+
+  // ─── Auto-focus label input on group edit ─
+  useEffect(() => {
+    if (editingLabel && labelInputRef.current) {
+      labelInputRef.current.focus()
+      labelInputRef.current.select()
+    }
+  }, [editingLabel])
+
+  // Sync label value when node changes
+  useEffect(() => {
+    setLabelValue(node.label || "")
+  }, [node.label])
+
   // ─── Handlers ───────────────────────────
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (editingLabel) return
     e.stopPropagation()
     onSelect(node.id, e.shiftKey)
     if (e.button === 0 && !isEditing) onDragStart(node.id, e)
-  }, [node.id, isEditing, onSelect, onDragStart])
+  }, [node.id, isEditing, editingLabel, onSelect, onDragStart])
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     e.stopPropagation()
@@ -142,74 +202,177 @@ export function CanvasNodeComponent({
 
   const handleDblClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
-    onDoubleClick(node)
-  }, [node, onDoubleClick])
+    if (isGroup) {
+      setEditingLabel(true)
+    } else {
+      onDoubleClick(node)
+    }
+  }, [node, isGroup, onDoubleClick])
+
+  const handleLabelSave = useCallback(() => {
+    setEditingLabel(false)
+    const trimmed = labelValue.trim()
+    if (trimmed !== (node.label || "")) {
+      onContentChange(node.id, trimmed)
+    }
+  }, [labelValue, node.id, node.label, onContentChange])
+
+  const handleLabelKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === "Escape") {
+      e.preventDefault()
+      if (e.key === "Escape") {
+        setLabelValue(node.label || "")
+      }
+      handleLabelSave()
+    }
+  }, [node.label, handleLabelSave])
+
+  const handleTextareaBlur = useCallback(() => {
+    // Text node blur: content is already saved via onChange
+  }, [])
+
+  const handleTextareaKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === "Escape") {
+      e.preventDefault()
+      ;(e.target as HTMLTextAreaElement).blur()
+    }
+  }, [])
+
+  // ─── Connection handles (shared) ────────
+  const renderConnectionHandles = () => (
+    (["top", "right", "bottom", "left"] as const).map((side) => {
+      const handleSize = 12
+      return (
+        <div
+          key={side}
+          className={`${isSelected ? "" : "opacity-0 group-hover/node:opacity-60"}`}
+          style={{
+            position: "absolute", ...CONNECTION_POS[side],
+            width: handleSize, height: handleSize, borderRadius: "50%",
+            backgroundColor: "#7a9b76", border: "2px solid white",
+            cursor: "crosshair", zIndex: 103,
+            transition: "opacity 150ms, transform 150ms",
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLElement).style.transform =
+              `${CONNECTION_POS[side]?.transform ?? ""} scale(1.3)`
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLElement).style.transform =
+              CONNECTION_POS[side]?.transform as string ?? ""
+          }}
+          onMouseDown={(e) => { e.stopPropagation(); onConnectionStart(node.id, side) }}
+        />
+      )
+    })
+  )
+
+  // ─── Resize handles (shared) ────────────
+  const renderResizeHandles = (alwaysShow: boolean) => (
+    RESIZE_HANDLES.map((h) => (
+      <div
+        key={h}
+        style={{
+          ...getHandleStyle(h),
+          opacity: 0,
+          transition: "opacity 150ms",
+          ...(isSelected || alwaysShow ? { opacity: node.locked ? 0.3 : 1 } : {}),
+        }}
+        className="group-hover/node:!opacity-100"
+        onMouseDown={(e) => { e.stopPropagation(); onResizeStart(node.id, h, e) }}
+      />
+    ))
+  )
+
+  // ─── Wrapper styles for search dimming & connection target ─
+  const wrapperTransitions = "border-color 150ms ease, box-shadow 150ms ease, opacity 200ms ease, transform 150ms ease"
 
   // ─── Group node ─────────────────────────
   if (isGroup) {
+    const groupBg = GROUP_BG_MAP[node.color] ?? GROUP_BG_MAP.default
     return (
       <div
+        data-node-id={node.id}
         className="group/node"
         style={{
           position: "absolute", left: screenX, top: screenY,
           width: screenW, height: screenH,
-          backgroundColor: `${colors.bg}88`,
-          borderColor: isSelected ? "#C4704A" : colors.border,
-          borderWidth: isSelected ? 2 : 1.5,
+          backgroundColor: groupBg,
+          borderColor: isConnectionTarget ? "#7a9b76" : isSelected ? "#C4704A" : colors.border,
+          borderWidth: isSelected || isConnectionTarget ? 2 : 1.5,
           borderStyle: "dashed", borderRadius: 12,
           zIndex: node.z_index,
-          cursor: "grab",
+          cursor: editingLabel ? "text" : "grab",
+          transition: wrapperTransitions,
+          ...(isConnectionTarget ? {
+            boxShadow: "0 0 0 3px rgba(122, 155, 118, 0.3)",
+            transform: "scale(1.02)",
+          } : {}),
+          ...(searchDimmed ? {
+            opacity: 0.3,
+            pointerEvents: "none" as const,
+          } : {}),
         }}
         onMouseDown={handleMouseDown}
         onTouchStart={handleTouchStart}
         onDoubleClick={handleDblClick}
       >
+        {/* Group header */}
         <div style={{
           padding: `${6 * scale}px ${10 * scale}px`,
           display: "flex", alignItems: "center", gap: 4 * scale,
         }}>
-          <Layers size={13 * scale} strokeWidth={1.75} style={{ color: colors.border }} />
+          <Layers size={13 * scale} strokeWidth={1.75} style={{ color: colors.border, flexShrink: 0 }} />
+
+          {editingLabel ? (
+            <input
+              ref={labelInputRef}
+              value={labelValue}
+              onChange={(e) => setLabelValue(e.target.value)}
+              onBlur={handleLabelSave}
+              onKeyDown={handleLabelKeyDown}
+              onMouseDown={(e) => e.stopPropagation()}
+              style={{
+                fontSize: 11 * scale, fontWeight: 600,
+                color: "var(--text-secondary)",
+                letterSpacing: "0.02em",
+                background: "transparent", border: "none", outline: "none",
+                padding: 0, margin: 0, flex: 1,
+                minWidth: 0,
+              }}
+            />
+          ) : (
+            <span style={{
+              fontSize: 11 * scale, fontWeight: 600,
+              color: "var(--text-secondary)", letterSpacing: "0.02em",
+              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+              flex: 1,
+            }}>
+              {title}
+            </span>
+          )}
+
+          {/* Node count badge */}
           <span style={{
-            fontSize: 11 * scale, fontWeight: 600,
-            color: "var(--text-secondary)", letterSpacing: "0.02em",
+            fontSize: 9 * scale, fontWeight: 500,
+            color: "var(--text-tertiary)",
+            backgroundColor: "rgba(0,0,0,0.06)",
+            padding: `${1 * scale}px ${5 * scale}px`,
+            borderRadius: 4 * scale,
+            whiteSpace: "nowrap",
+            flexShrink: 0,
           }}>
-            {title}
+            {groupNodeCount} {groupNodeCount === 1 ? "nodo" : "nodos"}
           </span>
-          {node.locked && <Lock size={10 * scale} style={{ color: "var(--text-tertiary)", marginLeft: "auto" }} />}
+
+          {node.locked && <Lock size={10 * scale} style={{ color: "var(--text-tertiary)", flexShrink: 0 }} />}
         </div>
 
         {/* Resize handles */}
-        {(isSelected || false) && RESIZE_HANDLES.map((h) => (
-          <div key={h} style={{ ...getHandleStyle(h), opacity: node.locked ? 0.3 : 1 }}
-            onMouseDown={(e) => { e.stopPropagation(); onResizeStart(node.id, h, e) }} />
-        ))}
+        {renderResizeHandles(false)}
 
-        {/* Connection anchors — visible on hover and selected */}
-        {(["top", "right", "bottom", "left"] as const).map((side) => {
-          const pos: Record<string, React.CSSProperties> = {
-            top: { top: -4, left: "50%", transform: "translateX(-50%)" },
-            bottom: { bottom: -4, left: "50%", transform: "translateX(-50%)" },
-            left: { left: -4, top: "50%", transform: "translateY(-50%)" },
-            right: { right: -4, top: "50%", transform: "translateY(-50%)" },
-          }
-          const size = isSelected ? 10 : 8
-          return (
-            <div
-              key={side}
-              className={`${isSelected ? "" : "opacity-0 group-hover/node:opacity-60"}`}
-              style={{
-                position: "absolute", ...pos[side],
-                width: size, height: size, borderRadius: "50%",
-                backgroundColor: "#7a9b76", border: "2px solid white",
-                cursor: "crosshair", zIndex: 103,
-                transition: "opacity 150ms, transform 150ms",
-              }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.transform = `${pos[side]?.transform ?? ""} scale(1.3)` }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = pos[side]?.transform as string ?? "" }}
-              onMouseDown={(e) => { e.stopPropagation(); onConnectionStart(node.id, side) }}
-            />
-          )
-        })}
+        {/* Connection handles */}
+        {renderConnectionHandles()}
       </div>
     )
   }
@@ -217,19 +380,29 @@ export function CanvasNodeComponent({
   // ─── Standard node ──────────────────────
   return (
     <div
+      data-node-id={node.id}
       className="group/node"
       style={{
         position: "absolute", left: screenX, top: screenY,
         width: screenW, height: screenH,
-        backgroundColor: colors.bg,
-        borderColor: isSelected ? "#C4704A" : colors.border,
-        borderWidth: isSelected ? 2 : 1,
+        backgroundColor: node.node_type === "url" ? colors.bg : colors.bg,
+        borderColor: isConnectionTarget ? "#7a9b76" : isSelected ? "#C4704A" : colors.border,
+        borderWidth: isSelected || isConnectionTarget ? 2 : 1,
         borderStyle: "solid", borderRadius: 12,
         zIndex: isSelected ? 100 : node.z_index,
         cursor: isEditing ? "text" : "grab",
-        transition: "border-color 150ms, box-shadow 150ms",
-        boxShadow: isSelected ? "0 4px 20px rgba(26,23,20,0.12)" : "0 1px 4px rgba(26,23,20,0.04)",
+        transition: wrapperTransitions,
+        boxShadow: isConnectionTarget
+          ? "0 0 0 3px rgba(122, 155, 118, 0.3)"
+          : isSelected
+            ? "0 4px 20px rgba(26,23,20,0.12)"
+            : "0 1px 4px rgba(26,23,20,0.04)",
         overflow: "hidden",
+        ...(isConnectionTarget ? { transform: "scale(1.02)" } : {}),
+        ...(searchDimmed ? {
+          opacity: 0.3,
+          pointerEvents: "none" as const,
+        } : {}),
       }}
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
@@ -242,7 +415,27 @@ export function CanvasNodeComponent({
       }}>
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", gap: 4 * scale, marginBottom: 4 * scale }}>
-          <NodeIcon size={14 * scale} strokeWidth={1.75} style={{ color: colors.border, flexShrink: 0 }} />
+          {node.node_type === "url" && node.url ? (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`https://www.google.com/s2/favicons?domain=${extractDomain(node.url)}&sz=32`}
+                alt=""
+                style={{
+                  width: 14 * scale, height: 14 * scale,
+                  borderRadius: 2, flexShrink: 0,
+                }}
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.display = "none"
+                }}
+              />
+              <Link size={14 * scale} strokeWidth={1.75} style={{
+                color: "#7a9b76", flexShrink: 0,
+              }} />
+            </>
+          ) : (
+            <NodeIcon size={14 * scale} strokeWidth={1.75} style={{ color: colors.border, flexShrink: 0 }} />
+          )}
           <span style={{
             fontSize: 12 * scale, fontWeight: 600,
             color: "var(--text-primary)",
@@ -253,15 +446,23 @@ export function CanvasNodeComponent({
           {node.locked && <Lock size={11 * scale} style={{ color: "var(--text-tertiary)", flexShrink: 0 }} />}
         </div>
 
-        {/* Body — editing vs preview vs image vs url */}
+        {/* Body — url / image / text editing / markdown preview */}
         {node.node_type === "url" ? (
-          <div style={{
-            flex: 1, display: "flex", flexDirection: "column",
-            justifyContent: "center", gap: 2 * scale,
-            borderLeft: `${2 * scale}px solid #7a9b76`,
-            paddingLeft: 6 * scale,
-            overflow: "hidden",
-          }}>
+          <div
+            style={{
+              flex: 1, display: "flex", flexDirection: "column",
+              justifyContent: "center", gap: 2 * scale,
+              borderLeft: `${2 * scale}px solid #7a9b76`,
+              paddingLeft: 6 * scale,
+              overflow: "hidden",
+              cursor: "pointer",
+            }}
+            onClick={(e) => {
+              e.stopPropagation()
+              if (node.url) window.open(node.url, "_blank", "noopener,noreferrer")
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
             <span
               className="font-heading"
               style={{
@@ -334,6 +535,8 @@ export function CanvasNodeComponent({
             autoFocus
             value={rawContent}
             onChange={(e) => onContentChange(node.id, e.target.value)}
+            onBlur={handleTextareaBlur}
+            onKeyDown={handleTextareaKeyDown}
             style={{
               flex: 1, width: "100%", resize: "none",
               fontSize: 11 * scale, lineHeight: 1.5,
@@ -343,6 +546,15 @@ export function CanvasNodeComponent({
             }}
             onMouseDown={(e) => e.stopPropagation()}
           />
+        ) : node.node_type === "text" && !rawContent ? (
+          <div style={{
+            flex: 1, display: "flex", alignItems: "center",
+            justifyContent: "center",
+            fontSize: 11 * scale, color: "var(--text-tertiary)",
+            fontStyle: "italic",
+          }}>
+            Escribe aqui...
+          </div>
         ) : rawContent ? (
           <div
             className="canvas-node-prose"
@@ -374,46 +586,10 @@ export function CanvasNodeComponent({
       </div>
 
       {/* Resize handles — visible on hover or selected */}
-      {RESIZE_HANDLES.map((h) => (
-        <div
-          key={h}
-          style={{
-            ...getHandleStyle(h),
-            opacity: 0,
-            transition: "opacity 150ms",
-            ...(isSelected ? { opacity: node.locked ? 0.3 : 1 } : {}),
-          }}
-          className="group-hover/node:!opacity-100"
-          onMouseDown={(e) => { e.stopPropagation(); onResizeStart(node.id, h, e) }}
-        />
-      ))}
+      {renderResizeHandles(false)}
 
-      {/* Connection anchor points — visible on hover (subtle) and selected (full) */}
-      {(["top", "right", "bottom", "left"] as const).map((side) => {
-        const pos: Record<string, React.CSSProperties> = {
-          top: { top: -4, left: "50%", transform: "translateX(-50%)" },
-          bottom: { bottom: -4, left: "50%", transform: "translateX(-50%)" },
-          left: { left: -4, top: "50%", transform: "translateY(-50%)" },
-          right: { right: -4, top: "50%", transform: "translateY(-50%)" },
-        }
-        const size = isSelected ? 10 : 8
-        return (
-          <div
-            key={side}
-            className={`${isSelected ? "" : "opacity-0 group-hover/node:opacity-60"}`}
-            style={{
-              position: "absolute", ...pos[side],
-              width: size, height: size, borderRadius: "50%",
-              backgroundColor: "#7a9b76", border: "2px solid white",
-              cursor: "crosshair", zIndex: 103,
-              transition: "opacity 150ms, transform 150ms",
-            }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.transform = `${pos[side]?.transform ?? ""} scale(1.3)` }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = pos[side]?.transform as string ?? "" }}
-            onMouseDown={(e) => { e.stopPropagation(); onConnectionStart(node.id, side) }}
-          />
-        )
-      })}
+      {/* Connection handles */}
+      {renderConnectionHandles()}
     </div>
   )
 }

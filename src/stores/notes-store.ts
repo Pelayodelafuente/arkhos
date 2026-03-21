@@ -15,7 +15,10 @@ import type {
   RubberBand,
   SnapGuide,
   HistoryEntry,
+  EdgeSide,
+  EdgeColor,
 } from '@/types/notes'
+import { CANVAS_BOUNDS } from '@/types/notes'
 import * as notesApi from '@/lib/supabase/notes'
 import { useUIStore } from './ui-store'
 
@@ -27,7 +30,31 @@ function toast(message: string, variant: 'success' | 'error') {
 
 // ─── Sort modes ──────────────────────
 
-export type NoteSortMode = 'recent' | 'oldest' | 'az' | 'za' | 'manual'
+export type NoteSortMode = 'recent' | 'oldest' | 'az' | 'za' | 'color' | 'tag' | 'manual'
+
+// ─── Canvas helpers ──────────────────
+
+function clampNodePosition(x: number, y: number, width: number, height: number) {
+  return {
+    x: Math.max(CANVAS_BOUNDS.minX, Math.min(x, CANVAS_BOUNDS.maxX - width)),
+    y: Math.max(CANVAS_BOUNDS.minY, Math.min(y, CANVAS_BOUNDS.maxY - height)),
+  }
+}
+
+function getNodesInGroup(groupNode: CanvasNode, allNodes: CanvasNode[]): CanvasNode[] {
+  return allNodes.filter(n => {
+    if (n.id === groupNode.id) return false
+    if (n.node_type === 'group') return false
+    const centerX = n.pos_x + (n.width || 200) / 2
+    const centerY = n.pos_y + (n.height || 100) / 2
+    return (
+      centerX >= groupNode.pos_x &&
+      centerX <= groupNode.pos_x + (groupNode.width || 400) &&
+      centerY >= groupNode.pos_y &&
+      centerY <= groupNode.pos_y + (groupNode.height || 300)
+    )
+  })
+}
 
 // ─── Store interface ──────────────────
 
@@ -72,6 +99,9 @@ interface NotesState {
 
   // Clipboard
   clipboard: { nodes: CanvasNode[]; edges: CanvasEdge[] } | null
+
+  // Canvas search
+  canvasSearchQuery: string
 }
 
 interface NotesActions {
@@ -118,7 +148,7 @@ interface NotesActions {
   persistSelectedNodePositions: () => Promise<void>
 
   // Canvas edge operations
-  addEdge: (fromNodeId: string, toNodeId: string, label?: string) => Promise<CanvasEdge | null>
+  addEdge: (fromNodeId: string, toNodeId: string, fromSide?: EdgeSide, toSide?: EdgeSide, color?: EdgeColor, label?: string) => Promise<CanvasEdge | null>
   editEdge: (id: string, data: Partial<Pick<CanvasEdge, 'label' | 'color'>>) => Promise<void>
   removeEdge: (id: string) => Promise<void>
 
@@ -158,6 +188,15 @@ interface NotesActions {
 
   // Duplicate
   duplicateSelectedNodes: () => Promise<void>
+
+  // Canvas search
+  setCanvasSearch: (query: string) => void
+
+  // Group selected nodes
+  groupSelectedNodes: () => Promise<void>
+
+  // Auto-layout
+  autoLayoutNodes: () => void
 }
 
 type NotesStore = NotesState & NotesActions
@@ -187,6 +226,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
   history: [],
   historyIndex: -1,
   clipboard: null,
+  canvasSearchQuery: '',
 
   // ── Fetch ───────────────────────────
 
@@ -216,7 +256,26 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
   fetchCanvas: async (canvasId) => {
     try {
       const { canvas, nodes, edges } = await notesApi.getCanvasWithNodes(canvasId)
-      set({ canvas, canvasNodes: nodes, canvasEdges: edges })
+
+      // Auto-fix nodes outside bounds
+      const fixedNodes = nodes.map(n => {
+        const clamped = clampNodePosition(n.pos_x, n.pos_y, n.width || 200, n.height || 100)
+        if (clamped.x !== n.pos_x || clamped.y !== n.pos_y) {
+          return { ...n, pos_x: clamped.x, pos_y: clamped.y }
+        }
+        return n
+      })
+
+      // Persist corrected positions for nodes that were out of bounds
+      const corrections = fixedNodes
+        .filter((n, i) => n.pos_x !== nodes[i].pos_x || n.pos_y !== nodes[i].pos_y)
+        .map(n => ({ id: n.id, pos_x: n.pos_x, pos_y: n.pos_y }))
+
+      if (corrections.length > 0) {
+        notesApi.batchUpdateNodePositions(corrections).catch(console.error)
+      }
+
+      set({ canvas, canvasNodes: fixedNodes, canvasEdges: edges })
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Error al cargar el canvas'
       toast(msg, 'error')
@@ -443,9 +502,11 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
   },
 
   updateNodePos: (id, pos) => {
+    const node = get().canvasNodes.find(n => n.id === id)
+    const clamped = clampNodePosition(pos.x, pos.y, node?.width || 200, node?.height || 100)
     set((s) => ({
       canvasNodes: s.canvasNodes.map((n) =>
-        n.id === id ? { ...n, pos_x: pos.x, pos_y: pos.y } : n
+        n.id === id ? { ...n, pos_x: clamped.x, pos_y: clamped.y } : n
       ),
     }))
   },
@@ -584,42 +645,72 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
     const { selectedNodeIds, canvasNodes } = get()
     if (selectedNodeIds.size === 0) return
 
-    // Collect group IDs that are selected
-    const selectedGroupIds = new Set(
-      canvasNodes
-        .filter((n) => selectedNodeIds.has(n.id) && n.node_type === 'group')
-        .map((n) => n.id)
+    // Collect group nodes that are selected
+    const selectedGroups = canvasNodes.filter(
+      (n) => selectedNodeIds.has(n.id) && n.node_type === 'group'
     )
 
-    // Also move children of selected groups (nodes whose group_id is a selected group)
-    const idsToMove = new Set(selectedNodeIds)
-    if (selectedGroupIds.size > 0) {
-      for (const node of canvasNodes) {
-        if (node.group_id && selectedGroupIds.has(node.group_id) && !idsToMove.has(node.id)) {
-          idsToMove.add(node.id)
+    // Find nodes contained within selected groups (spatial containment)
+    const containedNodeIds = new Set<string>()
+    for (const group of selectedGroups) {
+      const contained = getNodesInGroup(group, canvasNodes)
+      for (const cn of contained) {
+        if (!selectedNodeIds.has(cn.id)) {
+          containedNodeIds.add(cn.id)
         }
       }
     }
 
+    // Also include children via group_id (legacy)
+    const selectedGroupIds = new Set(selectedGroups.map((n) => n.id))
+    if (selectedGroupIds.size > 0) {
+      for (const node of canvasNodes) {
+        if (node.group_id && selectedGroupIds.has(node.group_id) && !selectedNodeIds.has(node.id)) {
+          containedNodeIds.add(node.id)
+        }
+      }
+    }
+
+    // Merge: all IDs that need to move
+    const idsToMove = new Set(selectedNodeIds)
+    for (const cid of containedNodeIds) {
+      idsToMove.add(cid)
+    }
+
     set({
-      canvasNodes: canvasNodes.map((n) =>
-        idsToMove.has(n.id) && !n.locked
-          ? { ...n, pos_x: n.pos_x + deltaX, pos_y: n.pos_y + deltaY }
-          : n
-      ),
+      canvasNodes: canvasNodes.map((n) => {
+        if (!idsToMove.has(n.id) || n.locked) return n
+        const clamped = clampNodePosition(
+          n.pos_x + deltaX,
+          n.pos_y + deltaY,
+          n.width || 200,
+          n.height || 100
+        )
+        return { ...n, pos_x: clamped.x, pos_y: clamped.y }
+      }),
     })
   },
 
   persistSelectedNodePositions: async () => {
     const { selectedNodeIds, canvasNodes } = get()
 
-    // Include children of selected groups
-    const selectedGroupIds = new Set(
-      canvasNodes
-        .filter((n) => selectedNodeIds.has(n.id) && n.node_type === 'group')
-        .map((n) => n.id)
+    // Include children of selected groups (both spatial and group_id)
+    const selectedGroups = canvasNodes.filter(
+      (n) => selectedNodeIds.has(n.id) && n.node_type === 'group'
     )
+    const selectedGroupIds = new Set(selectedGroups.map((n) => n.id))
+
     const idsToPersist = new Set(selectedNodeIds)
+
+    // Spatial containment
+    for (const group of selectedGroups) {
+      const contained = getNodesInGroup(group, canvasNodes)
+      for (const cn of contained) {
+        idsToPersist.add(cn.id)
+      }
+    }
+
+    // Legacy group_id
     if (selectedGroupIds.size > 0) {
       for (const node of canvasNodes) {
         if (node.group_id && selectedGroupIds.has(node.group_id) && !idsToPersist.has(node.id)) {
@@ -642,7 +733,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
 
   // ── Canvas Edge Operations ─────────
 
-  addEdge: async (fromNodeId, toNodeId, label) => {
+  addEdge: async (fromNodeId, toNodeId, fromSide: EdgeSide = 'right', toSide: EdgeSide = 'left', color: EdgeColor = 'default', label) => {
     const { canvas } = get()
     if (!canvas) return null
     get().pushHistory()
@@ -656,7 +747,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
     if (existing) return existing
 
     try {
-      const edge = await notesApi.createEdge(canvas.id, fromNodeId, toNodeId, label)
+      const edge = await notesApi.createEdge(canvas.id, fromNodeId, toNodeId, label, fromSide, toSide, color)
       set((s) => ({ canvasEdges: [...s.canvasEdges, edge] }))
       return edge
     } catch (e) {
@@ -702,15 +793,19 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
   // ── Selection ──────────────────────
 
   selectNode: (id, additive = false) => {
-    set((s) => {
-      const next = additive ? new Set(s.selectedNodeIds) : new Set<string>()
-      if (additive && next.has(id)) {
-        next.delete(id)
-      } else {
-        next.add(id)
-      }
-      return { selectedNodeIds: next, selectedEdgeId: null }
-    })
+    const { selectedNodeIds } = get()
+    if (additive) {
+      // Toggle: add or remove from selection
+      const next = new Set(selectedNodeIds)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      set({ selectedNodeIds: next, selectedEdgeId: null })
+    } else {
+      // If already selected (multi-select group), keep selection for group drag
+      if (selectedNodeIds.has(id) && selectedNodeIds.size > 1) return
+      // Otherwise, select ONLY this node
+      set({ selectedNodeIds: new Set([id]), selectedEdgeId: null, editingNodeId: null })
+    }
   },
 
   deselectAll: () => set({
@@ -917,6 +1012,84 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
     get().copySelectedNodes()
     await get().pasteNodes()
   },
+
+  // ── Canvas search ────────────────
+
+  setCanvasSearch: (query) => set({ canvasSearchQuery: query }),
+
+  // ── Group selected nodes ─────────
+
+  groupSelectedNodes: async () => {
+    const { selectedNodeIds, canvasNodes, canvas } = get()
+    if (!canvas || selectedNodeIds.size < 2) return
+
+    const selectedNodes = canvasNodes.filter(n => selectedNodeIds.has(n.id))
+    if (selectedNodes.length < 2) return
+
+    // Calculate bounding box with padding
+    const padding = 20
+    const headerPadding = 40
+    const minX = Math.min(...selectedNodes.map(n => n.pos_x)) - padding
+    const minY = Math.min(...selectedNodes.map(n => n.pos_y)) - headerPadding
+    const maxX = Math.max(...selectedNodes.map(n => n.pos_x + (n.width || 200))) + padding
+    const maxY = Math.max(...selectedNodes.map(n => n.pos_y + (n.height || 100))) + padding
+
+    // Use the existing addGroupNode action
+    get().pushHistory()
+    await get().addGroupNode(
+      `Grupo (${selectedNodes.length} nodos)`,
+      { x: minX, y: minY },
+      { width: maxX - minX, height: maxY - minY }
+    )
+  },
+
+  // ── Auto-layout ──────────────────
+
+  autoLayoutNodes: () => {
+    const { canvasNodes, canvas } = get()
+    if (!canvas || canvasNodes.length === 0) return
+
+    get().pushHistory()
+
+    // Separate groups from other nodes
+    const nonGroups = canvasNodes.filter(n => n.node_type !== 'group')
+
+    // Sort by created_at
+    const sorted = [...nonGroups].sort((a, b) =>
+      new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    )
+
+    // Grid layout: 4 columns
+    const cols = 4
+    const nodeW = 280
+    const nodeH = 160
+    const gapX = 40
+    const gapY = 40
+    const startX = 60
+    const startY = 60
+
+    const updatedNodes = canvasNodes.map(node => {
+      if (node.node_type === 'group') return node // handle groups separately
+      const idx = sorted.indexOf(node)
+      if (idx === -1) return node
+      const col = idx % cols
+      const row = Math.floor(idx / cols)
+      return {
+        ...node,
+        pos_x: startX + col * (nodeW + gapX),
+        pos_y: startY + row * (nodeH + gapY),
+      }
+    })
+
+    set({ canvasNodes: updatedNodes })
+
+    // Persist all positions
+    const updates = updatedNodes
+      .filter(n => n.node_type !== 'group')
+      .map(n => ({ id: n.id, pos_x: n.pos_x, pos_y: n.pos_y }))
+
+    notesApi.batchUpdateNodePositions(updates).catch(console.error)
+  },
 }))
 
 // ══════════════════════════════════════
@@ -960,6 +1133,13 @@ export function useFilteredNotes(): Note[] {
         return a.title.localeCompare(b.title, 'es')
       case 'za':
         return b.title.localeCompare(a.title, 'es')
+      case 'color':
+        return (a.color || 'default').localeCompare(b.color || 'default')
+      case 'tag': {
+        const aTag = a.tags.length > 0 ? a.tags[0] : '\uffff'
+        const bTag = b.tags.length > 0 ? b.tags[0] : '\uffff'
+        return aTag.localeCompare(bTag, 'es')
+      }
       case 'manual':
         // sort_order ASC, fallback to updated_at DESC for notes without sort_order
         if (a.sort_order !== b.sort_order) return a.sort_order - b.sort_order
@@ -971,6 +1151,26 @@ export function useFilteredNotes(): Note[] {
   })
 
   return result
+}
+
+/**
+ * Canvas search: returns matching node IDs for the current search query.
+ */
+export function useCanvasSearchResults() {
+  return useNotesStore(state => {
+    const query = state.canvasSearchQuery.toLowerCase().trim()
+    if (!query) return { matchingIds: null, query: '' }
+    const matchingIds = new Set<string>()
+    for (const node of state.canvasNodes) {
+      const title = node.note?.title || node.label || ''
+      const content = node.note?.content || node.content || ''
+      const url = node.url || ''
+      if (title.toLowerCase().includes(query) || content.toLowerCase().includes(query) || url.toLowerCase().includes(query)) {
+        matchingIds.add(node.id)
+      }
+    }
+    return { matchingIds, query }
+  })
 }
 
 /**

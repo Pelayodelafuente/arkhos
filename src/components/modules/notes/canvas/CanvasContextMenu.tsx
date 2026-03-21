@@ -1,7 +1,30 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import { StickyNote, Type, Square, Pencil, Lock, Unlock, Trash2, Copy, CopyPlus, ClipboardPaste, Link, Image as ImageIcon } from "lucide-react"
+import {
+  StickyNote,
+  Type,
+  Square,
+  Pencil,
+  Lock,
+  Unlock,
+  Trash2,
+  Copy,
+  CopyPlus,
+  ClipboardPaste,
+  Link,
+  Image as ImageIcon,
+  Tag,
+} from "lucide-react"
+import type { EdgeColor } from "@/types/notes"
+
+const EDGE_COLORS: { value: EdgeColor; color: string; label: string }[] = [
+  { value: "default", color: "#B0A48F", label: "Neutro" },
+  { value: "sage", color: "#7a9b76", label: "Sage" },
+  { value: "terracotta", color: "#C4704A", label: "Terracotta" },
+  { value: "stone", color: "#8A7A6A", label: "Stone" },
+  { value: "blue", color: "#6B8CC4", label: "Blue" },
+]
 
 interface Props {
   x: number
@@ -9,6 +32,7 @@ interface Props {
   worldX: number
   worldY: number
   targetNodeId: string | null
+  targetEdgeId: string | null
   onClose: () => void
   onNewNote: (pos: { x: number; y: number }) => void
   onNewTextNode: (pos: { x: number; y: number }) => void
@@ -24,6 +48,9 @@ interface Props {
   onDuplicate: () => void
   hasSelection?: boolean
   hasClipboard: boolean
+  onEdgeColorChange: (edgeId: string, color: EdgeColor) => void
+  onEdgeEditLabel: (edgeId: string) => void
+  onEdgeDelete: (edgeId: string) => void
 }
 
 interface MenuItem {
@@ -39,6 +66,7 @@ export function CanvasContextMenu({
   worldX,
   worldY,
   targetNodeId,
+  targetEdgeId,
   onClose,
   onNewNote,
   onNewTextNode,
@@ -53,6 +81,9 @@ export function CanvasContextMenu({
   onPaste,
   onDuplicate,
   hasClipboard,
+  onEdgeColorChange,
+  onEdgeEditLabel,
+  onEdgeDelete,
 }: Props) {
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -76,31 +107,106 @@ export function CanvasContextMenu({
 
   const worldPos = { x: worldX, y: worldY }
 
+  // ─── Edge context menu ────────────────
+  if (targetEdgeId) {
+    return (
+      <div
+        ref={menuRef}
+        className="fixed z-50 w-48 rounded-lg border border-border bg-card py-1 shadow-md"
+        style={{ left: x, top: y }}
+      >
+        {/* Edit label */}
+        <button
+          onClick={() => {
+            onEdgeEditLabel(targetEdgeId)
+            onClose()
+          }}
+          className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-text-secondary hover:bg-sand hover:text-foreground transition-colors"
+        >
+          <Tag size={14} strokeWidth={1.75} />
+          Editar etiqueta
+        </button>
+
+        {/* Color submenu */}
+        <div className="px-3 py-1.5">
+          <span className="text-[10px] font-medium uppercase tracking-wider text-text-tertiary">
+            Color
+          </span>
+          <div className="mt-1.5 flex items-center gap-1.5">
+            {EDGE_COLORS.map((ec) => (
+              <button
+                key={ec.value}
+                onClick={() => {
+                  onEdgeColorChange(targetEdgeId, ec.value)
+                  onClose()
+                }}
+                className="h-[18px] w-[18px] rounded-full border border-border hover:scale-125 transition-transform"
+                style={{ backgroundColor: ec.color }}
+                title={ec.label}
+                aria-label={`Color ${ec.label}`}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="my-1 border-t border-border" />
+
+        {/* Delete */}
+        <button
+          onClick={() => {
+            onEdgeDelete(targetEdgeId)
+            onClose()
+          }}
+          className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 transition-colors"
+        >
+          <Trash2 size={14} strokeWidth={1.75} />
+          Eliminar conexión
+        </button>
+      </div>
+    )
+  }
+
+  // ─── Canvas context menu ──────────────
   const canvasItems: MenuItem[] = [
     {
       label: "Nueva nota",
       icon: <StickyNote size={14} strokeWidth={1.75} />,
-      onClick: () => { onNewNote(worldPos); onClose() },
+      onClick: () => {
+        onNewNote(worldPos)
+        onClose()
+      },
     },
     {
-      label: "Texto rapido",
+      label: "Texto rápido",
       icon: <Type size={14} strokeWidth={1.75} />,
-      onClick: () => { onNewTextNode(worldPos); onClose() },
+      onClick: () => {
+        onNewTextNode(worldPos)
+        onClose()
+      },
     },
     {
-      label: "URL rapido",
+      label: "URL rápido",
       icon: <Link size={14} strokeWidth={1.75} />,
-      onClick: () => { onNewUrlNode(worldPos); onClose() },
+      onClick: () => {
+        onNewUrlNode(worldPos)
+        onClose()
+      },
     },
     {
       label: "Imagen",
       icon: <ImageIcon size={14} strokeWidth={1.75} />,
-      onClick: () => { onNewImageNode(worldPos); onClose() },
+      onClick: () => {
+        onNewImageNode(worldPos)
+        onClose()
+      },
     },
     {
       label: "Crear grupo",
       icon: <Square size={14} strokeWidth={1.75} />,
-      onClick: () => { onNewGroup(worldPos); onClose() },
+      onClick: () => {
+        onNewGroup(worldPos)
+        onClose()
+      },
     },
   ]
 
@@ -109,38 +215,59 @@ export function CanvasContextMenu({
     canvasItems.push({
       label: "Pegar",
       icon: <ClipboardPaste size={14} strokeWidth={1.75} />,
-      onClick: () => { onPaste(); onClose() },
+      onClick: () => {
+        onPaste()
+        onClose()
+      },
     })
   }
 
+  // ─── Node context menu ────────────────
   const nodeItems: MenuItem[] = targetNodeId
     ? [
         {
           label: "Editar",
           icon: <Pencil size={14} strokeWidth={1.75} />,
-          onClick: () => { onEditNote(targetNodeId); onClose() },
+          onClick: () => {
+            onEditNote(targetNodeId)
+            onClose()
+          },
         },
         {
           label: "Copiar",
           icon: <Copy size={14} strokeWidth={1.75} />,
-          onClick: () => { onCopy(); onClose() },
+          onClick: () => {
+            onCopy()
+            onClose()
+          },
         },
         {
           label: "Duplicar",
           icon: <CopyPlus size={14} strokeWidth={1.75} />,
-          onClick: () => { onDuplicate(); onClose() },
+          onClick: () => {
+            onDuplicate()
+            onClose()
+          },
         },
         {
           label: isNodeLocked ? "Desbloquear" : "Bloquear",
-          icon: isNodeLocked
-            ? <Unlock size={14} strokeWidth={1.75} />
-            : <Lock size={14} strokeWidth={1.75} />,
-          onClick: () => { onToggleLock(targetNodeId); onClose() },
+          icon: isNodeLocked ? (
+            <Unlock size={14} strokeWidth={1.75} />
+          ) : (
+            <Lock size={14} strokeWidth={1.75} />
+          ),
+          onClick: () => {
+            onToggleLock(targetNodeId)
+            onClose()
+          },
         },
         {
           label: "Eliminar",
           icon: <Trash2 size={14} strokeWidth={1.75} />,
-          onClick: () => { onDeleteNode(targetNodeId); onClose() },
+          onClick: () => {
+            onDeleteNode(targetNodeId)
+            onClose()
+          },
           danger: true,
         },
       ]

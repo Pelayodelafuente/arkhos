@@ -10,6 +10,8 @@ import type {
   NoteCanvas,
   CanvasNode,
   CanvasEdge,
+  EdgeSide,
+  EdgeColor,
 } from '@/types/notes'
 
 // ─── Client factory ───────────────────
@@ -529,7 +531,10 @@ export async function createEdge(
   canvasId: string,
   fromNodeId: string,
   toNodeId: string,
-  label?: string
+  label?: string,
+  fromSide: EdgeSide = 'right',
+  toSide: EdgeSide = 'left',
+  color: EdgeColor = 'default'
 ): Promise<CanvasEdge> {
   const client = createClient()
   const { data, error } = await client
@@ -539,6 +544,9 @@ export async function createEdge(
       from_node_id: fromNodeId,
       to_node_id: toNodeId,
       label: label ?? '',
+      from_side: fromSide,
+      to_side: toSide,
+      color,
     })
     .select()
     .single()
@@ -550,7 +558,7 @@ export async function createEdge(
 
 export async function updateEdge(
   edgeId: string,
-  data: Partial<Pick<CanvasEdge, 'label' | 'color'>>
+  data: Partial<Pick<CanvasEdge, 'label' | 'color' | 'from_side' | 'to_side'>>
 ): Promise<CanvasEdge> {
   const client = createClient()
   const { data: row, error } = await client
