@@ -62,11 +62,11 @@ export function KPICards() {
 
   const displayTotal = notAmortizeYearly
     ? summary.totalMonthly * 12 + summary.totalAnnual
-    : summary.totalMonthlyEstimate
+    : summary.totalMonthly
 
   const totalLabel = notAmortizeYearly ? 'GASTO ANUAL' : 'GASTO MENSUAL'
 
-  const nextBillingDays = nextBilling && isCurrentMonth ? getDaysUntilBilling(nextBilling.billing_day) : null
+  const nextBillingDays = nextBilling && isCurrentMonth ? getDaysUntilBilling(nextBilling) : null
 
   const cardMotionProps = (index: number) =>
     shouldReduce

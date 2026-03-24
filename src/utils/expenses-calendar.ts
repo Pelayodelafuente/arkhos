@@ -62,9 +62,11 @@ export function getDayNumber(date: string): number {
 }
 
 /**
- * Filtra suscripciones activas para un billing_day concreto.
- * Edge case: si billing_day > días del mes actual, la suscripción
- * aparece el último día del mes.
+ * Filtra suscripciones activas para un día concreto del calendario.
+ * - Mensuales: aparecen en su billing_day cada mes.
+ * - Anuales: solo aparecen en el mes de su aniversario (basado en started_at).
+ *   Si no tienen started_at, se usa billing_day como fallback (comportamiento anterior).
+ * Edge case: si el día de cobro excede los días del mes, se asigna al último día.
  */
 export function getSubscriptionsForDay(
   subscriptions: SubscriptionWithCategory[],
@@ -77,10 +79,23 @@ export function getSubscriptionsForDay(
   return subscriptions.filter((sub) => {
     if (!sub.is_active) return false
 
-    // Si billing_day excede los días del mes, se asigna al último día
-    const effectiveDay =
-      sub.billing_day > daysInMonth ? daysInMonth : sub.billing_day
+    if (sub.cycle === 'annual') {
+      if (!sub.started_at) {
+        // Fallback sin started_at: mismo comportamiento que mensual
+        const effectiveDay = sub.billing_day > daysInMonth ? daysInMonth : sub.billing_day
+        return effectiveDay === day
+      }
+      // Solo mostrar en el mes de renovación anual
+      const startDate = new Date(sub.started_at)
+      const renewalMonth = startDate.getMonth() + 1 // 1-based
+      if (renewalMonth !== month) return false
+      const renewalDay = startDate.getDate()
+      const effectiveDay = renewalDay > daysInMonth ? daysInMonth : renewalDay
+      return effectiveDay === day
+    }
 
+    // Mensual: aparece cada mes en su billing_day
+    const effectiveDay = sub.billing_day > daysInMonth ? daysInMonth : sub.billing_day
     return effectiveDay === day
   })
 }

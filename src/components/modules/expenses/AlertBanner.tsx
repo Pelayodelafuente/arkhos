@@ -66,7 +66,7 @@ export function AlertBanner() {
     const active = subscriptions.filter((s) => s.status === 'active')
 
     // Billing today
-    const todaySubs = active.filter((s) => isBillingToday(s.billing_day))
+    const todaySubs = active.filter((s) => isBillingToday(s))
     if (todaySubs.length > 0) {
       const total = todaySubs.reduce((acc, s) => acc + s.amount, 0)
       const names = todaySubs.map((s) => s.name).join(' y ')
@@ -80,7 +80,7 @@ export function AlertBanner() {
     }
 
     // Billing tomorrow
-    const tomorrowSubs = active.filter((s) => isBillingTomorrow(s.billing_day))
+    const tomorrowSubs = active.filter((s) => isBillingTomorrow(s))
     if (tomorrowSubs.length > 0) {
       const total = tomorrowSubs.reduce((acc, s) => acc + s.amount, 0)
       const names = tomorrowSubs.map((s) => s.name).join(' y ')
@@ -96,7 +96,7 @@ export function AlertBanner() {
     // Annual renewals within 30 days
     const annuals = active.filter((s) => s.cycle === 'annual')
     for (const sub of annuals) {
-      const days = getDaysUntilBilling(sub.billing_day)
+      const days = getDaysUntilBilling(sub)
       if (days > 0 && days <= 30) {
         result.push({
           id: `renewal-${sub.id}`,

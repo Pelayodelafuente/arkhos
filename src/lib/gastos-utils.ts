@@ -16,32 +16,42 @@ export function formatCurrency(amount: number): string {
   return currencyFormatter.format(amount)
 }
 
-// ─── Date helpers ───────────────────
+// ─── Billing info type ───────────────
 
 /**
- * Get the next billing date for a subscription.
- * If the billing day has passed this month, returns next month.
+ * Minimal interface to calculate billing dates.
+ * Satisfied by Subscription and SubscriptionWithCategory.
  */
-export function getNextBillingDate(billingDay: number, referenceDate?: Date): Date {
+export interface BillingRef {
+  billing_day: number
+  cycle: 'monthly' | 'annual'
+  started_at: string | null
+}
+
+// ─── Internal helpers ────────────────
+
+/**
+ * Next billing date for a monthly subscription.
+ * If billing_day has passed this month, returns next month.
+ */
+function getMonthlyNextBillingDate(billingDay: number, referenceDate?: Date): Date {
   const today = referenceDate ?? new Date()
   const year = today.getFullYear()
   const month = today.getMonth()
 
-  // Clamp billing day to days in this month
   const daysInThisMonth = new Date(year, month + 1, 0).getDate()
   const effectiveDay = Math.min(billingDay, daysInThisMonth)
 
   const thisMonth = new Date(year, month, effectiveDay)
 
   if (thisMonth.toDateString() === today.toDateString()) {
-    return thisMonth // billing is today
+    return thisMonth
   }
 
   if (thisMonth > today) {
     return thisMonth
   }
 
-  // Next month
   const nextMonth = month + 1
   const nextYear = nextMonth > 11 ? year + 1 : year
   const actualMonth = nextMonth > 11 ? 0 : nextMonth
@@ -52,39 +62,85 @@ export function getNextBillingDate(billingDay: number, referenceDate?: Date): Da
 }
 
 /**
- * Get days until next billing.
+ * Next renewal date for an annual subscription, based on started_at.
+ * Iterates yearly anniversaries from started_at until finding a future date.
  */
-export function getDaysUntilBilling(billingDay: number, referenceDate?: Date): number {
+function getNextAnnualRenewalDate(sub: BillingRef, referenceDate?: Date): Date {
   const today = referenceDate ?? new Date()
   today.setHours(0, 0, 0, 0)
-  const next = getNextBillingDate(billingDay, referenceDate)
+
+  if (!sub.started_at) {
+    // No started_at: fall back to monthly logic and log warning
+    console.warn(
+      `[gastos-utils] Suscripción anual sin started_at (billing_day=${sub.billing_day}) — usando fallback mensual`
+    )
+    return getMonthlyNextBillingDate(sub.billing_day, referenceDate)
+  }
+
+  const startDate = new Date(sub.started_at)
+  let nextRenewal = new Date(startDate)
+  nextRenewal.setHours(0, 0, 0, 0)
+
+  while (nextRenewal <= today) {
+    nextRenewal = new Date(nextRenewal)
+    nextRenewal.setFullYear(nextRenewal.getFullYear() + 1)
+  }
+
+  return nextRenewal
+}
+
+// ─── Date helpers ───────────────────
+
+/**
+ * Get the next billing date for a subscription.
+ * - monthly: next day X of month (existing logic)
+ * - annual: next anniversary of started_at
+ */
+export function getNextBillingDate(sub: BillingRef, referenceDate?: Date): Date {
+  if (sub.cycle === 'annual') {
+    return getNextAnnualRenewalDate(sub, referenceDate)
+  }
+  return getMonthlyNextBillingDate(sub.billing_day, referenceDate)
+}
+
+/**
+ * Get days until next billing for a subscription.
+ */
+export function getDaysUntilBilling(sub: BillingRef, referenceDate?: Date): number {
+  const today = referenceDate ?? new Date()
+  today.setHours(0, 0, 0, 0)
+  const next = getNextBillingDate(sub, referenceDate)
   next.setHours(0, 0, 0, 0)
   return Math.round((next.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
 }
 
 /**
- * Format relative billing text.
+ * Format relative billing text for a subscription.
  */
-export function formatNextBilling(billingDay: number): string {
-  const days = getDaysUntilBilling(billingDay)
+export function formatNextBilling(sub: BillingRef): string {
+  const next = getNextBillingDate(sub)
+  const days = getDaysUntilBilling(sub)
   if (days === 0) return 'Hoy'
   if (days === 1) return 'Mañana'
-  if (days <= 7) return `En ${days} días`
+  if (sub.cycle === 'annual') {
+    // Show exact date for annual subscriptions
+    return next.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
+  }
   return `En ${days} días`
 }
 
 /**
- * Check if billing is today.
+ * Check if billing is today for a subscription.
  */
-export function isBillingToday(billingDay: number): boolean {
-  return getDaysUntilBilling(billingDay) === 0
+export function isBillingToday(sub: BillingRef): boolean {
+  return getDaysUntilBilling(sub) === 0
 }
 
 /**
- * Check if billing is tomorrow.
+ * Check if billing is tomorrow for a subscription.
  */
-export function isBillingTomorrow(billingDay: number): boolean {
-  return getDaysUntilBilling(billingDay) === 1
+export function isBillingTomorrow(sub: BillingRef): boolean {
+  return getDaysUntilBilling(sub) === 1
 }
 
 // ─── Grouping helpers ───────────────
@@ -123,7 +179,6 @@ export function groupByCategory(subscriptions: SubscriptionWithCategory[]): Cate
     }
   }
 
-  // Sort: categories with most spending first, uncategorized last
   return Array.from(groups.values()).sort((a, b) => {
     if (!a.category) return 1
     if (!b.category) return -1
@@ -170,7 +225,7 @@ export function getMostExpensiveCategory(
 }
 
 /**
- * Get the next subscription to be billed (closest billing day).
+ * Get the next subscription to be billed (closest real billing date).
  */
 export function getNextBillingSubscription(
   subscriptions: SubscriptionWithCategory[]
@@ -182,7 +237,7 @@ export function getNextBillingSubscription(
   let minDays = Infinity
 
   for (const sub of active) {
-    const days = getDaysUntilBilling(sub.billing_day)
+    const days = getDaysUntilBilling(sub)
     if (days < minDays) {
       minDays = days
       closest = sub
@@ -205,7 +260,7 @@ export function getNextAnnualRenewal(
   let minDays = Infinity
 
   for (const sub of annuals) {
-    const days = getDaysUntilBilling(sub.billing_day)
+    const days = getDaysUntilBilling(sub)
     if (days < minDays) {
       minDays = days
       closest = sub
@@ -244,7 +299,6 @@ export function exportToCSV(subscriptions: SubscriptionWithCategory[], filename:
     s.started_at ?? '',
   ])
 
-  // Summary rows
   const monthlyTotal = subscriptions
     .filter((s) => s.status === 'active' && s.cycle === 'monthly')
     .reduce((acc, s) => acc + s.amount, 0)

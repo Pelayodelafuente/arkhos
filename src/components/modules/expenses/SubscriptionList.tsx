@@ -268,7 +268,7 @@ function SubscriptionRow({
   const isCancelled = subscription.status === 'cancelled'
   const isTrial = subscription.status === 'trial'
   const isInactive = isPaused || isCancelled
-  const billingToday = isBillingToday(subscription.billing_day)
+  const billingToday = isBillingToday(subscription)
 
   const displayAmount = notAmortizeYearly && subscription.cycle === 'monthly'
     ? subscription.amount * 12
@@ -329,7 +329,7 @@ function SubscriptionRow({
             {billingToday ? (
               <span className="text-accent font-medium">Cobro hoy</span>
             ) : (
-              `Próximo cobro: ${formatNextBilling(subscription.billing_day)}`
+              `Próximo cobro: ${formatNextBilling(subscription)}`
             )}
           </span>
         )}
