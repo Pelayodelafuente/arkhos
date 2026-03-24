@@ -375,6 +375,9 @@ function SubscriptionRow({
 // ─── Empty State ────────────────────
 
 function EmptyState({ onNew, searchQuery }: { onNew: () => void; searchQuery: string }) {
+  const cycleFilter = useExpensesStore((s) => s.cycleFilter)
+  const allSubscriptions = useExpensesStore((s) => s.subscriptions)
+
   if (searchQuery) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -383,6 +386,35 @@ function EmptyState({ onNew, searchQuery }: { onNew: () => void; searchQuery: st
         </p>
         <Button variant="ghost" size="sm" onClick={() => useExpensesStore.getState().setSearchQuery('')}>
           Limpiar búsqueda
+        </Button>
+      </div>
+    )
+  }
+
+  // Contextual message when cycle filter is active
+  if (cycleFilter !== 'all') {
+    const otherCycle = cycleFilter === 'monthly' ? 'annual' : 'monthly'
+    const otherCount = allSubscriptions.filter((s) => s.cycle === otherCycle).length
+    const filterLabel = cycleFilter === 'monthly' ? 'mensuales' : 'anuales'
+    const otherLabel = otherCycle === 'monthly' ? 'mensuales' : 'anuales'
+
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <CreditCard size={48} strokeWidth={0.75} className="text-text-tertiary/30 mb-3" />
+        <p className="text-sm text-text-secondary mb-1">
+          No tienes suscripciones {filterLabel}
+        </p>
+        {otherCount > 0 && (
+          <p className="text-xs text-text-tertiary mb-4">
+            Tienes {otherCount} suscripción{otherCount !== 1 ? 'es' : ''} {otherLabel}
+          </p>
+        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => useExpensesStore.getState().setCycleFilter('all')}
+        >
+          Mostrar todas
         </Button>
       </div>
     )

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback, useRef } from "react"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { Plus, Settings, Search, Sparkles, Download, X } from "lucide-react"
 import { Button } from "@/components/ui"
 import { useExpensesStore } from "@/stores/expenses-store"
@@ -35,6 +35,7 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
   const notAmortizeYearly = useExpensesStore((s) => s.notAmortizeYearly)
   const setNotAmortizeYearly = useExpensesStore((s) => s.setNotAmortizeYearly)
   const subscriptions = useExpensesStore((s) => s.subscriptions)
+  const cycleFilter = useExpensesStore((s) => s.cycleFilter)
 
   const [localSearch, setLocalSearch] = useState("")
   const [modalOpen, setModalOpen] = useState(false)
@@ -231,23 +232,32 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
       {isLoading ? (
         <GastosLoading />
       ) : (
-        <div className="space-y-6">
-          <div className="animate-fade-in-up" style={{ animationDelay: '100ms' }}>
-            <AlertBanner />
-          </div>
-          <div className="animate-fade-in-up" style={{ animationDelay: '100ms' }}>
-            <BudgetBar userId={userId} />
-          </div>
-          <div className="animate-fade-in-up" style={{ animationDelay: '130ms' }}>
-            <KPICards />
-          </div>
-          <div className="animate-fade-in-up" style={{ animationDelay: '200ms' }}>
-            <ExpenseCalendar onNewWithDay={handleNewWithDay} />
-          </div>
-          <div className="animate-fade-in-up" style={{ animationDelay: '300ms' }}>
-            <SubscriptionList onEdit={handleEdit} onNew={handleNew} />
-          </div>
-        </div>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={cycleFilter}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="space-y-6"
+          >
+            <div className="animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+              <AlertBanner />
+            </div>
+            <div className="animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+              <BudgetBar userId={userId} />
+            </div>
+            <div className="animate-fade-in-up" style={{ animationDelay: '130ms' }}>
+              <KPICards />
+            </div>
+            <div className="animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+              <ExpenseCalendar onNewWithDay={handleNewWithDay} />
+            </div>
+            <div className="animate-fade-in-up" style={{ animationDelay: '300ms' }}>
+              <SubscriptionList onEdit={handleEdit} onNew={handleNew} />
+            </div>
+          </motion.div>
+        </AnimatePresence>
       )}
 
       {/* Modals */}

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Check, X } from "lucide-react"
+import { Check, X, Target } from "lucide-react"
 import { useExpensesStore, useExpenseSummary } from "@/stores/expenses-store"
 import { formatCurrency } from "@/lib/gastos-utils"
 
@@ -17,7 +17,7 @@ export function BudgetBar({ userId }: BudgetBarProps) {
   const [budgetInput, setBudgetInput] = useState("")
 
   const budget = settings?.monthly_budget ?? null
-  const spent = summary.totalMonthlyEstimate
+  const spent = summary.totalMonthly
   const percentage = budget && budget > 0 ? Math.min((spent / budget) * 100, 100) : 0
 
   const getBarColor = () => {
@@ -30,6 +30,12 @@ export function BudgetBar({ userId }: BudgetBarProps) {
     if (percentage >= 90) return 'text-red-600'
     if (percentage >= 75) return 'text-amber-600'
     return 'text-[var(--module-gastos)]'
+  }
+
+  const getBorderColor = () => {
+    if (percentage >= 90) return 'border-red-200'
+    if (percentage >= 75) return 'border-amber-200'
+    return 'border-border'
   }
 
   const handleSave = async () => {
@@ -48,18 +54,22 @@ export function BudgetBar({ userId }: BudgetBarProps) {
 
   if (budget === null && !editing) {
     return (
-      <button
-        onClick={handleStartEdit}
-        className="text-xs text-[var(--module-gastos)] hover:text-accent transition-colors cursor-pointer"
-      >
-        Define un presupuesto mensual →
-      </button>
+      <div className="rounded-xl border border-dashed border-border px-4 py-3 flex items-center gap-3">
+        <Target size={16} strokeWidth={1.5} className="text-text-tertiary flex-shrink-0" />
+        <button
+          onClick={handleStartEdit}
+          className="text-sm text-[var(--module-gastos)] hover:text-accent transition-colors cursor-pointer"
+        >
+          Define un presupuesto mensual para controlar tus gastos →
+        </button>
+      </div>
     )
   }
 
   if (editing) {
     return (
-      <div className="flex items-center gap-2">
+      <div className="rounded-xl border border-border px-4 py-3 flex items-center gap-2">
+        <Target size={16} strokeWidth={1.5} className="text-text-tertiary flex-shrink-0" />
         <span className="text-xs text-text-secondary">Presupuesto:</span>
         <input
           type="number"
@@ -85,9 +95,12 @@ export function BudgetBar({ userId }: BudgetBarProps) {
   }
 
   return (
-    <div>
+    <div className={`rounded-xl border ${getBorderColor()} px-4 py-3`}>
       <div className="flex items-center justify-between mb-1.5">
-        <span className="text-xs text-text-tertiary">Presupuesto mensual</span>
+        <div className="flex items-center gap-2">
+          <Target size={14} strokeWidth={1.5} className="text-text-tertiary" />
+          <span className="text-xs text-text-tertiary">Presupuesto mensual</span>
+        </div>
         <button
           onClick={handleStartEdit}
           className="text-[10px] text-text-tertiary hover:text-accent transition-colors"
