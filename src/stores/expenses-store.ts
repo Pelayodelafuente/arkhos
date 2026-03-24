@@ -206,11 +206,11 @@ export const useExpensesStore = create<ExpensesStore>((set, get) => ({
       const category = get().categories.find((c) => c.id === created.category_id) ?? null
       const withCategory: SubscriptionWithCategory = { ...created, category }
       set((s) => ({ subscriptions: [...s.subscriptions, withCategory] }))
-      toast('Suscripcion anadida', 'success')
+      toast('Suscripción añadida', 'success')
       const client = createClient()
       logActivity(client, data.user_id, 'gastos', 'subscription_created', created.name)
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Error al anadir suscripcion'
+      const msg = e instanceof Error ? e.message : 'Error al añadir suscripción'
       toast(msg, 'error')
     }
   },
@@ -245,12 +245,12 @@ export const useExpensesStore = create<ExpensesStore>((set, get) => ({
           sub.id === id ? { ...updated, category } : sub
         ),
       }))
-      toast('Suscripcion actualizada', 'success')
+      toast('Suscripción actualizada', 'success')
       const client = createClient()
       logActivity(client, updated.user_id, 'gastos', 'subscription_updated', updated.name)
     } catch (e) {
       set({ subscriptions: prev })
-      const msg = e instanceof Error ? e.message : 'Error al actualizar suscripcion'
+      const msg = e instanceof Error ? e.message : 'Error al actualizar suscripción'
       toast(msg, 'error')
     }
   },
@@ -261,7 +261,7 @@ export const useExpensesStore = create<ExpensesStore>((set, get) => ({
 
     try {
       await deleteSubscriptionApi(id)
-      toast('Suscripcion eliminada', 'success')
+      toast('Suscripción eliminada', 'success')
       const removed = prev.find((s) => s.id === id)
       if (removed) {
         const client = createClient()
@@ -269,7 +269,7 @@ export const useExpensesStore = create<ExpensesStore>((set, get) => ({
       }
     } catch (e) {
       set({ subscriptions: prev })
-      const msg = e instanceof Error ? e.message : 'Error al eliminar suscripcion'
+      const msg = e instanceof Error ? e.message : 'Error al eliminar suscripción'
       toast(msg, 'error')
     }
   },
@@ -293,7 +293,7 @@ export const useExpensesStore = create<ExpensesStore>((set, get) => ({
       logActivity(client, sub.user_id, 'gastos', 'subscription_toggled', sub.name, newActive ? 'activada' : 'pausada')
     } catch (e) {
       set({ subscriptions: prev })
-      const msg = e instanceof Error ? e.message : 'Error al cambiar estado de suscripcion'
+      const msg = e instanceof Error ? e.message : 'Error al cambiar estado de suscripción'
       toast(msg, 'error')
     }
   },
@@ -326,12 +326,12 @@ export const useExpensesStore = create<ExpensesStore>((set, get) => ({
           x.id === id ? { ...updated, category } : x
         ),
       }))
-      toast(`Suscripcion ${status === 'active' ? 'activada' : status === 'paused' ? 'pausada' : status === 'cancelled' ? 'cancelada' : 'en prueba'}`, 'success')
+      toast(`Suscripción ${status === 'active' ? 'activada' : status === 'paused' ? 'pausada' : status === 'cancelled' ? 'cancelada' : 'en prueba'}`, 'success')
       const client = createClient()
       logActivity(client, sub.user_id, 'gastos', 'subscription_status_changed', sub.name, status)
     } catch (e) {
       set({ subscriptions: prev })
-      const msg = e instanceof Error ? e.message : 'Error al cambiar estado de suscripcion'
+      const msg = e instanceof Error ? e.message : 'Error al cambiar estado de suscripción'
       toast(msg, 'error')
     }
   },
@@ -342,11 +342,11 @@ export const useExpensesStore = create<ExpensesStore>((set, get) => ({
     try {
       const created = await createExpenseCategoryApi(data)
       set((s) => ({ categories: [...s.categories, created] }))
-      toast('Categoria anadida', 'success')
+      toast('Categoría añadida', 'success')
       const client = createClient()
       logActivity(client, data.user_id, 'gastos', 'category_created', created.name)
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Error al anadir categoria'
+      const msg = e instanceof Error ? e.message : 'Error al añadir categoría'
       toast(msg, 'error')
     }
   },
@@ -367,10 +367,10 @@ export const useExpensesStore = create<ExpensesStore>((set, get) => ({
           sub.category?.id === id ? { ...sub, category: updated } : sub
         ),
       }))
-      toast('Categoria actualizada', 'success')
+      toast('Categoría actualizada', 'success')
     } catch (e) {
       set({ categories: prev })
-      const msg = e instanceof Error ? e.message : 'Error al actualizar categoria'
+      const msg = e instanceof Error ? e.message : 'Error al actualizar categoría'
       toast(msg, 'error')
     }
   },
@@ -388,14 +388,14 @@ export const useExpensesStore = create<ExpensesStore>((set, get) => ({
           sub.category_id === id ? { ...sub, category_id: null, category: null } : sub
         ),
       }))
-      toast('Categoria eliminada', 'success')
+      toast('Categoría eliminada', 'success')
       if (removed) {
         const client = createClient()
         logActivity(client, removed.user_id, 'gastos', 'category_deleted', removed.name)
       }
     } catch (e) {
       set({ categories: prev })
-      const msg = e instanceof Error ? e.message : 'Error al eliminar categoria'
+      const msg = e instanceof Error ? e.message : 'Error al eliminar categoría'
       toast(msg, 'error')
     }
   },
@@ -427,6 +427,18 @@ export const useExpensesStore = create<ExpensesStore>((set, get) => ({
 // ══════════════════════════════════════
 // SELECTORS
 // ══════════════════════════════════════
+
+/**
+ * Suscripciones filtradas solo por cycleFilter (sin searchQuery).
+ * Usada por KPIs, calendario, banner y budget para respetar el filtro de ciclo.
+ */
+export function useCycleFilteredSubscriptions(): SubscriptionWithCategory[] {
+  const subscriptions = useExpensesStore((s) => s.subscriptions)
+  const cycleFilter = useExpensesStore((s) => s.cycleFilter)
+
+  if (cycleFilter === 'all') return subscriptions
+  return subscriptions.filter((sub) => sub.cycle === cycleFilter)
+}
 
 /**
  * Suscripciones filtradas por cycleFilter + searchQuery.
@@ -469,13 +481,13 @@ export function useFilteredSubscriptions(): SubscriptionWithCategory[] {
 
 /**
  * Map<billing_day, SubscriptionWithCategory[]> para el calendario.
- * Usa getSubscriptionsForDay() de expenses-calendar.ts.
+ * Respeta cycleFilter. Usa getSubscriptionsForDay() de expenses-calendar.ts.
  */
 export function useSubscriptionsByDay(
   year: number,
   month: number
 ): Map<number, SubscriptionWithCategory[]> {
-  const subscriptions = useExpensesStore((s) => s.subscriptions)
+  const subscriptions = useCycleFilteredSubscriptions()
 
   const map = new Map<number, SubscriptionWithCategory[]>()
 
@@ -493,13 +505,13 @@ export function useSubscriptionsByDay(
 }
 
 /**
- * Resumen financiero.
+ * Resumen financiero. Respeta cycleFilter.
  * si notAmortizeYearly=false: totalMonthlyEstimate = totalMonthly + totalAnnual/12
  * si notAmortizeYearly=true:  totalMonthlyEstimate = totalMonthly + totalAnnual
  * countActive: total de suscripciones activas (status active o trial)
  */
 export function useExpenseSummary(): ExpenseSummary {
-  const subscriptions = useExpensesStore((s) => s.subscriptions)
+  const subscriptions = useCycleFilteredSubscriptions()
   const notAmortizeYearly = useExpensesStore((s) => s.notAmortizeYearly)
 
   let totalMonthly = 0
@@ -538,7 +550,7 @@ export function useExpenseSummary(): ExpenseSummary {
  * Total monetario de un dia concreto del calendario.
  */
 export function useDayTotal(day: number, year: number, month: number): number {
-  const subscriptions = useExpensesStore((s) => s.subscriptions)
+  const subscriptions = useCycleFilteredSubscriptions()
   const subs = getSubscriptionsForDay(subscriptions, day, year, month)
   return subs.reduce((acc, sub) => acc + sub.amount, 0)
 }

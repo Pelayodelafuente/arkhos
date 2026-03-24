@@ -101,7 +101,7 @@ export function CategoryManager({ open, onClose, userId }: CategoryManagerProps)
                 style={{ backgroundColor: `${cat.color}1A` }}
               >
                 <span className="text-xs" style={{ color: cat.color }}>
-                  {cat.icon.charAt(0).toUpperCase()}
+                  {cat.name.charAt(0).toUpperCase()}
                 </span>
               </div>
 

@@ -156,7 +156,12 @@ export function ExpenseCalendarCell({
       {hasSubs && (
         <div className="mt-0.5 flex flex-wrap gap-0.5">
           {subscriptions.slice(0, 3).map((sub) => (
-            <div key={sub.id} className="group/badge relative">
+            <div
+              key={sub.id}
+              className={`group/badge relative rounded-full ring-[1.5px] ${
+                sub.cycle === 'annual' ? 'ring-[#9B7A4A]' : 'ring-[#4A7A9B]'
+              }`}
+            >
               <ServiceAvatar
                 name={sub.name}
                 icon={sub.icon}

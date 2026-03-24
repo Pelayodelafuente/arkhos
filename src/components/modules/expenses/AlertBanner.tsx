@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, Bell } from "lucide-react"
-import { useExpensesStore } from "@/stores/expenses-store"
+import { useCycleFilteredSubscriptions } from "@/stores/expenses-store"
 import { getDaysUntilBilling, formatCurrency, isBillingToday, isBillingTomorrow } from "@/lib/gastos-utils"
 import { ServiceAvatar } from "./ServiceAvatar"
 
@@ -50,7 +50,7 @@ const amountColorByType = {
 }
 
 export function AlertBanner() {
-  const subscriptions = useExpensesStore((s) => s.subscriptions)
+  const subscriptions = useCycleFilteredSubscriptions()
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => {
     if (typeof window === 'undefined') return new Set()
     const dismissed = getDismissed()

@@ -12,7 +12,7 @@ const CYCLE_PATTERNS: Record<string, 'monthly' | 'annual'> = {
   anual: 'annual',
   'año': 'annual',
   annual: 'annual',
-  yearly: 'monthly',
+  yearly: 'annual',
 }
 
 /**

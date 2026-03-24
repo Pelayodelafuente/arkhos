@@ -4,7 +4,7 @@ import { useMemo, useState, useRef, useEffect, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui"
-import { useExpensesStore } from "@/stores/expenses-store"
+import { useExpensesStore, useCycleFilteredSubscriptions } from "@/stores/expenses-store"
 import { getCalendarDays, getSubscriptionsForDay } from "@/utils/expenses-calendar"
 import { ExpenseCalendarCell } from "./ExpenseCalendarCell"
 import { ExpenseLegend } from "./ExpenseLegend"
@@ -38,7 +38,7 @@ export function ExpenseCalendar({ onNewWithDay }: ExpenseCalendarProps) {
   const [direction, setDirection] = useState(1)
 
   const calendarRef = useRef<HTMLDivElement>(null)
-  const subscriptions = useExpensesStore((s) => s.subscriptions)
+  const subscriptions = useCycleFilteredSubscriptions()
   const selectedDay = useExpensesStore((s) => s.selectedDay)
   const setSelectedDay = useExpensesStore((s) => s.setSelectedDay)
   const year = useExpensesStore((s) => s.viewedYear)

@@ -3,7 +3,7 @@
 import { useMemo, useEffect } from "react"
 import { Wallet, CalendarClock, FolderOpen, RotateCcw } from "lucide-react"
 import { motion, useSpring, useTransform, useMotionValue, useReducedMotion } from "framer-motion"
-import { useExpensesStore, useExpenseSummary } from "@/stores/expenses-store"
+import { useExpensesStore, useExpenseSummary, useCycleFilteredSubscriptions } from "@/stores/expenses-store"
 import { formatCurrency, getNextBillingSubscription, getMostExpensiveCategory, getNextAnnualRenewal, getDaysUntilBilling } from "@/lib/gastos-utils"
 import { ServiceAvatar } from "./ServiceAvatar"
 
@@ -33,7 +33,7 @@ const glassStyle = {
 } as const
 
 export function KPICards() {
-  const subscriptions = useExpensesStore((s) => s.subscriptions)
+  const subscriptions = useCycleFilteredSubscriptions()
   const notAmortizeYearly = useExpensesStore((s) => s.notAmortizeYearly)
   const viewedYear = useExpensesStore((s) => s.viewedYear)
   const viewedMonth = useExpensesStore((s) => s.viewedMonth)

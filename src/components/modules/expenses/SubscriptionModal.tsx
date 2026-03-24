@@ -203,7 +203,7 @@ export function SubscriptionModal({
     <Modal
       open={open}
       onClose={onClose}
-      title={isEdit ? `Editar ${subscription?.name ?? ""}` : "Nueva suscripcion"}
+      title={isEdit ? `Editar ${subscription?.name ?? ""}` : "Nueva suscripción"}
       className="max-w-md"
     >
       <div className="space-y-4">
