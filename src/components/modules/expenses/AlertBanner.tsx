@@ -3,8 +3,8 @@
 import { useMemo, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, Bell } from "lucide-react"
-import { useCycleFilteredSubscriptions } from "@/stores/expenses-store"
-import { getDaysUntilBilling, formatCurrency, isBillingToday, isBillingTomorrow } from "@/lib/gastos-utils"
+import { useCycleFilteredSubscriptions, useExpensesStore } from "@/stores/expenses-store"
+import { getDaysUntilBilling, formatCurrency, isBillingToday } from "@/lib/gastos-utils"
 import { ServiceAvatar } from "./ServiceAvatar"
 
 interface Alert {
@@ -51,6 +51,12 @@ const amountColorByType = {
 
 export function AlertBanner() {
   const subscriptions = useCycleFilteredSubscriptions()
+  const settings = useExpensesStore((s) => s.settings)
+
+  const alertEnabled = settings?.alert_enabled ?? true
+  const alertDaysBefore = settings?.alert_days_before ?? 1
+  const alertRenewalDays = settings?.alert_renewal_days ?? 30
+
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => {
     if (typeof window === 'undefined') return new Set()
     const dismissed = getDismissed()
@@ -62,6 +68,8 @@ export function AlertBanner() {
   })
 
   const alerts = useMemo(() => {
+    if (!alertEnabled) return []
+
     const result: Alert[] = []
     const active = subscriptions.filter((s) => s.status === 'active')
 
@@ -79,25 +87,28 @@ export function AlertBanner() {
       })
     }
 
-    // Billing tomorrow
-    const tomorrowSubs = active.filter((s) => isBillingTomorrow(s))
-    if (tomorrowSubs.length > 0) {
-      const total = tomorrowSubs.reduce((acc, s) => acc + s.amount, 0)
-      const names = tomorrowSubs.map((s) => s.name).join(' y ')
+    // Billing within alert_days_before days
+    const upcomingSubs = active.filter((s) => {
+      const days = getDaysUntilBilling(s)
+      return days > 0 && days <= alertDaysBefore
+    })
+    if (upcomingSubs.length > 0) {
+      const total = upcomingSubs.reduce((acc, s) => acc + s.amount, 0)
+      const names = upcomingSubs.map((s) => s.name).join(' y ')
       result.push({
-        id: `tomorrow-${new Date().toISOString().split('T')[0]}`,
+        id: `upcoming-${new Date().toISOString().split('T')[0]}`,
         type: 'tomorrow',
-        message: `Mañana se cobra ${names}`,
+        message: alertDaysBefore === 1 ? `Mañana se cobra ${names}` : `En ${alertDaysBefore} días se cobra ${names}`,
         total,
-        subscriptions: tomorrowSubs.map((s) => ({ name: s.name, icon: s.icon, color: s.color, amount: s.amount })),
+        subscriptions: upcomingSubs.map((s) => ({ name: s.name, icon: s.icon, color: s.color, amount: s.amount })),
       })
     }
 
-    // Annual renewals within 30 days
+    // Annual renewals within alert_renewal_days
     const annuals = active.filter((s) => s.cycle === 'annual')
     for (const sub of annuals) {
       const days = getDaysUntilBilling(sub)
-      if (days > 0 && days <= 30) {
+      if (days > 0 && days <= alertRenewalDays) {
         result.push({
           id: `renewal-${sub.id}`,
           type: 'renewal',
@@ -109,7 +120,7 @@ export function AlertBanner() {
     }
 
     return result.slice(0, 2) // Max 2 alerts
-  }, [subscriptions])
+  }, [subscriptions, alertEnabled, alertDaysBefore, alertRenewalDays])
 
   const visibleAlerts = alerts.filter((a) => !dismissedIds.has(a.id))
 

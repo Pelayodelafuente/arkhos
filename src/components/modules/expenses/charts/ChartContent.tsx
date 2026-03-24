@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from "react"
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts"
 import { useExpensesStore } from "@/stores/expenses-store"
 import { formatCurrency, groupByCategory, getMonthlyEquivalent } from "@/lib/gastos-utils"
+import { getSubscriptionsForDay } from "@/utils/expenses-calendar"
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion"
 
 type Tab = 'distribution' | 'evolution' | 'heatmap'
@@ -72,7 +73,7 @@ function DistributionChart({ subscriptions }: { subscriptions: SubscriptionWithC
 
   const chartData = groups.map((g) => ({
     name: g.category?.name ?? 'Sin categoría',
-    value: g.totalMonthly + g.totalAnnual / 12,
+    value: g.totalMonthly + g.totalQuarterly / 3 + g.totalSemiannual / 6 + g.totalAnnual / 12,
     color: g.category?.color ?? '#888780',
   }))
 
@@ -136,20 +137,76 @@ function DistributionChart({ subscriptions }: { subscriptions: SubscriptionWithC
 // ─── Evolution (Bar) ────────────────
 
 function EvolutionChart({ subscriptions }: { subscriptions: SubscriptionWithCategory[] }) {
-  const total = subscriptions.reduce((acc, s) => acc + getMonthlyEquivalent(s), 0)
+  const monthlySpending = useExpensesStore((s) => s.monthlySpending)
 
   const now = new Date()
   const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+  const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 
-  // Since we don't have historical data, show current month highlighted
-  const data = Array.from({ length: 6 }, (_, i) => {
-    const monthIndex = (now.getMonth() - 5 + i + 12) % 12
-    return {
-      name: monthNames[monthIndex],
-      total: i === 5 ? total : 0,
-      isCurrent: i === 5,
+  const hasData = monthlySpending.some((m) => m.total > 0)
+
+  const data = useMemo(() => {
+    if (!hasData) {
+      // Fallback: show current estimate
+      const total = subscriptions.reduce((acc, s) => acc + getMonthlyEquivalent(s), 0)
+      return Array.from({ length: 6 }, (_, i) => {
+        const monthIndex = (now.getMonth() - 5 + i + 12) % 12
+        return {
+          name: monthNames[monthIndex],
+          total: i === 5 ? total : 0,
+          count: i === 5 ? subscriptions.length : 0,
+          isCurrent: i === 5,
+          prevTotal: 0,
+        }
+      })
     }
-  })
+
+    return monthlySpending.map((m, i) => {
+      const [yearStr, monthStr] = m.month.split('-')
+      const monthIndex = parseInt(monthStr, 10) - 1
+      const prevMonth = i > 0 ? monthlySpending[i - 1].total : 0
+      return {
+        name: monthNames[monthIndex],
+        total: m.total,
+        count: m.count,
+        isCurrent: m.month === currentMonthKey,
+        prevTotal: prevMonth,
+        fullMonth: `${monthNames[monthIndex]} ${yearStr}`,
+      }
+    })
+  }, [monthlySpending, hasData, subscriptions, now, currentMonthKey])
+
+  interface TooltipPayload {
+    payload?: {
+      fullMonth?: string
+      name?: string
+      total?: number
+      count?: number
+    }
+  }
+
+  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: TooltipPayload[] }) => {
+    if (!active || !payload || !payload[0]) return null
+    const d = payload[0].payload
+    if (!d) return null
+    return (
+      <div className="rounded-lg bg-card border border-border px-3 py-2 text-xs">
+        <p className="font-medium text-foreground">{d.fullMonth ?? d.name}</p>
+        <p className="font-mono text-foreground">{formatCurrency(d.total ?? 0)}</p>
+        <p className="text-text-tertiary">{d.count ?? 0} pago{(d.count ?? 0) !== 1 ? 's' : ''}</p>
+      </div>
+    )
+  }
+
+  if (!hasData) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <p className="text-sm text-text-tertiary">
+          Los datos de evolucion se generan automaticamente cada mes
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div>
@@ -159,25 +216,22 @@ function EvolutionChart({ subscriptions }: { subscriptions: SubscriptionWithCate
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border-stone)" vertical={false} />
             <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'var(--text-tertiary)' }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fontSize: 11, fill: 'var(--text-tertiary)' }} axisLine={false} tickLine={false} width={50} />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: 'var(--bg-card)',
-                border: '1px solid var(--border-stone)',
-                borderRadius: 8,
-                fontSize: 12,
-              }}
-              formatter={(value) => [formatCurrency(Number(value)), 'Total']}
-            />
+            <Tooltip content={<CustomTooltip />} />
             <Bar dataKey="total" radius={[6, 6, 0, 0]}>
               {data.map((entry, i) => (
-                <Cell key={i} fill={entry.isCurrent ? '#4A7A9B' : 'rgba(74,122,155,0.2)'} />
+                <Cell key={i} fill={entry.isCurrent ? '#4A7A9B' : 'rgba(74,122,155,0.35)'} />
+              ))}
+            </Bar>
+            <Bar dataKey="prevTotal" radius={[6, 6, 0, 0]} fillOpacity={0}>
+              {data.map((_, i) => (
+                <Cell key={i} fill="transparent" stroke="#4A7A9B" strokeWidth={1} strokeDasharray="4 4" />
               ))}
             </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>
       <p className="text-center text-xs text-text-tertiary mt-3">
-        Los datos históricos se irán acumulando mes a mes
+        Gasto real basado en pagos registrados
       </p>
     </div>
   )
@@ -187,30 +241,30 @@ function EvolutionChart({ subscriptions }: { subscriptions: SubscriptionWithCate
 
 function YearHeatmap({ subscriptions }: { subscriptions: SubscriptionWithCategory[] }) {
   const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+  const [tooltip, setTooltip] = useState<{ x: number; y: number; content: string } | null>(null)
 
-  // Build a 12×31 grid of spending
+  const currentYear = new Date().getFullYear()
+
+  // Build a 12×31 grid of spending using getSubscriptionsForDay
   const grid = useMemo(() => {
-    const result: { month: number; day: number; amount: number }[][] = []
+    const result: { month: number; day: number; amount: number; subs: SubscriptionWithCategory[] }[][] = []
     for (let m = 0; m < 12; m++) {
-      const daysInMonth = new Date(new Date().getFullYear(), m + 1, 0).getDate()
-      const monthData: { month: number; day: number; amount: number }[] = []
+      const daysInMonth = new Date(currentYear, m + 1, 0).getDate()
+      const monthData: { month: number; day: number; amount: number; subs: SubscriptionWithCategory[] }[] = []
       for (let d = 1; d <= 31; d++) {
         if (d > daysInMonth) {
-          monthData.push({ month: m, day: d, amount: -1 }) // invalid
+          monthData.push({ month: m, day: d, amount: -1, subs: [] })
           continue
         }
-        const dayTotal = subscriptions
-          .filter((s) => {
-            const effective = s.billing_day > daysInMonth ? daysInMonth : s.billing_day
-            return effective === d
-          })
-          .reduce((acc, s) => acc + (s.cycle === 'monthly' ? s.amount : s.amount / 12), 0)
-        monthData.push({ month: m, day: d, amount: dayTotal })
+        // Use getSubscriptionsForDay for proper cycle handling
+        const daySubs = getSubscriptionsForDay(subscriptions, d, currentYear, m + 1)
+        const dayTotal = daySubs.reduce((acc, s) => acc + getMonthlyEquivalent(s), 0)
+        monthData.push({ month: m, day: d, amount: dayTotal, subs: daySubs })
       }
       result.push(monthData)
     }
     return result
-  }, [subscriptions])
+  }, [subscriptions, currentYear])
 
   const getColor = (amount: number): string => {
     if (amount < 0) return 'transparent'
@@ -221,7 +275,7 @@ function YearHeatmap({ subscriptions }: { subscriptions: SubscriptionWithCategor
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto relative">
       <div className="min-w-[600px]">
         {/* Month labels */}
         <div className="flex gap-0.5 mb-1 ml-8">
@@ -248,9 +302,19 @@ function YearHeatmap({ subscriptions }: { subscriptions: SubscriptionWithCategor
                   return (
                     <div
                       key={mIdx}
-                      className="flex-1 h-3 rounded-sm transition-colors"
+                      className="flex-1 h-3 rounded-sm transition-colors cursor-default"
                       style={{ backgroundColor: getColor(cell.amount) }}
-                      title={cell.amount > 0 ? `${monthNames[mIdx]} ${dayIdx + 1}: ${formatCurrency(cell.amount)}` : undefined}
+                      onMouseEnter={(e) => {
+                        if (cell.subs.length > 0) {
+                          const lines = cell.subs.map((s) => `${s.name}: ${formatCurrency(s.amount)}`).join('\n')
+                          setTooltip({
+                            x: e.clientX,
+                            y: e.clientY,
+                            content: `${monthNames[mIdx]} ${dayIdx + 1}\n${lines}`,
+                          })
+                        }
+                      }}
+                      onMouseLeave={() => setTooltip(null)}
                     />
                   )
                 })}
@@ -259,6 +323,16 @@ function YearHeatmap({ subscriptions }: { subscriptions: SubscriptionWithCategor
           ))}
         </div>
       </div>
+
+      {/* Tooltip */}
+      {tooltip && (
+        <div
+          className="pointer-events-none fixed z-50 rounded-lg bg-foreground text-card px-3 py-2 text-[11px] shadow-lg whitespace-pre-line"
+          style={{ left: tooltip.x + 12, top: tooltip.y - 8 }}
+        >
+          {tooltip.content}
+        </div>
+      )}
     </div>
   )
 }

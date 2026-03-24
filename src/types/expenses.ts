@@ -1,5 +1,5 @@
 // ══════════════════════════════════════
-// Arkhos — Expense Types (v2)
+// Arkhos — Expense Types (v3)
 // Módulo Gastos: categories + subscriptions + price history + settings
 // ══════════════════════════════════════
 
@@ -35,6 +35,10 @@ export interface ExpenseCategoryUpdate {
 
 export type SubscriptionStatus = 'active' | 'paused' | 'cancelled' | 'trial'
 
+// ─── Billing Cycle ──────────────────
+
+export type BillingCycle = 'monthly' | 'quarterly' | 'semiannual' | 'annual'
+
 // ─── Subscriptions ────────────────────
 
 export interface Subscription {
@@ -46,7 +50,7 @@ export interface Subscription {
   color: string
   amount: number
   currency: string
-  cycle: 'monthly' | 'annual'
+  cycle: BillingCycle
   billing_day: number
   is_active: boolean
   status: SubscriptionStatus
@@ -56,6 +60,7 @@ export interface Subscription {
   notes: string | null
   started_at: string | null
   cancelled_at: string | null
+  tags: string[]
   created_at: string
   updated_at: string
 }
@@ -68,7 +73,7 @@ export interface SubscriptionInsert {
   color: string
   amount: number
   currency?: string
-  cycle: 'monthly' | 'annual'
+  cycle: BillingCycle
   billing_day: number
   is_active?: boolean
   status?: SubscriptionStatus
@@ -77,6 +82,7 @@ export interface SubscriptionInsert {
   url?: string | null
   notes?: string | null
   started_at?: string | null
+  tags?: string[]
 }
 
 export interface SubscriptionUpdate {
@@ -86,7 +92,7 @@ export interface SubscriptionUpdate {
   color?: string
   amount?: number
   currency?: string
-  cycle?: 'monthly' | 'annual'
+  cycle?: BillingCycle
   billing_day?: number
   is_active?: boolean
   status?: SubscriptionStatus
@@ -96,6 +102,7 @@ export interface SubscriptionUpdate {
   notes?: string | null
   started_at?: string | null
   cancelled_at?: string | null
+  tags?: string[]
 }
 
 // Subscription con categoría expandida (join)
@@ -123,6 +130,9 @@ export interface UserGastosSettings {
   show_annual_prices: boolean
   list_view_mode: 'category' | 'chronological'
   collapsed_categories: string[]
+  alert_days_before: number
+  alert_renewal_days: number
+  alert_enabled: boolean
   created_at: string
   updated_at: string
 }
@@ -132,19 +142,58 @@ export interface UserGastosSettingsUpdate {
   show_annual_prices?: boolean
   list_view_mode?: 'category' | 'chronological'
   collapsed_categories?: string[]
+  alert_days_before?: number
+  alert_renewal_days?: number
+  alert_enabled?: boolean
+}
+
+// ─── Subscription Payments ──────────
+
+export interface SubscriptionPayment {
+  id: string
+  subscription_id: string
+  user_id: string
+  amount: number
+  currency: string
+  paid_at: string
+  cycle: string
+  auto_generated: boolean
+  notes: string | null
+  created_at: string
+}
+
+export interface SubscriptionPaymentInsert {
+  subscription_id: string
+  user_id: string
+  amount: number
+  currency?: string
+  paid_at: string
+  cycle: string
+  auto_generated?: boolean
+  notes?: string | null
+}
+
+export interface MonthlySpending {
+  month: string  // 'YYYY-MM'
+  total: number
+  count: number
 }
 
 // ─── Filtros y UI ─────────────────────
 
-export type CycleFilter = 'all' | 'monthly' | 'annual'
+export type CycleFilter = 'all' | 'monthly' | 'quarterly' | 'semiannual' | 'annual'
 
 // ─── Resumen financiero ───────────────
 
 export interface ExpenseSummary {
   totalMonthly: number
+  totalQuarterly: number
+  totalSemiannual: number
   totalAnnual: number
   totalMonthlyEstimate: number
   countMonthly: number
+  countQuarterly: number
+  countSemiannual: number
   countAnnual: number
   countActive: number
 }
@@ -163,7 +212,7 @@ export interface CalendarDay {
 export interface SmartAddParsed {
   name: string | null
   amount: number | null
-  cycle: 'monthly' | 'annual' | null
+  cycle: BillingCycle | null
   billingDay: number | null
   category: string | null
 }

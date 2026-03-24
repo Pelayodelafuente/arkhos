@@ -2,12 +2,15 @@
 
 import { useEffect, useState, useCallback, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Plus, Settings, Search, Sparkles, Download, X } from "lucide-react"
+import { Plus, Settings, Search, Sparkles, Download, X, Bell } from "lucide-react"
 import { Button } from "@/components/ui"
 import { useExpensesStore } from "@/stores/expenses-store"
 import { KPICards } from "./KPICards"
-import { BudgetBar } from "./BudgetBar"
+import { BudgetRing } from "./BudgetRing"
+import { MiniDistributionChart } from "./MiniDistributionChart"
+import { SpendingTrend } from "./SpendingTrend"
 import { AlertBanner } from "./AlertBanner"
+import { AlertSettings } from "./AlertSettings"
 import { ExpenseCalendar } from "./ExpenseCalendar"
 import { SubscriptionList } from "./SubscriptionList"
 import { CycleFilterToggle } from "./CycleFilterToggle"
@@ -30,6 +33,8 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
   const fetchSubscriptions = useExpensesStore((s) => s.fetchSubscriptions)
   const fetchCategories = useExpensesStore((s) => s.fetchCategories)
   const fetchSettings = useExpensesStore((s) => s.fetchSettings)
+  const fetchMonthlySpending = useExpensesStore((s) => s.fetchMonthlySpending)
+  const generateMissingPayments = useExpensesStore((s) => s.generateMissingPayments)
   const setSearchQuery = useExpensesStore((s) => s.setSearchQuery)
   const isLoading = useExpensesStore((s) => s.isLoading)
   const notAmortizeYearly = useExpensesStore((s) => s.notAmortizeYearly)
@@ -44,6 +49,8 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
   const [categoryManagerOpen, setCategoryManagerOpen] = useState(false)
   const [smartAddOpen, setSmartAddOpen] = useState(false)
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
+  const [alertSettingsOpen, setAlertSettingsOpen] = useState(false)
+  const [chartDialogOpen, setChartDialogOpen] = useState(false)
 
   const searchRef = useRef<HTMLInputElement>(null)
 
@@ -60,10 +67,18 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
 
   // Fetch data
   useEffect(() => {
-    fetchSubscriptions(userId)
-    fetchCategories(userId)
-    fetchSettings(userId)
-  }, [userId, fetchSubscriptions, fetchCategories, fetchSettings])
+    const loadData = async () => {
+      await Promise.all([
+        fetchSubscriptions(userId),
+        fetchCategories(userId),
+        fetchSettings(userId),
+      ])
+      // After subscriptions are loaded, generate missing payments and fetch spending
+      await generateMissingPayments(userId)
+      await fetchMonthlySpending(userId)
+    }
+    loadData()
+  }, [userId, fetchSubscriptions, fetchCategories, fetchSettings, generateMissingPayments, fetchMonthlySpending])
 
   // Debounced search
   useEffect(() => {
@@ -123,6 +138,10 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
     exportToCSV(subscriptions, 'arkhos-gastos')
   }, [subscriptions])
 
+  const handleOpenFullChart = useCallback(() => {
+    setChartDialogOpen(true)
+  }, [])
+
   return (
     <div>
       {/* Header */}
@@ -147,7 +166,7 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
           <input
             ref={searchRef}
             type="text"
-            placeholder="Buscar suscripción..."
+            placeholder="Buscar suscripcion..."
             value={localSearch}
             onChange={(e) => setLocalSearch(e.target.value)}
             className="w-full rounded-md border border-border bg-card py-2 pl-9 pr-8 text-sm text-foreground placeholder:text-text-tertiary focus:border-accent focus:outline-none"
@@ -181,11 +200,22 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
           className="border border-border"
         >
           <Settings size={16} strokeWidth={1.75} />
-          <span className="hidden sm:inline">Categorías</span>
+          <span className="hidden sm:inline">Categorias</span>
         </Button>
 
         {/* Chart */}
-        <ExpenseChartDialog />
+        <ExpenseChartDialog externalOpen={chartDialogOpen} onExternalClose={() => setChartDialogOpen(false)} />
+
+        {/* Alert settings */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setAlertSettingsOpen(true)}
+          className="border border-border"
+        >
+          <Bell size={16} strokeWidth={1.75} />
+          <span className="hidden sm:inline">Alertas</span>
+        </Button>
 
         {/* CSV Export */}
         <Button
@@ -224,11 +254,11 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
         {/* CTA */}
         <Button variant="primary" size="sm" onClick={handleNew}>
           <Plus size={16} strokeWidth={1.75} />
-          <span className="hidden sm:inline">Suscripción</span>
+          <span className="hidden sm:inline">Suscripcion</span>
         </Button>
       </div>
 
-      {/* Main content */}
+      {/* Main content — 2-column dashboard */}
       {isLoading ? (
         <GastosLoading />
       ) : (
@@ -239,22 +269,36 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="space-y-6"
           >
-            <div className="animate-fade-in-up" style={{ animationDelay: '100ms' }}>
-              <AlertBanner />
-            </div>
-            <div className="animate-fade-in-up" style={{ animationDelay: '100ms' }}>
-              <BudgetBar userId={userId} />
-            </div>
-            <div className="animate-fade-in-up" style={{ animationDelay: '130ms' }}>
-              <KPICards />
-            </div>
-            <div className="animate-fade-in-up" style={{ animationDelay: '200ms' }}>
-              <ExpenseCalendar onNewWithDay={handleNewWithDay} />
-            </div>
-            <div className="animate-fade-in-up" style={{ animationDelay: '300ms' }}>
-              <SubscriptionList onEdit={handleEdit} onNew={handleNew} />
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
+              {/* Left column */}
+              <div className="space-y-6 min-w-0">
+                <div className="animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+                  <KPICards />
+                </div>
+                <div className="animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+                  <AlertBanner />
+                </div>
+                <div className="animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+                  <ExpenseCalendar onNewWithDay={handleNewWithDay} />
+                </div>
+                <div className="animate-fade-in-up" style={{ animationDelay: '300ms' }}>
+                  <SubscriptionList onEdit={handleEdit} onNew={handleNew} />
+                </div>
+              </div>
+
+              {/* Right column (sidebar) — sticky on desktop */}
+              <div className="space-y-4 lg:sticky lg:top-4 lg:self-start">
+                <div className="animate-fade-in-up" style={{ animationDelay: '130ms' }}>
+                  <BudgetRing userId={userId} />
+                </div>
+                <div className="animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+                  <MiniDistributionChart onOpenFullChart={handleOpenFullChart} />
+                </div>
+                <div className="animate-fade-in-up" style={{ animationDelay: '270ms' }}>
+                  <SpendingTrend />
+                </div>
+              </div>
             </div>
           </motion.div>
         </AnimatePresence>
@@ -281,6 +325,11 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
       <ShortcutsModal
         open={shortcutsOpen}
         onClose={() => setShortcutsOpen(false)}
+      />
+      <AlertSettings
+        open={alertSettingsOpen}
+        onClose={() => setAlertSettingsOpen(false)}
+        userId={userId}
       />
     </div>
   )

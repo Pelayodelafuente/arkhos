@@ -6,7 +6,9 @@ import type { CycleFilter } from "@/types/expenses"
 
 const OPTIONS: { value: CycleFilter; label: string }[] = [
   { value: "all", label: "Todo" },
-  { value: "monthly", label: "Mensual" },
+  { value: "monthly", label: "Mes" },
+  { value: "quarterly", label: "Trim." },
+  { value: "semiannual", label: "Sem." },
   { value: "annual", label: "Anual" },
 ]
 
@@ -22,7 +24,7 @@ export function CycleFilterToggle() {
           <button
             key={opt.value}
             onClick={() => setCycleFilter(opt.value)}
-            className={`relative rounded-[17px] px-4 py-1.5 text-xs font-medium transition-colors duration-200 ${
+            className={`relative rounded-[17px] px-3 py-1.5 text-xs font-medium transition-colors duration-200 ${
               isActive
                 ? "text-card font-semibold"
                 : "text-text-tertiary hover:text-text-secondary"

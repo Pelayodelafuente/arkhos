@@ -3,12 +3,18 @@
 // Parses natural language subscription descriptions
 // ══════════════════════════════════════
 
-import type { SmartAddParsed } from '@/types/expenses'
+import type { SmartAddParsed, BillingCycle } from '@/types/expenses'
 
-const CYCLE_PATTERNS: Record<string, 'monthly' | 'annual'> = {
+const CYCLE_PATTERNS: Record<string, BillingCycle> = {
   mensual: 'monthly',
   mes: 'monthly',
   monthly: 'monthly',
+  trimestral: 'quarterly',
+  trim: 'quarterly',
+  quarterly: 'quarterly',
+  semestral: 'semiannual',
+  sem: 'semiannual',
+  semiannual: 'semiannual',
   anual: 'annual',
   'año': 'annual',
   annual: 'annual',
@@ -21,6 +27,8 @@ const CYCLE_PATTERNS: Record<string, 'monthly' | 'annual'> = {
  * Examples:
  * "Netflix 17.99 mensual día 1" → { name: "Netflix", amount: 17.99, cycle: "monthly", billingDay: 1 }
  * "Figma 180 anual día 15 en Herramientas Dev" → { name: "Figma", amount: 180, cycle: "annual", billingDay: 15, category: "Herramientas Dev" }
+ * "Adobe 59.99 trimestral día 5" → { name: "Adobe", amount: 59.99, cycle: "quarterly", billingDay: 5 }
+ * "Seguro 300 semestral día 1" → { name: "Seguro", amount: 300, cycle: "semiannual", billingDay: 1 }
  */
 export function parseSmartAdd(input: string): SmartAddParsed {
   const result: SmartAddParsed = {

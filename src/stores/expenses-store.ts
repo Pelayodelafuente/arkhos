@@ -18,6 +18,11 @@ import {
   getUserGastosSettings,
   upsertUserGastosSettings,
   updateSubscriptionStatus as updateSubscriptionStatusApi,
+  getPayments as getPaymentsApi,
+  createPayment as createPaymentApi,
+  deletePayment as deletePaymentApi,
+  getMonthlySpending as getMonthlySpendingApi,
+  autoGeneratePayments,
 } from '@/lib/supabase/expenses'
 import { logActivity } from '@/lib/supabase/activity'
 import { createClient } from '@/lib/supabase/client'
@@ -35,6 +40,9 @@ import type {
   UserGastosSettings,
   UserGastosSettingsUpdate,
   PriceHistoryEntry,
+  SubscriptionPayment,
+  SubscriptionPaymentInsert,
+  MonthlySpending,
 } from '@/types/expenses'
 import { getSubscriptionsForDay } from '@/utils/expenses-calendar'
 import { useUIStore } from './ui-store'
@@ -61,6 +69,8 @@ interface ExpensesState {
   collapsedCategories: Set<string>
   viewedYear: number
   viewedMonth: number
+  payments: SubscriptionPayment[]
+  monthlySpending: MonthlySpending[]
 }
 
 interface ExpensesActions {
@@ -84,6 +94,11 @@ interface ExpensesActions {
   setListViewMode: (mode: 'category' | 'chronological') => void
   toggleCategoryCollapse: (categoryId: string) => void
   setViewedMonth: (year: number, month: number) => void
+  fetchPayments: (userId: string) => Promise<void>
+  fetchMonthlySpending: (userId: string, months?: number) => Promise<void>
+  addPayment: (data: SubscriptionPaymentInsert) => Promise<void>
+  removePayment: (id: string) => Promise<void>
+  generateMissingPayments: (userId: string) => Promise<void>
 }
 
 type ExpensesStore = ExpensesState & ExpensesActions
@@ -105,6 +120,8 @@ export const useExpensesStore = create<ExpensesStore>((set, get) => ({
   collapsedCategories: new Set(),
   viewedYear: new Date().getFullYear(),
   viewedMonth: new Date().getMonth() + 1,
+  payments: [],
+  monthlySpending: [],
 
   // ── Fetch ───────────────────────────
 
@@ -422,6 +439,69 @@ export const useExpensesStore = create<ExpensesStore>((set, get) => ({
       return { collapsedCategories: next }
     })
   },
+
+  // ── Payments ─────────────────────────
+
+  fetchPayments: async (userId) => {
+    try {
+      const payments = await getPaymentsApi(userId)
+      set({ payments })
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Error al cargar pagos'
+      toast(msg, 'error')
+    }
+  },
+
+  fetchMonthlySpending: async (userId, months) => {
+    try {
+      const monthlySpending = await getMonthlySpendingApi(userId, months)
+      set({ monthlySpending })
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Error al cargar gasto mensual'
+      toast(msg, 'error')
+    }
+  },
+
+  addPayment: async (data) => {
+    try {
+      const created = await createPaymentApi(data)
+      set((s) => ({ payments: [created, ...s.payments] }))
+      toast('Pago registrado', 'success')
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Error al registrar pago'
+      toast(msg, 'error')
+    }
+  },
+
+  removePayment: async (id) => {
+    const prev = get().payments
+    set((s) => ({ payments: s.payments.filter((p) => p.id !== id) }))
+
+    try {
+      await deletePaymentApi(id)
+      toast('Pago eliminado', 'success')
+    } catch (e) {
+      set({ payments: prev })
+      const msg = e instanceof Error ? e.message : 'Error al eliminar pago'
+      toast(msg, 'error')
+    }
+  },
+
+  generateMissingPayments: async (userId) => {
+    try {
+      const subs = get().subscriptions
+      const count = await autoGeneratePayments(userId, subs)
+      if (count > 0) {
+        // Refresh monthly spending after generating
+        const monthlySpending = await getMonthlySpendingApi(userId)
+        const payments = await getPaymentsApi(userId)
+        set({ monthlySpending, payments })
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Error al generar pagos'
+      toast(msg, 'error')
+    }
+  },
 }))
 
 // ══════════════════════════════════════
@@ -457,7 +537,8 @@ export function useFilteredSubscriptions(): SubscriptionWithCategory[] {
       return (
         sub.name.toLowerCase().includes(q) ||
         (sub.category?.name ?? '').toLowerCase().includes(q) ||
-        (sub.notes ?? '').toLowerCase().includes(q)
+        (sub.notes ?? '').toLowerCase().includes(q) ||
+        (sub.tags?.some((t) => t.toLowerCase().includes(q)) ?? false)
       )
     }
     return true
@@ -506,8 +587,8 @@ export function useSubscriptionsByDay(
 
 /**
  * Resumen financiero. Respeta cycleFilter.
- * si notAmortizeYearly=false: totalMonthlyEstimate = totalMonthly + totalAnnual/12
- * si notAmortizeYearly=true:  totalMonthlyEstimate = totalMonthly + totalAnnual
+ * totalMonthlyEstimate = totalMonthly + totalQuarterly/3 + totalSemiannual/6 + totalAnnual/12
+ * (cuando notAmortizeYearly=true, no se dividen — se suman directamente)
  * countActive: total de suscripciones activas (status active o trial)
  */
 export function useExpenseSummary(): ExpenseSummary {
@@ -515,32 +596,51 @@ export function useExpenseSummary(): ExpenseSummary {
   const notAmortizeYearly = useExpensesStore((s) => s.notAmortizeYearly)
 
   let totalMonthly = 0
+  let totalQuarterly = 0
+  let totalSemiannual = 0
   let totalAnnual = 0
   let countMonthly = 0
+  let countQuarterly = 0
+  let countSemiannual = 0
   let countAnnual = 0
   let countActive = 0
 
   for (const sub of subscriptions) {
     if (!sub.is_active) continue
     countActive++
-    if (sub.cycle === 'monthly') {
-      totalMonthly += sub.amount
-      countMonthly++
-    } else {
-      totalAnnual += sub.amount
-      countAnnual++
+    switch (sub.cycle) {
+      case 'monthly':
+        totalMonthly += sub.amount
+        countMonthly++
+        break
+      case 'quarterly':
+        totalQuarterly += sub.amount
+        countQuarterly++
+        break
+      case 'semiannual':
+        totalSemiannual += sub.amount
+        countSemiannual++
+        break
+      case 'annual':
+        totalAnnual += sub.amount
+        countAnnual++
+        break
     }
   }
 
   const totalMonthlyEstimate = notAmortizeYearly
-    ? totalMonthly + totalAnnual
-    : totalMonthly + totalAnnual / 12
+    ? totalMonthly + totalQuarterly + totalSemiannual + totalAnnual
+    : totalMonthly + totalQuarterly / 3 + totalSemiannual / 6 + totalAnnual / 12
 
   return {
     totalMonthly,
+    totalQuarterly,
+    totalSemiannual,
     totalAnnual,
     totalMonthlyEstimate,
     countMonthly,
+    countQuarterly,
+    countSemiannual,
     countAnnual,
     countActive,
   }

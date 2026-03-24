@@ -61,8 +61,8 @@ export function KPICards() {
   const nextRenewal = useMemo(() => getNextAnnualRenewal(subscriptions), [subscriptions])
 
   const displayTotal = notAmortizeYearly
-    ? summary.totalMonthly * 12 + summary.totalAnnual
-    : summary.totalMonthly
+    ? summary.totalMonthly * 12 + summary.totalQuarterly * 4 + summary.totalSemiannual * 2 + summary.totalAnnual
+    : summary.totalMonthlyEstimate
 
   const totalLabel = notAmortizeYearly ? 'GASTO ANUAL' : 'GASTO MENSUAL'
 

@@ -17,6 +17,9 @@ import type {
   PriceHistoryEntry,
   UserGastosSettings,
   UserGastosSettingsUpdate,
+  SubscriptionPayment,
+  SubscriptionPaymentInsert,
+  MonthlySpending,
 } from '@/types/expenses'
 
 // ─── Client factory ───────────────────
@@ -171,6 +174,7 @@ export async function createSubscription(data: SubscriptionInsert): Promise<Subs
       url: data.url ?? null,
       notes: data.notes ?? null,
       started_at: data.started_at ?? null,
+      tags: data.tags ?? [],
     })
     .select()
     .single()
@@ -294,6 +298,171 @@ export async function upsertUserGastosSettings(
 }
 
 // ══════════════════════════════════════
+// SUBSCRIPTION PAYMENTS
+// ══════════════════════════════════════
+
+export async function getPayments(
+  userId: string,
+  from?: string,
+  to?: string
+): Promise<SubscriptionPayment[]> {
+  const client = createClient()
+  let query = client
+    .from('subscription_payments')
+    .select('*')
+    .eq('user_id', userId)
+    .order('paid_at', { ascending: false })
+
+  if (from) query = query.gte('paid_at', from)
+  if (to) query = query.lte('paid_at', to)
+
+  const { data, error } = await query
+  if (error) throw new ExpensesError('Error fetching payments', error.message)
+  return (data ?? []) as SubscriptionPayment[]
+}
+
+export async function getPaymentsBySubscription(
+  subscriptionId: string
+): Promise<SubscriptionPayment[]> {
+  const client = createClient()
+  const { data, error } = await client
+    .from('subscription_payments')
+    .select('*')
+    .eq('subscription_id', subscriptionId)
+    .order('paid_at', { ascending: false })
+
+  if (error) throw new ExpensesError('Error fetching payments by subscription', error.message)
+  return (data ?? []) as SubscriptionPayment[]
+}
+
+export async function createPayment(
+  data: SubscriptionPaymentInsert
+): Promise<SubscriptionPayment> {
+  const client = createClient()
+  const { data: row, error } = await client
+    .from('subscription_payments')
+    .insert({
+      subscription_id: data.subscription_id,
+      user_id: data.user_id,
+      amount: data.amount,
+      currency: data.currency ?? 'EUR',
+      paid_at: data.paid_at,
+      cycle: data.cycle,
+      auto_generated: data.auto_generated ?? false,
+      notes: data.notes ?? null,
+    })
+    .select()
+    .single()
+
+  if (error) throw new ExpensesError('Error creating payment', error.message)
+  if (!row) throw new ExpensesError('Error creating payment: no data returned')
+  return row as SubscriptionPayment
+}
+
+export async function deletePayment(id: string): Promise<void> {
+  const client = createClient()
+  const { error } = await client.from('subscription_payments').delete().eq('id', id)
+  if (error) throw new ExpensesError('Error deleting payment', error.message)
+}
+
+export async function getMonthlySpending(
+  userId: string,
+  months: number = 6
+): Promise<MonthlySpending[]> {
+  const now = new Date()
+  const fromDate = new Date(now.getFullYear(), now.getMonth() - months + 1, 1)
+  const fromStr = fromDate.toISOString().split('T')[0]
+
+  const payments = await getPayments(userId, fromStr)
+
+  // Aggregate by month
+  const map = new Map<string, { total: number; count: number }>()
+
+  // Pre-fill all months so we always have entries
+  for (let i = 0; i < months; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - months + 1 + i, 1)
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    map.set(key, { total: 0, count: 0 })
+  }
+
+  for (const p of payments) {
+    const date = new Date(p.paid_at)
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+    const entry = map.get(key)
+    if (entry) {
+      entry.total += p.amount
+      entry.count += 1
+    }
+  }
+
+  return Array.from(map.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([month, data]) => ({ month, total: data.total, count: data.count }))
+}
+
+/**
+ * Auto-generate payments for the current billing period for each active subscription.
+ * Returns the count of newly created payments.
+ */
+export async function autoGeneratePayments(
+  userId: string,
+  subscriptions: SubscriptionWithCategory[]
+): Promise<number> {
+  const now = new Date()
+  const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+
+  // Get all existing payments for this month
+  const firstOfMonth = `${currentMonth}-01`
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
+  const lastOfMonth = `${currentMonth}-${String(lastDay).padStart(2, '0')}`
+
+  const existingPayments = await getPayments(userId, firstOfMonth, lastOfMonth)
+  const existingSubIds = new Set(existingPayments.map((p) => p.subscription_id))
+
+  let created = 0
+
+  for (const sub of subscriptions) {
+    if (sub.status !== 'active') continue
+    if (existingSubIds.has(sub.id)) continue
+
+    // For monthly: always generate if billing_day has passed or is today
+    // For others: check if billing falls in current month
+    let shouldGenerate = false
+    const billingDay = Math.min(sub.billing_day, lastDay)
+
+    if (sub.cycle === 'monthly') {
+      shouldGenerate = billingDay <= now.getDate()
+    } else {
+      // For quarterly/semiannual/annual, check if the subscription bills this month
+      if (sub.started_at) {
+        const startDate = new Date(sub.started_at)
+        const monthsDiff = (now.getFullYear() - startDate.getFullYear()) * 12 + (now.getMonth() - startDate.getMonth())
+        const interval = sub.cycle === 'quarterly' ? 3 : sub.cycle === 'semiannual' ? 6 : 12
+        if (monthsDiff >= 0 && monthsDiff % interval === 0 && billingDay <= now.getDate()) {
+          shouldGenerate = true
+        }
+      }
+    }
+
+    if (shouldGenerate) {
+      const paidAt = `${currentMonth}-${String(billingDay).padStart(2, '0')}`
+      await createPayment({
+        subscription_id: sub.id,
+        user_id: userId,
+        amount: sub.amount,
+        currency: sub.currency,
+        paid_at: paidAt,
+        cycle: sub.cycle,
+        auto_generated: true,
+      })
+      created++
+    }
+  }
+
+  return created
+}
+
+// ══════════════════════════════════════
 // CALCULATIONS
 // ══════════════════════════════════════
 
@@ -301,27 +470,46 @@ export async function getExpenseSummary(userId: string): Promise<ExpenseSummary>
   const active = await getActiveSubscriptions(userId)
 
   let totalMonthly = 0
+  let totalQuarterly = 0
+  let totalSemiannual = 0
   let totalAnnual = 0
   let countMonthly = 0
+  let countQuarterly = 0
+  let countSemiannual = 0
   let countAnnual = 0
 
   for (const sub of active) {
-    if (sub.cycle === 'monthly') {
-      totalMonthly += sub.amount
-      countMonthly++
-    } else {
-      totalAnnual += sub.amount
-      countAnnual++
+    switch (sub.cycle) {
+      case 'monthly':
+        totalMonthly += sub.amount
+        countMonthly++
+        break
+      case 'quarterly':
+        totalQuarterly += sub.amount
+        countQuarterly++
+        break
+      case 'semiannual':
+        totalSemiannual += sub.amount
+        countSemiannual++
+        break
+      case 'annual':
+        totalAnnual += sub.amount
+        countAnnual++
+        break
     }
   }
 
-  const totalMonthlyEstimate = totalMonthly + totalAnnual / 12
+  const totalMonthlyEstimate = totalMonthly + totalQuarterly / 3 + totalSemiannual / 6 + totalAnnual / 12
 
   return {
     totalMonthly,
+    totalQuarterly,
+    totalSemiannual,
     totalAnnual,
     totalMonthlyEstimate,
     countMonthly,
+    countQuarterly,
+    countSemiannual,
     countAnnual,
     countActive: active.length,
   }

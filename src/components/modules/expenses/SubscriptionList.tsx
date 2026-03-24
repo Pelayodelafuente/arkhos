@@ -7,7 +7,7 @@ import { Card, Badge, Button } from "@/components/ui"
 import { useExpensesStore, useFilteredSubscriptions } from "@/stores/expenses-store"
 import { ServiceAvatar } from "./ServiceAvatar"
 import { HighlightText } from "./HighlightText"
-import { formatCurrency, formatNextBilling, isBillingToday, groupByCategory } from "@/lib/gastos-utils"
+import { formatCurrency, formatNextBilling, isBillingToday, groupByCategory, getCycleShortLabel, getDaysUntilBilling, getNextBillingDate } from "@/lib/gastos-utils"
 import type { SubscriptionWithCategory } from "@/types/expenses"
 
 interface SubscriptionListProps {
@@ -139,7 +139,9 @@ function CategoryView({
       {groups.map((group) => {
         const key = group.category?.id ?? '__uncategorized__'
         const isCollapsed = collapsedCategories.has(key)
-        const groupTotal = group.totalMonthly + (notAmortizeYearly ? group.totalAnnual : group.totalAnnual / 12)
+        const groupTotal = notAmortizeYearly
+          ? group.totalMonthly + group.totalQuarterly + group.totalSemiannual + group.totalAnnual
+          : group.totalMonthly + group.totalQuarterly / 3 + group.totalSemiannual / 6 + group.totalAnnual / 12
 
         return (
           <div key={key}>
@@ -270,11 +272,37 @@ function SubscriptionRow({
   const isInactive = isPaused || isCancelled
   const billingToday = isBillingToday(subscription)
 
-  const displayAmount = notAmortizeYearly && subscription.cycle === 'monthly'
-    ? subscription.amount * 12
-    : notAmortizeYearly && subscription.cycle === 'annual'
-      ? subscription.amount
+  // When notAmortizeYearly: show annualized amount; otherwise show raw amount
+  const displayAmount = notAmortizeYearly
+    ? subscription.cycle === 'monthly' ? subscription.amount * 12
+      : subscription.cycle === 'quarterly' ? subscription.amount * 4
+      : subscription.cycle === 'semiannual' ? subscription.amount * 2
       : subscription.amount
+    : subscription.amount
+
+  // Countdown days
+  const daysUntil = !isInactive ? getDaysUntilBilling(subscription) : null
+
+  // Billing cycle progress: how far into the current billing period
+  const cycleProgress = useMemo(() => {
+    if (isInactive) return 0
+    const cycleDaysMap: Record<string, number> = {
+      monthly: 30,
+      quarterly: 90,
+      semiannual: 180,
+      annual: 365,
+    }
+    const totalDays = cycleDaysMap[subscription.cycle] ?? 30
+    const nextDate = getNextBillingDate(subscription)
+    const now = new Date()
+    now.setHours(0, 0, 0, 0)
+    nextDate.setHours(0, 0, 0, 0)
+    const daysLeft = Math.round((nextDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+    const daysSinceLast = totalDays - daysLeft
+    return Math.max(0, Math.min(100, (daysSinceLast / totalDays) * 100))
+  }, [subscription, isInactive])
+
+  const categoryColor = subscription.category?.color ?? undefined
 
   return (
     <motion.div
@@ -284,9 +312,12 @@ function SubscriptionRow({
         viewport: { once: true, margin: "-20px" },
         transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1], delay: index * 0.04 },
       })}
-      className={`group flex items-center gap-3 px-3 py-3 transition-all hover:bg-[rgba(240,235,225,0.5)] hover:-translate-y-[1px] hover:shadow-[0_4px_16px_rgba(26,23,20,0.06)] cursor-pointer ${
+      className={`group relative flex items-center gap-3 px-3 py-3 transition-all hover:bg-[rgba(240,235,225,0.5)] hover:-translate-y-[1px] cursor-pointer ${
         isInactive ? 'opacity-50' : ''
       }`}
+      style={{
+        borderLeft: categoryColor ? `3px solid ${categoryColor}` : undefined,
+      }}
       onClick={onEdit}
     >
       {/* Billing day */}
@@ -302,7 +333,7 @@ function SubscriptionRow({
         size="sm"
       />
 
-      {/* Name + next billing */}
+      {/* Name + next billing + tags + cycle progress */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className={`text-[13px] font-semibold text-foreground truncate ${isInactive ? 'line-through' : ''}`}>
@@ -324,26 +355,69 @@ function SubscriptionRow({
             </span>
           )}
         </div>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {!isInactive && (
+            <span className="text-xs text-text-tertiary">
+              {billingToday ? (
+                <span className="text-accent font-medium">Cobro hoy</span>
+              ) : (
+                `Proximo cobro: ${formatNextBilling(subscription)}`
+              )}
+            </span>
+          )}
+          {/* Countdown badge */}
+          {daysUntil !== null && daysUntil > 0 && daysUntil <= 7 && !billingToday && (
+            <Badge variant={daysUntil <= 2 ? "terracotta" : "gold"}>
+              En {daysUntil} dia{daysUntil !== 1 ? 's' : ''}
+            </Badge>
+          )}
+          {subscription.tags && subscription.tags.length > 0 && (
+            <span className="flex items-center gap-1">
+              {subscription.tags.slice(0, 3).map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded-full bg-sand px-1.5 py-px text-[10px] text-text-tertiary"
+                >
+                  {tag}
+                </span>
+              ))}
+              {subscription.tags.length > 3 && (
+                <span className="text-[10px] text-text-tertiary">+{subscription.tags.length - 3}</span>
+              )}
+            </span>
+          )}
+        </div>
+        {/* Cycle progress bar */}
         {!isInactive && (
-          <span className="text-xs text-text-tertiary">
-            {billingToday ? (
-              <span className="text-accent font-medium">Cobro hoy</span>
-            ) : (
-              `Próximo cobro: ${formatNextBilling(subscription)}`
-            )}
-          </span>
+          <div className="mt-1 h-[2px] w-full rounded-full bg-border/50 overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{
+                width: `${cycleProgress}%`,
+                backgroundColor: categoryColor ?? 'var(--module-gastos)',
+                transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
+              }}
+            />
+          </div>
         )}
       </div>
 
       {/* Cycle badge */}
-      <Badge variant={subscription.cycle === "monthly" ? "blue" : "gold"}>
-        {subscription.cycle === "monthly" ? "Mes" : "Año"}
+      <Badge variant={subscription.cycle === "monthly" ? "blue" : subscription.cycle === "annual" ? "gold" : subscription.cycle === "quarterly" ? "terracotta" : "green"}>
+        {getCycleShortLabel(subscription.cycle)}
       </Badge>
 
-      {/* Amount */}
-      <span className={`font-mono text-[13px] text-foreground min-w-[72px] text-right flex-shrink-0 ${isInactive ? 'line-through' : ''}`}>
-        {formatCurrency(displayAmount)}
-      </span>
+      {/* Amount + currency */}
+      <div className="flex items-center gap-1 flex-shrink-0">
+        {subscription.currency && subscription.currency !== 'EUR' && (
+          <span className="rounded bg-sand px-1 py-px text-[9px] font-mono font-medium text-text-tertiary">
+            {subscription.currency}
+          </span>
+        )}
+        <span className={`font-mono text-[13px] text-foreground min-w-[72px] text-right ${isInactive ? 'line-through' : ''}`}>
+          {formatCurrency(displayAmount)}
+        </span>
+      </div>
 
       {/* Billing today dot */}
       {billingToday && !isInactive && (
@@ -393,10 +467,15 @@ function EmptyState({ onNew, searchQuery }: { onNew: () => void; searchQuery: st
 
   // Contextual message when cycle filter is active
   if (cycleFilter !== 'all') {
-    const otherCycle = cycleFilter === 'monthly' ? 'annual' : 'monthly'
-    const otherCount = allSubscriptions.filter((s) => s.cycle === otherCycle).length
-    const filterLabel = cycleFilter === 'monthly' ? 'mensuales' : 'anuales'
-    const otherLabel = otherCycle === 'monthly' ? 'mensuales' : 'anuales'
+    const cycleLabels: Record<string, string> = {
+      monthly: 'mensuales',
+      quarterly: 'trimestrales',
+      semiannual: 'semestrales',
+      annual: 'anuales',
+    }
+    const otherCount = allSubscriptions.filter((s) => s.cycle !== cycleFilter).length
+    const filterLabel = cycleLabels[cycleFilter] ?? cycleFilter
+    const otherLabel = 'de otros ciclos'
 
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">

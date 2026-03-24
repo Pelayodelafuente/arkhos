@@ -1,13 +1,14 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
-import { Play, Pause, Trash2 } from "lucide-react"
+import { useState, useEffect, useCallback, useMemo } from "react"
+import { Play, Pause, Trash2, AlertTriangle } from "lucide-react"
 import { z } from "zod/v4"
 import { Modal, Button, Input, Select, Textarea } from "@/components/ui"
 import { useExpensesStore } from "@/stores/expenses-store"
-import type { SubscriptionWithCategory } from "@/types/expenses"
+import type { SubscriptionWithCategory, BillingCycle } from "@/types/expenses"
 import type { SubscriptionService } from "@/data/subscriptionServices"
 import { ServicesCombobox } from "./ServicesCombobox"
+import { findDuplicates } from "@/lib/duplicate-detection"
 
 // ── Zod schema ──────────────────────────
 
@@ -16,7 +17,7 @@ const subscriptionSchema = z.object({
   icon: z.string().min(1),
   color: z.string().min(1),
   amount: z.number().positive("El importe debe ser mayor que 0"),
-  cycle: z.enum(["monthly", "annual"]),
+  cycle: z.enum(["monthly", "quarterly", "semiannual", "annual"]),
   billing_day: z.number().int().min(1).max(31),
   category_id: z.string().nullable().optional(),
   url: z.string().nullable().optional(),
@@ -46,6 +47,7 @@ export function SubscriptionModal({
   const removeSubscription = useExpensesStore((s) => s.removeSubscription)
   const toggleActive = useExpensesStore((s) => s.toggleActive)
   const categories = useExpensesStore((s) => s.categories)
+  const subscriptions = useExpensesStore((s) => s.subscriptions)
 
   const isEdit = Boolean(subscription)
 
@@ -55,15 +57,38 @@ export function SubscriptionModal({
   const [icon, setIcon] = useState("")
   const [color, setColor] = useState("#4A7A9B")
   const [amount, setAmount] = useState("")
-  const [cycle, setCycle] = useState<"monthly" | "annual">("monthly")
+  const [cycle, setCycle] = useState<BillingCycle>("monthly")
   const [billingDay, setBillingDay] = useState("1")
   const [categoryId, setCategoryId] = useState("")
   const [url, setUrl] = useState("")
   const [notes, setNotes] = useState("")
   const [startedAt, setStartedAt] = useState("")
+  const [currency, setCurrency] = useState("EUR")
+  const [tags, setTags] = useState<string[]>([])
+  const [tagInput, setTagInput] = useState("")
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [dismissedDuplicates, setDismissedDuplicates] = useState(false)
+
+  // Collect all existing tags for autocomplete
+  const allTags = useMemo(() => {
+    const tagSet = new Set<string>()
+    for (const sub of subscriptions) {
+      if (sub.tags) {
+        for (const t of sub.tags) tagSet.add(t)
+      }
+    }
+    return Array.from(tagSet).sort()
+  }, [subscriptions])
+
+  const tagSuggestions = useMemo(() => {
+    if (!tagInput.trim()) return []
+    const q = tagInput.toLowerCase()
+    return allTags.filter(
+      (t) => t.toLowerCase().includes(q) && !tags.includes(t)
+    ).slice(0, 5)
+  }, [tagInput, allTags, tags])
 
   const resetForm = useCallback(() => {
     setName("")
@@ -76,9 +101,25 @@ export function SubscriptionModal({
     setUrl("")
     setNotes("")
     setStartedAt("")
+    setCurrency("EUR")
+    setTags([])
+    setTagInput("")
     setErrors({})
     setConfirmDelete(false)
+    setDismissedDuplicates(false)
   }, [])
+
+  // ── Duplicate detection ───────────
+
+  const duplicates = useMemo(() => {
+    if (isEdit || !name || dismissedDuplicates) return []
+    return findDuplicates(
+      subscriptions,
+      name,
+      parseFloat(amount) || undefined,
+      icon || undefined
+    )
+  }, [isEdit, name, amount, icon, subscriptions, dismissedDuplicates])
 
   // ── Populate on edit ────────────────
 
@@ -94,6 +135,9 @@ export function SubscriptionModal({
       setUrl(subscription.url ?? "")
       setNotes(subscription.notes ?? "")
       setStartedAt(subscription.started_at ?? "")
+      setCurrency(subscription.currency ?? "EUR")
+      setTags(subscription.tags ?? [])
+      setTagInput("")
     } else {
       resetForm()
     }
@@ -122,12 +166,14 @@ export function SubscriptionModal({
       icon: icon || name.toLowerCase().replace(/\s+/g, "-"),
       color,
       amount: parseFloat(amount) || 0,
+      currency,
       cycle,
       billing_day: parseInt(billingDay, 10),
       category_id: categoryId || null,
       url: url || null,
       notes: notes || null,
       started_at: startedAt || null,
+      tags,
     }
 
     const result = subscriptionSchema.safeParse(data)
@@ -184,8 +230,16 @@ export function SubscriptionModal({
 
   // ── Select options ──────────────────
 
+  const currencyOptions = [
+    { value: "EUR", label: "EUR" },
+    { value: "USD", label: "USD" },
+    { value: "GBP", label: "GBP" },
+  ]
+
   const cycleOptions = [
     { value: "monthly", label: "Mensual" },
+    { value: "quarterly", label: "Trimestral" },
+    { value: "semiannual", label: "Semestral" },
     { value: "annual", label: "Anual" },
   ]
 
@@ -207,6 +261,27 @@ export function SubscriptionModal({
       className="max-w-md"
     >
       <div className="space-y-4">
+        {/* Duplicate warning */}
+        {duplicates.length > 0 && (
+          <div className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 p-3">
+            <AlertTriangle size={16} strokeWidth={1.75} className="text-amber-600 mt-0.5 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-amber-800 mb-1">Posible duplicado</p>
+              {duplicates.map((dup) => (
+                <p key={dup.subscription.id} className="text-[11px] text-amber-700 truncate">
+                  {dup.subscription.name} — {dup.reason}
+                </p>
+              ))}
+              <button
+                onClick={() => setDismissedDuplicates(true)}
+                className="mt-1.5 text-[11px] font-medium text-amber-600 hover:text-amber-800 underline"
+              >
+                Ignorar
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Service combobox */}
         <ServicesCombobox
           value={isEdit ? name : ""}
@@ -236,23 +311,29 @@ export function SubscriptionModal({
           </div>
         </div>
 
-        {/* Amount + Cycle */}
-        <div className="grid grid-cols-2 gap-3">
+        {/* Amount + Currency + Cycle */}
+        <div className="grid grid-cols-[1fr_80px_1fr] gap-3">
           <Input
-            label="Importe (EUR)"
+            label="Importe"
             type="number"
             step="0.01"
             min="0"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             error={errors.amount}
-            placeholder="9.99"
+            placeholder=""
+          />
+          <Select
+            label="Divisa"
+            options={currencyOptions}
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value)}
           />
           <Select
             label="Ciclo"
             options={cycleOptions}
             value={cycle}
-            onChange={(e) => setCycle(e.target.value as "monthly" | "annual")}
+            onChange={(e) => setCycle(e.target.value as BillingCycle)}
           />
         </div>
 
@@ -288,6 +369,65 @@ export function SubscriptionModal({
           placeholder="Notas personales..."
           rows={2}
         />
+
+        {/* Tags */}
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-text-secondary">Etiquetas</label>
+          <div className="flex flex-wrap items-center gap-1.5 rounded-md border border-border bg-card px-2 py-1.5 min-h-[38px] focus-within:border-accent">
+            {tags.map((tag) => (
+              <span
+                key={tag}
+                className="inline-flex items-center gap-1 rounded-full bg-sand px-2 py-0.5 text-xs text-foreground"
+              >
+                {tag}
+                <button
+                  type="button"
+                  onClick={() => setTags(tags.filter((t) => t !== tag))}
+                  className="text-text-tertiary hover:text-foreground transition-colors"
+                >
+                  &times;
+                </button>
+              </span>
+            ))}
+            <input
+              type="text"
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              onKeyDown={(e) => {
+                if ((e.key === 'Enter' || e.key === ',') && tagInput.trim()) {
+                  e.preventDefault()
+                  const newTag = tagInput.trim().replace(/,/g, '')
+                  if (newTag && !tags.includes(newTag)) {
+                    setTags([...tags, newTag])
+                  }
+                  setTagInput("")
+                }
+                if (e.key === 'Backspace' && !tagInput && tags.length > 0) {
+                  setTags(tags.slice(0, -1))
+                }
+              }}
+              placeholder={tags.length === 0 ? "Añadir etiqueta..." : ""}
+              className="flex-1 min-w-[80px] bg-transparent text-sm text-foreground placeholder:text-text-tertiary outline-none"
+            />
+          </div>
+          {tagSuggestions.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-1">
+              {tagSuggestions.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => {
+                    if (!tags.includes(s)) setTags([...tags, s])
+                    setTagInput("")
+                  }}
+                  className="rounded-full bg-sand/70 px-2 py-0.5 text-[11px] text-text-secondary hover:bg-sand hover:text-foreground transition-colors"
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Start date */}
         <Input

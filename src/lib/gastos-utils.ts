@@ -3,7 +3,7 @@
 // Calculations, formatting, date helpers
 // ══════════════════════════════════════
 
-import type { SubscriptionWithCategory, ExpenseCategory } from '@/types/expenses'
+import type { SubscriptionWithCategory, ExpenseCategory, BillingCycle } from '@/types/expenses'
 
 // ─── Currency formatter ─────────────
 
@@ -24,7 +24,7 @@ export function formatCurrency(amount: number): string {
  */
 export interface BillingRef {
   billing_day: number
-  cycle: 'monthly' | 'annual'
+  cycle: BillingCycle
   started_at: string | null
 }
 
@@ -70,7 +70,6 @@ function getNextAnnualRenewalDate(sub: BillingRef, referenceDate?: Date): Date {
   today.setHours(0, 0, 0, 0)
 
   if (!sub.started_at) {
-    // No started_at: fall back to monthly logic and log warning
     console.warn(
       `[gastos-utils] Suscripción anual sin started_at (billing_day=${sub.billing_day}) — usando fallback mensual`
     )
@@ -89,18 +88,78 @@ function getNextAnnualRenewalDate(sub: BillingRef, referenceDate?: Date): Date {
   return nextRenewal
 }
 
+/**
+ * Next billing date for a quarterly subscription (every 3 months from started_at).
+ */
+function getNextQuarterlyBillingDate(sub: BillingRef, referenceDate?: Date): Date {
+  const today = referenceDate ?? new Date()
+  today.setHours(0, 0, 0, 0)
+
+  if (!sub.started_at) {
+    console.warn(
+      `[gastos-utils] Suscripción trimestral sin started_at (billing_day=${sub.billing_day}) — usando fallback mensual`
+    )
+    return getMonthlyNextBillingDate(sub.billing_day, referenceDate)
+  }
+
+  const startDate = new Date(sub.started_at)
+  let nextRenewal = new Date(startDate)
+  nextRenewal.setHours(0, 0, 0, 0)
+
+  while (nextRenewal <= today) {
+    nextRenewal = new Date(nextRenewal)
+    nextRenewal.setMonth(nextRenewal.getMonth() + 3)
+  }
+
+  return nextRenewal
+}
+
+/**
+ * Next billing date for a semiannual subscription (every 6 months from started_at).
+ */
+function getNextSemiannualBillingDate(sub: BillingRef, referenceDate?: Date): Date {
+  const today = referenceDate ?? new Date()
+  today.setHours(0, 0, 0, 0)
+
+  if (!sub.started_at) {
+    console.warn(
+      `[gastos-utils] Suscripción semestral sin started_at (billing_day=${sub.billing_day}) — usando fallback mensual`
+    )
+    return getMonthlyNextBillingDate(sub.billing_day, referenceDate)
+  }
+
+  const startDate = new Date(sub.started_at)
+  let nextRenewal = new Date(startDate)
+  nextRenewal.setHours(0, 0, 0, 0)
+
+  while (nextRenewal <= today) {
+    nextRenewal = new Date(nextRenewal)
+    nextRenewal.setMonth(nextRenewal.getMonth() + 6)
+  }
+
+  return nextRenewal
+}
+
 // ─── Date helpers ───────────────────
 
 /**
  * Get the next billing date for a subscription.
  * - monthly: next day X of month (existing logic)
+ * - quarterly: next 3-month anniversary of started_at
+ * - semiannual: next 6-month anniversary of started_at
  * - annual: next anniversary of started_at
  */
 export function getNextBillingDate(sub: BillingRef, referenceDate?: Date): Date {
-  if (sub.cycle === 'annual') {
-    return getNextAnnualRenewalDate(sub, referenceDate)
+  switch (sub.cycle) {
+    case 'annual':
+      return getNextAnnualRenewalDate(sub, referenceDate)
+    case 'quarterly':
+      return getNextQuarterlyBillingDate(sub, referenceDate)
+    case 'semiannual':
+      return getNextSemiannualBillingDate(sub, referenceDate)
+    default:
+      return getMonthlyNextBillingDate(sub.billing_day, referenceDate)
   }
-  return getMonthlyNextBillingDate(sub.billing_day, referenceDate)
 }
 
 /**
@@ -122,8 +181,7 @@ export function formatNextBilling(sub: BillingRef): string {
   const days = getDaysUntilBilling(sub)
   if (days === 0) return 'Hoy'
   if (days === 1) return 'Mañana'
-  if (sub.cycle === 'annual') {
-    // Show exact date for annual subscriptions
+  if (sub.cycle === 'annual' || sub.cycle === 'quarterly' || sub.cycle === 'semiannual') {
     return next.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
   }
   return `En ${days} días`
@@ -150,6 +208,8 @@ export interface CategoryGroup {
   subscriptions: SubscriptionWithCategory[]
   totalMonthly: number
   totalAnnual: number
+  totalQuarterly: number
+  totalSemiannual: number
 }
 
 /**
@@ -167,23 +227,34 @@ export function groupByCategory(subscriptions: SubscriptionWithCategory[]): Cate
         subscriptions: [],
         totalMonthly: 0,
         totalAnnual: 0,
+        totalQuarterly: 0,
+        totalSemiannual: 0,
       })
     }
 
     const group = groups.get(key)!
     group.subscriptions.push(sub)
-    if (sub.cycle === 'monthly') {
-      group.totalMonthly += sub.amount
-    } else {
-      group.totalAnnual += sub.amount
+    switch (sub.cycle) {
+      case 'monthly':
+        group.totalMonthly += sub.amount
+        break
+      case 'quarterly':
+        group.totalQuarterly += sub.amount
+        break
+      case 'semiannual':
+        group.totalSemiannual += sub.amount
+        break
+      case 'annual':
+        group.totalAnnual += sub.amount
+        break
     }
   }
 
   return Array.from(groups.values()).sort((a, b) => {
     if (!a.category) return 1
     if (!b.category) return -1
-    const totalA = a.totalMonthly + a.totalAnnual / 12
-    const totalB = b.totalMonthly + b.totalAnnual / 12
+    const totalA = a.totalMonthly + a.totalQuarterly / 3 + a.totalSemiannual / 6 + a.totalAnnual / 12
+    const totalB = b.totalMonthly + b.totalQuarterly / 3 + b.totalSemiannual / 6 + b.totalAnnual / 12
     return totalB - totalA
   })
 }
@@ -194,14 +265,32 @@ export function groupByCategory(subscriptions: SubscriptionWithCategory[]): Cate
  * Calculate annualized amount for a subscription.
  */
 export function getAnnualizedAmount(sub: SubscriptionWithCategory): number {
-  return sub.cycle === 'monthly' ? sub.amount * 12 : sub.amount
+  switch (sub.cycle) {
+    case 'monthly':
+      return sub.amount * 12
+    case 'quarterly':
+      return sub.amount * 4
+    case 'semiannual':
+      return sub.amount * 2
+    case 'annual':
+      return sub.amount
+  }
 }
 
 /**
  * Calculate monthly equivalent for a subscription.
  */
 export function getMonthlyEquivalent(sub: SubscriptionWithCategory): number {
-  return sub.cycle === 'monthly' ? sub.amount : sub.amount / 12
+  switch (sub.cycle) {
+    case 'monthly':
+      return sub.amount
+    case 'quarterly':
+      return sub.amount / 3
+    case 'semiannual':
+      return sub.amount / 6
+    case 'annual':
+      return sub.amount / 12
+  }
 }
 
 /**
@@ -219,7 +308,7 @@ export function getMostExpensiveCategory(
   const top = groups[0]
   return {
     category: top.category,
-    total: top.totalMonthly + top.totalAnnual / 12,
+    total: top.totalMonthly + top.totalQuarterly / 3 + top.totalSemiannual / 6 + top.totalAnnual / 12,
     count: top.subscriptions.length,
   }
 }
@@ -284,6 +373,40 @@ export function getHeatIntensity(totalAmount: number): string {
   return 'bg-[rgba(74,122,155,0.20)]'
 }
 
+// ─── Cycle labels ────────────────────
+
+/**
+ * Get human-readable cycle label in Spanish.
+ */
+export function getCycleLabel(cycle: BillingCycle): string {
+  switch (cycle) {
+    case 'monthly':
+      return 'Mensual'
+    case 'quarterly':
+      return 'Trimestral'
+    case 'semiannual':
+      return 'Semestral'
+    case 'annual':
+      return 'Anual'
+  }
+}
+
+/**
+ * Get short cycle label for badges.
+ */
+export function getCycleShortLabel(cycle: BillingCycle): string {
+  switch (cycle) {
+    case 'monthly':
+      return 'Mes'
+    case 'quarterly':
+      return 'Trim'
+    case 'semiannual':
+      return 'Sem'
+    case 'annual':
+      return 'Año'
+  }
+}
+
 // ─── CSV Export ──────────────────────
 
 export function exportToCSV(subscriptions: SubscriptionWithCategory[], filename: string): void {
@@ -291,7 +414,7 @@ export function exportToCSV(subscriptions: SubscriptionWithCategory[], filename:
   const rows = subscriptions.map((s) => [
     s.name,
     s.category?.name ?? 'Sin categoría',
-    s.cycle === 'monthly' ? 'Mensual' : 'Anual',
+    getCycleLabel(s.cycle),
     s.amount.toFixed(2),
     String(s.billing_day),
     s.url ?? '',
@@ -302,14 +425,31 @@ export function exportToCSV(subscriptions: SubscriptionWithCategory[], filename:
   const monthlyTotal = subscriptions
     .filter((s) => s.status === 'active' && s.cycle === 'monthly')
     .reduce((acc, s) => acc + s.amount, 0)
+  const quarterlyTotal = subscriptions
+    .filter((s) => s.status === 'active' && s.cycle === 'quarterly')
+    .reduce((acc, s) => acc + s.amount, 0)
+  const semiannualTotal = subscriptions
+    .filter((s) => s.status === 'active' && s.cycle === 'semiannual')
+    .reduce((acc, s) => acc + s.amount, 0)
   const annualTotal = subscriptions
     .filter((s) => s.status === 'active' && s.cycle === 'annual')
     .reduce((acc, s) => acc + s.amount, 0)
 
   rows.push([])
   rows.push(['TOTAL MENSUAL', '', '', monthlyTotal.toFixed(2), '', '', '', ''])
+  rows.push(['TOTAL TRIMESTRAL', '', '', quarterlyTotal.toFixed(2), '', '', '', ''])
+  rows.push(['TOTAL SEMESTRAL', '', '', semiannualTotal.toFixed(2), '', '', '', ''])
   rows.push(['TOTAL ANUAL', '', '', annualTotal.toFixed(2), '', '', '', ''])
-  rows.push(['TOTAL ESTIMADO/AÑO', '', '', (monthlyTotal * 12 + annualTotal).toFixed(2), '', '', '', ''])
+  rows.push([
+    'TOTAL ESTIMADO/AÑO',
+    '',
+    '',
+    (monthlyTotal * 12 + quarterlyTotal * 4 + semiannualTotal * 2 + annualTotal).toFixed(2),
+    '',
+    '',
+    '',
+    '',
+  ])
 
   const csv = [headers, ...rows].map((row) => row.map((cell) => `"${cell}"`).join(',')).join('\n')
   const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' })

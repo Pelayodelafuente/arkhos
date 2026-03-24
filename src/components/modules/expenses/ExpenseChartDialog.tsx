@@ -1,14 +1,31 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { PieChart as PieChartIcon } from "lucide-react"
 import dynamic from "next/dynamic"
 import { Button, Modal } from "@/components/ui"
 
 const LazyCharts = dynamic(() => import("./charts/ChartContent"), { ssr: false })
 
-export function ExpenseChartDialog() {
+interface ExpenseChartDialogProps {
+  externalOpen?: boolean
+  onExternalClose?: () => void
+}
+
+export function ExpenseChartDialog({ externalOpen, onExternalClose }: ExpenseChartDialogProps) {
   const [open, setOpen] = useState(false)
+
+  // Sync with external open state
+  useEffect(() => {
+    if (externalOpen) {
+      setOpen(true)
+    }
+  }, [externalOpen])
+
+  const handleClose = () => {
+    setOpen(false)
+    onExternalClose?.()
+  }
 
   return (
     <>
@@ -19,13 +36,13 @@ export function ExpenseChartDialog() {
         className="border border-border"
       >
         <PieChartIcon size={16} strokeWidth={1.75} />
-        <span className="hidden sm:inline">Gráfico</span>
+        <span className="hidden sm:inline">Grafico</span>
       </Button>
 
       <Modal
         open={open}
-        onClose={() => setOpen(false)}
-        title="Análisis de gastos"
+        onClose={handleClose}
+        title="Analisis de gastos"
         className="max-w-2xl"
       >
         {open && <LazyCharts />}

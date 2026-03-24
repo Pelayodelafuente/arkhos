@@ -17,7 +17,7 @@ export function BudgetBar({ userId }: BudgetBarProps) {
   const [budgetInput, setBudgetInput] = useState("")
 
   const budget = settings?.monthly_budget ?? null
-  const spent = summary.totalMonthly
+  const spent = summary.totalMonthlyEstimate
   const percentage = budget && budget > 0 ? Math.min((spent / budget) * 100, 100) : 0
 
   const getBarColor = () => {

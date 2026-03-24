@@ -1,13 +1,14 @@
 "use client"
 
 import { useState, useCallback, useMemo } from "react"
-import { Sparkles, Check, AlertCircle } from "lucide-react"
+import { Sparkles, Check, AlertCircle, AlertTriangle } from "lucide-react"
 import { Modal, Button, Badge } from "@/components/ui"
 import { useExpensesStore } from "@/stores/expenses-store"
 import { parseSmartAdd, isSmartAddComplete } from "@/lib/smart-add-parser"
 import { findServiceByName } from "@/data/subscriptionServices"
+import { findDuplicates } from "@/lib/duplicate-detection"
 import { ServiceAvatar } from "./ServiceAvatar"
-import { formatCurrency } from "@/lib/gastos-utils"
+import { formatCurrency, getCycleShortLabel } from "@/lib/gastos-utils"
 
 interface SmartAddModalProps {
   open: boolean
@@ -18,11 +19,24 @@ interface SmartAddModalProps {
 export function SmartAddModal({ open, onClose, userId }: SmartAddModalProps) {
   const [input, setInput] = useState("")
   const [saving, setSaving] = useState(false)
+  const [dismissedDuplicates, setDismissedDuplicates] = useState(false)
   const addSubscription = useExpensesStore((s) => s.addSubscription)
+  const subscriptions = useExpensesStore((s) => s.subscriptions)
 
   const parsed = useMemo(() => parseSmartAdd(input), [input])
   const complete = isSmartAddComplete(parsed)
   const matchedService = parsed.name ? findServiceByName(parsed.name) : undefined
+
+  // Duplicate detection
+  const duplicates = useMemo(() => {
+    if (!parsed.name || dismissedDuplicates) return []
+    return findDuplicates(
+      subscriptions,
+      parsed.name,
+      parsed.amount ?? undefined,
+      matchedService?.id
+    )
+  }, [parsed.name, parsed.amount, matchedService, subscriptions, dismissedDuplicates])
 
   const handleCreate = useCallback(async () => {
     if (!complete || !parsed.name || !parsed.amount) return
@@ -40,6 +54,7 @@ export function SmartAddModal({ open, onClose, userId }: SmartAddModalProps) {
         status: 'active',
       })
       setInput("")
+      setDismissedDuplicates(false)
       onClose()
     } finally {
       setSaving(false)
@@ -49,6 +64,16 @@ export function SmartAddModal({ open, onClose, userId }: SmartAddModalProps) {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && complete) {
       handleCreate()
+    }
+  }
+
+  const getCycleBadgeVariant = (cycle: string): "blue" | "gold" | "terracotta" | "green" => {
+    switch (cycle) {
+      case 'monthly': return 'blue'
+      case 'quarterly': return 'terracotta'
+      case 'semiannual': return 'green'
+      case 'annual': return 'gold'
+      default: return 'blue'
     }
   }
 
@@ -65,7 +90,7 @@ export function SmartAddModal({ open, onClose, userId }: SmartAddModalProps) {
           <input
             type="text"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => { setInput(e.target.value); setDismissedDuplicates(false) }}
             onKeyDown={handleKeyDown}
             placeholder='Ej: Netflix 17.99 mensual día 1'
             className="w-full rounded-xl border border-border bg-card py-3 pl-10 pr-4 text-sm text-foreground placeholder:text-text-tertiary focus:border-accent focus:outline-none"
@@ -75,10 +100,31 @@ export function SmartAddModal({ open, onClose, userId }: SmartAddModalProps) {
 
         {/* Help text */}
         <p className="text-[11px] text-text-tertiary leading-relaxed">
-          Escribe el nombre, precio, ciclo (mensual/anual), día de cobro y categoría.
+          Escribe el nombre, precio, ciclo (mensual/trimestral/semestral/anual), día de cobro y categoría.
           <br />
           Ejemplo: <span className="font-mono">Spotify 10.99 mensual día 15 en Música</span>
         </p>
+
+        {/* Duplicate warning */}
+        {duplicates.length > 0 && (
+          <div className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 p-3">
+            <AlertTriangle size={16} strokeWidth={1.75} className="text-amber-600 mt-0.5 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-amber-800 mb-1">Posible duplicado</p>
+              {duplicates.map((dup) => (
+                <p key={dup.subscription.id} className="text-[11px] text-amber-700 truncate">
+                  {dup.subscription.name} — {dup.reason}
+                </p>
+              ))}
+              <button
+                onClick={() => setDismissedDuplicates(true)}
+                className="mt-1.5 text-[11px] font-medium text-amber-600 hover:text-amber-800 underline"
+              >
+                Ignorar
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Preview */}
         {parsed.name && (
@@ -106,8 +152,8 @@ export function SmartAddModal({ open, onClose, userId }: SmartAddModalProps) {
                     </span>
                   )}
                   {parsed.cycle && (
-                    <Badge variant={parsed.cycle === 'monthly' ? 'blue' : 'gold'}>
-                      {parsed.cycle === 'monthly' ? 'Mensual' : 'Anual'}
+                    <Badge variant={getCycleBadgeVariant(parsed.cycle)}>
+                      {getCycleShortLabel(parsed.cycle)}
                     </Badge>
                   )}
                   {parsed.billingDay !== null && (
