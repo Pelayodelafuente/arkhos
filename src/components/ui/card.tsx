@@ -26,18 +26,10 @@ export function Card({
       onClick={onClick}
       className={`rounded-xl bg-card ${paddingClasses[padding]} ${
         isClickable
-          ? "cursor-pointer transition-all"
+          ? "cursor-pointer transition-all hover:[box-shadow:0_4px_20px_rgba(160,80,40,0.10)] hover:[border-color:var(--border-accent)]"
           : ""
       } ${className}`}
       style={{ border: "1px solid var(--border-subtle)" }}
-      onMouseEnter={isClickable ? (e) => {
-        (e.currentTarget as HTMLDivElement).style.borderColor = "var(--accent-terracotta)";
-        (e.currentTarget as HTMLDivElement).style.boxShadow = "0 4px 20px rgba(160,80,40,0.10)";
-      } : undefined}
-      onMouseLeave={isClickable ? (e) => {
-        (e.currentTarget as HTMLDivElement).style.borderColor = "";
-        (e.currentTarget as HTMLDivElement).style.boxShadow = "";
-      } : undefined}
       {...props}
     >
       {children}
