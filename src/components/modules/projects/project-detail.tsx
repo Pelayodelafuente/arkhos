@@ -326,24 +326,12 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
     [debounce, editTask]
   );
 
-  if (loading && !project) return <DetailSkeleton />;
-
-  if (!project) {
-    return (
-      <div className="py-16 text-center">
-        <p className="text-text-tertiary">Proyecto no encontrado</p>
-        <Link href="/proyectos" className="mt-2 inline-block text-sm text-accent hover:underline">
-          Volver a proyectos
-        </Link>
-      </div>
-    );
-  }
-
-  const totalTrackedSeconds = project.phases.reduce(
+  // Computed before early returns so hooks are always called unconditionally
+  const totalTrackedSeconds = (project?.phases ?? []).reduce(
     (sum, p) => sum + p.tasks.reduce((ts, t) => ts + t.tracked_seconds, 0), 0
   );
-  const totalTasks = project.phases.reduce((sum, p) => sum + p.tasks.length, 0);
-  const doneTasks = project.phases.reduce(
+  const totalTasks = (project?.phases ?? []).reduce((sum, p) => sum + p.tasks.length, 0);
+  const doneTasks = (project?.phases ?? []).reduce(
     (sum, p) => sum + p.tasks.filter((t) => t.done).length,
     0
   );
@@ -358,6 +346,19 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
     }
     prevProgressRef.current = overallProgress;
   }, [overallProgress]);
+
+  if (loading && !project) return <DetailSkeleton />;
+
+  if (!project) {
+    return (
+      <div className="py-16 text-center">
+        <p className="text-text-tertiary">Proyecto no encontrado</p>
+        <Link href="/proyectos" className="mt-2 inline-block text-sm text-accent hover:underline">
+          Volver a proyectos
+        </Link>
+      </div>
+    );
+  }
 
   function togglePhase(phaseId: string) {
     setExpandedPhases((prev) => {
