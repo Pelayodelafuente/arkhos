@@ -143,18 +143,17 @@ interface ConfettiParticle {
   size: number;
 }
 
+// Stable particles — generated once at module load (avoids Math.random in render)
+const CONFETTI_PARTICLES: ConfettiParticle[] = Array.from({ length: 20 }, (_, i) => ({
+  id: i,
+  x: Math.random() * 100,
+  delay: Math.random() * 0.5,
+  color: i % 2 === 0 ? "#C4704A" : "#5b8c6a",
+  size: 6 + Math.random() * 4,
+}))
+
 function Confetti() {
-  const particles = useMemo<ConfettiParticle[]>(
-    () =>
-      Array.from({ length: 20 }, (_, i) => ({
-        id: i,
-        x: Math.random() * 100,
-        delay: Math.random() * 0.5,
-        color: i % 2 === 0 ? "#C4704A" : "#5b8c6a",
-        size: 6 + Math.random() * 4,
-      })),
-    []
-  );
+  const particles = CONFETTI_PARTICLES;
 
   return (
     <div className="pointer-events-none fixed inset-0 z-50 overflow-hidden">

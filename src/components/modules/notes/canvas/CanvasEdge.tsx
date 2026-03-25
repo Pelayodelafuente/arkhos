@@ -132,6 +132,28 @@ export function CanvasEdgeComponent({
 }: CanvasEdgeProps) {
   const [isHovered, setIsHovered] = useState(false)
 
+  // Hooks must come before any early return
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
+    onSelect(edge.id)
+  }, [edge.id, onSelect])
+
+  const handleDoubleClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
+    onEditLabel(edge.id)
+  }, [edge.id, onEditLabel])
+
+  const handleContextMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    onContextMenu(edge.id, e)
+  }, [edge.id, onContextMenu])
+
+  const handleDelete = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
+    onDelete(edge.id)
+  }, [edge.id, onDelete])
+
   const fromNode = nodes.get(edge.from_node_id)
   const toNode = nodes.get(edge.to_node_id)
   if (!fromNode || !toNode) return null
@@ -155,27 +177,6 @@ export function CanvasEdgeComponent({
 
   // Delete button radius
   const btnR = 10 / scale
-
-  const handleClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation()
-    onSelect(edge.id)
-  }, [edge.id, onSelect])
-
-  const handleDoubleClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation()
-    onEditLabel(edge.id)
-  }, [edge.id, onEditLabel])
-
-  const handleContextMenu = useCallback((e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    onContextMenu(edge.id, e)
-  }, [edge.id, onContextMenu])
-
-  const handleDelete = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation()
-    onDelete(edge.id)
-  }, [edge.id, onDelete])
 
   return (
     <g

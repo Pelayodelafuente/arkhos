@@ -136,11 +136,35 @@ function DistributionChart({ subscriptions }: { subscriptions: SubscriptionWithC
 
 // ─── Evolution (Bar) ────────────────
 
+// Stable constants — outside component to avoid useMemo dependency issues
+const MONTH_NAMES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+
+interface TooltipPayload {
+  payload?: {
+    fullMonth?: string
+    name?: string
+    total?: number
+    count?: number
+  }
+}
+
+function CustomTooltip({ active, payload }: { active?: boolean; payload?: TooltipPayload[] }) {
+  if (!active || !payload || !payload[0]) return null
+  const d = payload[0].payload
+  if (!d) return null
+  return (
+    <div className="rounded-lg bg-card border border-border px-3 py-2 text-xs">
+      <p className="font-medium text-foreground">{d.fullMonth ?? d.name}</p>
+      <p className="font-mono text-foreground">{formatCurrency(d.total ?? 0)}</p>
+      <p className="text-text-tertiary">{d.count ?? 0} pago{(d.count ?? 0) !== 1 ? 's' : ''}</p>
+    </div>
+  )
+}
+
 function EvolutionChart({ subscriptions }: { subscriptions: SubscriptionWithCategory[] }) {
   const monthlySpending = useExpensesStore((s) => s.monthlySpending)
 
   const now = new Date()
-  const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
   const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 
   const hasData = monthlySpending.some((m) => m.total > 0)
@@ -152,7 +176,7 @@ function EvolutionChart({ subscriptions }: { subscriptions: SubscriptionWithCate
       return Array.from({ length: 6 }, (_, i) => {
         const monthIndex = (now.getMonth() - 5 + i + 12) % 12
         return {
-          name: monthNames[monthIndex],
+          name: MONTH_NAMES[monthIndex],
           total: i === 5 ? total : 0,
           count: i === 5 ? subscriptions.length : 0,
           isCurrent: i === 5,
@@ -166,37 +190,15 @@ function EvolutionChart({ subscriptions }: { subscriptions: SubscriptionWithCate
       const monthIndex = parseInt(monthStr, 10) - 1
       const prevMonth = i > 0 ? monthlySpending[i - 1].total : 0
       return {
-        name: monthNames[monthIndex],
+        name: MONTH_NAMES[monthIndex],
         total: m.total,
         count: m.count,
         isCurrent: m.month === currentMonthKey,
         prevTotal: prevMonth,
-        fullMonth: `${monthNames[monthIndex]} ${yearStr}`,
+        fullMonth: `${MONTH_NAMES[monthIndex]} ${yearStr}`,
       }
     })
   }, [monthlySpending, hasData, subscriptions, now, currentMonthKey])
-
-  interface TooltipPayload {
-    payload?: {
-      fullMonth?: string
-      name?: string
-      total?: number
-      count?: number
-    }
-  }
-
-  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: TooltipPayload[] }) => {
-    if (!active || !payload || !payload[0]) return null
-    const d = payload[0].payload
-    if (!d) return null
-    return (
-      <div className="rounded-lg bg-card border border-border px-3 py-2 text-xs">
-        <p className="font-medium text-foreground">{d.fullMonth ?? d.name}</p>
-        <p className="font-mono text-foreground">{formatCurrency(d.total ?? 0)}</p>
-        <p className="text-text-tertiary">{d.count ?? 0} pago{(d.count ?? 0) !== 1 ? 's' : ''}</p>
-      </div>
-    )
-  }
 
   if (!hasData) {
     return (
