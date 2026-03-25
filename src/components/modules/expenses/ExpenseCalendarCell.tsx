@@ -123,7 +123,8 @@ export function ExpenseCalendarCell({
   const cellClasses = [
     'relative rounded-xl p-1 min-h-[48px] transition-all duration-200',
     hasSubs ? 'cursor-pointer' : 'cursor-default',
-    isSelected ? 'bg-[rgba(196,112,74,0.10)] border-2 border-accent' : '',
+    // ring-inset uses box-shadow (no layout impact), avoids reflow caused by border-2
+    isSelected ? 'bg-[rgba(196,112,74,0.10)] ring-2 ring-inset ring-[#C4704A] border border-transparent' : '',
     isToday && !isSelected ? 'bg-sand border border-border' : '',
     !isSelected && !isToday && hasSubs ? `${heatClass} border border-[rgba(74,122,155,0.12)]` : '',
     !isSelected && !isToday && !hasSubs ? 'border border-transparent' : '',

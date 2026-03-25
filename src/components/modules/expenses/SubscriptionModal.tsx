@@ -63,51 +63,10 @@ export function SubscriptionModal({
   const [url, setUrl] = useState("")
   const [notes, setNotes] = useState("")
   const [startedAt, setStartedAt] = useState("")
-  const [currency, setCurrency] = useState("EUR")
-  const [tags, setTags] = useState<string[]>([])
-  const [tagInput, setTagInput] = useState("")
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [dismissedDuplicates, setDismissedDuplicates] = useState(false)
-
-  // Collect all existing tags for autocomplete
-  const allTags = useMemo(() => {
-    const tagSet = new Set<string>()
-    for (const sub of subscriptions) {
-      if (sub.tags) {
-        for (const t of sub.tags) tagSet.add(t)
-      }
-    }
-    return Array.from(tagSet).sort()
-  }, [subscriptions])
-
-  const tagSuggestions = useMemo(() => {
-    if (!tagInput.trim()) return []
-    const q = tagInput.toLowerCase()
-    return allTags.filter(
-      (t) => t.toLowerCase().includes(q) && !tags.includes(t)
-    ).slice(0, 5)
-  }, [tagInput, allTags, tags])
-
-  const resetForm = useCallback(() => {
-    setName("")
-    setIcon("")
-    setColor("#4A7A9B")
-    setAmount("")
-    setCycle("monthly")
-    setBillingDay("1")
-    setCategoryId("")
-    setUrl("")
-    setNotes("")
-    setStartedAt("")
-    setCurrency("EUR")
-    setTags([])
-    setTagInput("")
-    setErrors({})
-    setConfirmDelete(false)
-    setDismissedDuplicates(false)
-  }, [])
 
   // ── Duplicate detection ───────────
 
@@ -120,6 +79,22 @@ export function SubscriptionModal({
       icon || undefined
     )
   }, [isEdit, name, amount, icon, subscriptions, dismissedDuplicates])
+
+  const resetForm = useCallback(() => {
+    setName("")
+    setIcon("")
+    setColor("#4A7A9B")
+    setAmount("")
+    setCycle("monthly")
+    setBillingDay("1")
+    setCategoryId("")
+    setUrl("")
+    setNotes("")
+    setStartedAt("")
+    setErrors({})
+    setConfirmDelete(false)
+    setDismissedDuplicates(false)
+  }, [])
 
   // ── Populate on edit ────────────────
 
@@ -135,9 +110,6 @@ export function SubscriptionModal({
       setUrl(subscription.url ?? "")
       setNotes(subscription.notes ?? "")
       setStartedAt(subscription.started_at ?? "")
-      setCurrency(subscription.currency ?? "EUR")
-      setTags(subscription.tags ?? [])
-      setTagInput("")
     } else {
       resetForm()
     }
@@ -166,14 +138,12 @@ export function SubscriptionModal({
       icon: icon || name.toLowerCase().replace(/\s+/g, "-"),
       color,
       amount: parseFloat(amount) || 0,
-      currency,
       cycle,
       billing_day: parseInt(billingDay, 10),
       category_id: categoryId || null,
       url: url || null,
       notes: notes || null,
       started_at: startedAt || null,
-      tags,
     }
 
     const result = subscriptionSchema.safeParse(data)
@@ -230,12 +200,6 @@ export function SubscriptionModal({
 
   // ── Select options ──────────────────
 
-  const currencyOptions = [
-    { value: "EUR", label: "EUR" },
-    { value: "USD", label: "USD" },
-    { value: "GBP", label: "GBP" },
-  ]
-
   const cycleOptions = [
     { value: "monthly", label: "Mensual" },
     { value: "annual", label: "Anual" },
@@ -272,7 +236,7 @@ export function SubscriptionModal({
               ))}
               <button
                 onClick={() => setDismissedDuplicates(true)}
-                className="mt-1.5 text-[11px] font-medium text-amber-600 hover:text-amber-800 underline"
+                className="mt-1.5 text-[11px] font-medium text-amber-600 hover:text-amber-800 underline cursor-pointer"
               >
                 Ignorar
               </button>
@@ -309,8 +273,8 @@ export function SubscriptionModal({
           </div>
         </div>
 
-        {/* Amount + Currency + Cycle */}
-        <div className="grid grid-cols-[1fr_80px_1fr] gap-3">
+        {/* Amount + Cycle */}
+        <div className="grid grid-cols-2 gap-3">
           <Input
             label="Importe"
             type="number"
@@ -320,12 +284,6 @@ export function SubscriptionModal({
             onChange={(e) => setAmount(e.target.value)}
             error={errors.amount}
             placeholder=""
-          />
-          <Select
-            label="Divisa"
-            options={currencyOptions}
-            value={currency}
-            onChange={(e) => setCurrency(e.target.value)}
           />
           <Select
             label="Ciclo"
@@ -368,65 +326,6 @@ export function SubscriptionModal({
           rows={2}
         />
 
-        {/* Tags */}
-        <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-text-secondary">Etiquetas</label>
-          <div className="flex flex-wrap items-center gap-1.5 rounded-md border border-border bg-card px-2 py-1.5 min-h-[38px] focus-within:border-accent">
-            {tags.map((tag) => (
-              <span
-                key={tag}
-                className="inline-flex items-center gap-1 rounded-full bg-sand px-2 py-0.5 text-xs text-foreground"
-              >
-                {tag}
-                <button
-                  type="button"
-                  onClick={() => setTags(tags.filter((t) => t !== tag))}
-                  className="text-text-tertiary hover:text-foreground transition-colors"
-                >
-                  &times;
-                </button>
-              </span>
-            ))}
-            <input
-              type="text"
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyDown={(e) => {
-                if ((e.key === 'Enter' || e.key === ',') && tagInput.trim()) {
-                  e.preventDefault()
-                  const newTag = tagInput.trim().replace(/,/g, '')
-                  if (newTag && !tags.includes(newTag)) {
-                    setTags([...tags, newTag])
-                  }
-                  setTagInput("")
-                }
-                if (e.key === 'Backspace' && !tagInput && tags.length > 0) {
-                  setTags(tags.slice(0, -1))
-                }
-              }}
-              placeholder={tags.length === 0 ? "Añadir etiqueta..." : ""}
-              className="flex-1 min-w-[80px] bg-transparent text-sm text-foreground placeholder:text-text-tertiary outline-none"
-            />
-          </div>
-          {tagSuggestions.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-1">
-              {tagSuggestions.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => {
-                    if (!tags.includes(s)) setTags([...tags, s])
-                    setTagInput("")
-                  }}
-                  className="rounded-full bg-sand/70 px-2 py-0.5 text-[11px] text-text-secondary hover:bg-sand hover:text-foreground transition-colors"
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
         {/* Start date */}
         <Input
           label="Fecha de inicio"
@@ -442,7 +341,7 @@ export function SubscriptionModal({
               variant="ghost"
               size="sm"
               onClick={handleToggleActive}
-              className="border border-border"
+              className="border border-border cursor-pointer"
             >
               {subscription.is_active ? (
                 <>
@@ -456,15 +355,21 @@ export function SubscriptionModal({
                 </>
               )}
             </Button>
-            <Button
-              variant="danger"
-              size="sm"
+            <button
               onClick={handleDelete}
-              loading={saving && confirmDelete}
+              disabled={saving && confirmDelete}
+              className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-150 cursor-pointer border border-border
+                ${confirmDelete
+                  ? 'bg-[#C4704A]/10 text-[#C4704A] border-[#C4704A]/30'
+                  : 'text-foreground/60 hover:bg-sand hover:text-foreground/90 hover:border-stone/50'
+                }`}
             >
+              {saving && confirmDelete && (
+                <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+              )}
               <Trash2 size={14} strokeWidth={1.75} />
               {confirmDelete ? "Confirmar eliminacion" : "Eliminar"}
-            </Button>
+            </button>
           </div>
         )}
 

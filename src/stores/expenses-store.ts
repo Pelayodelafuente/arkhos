@@ -297,10 +297,11 @@ export const useExpensesStore = create<ExpensesStore>((set, get) => ({
     if (!sub) return
 
     const newActive = !sub.is_active
-    // Optimistic
+    const newStatus = newActive ? 'active' : 'paused'
+    // Optimistic: update both is_active and status so UI reflects pause immediately
     set((s) => ({
       subscriptions: s.subscriptions.map((x) =>
-        x.id === id ? { ...x, is_active: newActive } : x
+        x.id === id ? { ...x, is_active: newActive, status: newStatus as SubscriptionStatus } : x
       ),
     }))
 
@@ -308,6 +309,7 @@ export const useExpensesStore = create<ExpensesStore>((set, get) => ({
       await toggleSubscriptionActiveApi(id, newActive)
       const client = createClient()
       logActivity(client, sub.user_id, 'gastos', 'subscription_toggled', sub.name, newActive ? 'activada' : 'pausada')
+      toast(`${sub.name} ${newActive ? 'reactivada' : 'pausada'}`, 'success')
     } catch (e) {
       set({ subscriptions: prev })
       const msg = e instanceof Error ? e.message : 'Error al cambiar estado de suscripción'
@@ -612,9 +614,27 @@ export function useSubscriptionsByDay(
  * (cuando notAmortizeYearly=true, no se dividen — se suman directamente)
  * countActive: total de suscripciones activas (status active o trial)
  */
+/**
+ * Returns true if a non-monthly subscription actually bills in the given month/year.
+ * Falls back to always-visible if no started_at (legacy data).
+ */
+function isSubBillingInViewedMonth(
+  startedAt: string | null,
+  viewedYear: number,
+  viewedMonth: number,
+  periodMonths: number
+): boolean {
+  if (!startedAt) return true
+  const start = new Date(startedAt)
+  const monthsDiff = (viewedYear - start.getFullYear()) * 12 + (viewedMonth - (start.getMonth() + 1))
+  return monthsDiff >= 0 && monthsDiff % periodMonths === 0
+}
+
 export function useExpenseSummary(): ExpenseSummary {
   const subscriptions = useCycleFilteredSubscriptions()
   const notAmortizeYearly = useExpensesStore((s) => s.notAmortizeYearly)
+  const viewedYear = useExpensesStore((s) => s.viewedYear)
+  const viewedMonth = useExpensesStore((s) => s.viewedMonth)
 
   let totalMonthly = 0
   let totalQuarterly = 0
@@ -635,16 +655,22 @@ export function useExpenseSummary(): ExpenseSummary {
         countMonthly++
         break
       case 'quarterly':
-        totalQuarterly += sub.amount
-        countQuarterly++
+        if (isSubBillingInViewedMonth(sub.started_at, viewedYear, viewedMonth, 3)) {
+          totalQuarterly += sub.amount
+          countQuarterly++
+        }
         break
       case 'semiannual':
-        totalSemiannual += sub.amount
-        countSemiannual++
+        if (isSubBillingInViewedMonth(sub.started_at, viewedYear, viewedMonth, 6)) {
+          totalSemiannual += sub.amount
+          countSemiannual++
+        }
         break
       case 'annual':
-        totalAnnual += sub.amount
-        countAnnual++
+        if (isSubBillingInViewedMonth(sub.started_at, viewedYear, viewedMonth, 12)) {
+          totalAnnual += sub.amount
+          countAnnual++
+        }
         break
     }
   }

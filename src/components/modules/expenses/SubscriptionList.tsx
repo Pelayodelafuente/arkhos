@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo } from "react"
-import { ChevronDown, CreditCard, Pencil, Pause, Play, Plus } from "lucide-react"
+import { ChevronDown, CreditCard, Pencil, Pause, Play, Plus, MonitorPlay, Code2, Music, HardDrive, Zap, Gamepad2, Shield, Heart, BookOpen, TrendingUp, Layers } from "lucide-react"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import { Card, Badge, Button } from "@/components/ui"
 import { useExpensesStore, useFilteredSubscriptions } from "@/stores/expenses-store"
@@ -44,7 +44,7 @@ export function SubscriptionList({ onEdit, onNew }: SubscriptionListProps) {
         <div className="flex items-center gap-1 rounded-lg bg-sand p-0.5">
           <button
             onClick={() => setListViewMode('category')}
-            className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors ${
+            className={`cursor-pointer rounded-md px-2.5 py-1 text-[11px] font-medium transition-all active:scale-[0.97] ${
               listViewMode === 'category'
                 ? 'bg-card text-foreground shadow-sm'
                 : 'text-text-tertiary hover:text-text-secondary'
@@ -54,7 +54,7 @@ export function SubscriptionList({ onEdit, onNew }: SubscriptionListProps) {
           </button>
           <button
             onClick={() => setListViewMode('chronological')}
-            className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors ${
+            className={`cursor-pointer rounded-md px-2.5 py-1 text-[11px] font-medium transition-all active:scale-[0.97] ${
               listViewMode === 'chronological'
                 ? 'bg-card text-foreground shadow-sm'
                 : 'text-text-tertiary hover:text-text-secondary'
@@ -106,6 +106,23 @@ export function SubscriptionList({ onEdit, onNew }: SubscriptionListProps) {
       </Card>
     </div>
   )
+}
+
+// ─── Category icon mapping ───────────
+
+function getCategoryIcon(name: string) {
+  const lower = name.toLowerCase()
+  if (lower.includes('stream') || lower.includes('video') || lower.includes('tv')) return <MonitorPlay size={13} strokeWidth={1.5} />
+  if (lower.includes('softw') || lower.includes('cod') || lower.includes('dev') || lower.includes('programac')) return <Code2 size={13} strokeWidth={1.5} />
+  if (lower.includes('mús') || lower.includes('music') || lower.includes('audio') || lower.includes('podcast')) return <Music size={13} strokeWidth={1.5} />
+  if (lower.includes('almac') || lower.includes('storage') || lower.includes('cloud') || lower.includes('drive')) return <HardDrive size={13} strokeWidth={1.5} />
+  if (lower.includes('product') || lower.includes('trabajo') || lower.includes('work') || lower.includes('ofic')) return <Zap size={13} strokeWidth={1.5} />
+  if (lower.includes('gaming') || lower.includes('juego') || lower.includes('game')) return <Gamepad2 size={13} strokeWidth={1.5} />
+  if (lower.includes('segur') || lower.includes('secur') || lower.includes('vpn') || lower.includes('contraseñ')) return <Shield size={13} strokeWidth={1.5} />
+  if (lower.includes('salud') || lower.includes('health') || lower.includes('fitness') || lower.includes('deport')) return <Heart size={13} strokeWidth={1.5} />
+  if (lower.includes('educ') || lower.includes('curso') || lower.includes('learn') || lower.includes('libro')) return <BookOpen size={13} strokeWidth={1.5} />
+  if (lower.includes('financ') || lower.includes('dinero') || lower.includes('banco') || lower.includes('invers')) return <TrendingUp size={13} strokeWidth={1.5} />
+  return <Layers size={13} strokeWidth={1.5} />
 }
 
 // ─── Category View ──────────────────
@@ -162,10 +179,9 @@ function CategoryView({
                 }`}
               />
               {group.category && (
-                <span
-                  className="h-2.5 w-2.5 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: group.category.color }}
-                />
+                <span className="text-foreground/50 flex-shrink-0 flex items-center">
+                  {getCategoryIcon(group.category.name)}
+                </span>
               )}
               <span className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">
                 {group.category?.name ?? 'Sin categoría'}
@@ -340,12 +356,12 @@ function SubscriptionRow({
             <HighlightText text={subscription.name} query={searchQuery} />
           </span>
           {isPaused && (
-            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700 flex-shrink-0">
+            <span className="rounded-full bg-sand px-2 py-0.5 text-[10px] font-medium text-foreground/40 flex-shrink-0">
               Pausada
             </span>
           )}
           {isCancelled && (
-            <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700 flex-shrink-0">
+            <span className="rounded-full bg-sand px-2 py-0.5 text-[10px] font-medium text-foreground/40 flex-shrink-0">
               Cancelada
             </span>
           )}
@@ -431,13 +447,13 @@ function SubscriptionRow({
       <div className="flex items-center gap-1 opacity-0 translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 flex-shrink-0">
         <button
           onClick={(e) => { e.stopPropagation(); onEdit() }}
-          className="flex h-7 w-7 items-center justify-center rounded-md text-text-tertiary hover:bg-sand hover:text-foreground transition-colors"
+          className="flex h-7 w-7 items-center justify-center rounded-md text-text-tertiary hover:bg-sand hover:text-foreground hover:scale-110 transition-all cursor-pointer"
         >
           <Pencil size={13} strokeWidth={1.75} />
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); onToggleActive() }}
-          className="flex h-7 w-7 items-center justify-center rounded-md text-text-tertiary hover:bg-sand hover:text-foreground transition-colors"
+          className="flex h-7 w-7 items-center justify-center rounded-md text-text-tertiary hover:bg-sand hover:text-foreground hover:scale-110 transition-all cursor-pointer"
         >
           {isPaused ? <Play size={13} strokeWidth={1.75} /> : <Pause size={13} strokeWidth={1.75} />}
         </button>
