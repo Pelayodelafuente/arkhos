@@ -76,7 +76,7 @@ export function WindowContext() {
           <div className="flex items-center gap-[6px]">
             <span
               className="max-w-[140px] truncate font-mono text-[10px]"
-              style={{ color: '#3D3630' }}
+              style={{ color: '#5a3e28' }}
               title={row.value}
             >
               {row.value}

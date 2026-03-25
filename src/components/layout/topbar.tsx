@@ -14,7 +14,16 @@ export function Topbar({ userName }: TopbarProps) {
 
   return (
     <>
-      <header className="flex h-14 items-center justify-between border-b border-border bg-background px-4 lg:hidden">
+      <header
+        className="flex h-14 items-center justify-between border-b px-4 lg:hidden"
+        style={{
+          backgroundColor: "rgba(247, 241, 232, 0.88)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+          borderBottomColor: "var(--border-subtle)",
+          color: "var(--text-primary)",
+        }}
+      >
         <ArkhosLogo size="sm" />
         <button
           onClick={() => setOpen(true)}

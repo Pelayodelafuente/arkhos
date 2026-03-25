@@ -40,11 +40,11 @@ interface ColumnDef {
 }
 
 const COLUMNS: ColumnDef[] = [
-  { status: 'todo', label: 'Pendiente', bg: 'bg-[#FAF7F2]' },
-  { status: 'in_progress', label: 'En progreso', bg: 'bg-[#f0f4f0]' },
-  { status: 'review', label: 'En revisión', bg: 'bg-[#F0EBE1]' },
-  { status: 'done', label: 'Completada', bg: 'bg-[#f0f4f0]' },
-  { status: 'blocked', label: 'Bloqueada', bg: 'bg-[#faf0f0]' },
+  { status: 'todo', label: 'Pendiente', bg: 'bg-[#f7f1e8]' },
+  { status: 'in_progress', label: 'En progreso', bg: 'bg-[#fdf5ee]' },
+  { status: 'review', label: 'En revisión', bg: 'bg-[#f0e8d8]' },
+  { status: 'done', label: 'Completada', bg: 'bg-[#eef5f4]' },
+  { status: 'blocked', label: 'Bloqueada', bg: 'bg-[#f8f0f1]' },
 ];
 
 // ─── Enriched task (with phase info) ────

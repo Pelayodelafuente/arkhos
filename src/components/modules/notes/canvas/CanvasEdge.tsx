@@ -234,7 +234,7 @@ export function CanvasEdgeComponent({
           x={mid.x}
           y={mid.y - 8 / scale}
           textAnchor="middle"
-          fill="#3D3630"
+          fill="#5a3e28"
           fontSize={(isSelected ? 13 : 12) / scale}
           fontFamily="Plus Jakarta Sans, sans-serif"
           style={{ pointerEvents: 'none' }}

@@ -7,9 +7,9 @@ const variantConfig: Record<
   ToastVariant,
   { icon: typeof Info; color: string; bg: string }
 > = {
-  success: { icon: CheckCircle, color: "#5B8C6A", bg: "rgba(91,140,106,0.08)" },
-  error:   { icon: XCircle,     color: "#DC2626", bg: "rgba(220,38,38,0.08)" },
-  info:    { icon: Info,        color: "#C4704A", bg: "rgba(196,112,74,0.08)" },
+  success: { icon: CheckCircle, color: "#045950", bg: "rgba(5,107,99,0.10)" },
+  error:   { icon: XCircle,     color: "#5f1b29", bg: "rgba(95,27,41,0.08)" },
+  info:    { icon: Info,        color: "#c4704a", bg: "rgba(196,112,74,0.08)" },
 };
 
 function ToastItem({ toast }: { toast: Toast }) {
@@ -18,8 +18,8 @@ function ToastItem({ toast }: { toast: Toast }) {
 
   return (
     <div
-      className="animate-slide-in-right relative flex w-80 items-start gap-3 overflow-hidden rounded-xl border border-border bg-card p-4"
-      style={{ boxShadow: "var(--shadow-modal)" }}
+      className="animate-slide-in-right relative flex w-80 items-start gap-3 overflow-hidden rounded-xl bg-card p-4"
+      style={{ border: "1px solid var(--border-subtle)", boxShadow: "var(--shadow-modal)" }}
     >
       <span
         className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full"

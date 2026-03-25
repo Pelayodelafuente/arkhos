@@ -17,7 +17,7 @@ function getStrength(password: string): number {
 }
 
 const LABELS = ["", "Débil", "Media", "Fuerte", "Muy fuerte"];
-const COLORS = ["", "#DC2626", "#E57A1A", "#5B8C6A", "#3D7A4A"];
+const COLORS = ["", "#5f1b29", "#E57A1A", "#056b63", "#045950"];
 
 export function PasswordStrength({ password, dark }: PasswordStrengthProps) {
   const strength = getStrength(password);

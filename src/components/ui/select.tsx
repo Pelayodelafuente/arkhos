@@ -32,11 +32,15 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           <select
             ref={ref}
             id={selectId}
-            className={`w-full appearance-none rounded-md border bg-card px-3 py-2 pr-8 text-sm text-foreground outline-none transition-colors ${
+            className={`w-full appearance-none rounded-md border bg-card px-3 py-2 pr-8 text-sm text-foreground outline-none transition-colors placeholder:text-text-faint ${
               error
-                ? "border-red-400 focus:border-red-500"
-                : "border-border focus:border-accent"
+                ? "focus:border-crimson"
+                : "focus:border-accent"
             } ${className}`}
+            style={{
+              borderColor: error ? "var(--crimson)" : "var(--border-medium)",
+              color: "var(--text-primary)",
+            }}
             {...props}
           >
             {placeholder && (
@@ -57,7 +61,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           />
         </div>
         {error && (
-          <p className="text-xs text-red-600">{error}</p>
+          <p className="text-xs" style={{ color: "var(--crimson)" }}>{error}</p>
         )}
       </div>
     );

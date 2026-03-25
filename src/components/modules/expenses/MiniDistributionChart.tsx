@@ -24,7 +24,7 @@ export function MiniDistributionChart() {
         g.totalQuarterly / 3 +
         g.totalSemiannual / 6 +
         g.totalAnnual / 12,
-      color: g.category?.color ?? "#888780",
+      color: g.category?.color ?? "#9a7a5a",
     }))
 
     // Keep top 5, merge rest into "Otros"
@@ -35,7 +35,7 @@ export function MiniDistributionChart() {
 
     const data =
       restTotal > 0
-        ? [...top5, { name: "Otros", value: restTotal, color: "#888780" }]
+        ? [...top5, { name: "Otros", value: restTotal, color: "#9a7a5a" }]
         : top5
 
     const t = data.reduce((acc, d) => acc + d.value, 0)

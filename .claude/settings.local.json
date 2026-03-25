@@ -46,7 +46,14 @@
       "Bash(pnpm add:*)",
       "Bash(npx tsc:*)",
       "Bash(git add:*)",
-      "Bash(npx next:*)"
+      "Bash(npx next:*)",
+      "Read(//c/Users/PC/**)",
+      "Read(//c/Users/PC/Desktop/**)",
+      "Read(//c/Users/PC/Downloads/**)",
+      "Bash(npx vitest:*)",
+      "Bash(\"C:/Users/PC/Documents/Pelayo/Arkhos/src/components/modules/notes/index.ts\":*)",
+      "Bash(npx eslint:*)",
+      "mcp__engram__mem_get_observation"
     ]
   }
 }

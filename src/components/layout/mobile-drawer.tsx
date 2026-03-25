@@ -12,9 +12,9 @@ const navItems = [
   { label: "Inicio", href: "/", icon: Home, dot: null },
   { label: "Proyectos", href: "/proyectos", icon: FolderKanban, dot: "#C4704A" },
   { label: "Notas", href: "/notas", icon: StickyNote, dot: "#7a9b76" },
-  { label: "Mercados", href: "/mercados", icon: TrendingUp, dot: "#9B7A4A" },
-  { label: "Patrimonio", href: "/patrimonio", icon: Wallet, dot: "#5B8C6A" },
-  { label: "Gastos", href: "/gastos", icon: CreditCard, dot: "#4A7A9B" },
+  { label: "Mercados", href: "/mercados", icon: TrendingUp, dot: "#9a6a28" },
+  { label: "Patrimonio", href: "/patrimonio", icon: Wallet, dot: "#056b63" },
+  { label: "Gastos", href: "/gastos", icon: CreditCard, dot: "#5f1b29" },
 ] as const;
 
 interface MobileDrawerProps {
@@ -64,8 +64,9 @@ export function MobileDrawer({ open, onClose, userName }: MobileDrawerProps) {
 
       {/* Drawer panel */}
       <div
-        className="fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col bg-sand lg:hidden"
+        className="fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col lg:hidden"
         style={{
+          backgroundColor: "var(--bg-sidebar)",
           animation: closing
             ? "slide-out-left 250ms var(--ease-out-expo) forwards"
             : "slide-in-left 250ms var(--ease-out-expo) forwards",
@@ -75,7 +76,7 @@ export function MobileDrawer({ open, onClose, userName }: MobileDrawerProps) {
           <ArkhosLogo size="sm" />
           <button
             onClick={handleClose}
-            className="flex h-8 w-8 items-center justify-center rounded-md text-text-secondary transition-colors duration-150 hover:bg-border"
+            className="flex h-8 w-8 items-center justify-center rounded-md text-text-secondary transition-colors duration-150 hover:bg-sand"
             aria-label="Cerrar menú"
           >
             <X size={18} strokeWidth={1.75} />
@@ -94,8 +95,8 @@ export function MobileDrawer({ open, onClose, userName }: MobileDrawerProps) {
                     onClick={handleClose}
                     className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
                       isActive
-                        ? "bg-accent text-[#FBF0EA]"
-                        : "text-text-secondary hover:bg-border hover:text-foreground"
+                        ? "bg-card text-accent"
+                        : "text-text-secondary hover:bg-sand hover:text-foreground"
                     }`}
                   >
                     {dot ? (
@@ -125,7 +126,7 @@ export function MobileDrawer({ open, onClose, userName }: MobileDrawerProps) {
             target="_blank"
             rel="noopener noreferrer"
             onClick={handleClose}
-            className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-text-tertiary transition-colors hover:bg-border hover:text-accent"
+            className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-text-tertiary transition-colors hover:bg-sand hover:text-accent"
           >
             <span className="h-2 w-2 flex-shrink-0" />
             <BookOpen size={16} strokeWidth={1.75} className="flex-shrink-0" />
@@ -134,14 +135,14 @@ export function MobileDrawer({ open, onClose, userName }: MobileDrawerProps) {
         </div>
 
         {/* Security */}
-        <div className="border-t border-border px-3 py-3">
+        <div className="border-t px-3 py-3" style={{ borderTopColor: "var(--border-subtle)" }}>
           <Link
             href="/settings/security"
             onClick={handleClose}
             className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
               pathname === "/settings/security"
-                ? "bg-accent text-[#FBF0EA]"
-                : "text-text-secondary hover:bg-border hover:text-foreground"
+                ? "bg-card text-accent"
+                : "text-text-secondary hover:bg-sand hover:text-foreground"
             }`}
           >
             <span className="h-2 w-2 flex-shrink-0" />
@@ -150,7 +151,7 @@ export function MobileDrawer({ open, onClose, userName }: MobileDrawerProps) {
           </Link>
         </div>
 
-        <div className="border-t border-border px-4 py-4">
+        <div className="border-t px-4 py-4" style={{ borderTopColor: "var(--border-subtle)" }}>
           <p className="mb-2 truncate text-xs text-text-tertiary" title={userName}>
             {userName}
           </p>

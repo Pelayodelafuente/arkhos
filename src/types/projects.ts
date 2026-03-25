@@ -16,25 +16,25 @@ export type TaskStatus = (typeof TASK_STATUSES)[number];
 // ─── Phase/Task status display config ─
 
 export const PHASE_STATUS_CONFIG: Record<PhaseStatus, { label: string; color: string }> = {
-  pending: { label: 'Pendiente', color: '#888780' },
+  pending: { label: 'Pendiente', color: '#9a7a5a' },
   'in-progress': { label: 'En progreso', color: '#C4704A' },
-  done: { label: 'Completada', color: '#5B8C6A' },
+  done: { label: 'Completada', color: '#056b63' },
 };
 
 export const TASK_PRIORITY_CONFIG: Record<TaskPriority, { label: string; color: string }> = {
-  none: { label: 'Sin prioridad', color: '#888780' },
-  low: { label: 'Baja', color: '#4A7A9B' },
-  medium: { label: 'Media', color: '#9B7A4A' },
+  none: { label: 'Sin prioridad', color: '#9a7a5a' },
+  low: { label: 'Baja', color: '#9a6a28' },
+  medium: { label: 'Media', color: '#c4704a' },
   high: { label: 'Alta', color: '#C4704A' },
-  urgent: { label: 'Urgente', color: '#b94444' },
+  urgent: { label: 'Urgente', color: '#5f1b29' },
 };
 
 export const TASK_STATUS_CONFIG: Record<TaskStatus, { label: string; color: string }> = {
-  todo: { label: 'Pendiente', color: '#888780' },
-  in_progress: { label: 'En progreso', color: '#4A7A9B' },
-  review: { label: 'En revisión', color: '#9b7a4a' },
-  done: { label: 'Completada', color: '#5b8c6a' },
-  blocked: { label: 'Bloqueada', color: '#b94444' },
+  todo: { label: 'Pendiente', color: '#9a7a5a' },
+  in_progress: { label: 'En progreso', color: '#c4704a' },
+  review: { label: 'En revisión', color: '#9a6a28' },
+  done: { label: 'Completada', color: '#056b63' },
+  blocked: { label: 'Bloqueada', color: '#5f1b29' },
 };
 
 // ─── Dynamic project type / status ────
@@ -76,14 +76,14 @@ export interface CreateProjectStatusInput {
 // ─── Default seeds for new users ──────
 
 export const DEFAULT_PROJECT_TYPES: Omit<CreateProjectTypeInput, 'sort_order'>[] = [
-  { name: 'Web', icon: 'Globe', color: '#4A7A9B' },
+  { name: 'Web', icon: 'Globe', color: '#c4704a' },
 ];
 
 export const DEFAULT_PROJECT_STATUSES: Omit<CreateProjectStatusInput, 'sort_order'>[] = [
-  { name: 'Idea', color: '#888780', is_default: true },
-  { name: 'Activo', color: '#5B8C6A' },
-  { name: 'Pausado', color: '#9B7A4A' },
-  { name: 'Completado', color: '#4A7A9B' },
+  { name: 'Idea', color: '#9a7a5a', is_default: true },
+  { name: 'Activo', color: '#056b63' },
+  { name: 'Pausado', color: '#9a6a28' },
+  { name: 'Completado', color: '#c4704a' },
 ];
 
 // ─── Icon picker categories ──────────

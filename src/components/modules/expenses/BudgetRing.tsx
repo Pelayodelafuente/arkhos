@@ -18,14 +18,14 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS
 
 function getRingColor(percentage: number): string {
   if (percentage >= 90) return "#C4704A"
-  if (percentage >= 70) return "#9B7A4A"
-  return "#5B8C6A"
+  if (percentage >= 70) return "#9a6a28"
+  return "#056b63"
 }
 
 function getTextColor(percentage: number): string {
   if (percentage >= 90) return "text-[#C4704A]"
-  if (percentage >= 70) return "text-[#9B7A4A]"
-  return "text-[#5B8C6A]"
+  if (percentage >= 70) return "text-[#9a6a28]"
+  return "text-[#056b63]"
 }
 
 export function BudgetRing({ userId }: BudgetRingProps) {
@@ -39,7 +39,7 @@ export function BudgetRing({ userId }: BudgetRingProps) {
   const budget = settings?.monthly_budget ?? null
   const spent = summary.totalMonthlyEstimate
   const percentage = budget && budget > 0 ? Math.min((spent / budget) * 100, 100) : 0
-  const ringColor = budget ? getRingColor(percentage) : "#888780"
+  const ringColor = budget ? getRingColor(percentage) : "#9a7a5a"
 
   const handleSave = async () => {
     const value = parseFloat(budgetInput)

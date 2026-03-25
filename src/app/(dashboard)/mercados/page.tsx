@@ -9,7 +9,7 @@ export default function MercadosPage() {
       <div className="animate-fade-in-up mb-8 flex items-center gap-3">
         <div
           className="flex h-10 w-10 items-center justify-center rounded-md"
-          style={{ backgroundColor: "#9B7A4A" }}
+          style={{ backgroundColor: "#9a6a28" }}
         >
           <TrendingUp size={20} strokeWidth={1.75} className="text-white" />
         </div>

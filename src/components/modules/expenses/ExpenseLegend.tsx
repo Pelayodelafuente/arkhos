@@ -11,13 +11,13 @@ export function ExpenseLegend({ onGoToToday }: ExpenseLegendProps) {
     <div className="flex items-center justify-center gap-4 py-3">
       {/* Monthly */}
       <div className="flex items-center gap-1.5">
-        <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "#4A7A9B" }} />
+        <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "#5f1b29" }} />
         <span className="text-[12px] text-text-tertiary">Mensual</span>
       </div>
 
       {/* Annual */}
       <div className="flex items-center gap-1.5">
-        <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "#9B7A4A" }} />
+        <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "#9a6a28" }} />
         <span className="text-[12px] text-text-tertiary">Anual</span>
       </div>
 

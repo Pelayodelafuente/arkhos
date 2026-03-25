@@ -120,7 +120,7 @@ export interface SnapGuide {
 // ─── Color Configs ──────────────────
 
 export const NOTE_COLOR_CONFIG: { value: NoteColor; bg: string; border: string; label: string }[] = [
-  { value: 'default', bg: '#FAF7F2', border: '#E2D9CA', label: 'Neutro' },
+  { value: 'default', bg: '#f7f1e8', border: 'rgba(160,120,80,0.35)', label: 'Neutro' },
   { value: 'sage', bg: '#eef3ee', border: '#7a9b76', label: 'Sage' },
   { value: 'terracotta', bg: '#faf0ec', border: '#C4704A', label: 'Terracotta' },
   { value: 'stone', bg: '#f5f2ee', border: '#B0A48F', label: 'Stone' },

@@ -243,7 +243,7 @@ export function ProjectModal({
     closeModal();
   }
 
-  const statusColor = localStatuses.find((s) => s.name === status)?.color ?? "#888780";
+  const statusColor = localStatuses.find((s) => s.name === status)?.color ?? "#9a7a5a";
 
   return (
     <Modal

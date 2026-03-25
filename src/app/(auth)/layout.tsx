@@ -29,7 +29,7 @@ export default function AuthLayout({
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse at 30% 20%, rgba(212,132,90,0.06) 0%, transparent 60%), radial-gradient(ellipse at 70% 80%, rgba(122,155,118,0.03) 0%, transparent 60%)",
+            "radial-gradient(ellipse at 30% 20%, rgba(212,132,90,0.06) 0%, transparent 60%), radial-gradient(ellipse at 70% 80%, rgba(95,27,41,0.04) 0%, transparent 60%)",
         }}
       />
 
@@ -51,10 +51,10 @@ export default function AuthLayout({
           style={{
             backdropFilter: "blur(24px) saturate(180%)",
             WebkitBackdropFilter: "blur(24px) saturate(180%)",
-            background: "#FAF7F2",
-            border: "1px solid rgba(226, 217, 202, 0.6)",
+            background: "#f7f1e8",
+            border: "1px solid rgba(160, 120, 80, 0.3)",
             boxShadow:
-              "0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(212, 132, 90, 0.05) inset",
+              "0 8px 32px rgba(42, 26, 16, 0.25), 0 0 0 1px rgba(196, 112, 74, 0.06) inset",
             animation: "auth-panel-enter 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both",
           }}
         >

@@ -6,29 +6,41 @@
 
 :root {
   /* Fondos */
-  --bg-cream: #FAF7F2;
-  --bg-sand: #F0EBE1;
+  --bg-cream: #f7f1e8;
+  --bg-page: #f7f1e8;
+  --bg-sand: #f0e8d8;
   --bg-card: #FFFFFF;
+  --bg-sidebar: #ede3d0;
 
   /* Textos */
-  --text-primary: #1A1714;
-  --text-secondary: #3D3630;
-  --text-tertiary: #888780;
+  --text-primary: #2a1a10;
+  --text-secondary: #5a3e28;
+  --text-tertiary: #9a7a5a;
+  --text-muted: #9a7a5a;
+  --text-faint: #b89878;
 
   /* Bordes */
-  --border-stone: #E2D9CA;
+  --border-stone: rgba(160, 120, 80, 0.35);
+  --border-subtle: rgba(160, 120, 80, 0.2);
+  --border-medium: rgba(160, 120, 80, 0.35);
+  --border-accent: rgba(196, 112, 74, 0.5);
 
   /* Acento */
-  --accent-terracotta: #C4704A;
+  --accent-terracotta: #c4704a;
+  --accent-dark: #a85838;
+  --accent-light: #d8906a;
+  --crimson: #5f1b29;
+  --crimson-soft: #8a3040;
+  --orange: #ff845d;
 
   /* Colores por módulo */
-  --module-proyectos: #C4704A;
-  --module-patrimonio: #5B8C6A;
-  --module-gastos: #4A7A9B;
-  --module-mercados: #9B7A4A;
+  --module-proyectos: #c4704a;
+  --module-patrimonio: #056b63;
+  --module-gastos: #5f1b29;
+  --module-mercados: #9a6a28;
 
   /* Sombras (solo modales) */
-  --shadow-modal: 0 4px 20px rgba(26, 23, 20, 0.08);
+  --shadow-modal: 0 4px 20px rgba(42, 26, 16, 0.08);
 
   /* Animation system */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -44,16 +56,27 @@
   --color-foreground: var(--text-primary);
   --color-card: var(--bg-card);
   --color-sand: var(--bg-sand);
+  --color-sidebar: var(--bg-sidebar);
 
   /* Bordes */
   --color-border: var(--border-stone);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-medium: var(--border-medium);
+  --color-border-accent: var(--border-accent);
 
   /* Acento */
   --color-accent: var(--accent-terracotta);
+  --color-accent-dark: var(--accent-dark);
+  --color-accent-light: var(--accent-light);
+  --color-crimson: var(--crimson);
+  --color-crimson-soft: var(--crimson-soft);
+  --color-orange: var(--orange);
 
   /* Textos */
   --color-text-secondary: var(--text-secondary);
   --color-text-tertiary: var(--text-tertiary);
+  --color-text-muted: var(--text-muted);
+  --color-text-faint: var(--text-faint);
 
   /* Módulos */
   --color-proyectos: var(--module-proyectos);
@@ -68,7 +91,7 @@
 }
 
 body {
-  background-color: var(--bg-cream);
+  background-color: var(--bg-page);
   color: var(--text-primary);
   font-family: var(--font-sans);
 }
@@ -166,8 +189,8 @@ mark {
 .auth-dark input:-webkit-autofill,
 .auth-dark input:-webkit-autofill:hover,
 .auth-dark input:-webkit-autofill:focus {
-  -webkit-box-shadow: 0 0 0 30px #FAF7F2 inset;
-  -webkit-text-fill-color: #1A1714;
+  -webkit-box-shadow: 0 0 0 30px #f7f1e8 inset;
+  -webkit-text-fill-color: #2a1a10;
   caret-color: #D4845A;
   transition: background-color 5000s ease-in-out 0s;
 }
@@ -321,7 +344,7 @@ mark {
 /* ── Projects: Phase completion border glow ── */
 @keyframes phase-complete-glow {
   0% { border-color: var(--accent-terracotta); }
-  50% { border-color: #5b8c6a; }
+  50% { border-color: #056b63; }
   100% { border-color: transparent; }
 }
 
@@ -408,14 +431,14 @@ mark {
 
 .canvas-node-prose code {
   font-family: var(--font-mono);
-  background: rgba(0, 0, 0, 0.06);
+  background: rgba(160, 120, 80, 0.1);
   padding: 0.1em 0.3em;
   border-radius: 3px;
   font-size: 0.9em;
 }
 
 .canvas-node-prose pre {
-  background: rgba(0, 0, 0, 0.04);
+  background: rgba(160, 120, 80, 0.07);
   padding: 0.4em;
   border-radius: 6px;
   overflow: hidden;

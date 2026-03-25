@@ -55,9 +55,9 @@ function computeHealthScore(phases: ProjectPhase[]): number {
 }
 
 function getHealthColor(score: number): string {
-  if (score >= 80) return '#5B8C6A';
-  if (score >= 50) return '#9B7A4A';
-  return '#b94444';
+  if (score >= 80) return '#056b63';
+  if (score >= 50) return '#9a6a28';
+  return '#5f1b29';
 }
 
 // ─── Component ──────────────────────────
@@ -131,7 +131,7 @@ export default function DashboardView({ phases }: DashboardViewProps) {
         {/* Total / Completadas */}
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="flex items-center gap-2 mb-2">
-            <CheckCircle2 size={18} className="text-[#5B8C6A]" />
+            <CheckCircle2 size={18} className="text-[#056b63]" />
             <span className="text-xs text-text-tertiary">Tareas completadas</span>
           </div>
           <p className="font-mono text-2xl text-foreground">
@@ -218,7 +218,7 @@ export default function DashboardView({ phases }: DashboardViewProps) {
               textAnchor="middle"
               dominantBaseline="middle"
               className="font-mono"
-              style={{ fontSize: '36px', fontWeight: 700, fill: '#1A1714' }}
+              style={{ fontSize: '36px', fontWeight: 700, fill: '#2a1a10' }}
             >
               {progress}%
             </text>
@@ -227,7 +227,7 @@ export default function DashboardView({ phases }: DashboardViewProps) {
               y={118}
               textAnchor="middle"
               dominantBaseline="middle"
-              style={{ fontSize: '12px', fill: '#888780' }}
+              style={{ fontSize: '12px', fill: '#9a7a5a' }}
             >
               completado
             </text>
@@ -287,7 +287,7 @@ export default function DashboardView({ phases }: DashboardViewProps) {
                     )}
                     <span
                       className="text-xs font-mono shrink-0"
-                      style={{ color: rel.isPast ? '#b94444' : '#888780' }}
+                      style={{ color: rel.isPast ? '#5f1b29' : '#9a7a5a' }}
                     >
                       {rel.text}
                     </span>

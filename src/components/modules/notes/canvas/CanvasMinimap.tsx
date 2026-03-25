@@ -135,8 +135,10 @@ export function CanvasMinimap({
 
       {/* Viewport indicator */}
       <div
-        className="absolute rounded-sm border-[1.5px] border-blue-500/60 bg-blue-400/15"
+        className="absolute rounded-sm"
         style={{
+          border: "1.5px solid rgba(196,112,74,0.6)",
+          backgroundColor: "rgba(196,112,74,0.12)",
           left: vpMinimap.x,
           top: vpMinimap.y,
           width: vpMinimapW,

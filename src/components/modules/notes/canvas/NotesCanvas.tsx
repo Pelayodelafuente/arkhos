@@ -882,8 +882,8 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
       </svg>
 
       {rubberBandRect && (
-        <div className="absolute border border-blue-500/50 bg-blue-400/10 rounded-sm pointer-events-none"
-          style={{ zIndex: 10, left: rubberBandRect.x, top: rubberBandRect.y, width: rubberBandRect.w, height: rubberBandRect.h }} />
+        <div className="absolute rounded-sm pointer-events-none"
+          style={{ border: "1px solid rgba(196,112,74,0.5)", backgroundColor: "rgba(196,112,74,0.08)", zIndex: 10, left: rubberBandRect.x, top: rubberBandRect.y, width: rubberBandRect.w, height: rubberBandRect.h }} />
       )}
 
       <div className="absolute inset-0" style={{ zIndex: 2, pointerEvents: "none" }}>

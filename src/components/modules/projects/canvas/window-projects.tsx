@@ -203,8 +203,8 @@ export function WindowProjects({ userId }: WindowProjectsProps) {
           placeholder="Buscar proyecto..."
           value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
-          className="w-full border-none bg-transparent font-sans text-[11px] outline-none placeholder:text-[#aaa]"
-          style={{ color: '#3D3630' }}
+          className="w-full border-none bg-transparent font-sans text-[11px] outline-none placeholder:text-[#b89878]"
+          style={{ color: '#5a3e28' }}
         />
       </div>
 

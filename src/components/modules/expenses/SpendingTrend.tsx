@@ -126,7 +126,7 @@ export function SpendingTrend() {
               {data.map((entry, i) => (
                 <Cell
                   key={i}
-                  fill={entry.isCurrent ? '#4A7A9B' : entry.total > currentTotal * 1.5 ? 'rgba(196,112,74,0.6)' : 'rgba(74,122,155,0.3)'}
+                  fill={entry.isCurrent ? '#5f1b29' : entry.total > currentTotal * 1.5 ? 'rgba(196,112,74,0.6)' : 'rgba(95,27,41,0.3)'}
                 />
               ))}
             </Bar>

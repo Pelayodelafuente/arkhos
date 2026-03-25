@@ -44,19 +44,19 @@ const navItems = [
     label: "Mercados",
     href: "/mercados",
     icon: TrendingUp,
-    dot: "#9B7A4A",
+    dot: "#9a6a28",
   },
   {
     label: "Patrimonio",
     href: "/patrimonio",
     icon: Wallet,
-    dot: "#5B8C6A",
+    dot: "#056b63",
   },
   {
     label: "Gastos",
     href: "/gastos",
     icon: CreditCard,
-    dot: "#4A7A9B",
+    dot: "#5f1b29",
   },
 ] as const;
 
@@ -76,13 +76,22 @@ export function Sidebar({ userName }: SidebarProps) {
 
   return (
     <aside
-      className="flex h-screen flex-col border-r border-border bg-sand"
+      className="relative flex h-screen flex-col border-r bg-sidebar"
       style={{
         width: collapsed ? 56 : 240,
         transition: "width 250ms cubic-bezier(0.16,1,0.3,1)",
         overflow: "hidden",
+        borderRightColor: "var(--border-subtle)",
       }}
     >
+      {/* Top gradient stripe */}
+      <div
+        className="pointer-events-none absolute left-0 right-0 top-0"
+        style={{
+          height: 3,
+          background: "linear-gradient(90deg, #c4704a, #5f1b29)",
+        }}
+      />
       {/* Logo + collapse toggle */}
       <div
         className="flex items-center"
@@ -101,7 +110,7 @@ export function Sidebar({ userName }: SidebarProps) {
           <button
             type="button"
             onClick={toggleCollapsed}
-            className="flex items-center justify-center rounded-md text-text-tertiary transition-colors hover:bg-border hover:text-foreground"
+            className="flex items-center justify-center rounded-md text-text-tertiary transition-colors hover:bg-sand hover:text-foreground"
             style={{ width: 28, height: 28 }}
             title="Colapsar sidebar"
           >
@@ -116,7 +125,7 @@ export function Sidebar({ userName }: SidebarProps) {
           <button
             type="button"
             onClick={toggleCollapsed}
-            className="flex items-center justify-center rounded-md text-text-tertiary transition-colors hover:bg-border hover:text-foreground"
+            className="flex items-center justify-center rounded-md text-text-tertiary transition-colors hover:bg-sand hover:text-foreground"
             style={{ width: 32, height: 28 }}
             title="Expandir sidebar"
           >
@@ -138,9 +147,15 @@ export function Sidebar({ userName }: SidebarProps) {
                   href={href}
                   className={`group flex items-center rounded-md text-sm font-medium transition-all duration-200 ${
                     isActive
-                      ? "bg-accent text-[#FBF0EA]"
-                      : "text-text-secondary hover:bg-border hover:text-foreground"
+                      ? "bg-card text-accent"
+                      : "text-text-secondary hover:text-foreground"
                   }`}
+                  onMouseEnter={(e) => {
+                    if (!isActive) (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(196,112,74,0.08)";
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "";
+                  }}
                   style={{
                     gap: collapsed ? 0 : 12,
                     padding: collapsed ? "10px 0" : "10px 12px",
@@ -186,7 +201,7 @@ export function Sidebar({ userName }: SidebarProps) {
             href="/docs"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-text-tertiary transition-colors hover:bg-border hover:text-accent"
+            className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-text-tertiary transition-colors hover:bg-sand hover:text-accent"
           >
             <span className="h-2 w-2 flex-shrink-0" />
             <BookOpen size={16} strokeWidth={1.75} className="flex-shrink-0" />
@@ -197,15 +212,15 @@ export function Sidebar({ userName }: SidebarProps) {
 
       {/* Settings */}
       <div
-        className="border-t border-border"
-        style={{ padding: collapsed ? "8px 6px" : "12px 12px" }}
+        className="border-t"
+        style={{ padding: collapsed ? "8px 6px" : "12px 12px", borderTopColor: "var(--border-subtle)" }}
       >
         <Link
           href="/settings/security"
           className={`flex items-center rounded-md text-sm font-medium transition-colors ${
             pathname === "/settings/security"
-              ? "bg-accent text-[#FBF0EA]"
-              : "text-text-secondary hover:bg-border hover:text-foreground"
+              ? "bg-card text-accent"
+              : "text-text-secondary hover:bg-sand hover:text-foreground"
           }`}
           style={{
             gap: collapsed ? 0 : 12,
@@ -222,8 +237,8 @@ export function Sidebar({ userName }: SidebarProps) {
 
       {/* User + logout */}
       <div
-        className="border-t border-border"
-        style={{ padding: collapsed ? "12px 6px" : "16px 16px" }}
+        className="border-t"
+        style={{ padding: collapsed ? "12px 6px" : "16px 16px", borderTopColor: "var(--border-subtle)" }}
       >
         {!collapsed && (
           <p

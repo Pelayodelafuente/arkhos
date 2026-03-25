@@ -99,8 +99,8 @@ export function renderIconByName(
 // ─── Color Presets ────────────────────────────────────────────────────────────
 
 const COLOR_PRESETS = [
-  "#0572EC", "#6E40C9", "#1DB954", "#F24E1E", "#000000",
-  "#FF6363", "#5B8C6A", "#C4704A", "#4A7A9B", "#9B7A4A",
+  "#c4704a", "#5f1b29", "#8a3040", "#056b63", "#9a6a28",
+  "#6E40C9", "#1DB954", "#F24E1E", "#7a9b76", "#2a1a10",
   "#007AFF", "#E50914",
 ]
 
@@ -123,7 +123,7 @@ export function CategoryManager({ open, onClose, userId }: CategoryManagerProps)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [name, setName] = useState("")
   const [icon, setIcon] = useState("zap")
-  const [color, setColor] = useState("#4A7A9B")
+  const [color, setColor] = useState("#5f1b29")
   const [iconSearch, setIconSearch] = useState("")
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 

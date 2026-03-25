@@ -59,9 +59,9 @@ function isOverdue(date: string): boolean {
 // ─── Priority colors ────────────────
 
 const PRIORITY_COLORS: Record<TaskPriority, string> = {
-  none: "#888780",
-  low: "#5b8c6a",
-  medium: "#9b7a4a",
+  none: "#9a7a5a",
+  low: "#9a6a28",
+  medium: "#c4704a",
   high: "#c4704a",
   urgent: "#b94444",
 };

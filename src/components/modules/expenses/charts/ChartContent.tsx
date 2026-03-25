@@ -74,7 +74,7 @@ function DistributionChart({ subscriptions }: { subscriptions: SubscriptionWithC
   const chartData = groups.map((g) => ({
     name: g.category?.name ?? 'Sin categoría',
     value: g.totalMonthly + g.totalQuarterly / 3 + g.totalSemiannual / 6 + g.totalAnnual / 12,
-    color: g.category?.color ?? '#888780',
+    color: g.category?.color ?? '#9a7a5a',
   }))
 
   const total = chartData.reduce((acc, d) => acc + d.value, 0)
@@ -219,12 +219,12 @@ function EvolutionChart({ subscriptions }: { subscriptions: SubscriptionWithCate
             <Tooltip content={<CustomTooltip />} />
             <Bar dataKey="total" radius={[6, 6, 0, 0]}>
               {data.map((entry, i) => (
-                <Cell key={i} fill={entry.isCurrent ? '#4A7A9B' : 'rgba(74,122,155,0.35)'} />
+                <Cell key={i} fill={entry.isCurrent ? '#5f1b29' : 'rgba(95,27,41,0.35)'} />
               ))}
             </Bar>
             <Bar dataKey="prevTotal" radius={[6, 6, 0, 0]} fillOpacity={0}>
               {data.map((_, i) => (
-                <Cell key={i} fill="transparent" stroke="#4A7A9B" strokeWidth={1} strokeDasharray="4 4" />
+                <Cell key={i} fill="transparent" stroke="#5f1b29" strokeWidth={1} strokeDasharray="4 4" />
               ))}
             </Bar>
           </BarChart>

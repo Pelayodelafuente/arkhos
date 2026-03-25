@@ -47,13 +47,13 @@ export function ProjectsToolbar({ statuses }: ProjectsToolbarProps) {
   }, [sortOpen]);
 
   const statusOptions: Array<{ value: string; label: string; color: string }> = [
-    { value: "all", label: "Todos", color: "#888780" },
+    { value: "all", label: "Todos", color: "#9a7a5a" },
     ...statuses.map((s) => ({
       value: s.name,
       label: s.name,
       color: s.color,
     })),
-    ...(hasArchived ? [{ value: "Archivado", label: "Archivados", color: "#888780" }] : []),
+    ...(hasArchived ? [{ value: "Archivado", label: "Archivados", color: "#9a7a5a" }] : []),
   ];
 
   return (

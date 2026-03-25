@@ -141,7 +141,7 @@ export default function FlowView({ phases }: FlowViewProps) {
             markerHeight="6"
             orient="auto-start-reverse"
           >
-            <path d="M 0 0 L 10 4 L 0 8 Z" fill="#5B8C6A" />
+            <path d="M 0 0 L 10 4 L 0 8 Z" fill="#056b63" />
           </marker>
 
           {/* Arrow marker — pending */}
@@ -188,7 +188,7 @@ export default function FlowView({ phases }: FlowViewProps) {
 
             const isDone = phase.status === 'done';
             const isActive = phase.status === 'in-progress' || nextPhase.status === 'in-progress';
-            const strokeColor = isDone ? '#5B8C6A' : isActive ? '#C4704A' : '#E2D9CA';
+            const strokeColor = isDone ? '#056b63' : isActive ? '#C4704A' : 'rgba(160,120,80,0.35)';
             const markerId = isDone ? 'arrow-done' : isActive ? 'arrow-active' : 'arrow-pending';
 
             return (
@@ -229,10 +229,10 @@ export default function FlowView({ phases }: FlowViewProps) {
 
             const borderColor =
               phase.status === 'done'
-                ? '#5B8C6A'
+                ? '#056b63'
                 : phase.status === 'in-progress'
                   ? '#C4704A'
-                  : '#E2D9CA';
+                  : 'rgba(160,120,80,0.35)';
             const borderWidth = phase.status === 'pending' ? 1 : 2;
             const isActive = phase.status === 'in-progress';
 
@@ -260,7 +260,7 @@ export default function FlowView({ phases }: FlowViewProps) {
                   y={nodeY + 22}
                   fontSize={12}
                   fontWeight={500}
-                  fill="#1A1714"
+                  fill="#2a1a10"
                   fontFamily="var(--font-sans)"
                 >
                   {phase.name.length > 20 ? `${phase.name.slice(0, 20)}...` : phase.name}
@@ -314,7 +314,7 @@ export default function FlowView({ phases }: FlowViewProps) {
                   x={nodeX + 12}
                   y={nodeY + 62}
                   fontSize={10}
-                  fill="#888780"
+                  fill="#9a7a5a"
                   fontFamily="var(--font-mono)"
                 >
                   {doneTasks}/{totalTasks} tareas
