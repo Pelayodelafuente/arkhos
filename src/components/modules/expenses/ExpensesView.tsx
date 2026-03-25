@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Plus, Settings, Search, Sparkles, Download, X, Bell } from "lucide-react"
+import { Plus, Settings, Search, Sparkles, Download, X, Bell, PieChart } from "lucide-react"
 import { Button } from "@/components/ui"
 import { useExpensesStore } from "@/stores/expenses-store"
 import { KPICards } from "./KPICards"
@@ -14,7 +14,6 @@ import { AlertSettings } from "./AlertSettings"
 import { ExpenseCalendar } from "./ExpenseCalendar"
 import { SubscriptionList } from "./SubscriptionList"
 import { CycleFilterToggle } from "./CycleFilterToggle"
-import { ExpenseChartDialog } from "./ExpenseChartDialog"
 import { SubscriptionModal } from "./SubscriptionModal"
 import { CategoryManager } from "./CategoryManager"
 import { SmartAddModal } from "./SmartAddModal"
@@ -50,9 +49,9 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
   const [smartAddOpen, setSmartAddOpen] = useState(false)
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const [alertSettingsOpen, setAlertSettingsOpen] = useState(false)
-  const [chartDialogOpen, setChartDialogOpen] = useState(false)
 
   const searchRef = useRef<HTMLInputElement>(null)
+  const chartsRef = useRef<HTMLDivElement>(null)
 
   // Restore amortization preference
   useEffect(() => {
@@ -138,8 +137,8 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
     exportToCSV(subscriptions, 'arkhos-gastos')
   }, [subscriptions])
 
-  const handleOpenFullChart = useCallback(() => {
-    setChartDialogOpen(true)
+  const handleScrollToCharts = useCallback(() => {
+    chartsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }, [])
 
   return (
@@ -203,8 +202,16 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
           <span className="hidden sm:inline">Categorias</span>
         </Button>
 
-        {/* Chart */}
-        <ExpenseChartDialog externalOpen={chartDialogOpen} onExternalClose={() => setChartDialogOpen(false)} />
+        {/* Chart — scroll to sidebar charts */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleScrollToCharts}
+          className="border border-border"
+        >
+          <PieChart size={16} strokeWidth={1.75} />
+          <span className="hidden sm:inline">Grafico</span>
+        </Button>
 
         {/* Alert settings */}
         <Button
@@ -288,12 +295,12 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
               </div>
 
               {/* Right column (sidebar) — sticky on desktop */}
-              <div className="space-y-4 lg:sticky lg:top-4 lg:self-start">
+              <div ref={chartsRef} className="space-y-4 lg:sticky lg:top-4 lg:self-start">
                 <div className="animate-fade-in-up" style={{ animationDelay: '130ms' }}>
                   <BudgetRing userId={userId} />
                 </div>
                 <div className="animate-fade-in-up" style={{ animationDelay: '200ms' }}>
-                  <MiniDistributionChart onOpenFullChart={handleOpenFullChart} />
+                  <MiniDistributionChart />
                 </div>
                 <div className="animate-fade-in-up" style={{ animationDelay: '270ms' }}>
                   <SpendingTrend />
@@ -306,6 +313,7 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
 
       {/* Modals */}
       <SubscriptionModal
+        key={editingSub?.id ?? 'new'}
         open={modalOpen}
         onClose={handleCloseModal}
         userId={userId}

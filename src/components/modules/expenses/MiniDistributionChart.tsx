@@ -7,11 +7,7 @@ import { useExpensesStore } from "@/stores/expenses-store"
 import { groupByCategory, formatCurrency } from "@/lib/gastos-utils"
 import { BarChart3 } from "lucide-react"
 
-interface MiniDistributionChartProps {
-  onOpenFullChart?: () => void
-}
-
-export function MiniDistributionChart({ onOpenFullChart }: MiniDistributionChartProps) {
+export function MiniDistributionChart() {
   const subscriptions = useExpensesStore((s) => s.subscriptions)
 
   const active = useMemo(
@@ -65,11 +61,7 @@ export function MiniDistributionChart({ onOpenFullChart }: MiniDistributionChart
 
   return (
     <Card padding="sm">
-      <button
-        onClick={onOpenFullChart}
-        className="w-full cursor-pointer focus:outline-none"
-        type="button"
-      >
+      <div>
         {/* Header */}
         <div className="flex items-center gap-2 px-2 pt-1 pb-0">
           <div className="h-3 w-0.5 rounded-full bg-[var(--module-gastos)]" />
@@ -135,7 +127,7 @@ export function MiniDistributionChart({ onOpenFullChart }: MiniDistributionChart
             <span className="text-text-tertiary text-[10px] ml-1">/mes</span>
           </p>
         </div>
-      </button>
+      </div>
     </Card>
   )
 }

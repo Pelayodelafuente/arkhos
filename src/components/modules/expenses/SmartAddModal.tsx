@@ -100,7 +100,7 @@ export function SmartAddModal({ open, onClose, userId }: SmartAddModalProps) {
 
         {/* Help text */}
         <p className="text-[11px] text-text-tertiary leading-relaxed">
-          Escribe el nombre, precio, ciclo (mensual/trimestral/semestral/anual), día de cobro y categoría.
+          Escribe el nombre, precio, ciclo (mensual/anual), día de cobro y categoría.
           <br />
           Ejemplo: <span className="font-mono">Spotify 10.99 mensual día 15 en Música</span>
         </p>

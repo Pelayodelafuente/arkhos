@@ -7,8 +7,6 @@ import type { CycleFilter } from "@/types/expenses"
 const OPTIONS: { value: CycleFilter; label: string }[] = [
   { value: "all", label: "Todo" },
   { value: "monthly", label: "Mes" },
-  { value: "quarterly", label: "Trim." },
-  { value: "semiannual", label: "Sem." },
   { value: "annual", label: "Anual" },
 ]
 

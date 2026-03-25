@@ -238,8 +238,6 @@ export function SubscriptionModal({
 
   const cycleOptions = [
     { value: "monthly", label: "Mensual" },
-    { value: "quarterly", label: "Trimestral" },
-    { value: "semiannual", label: "Semestral" },
     { value: "annual", label: "Anual" },
   ]
 

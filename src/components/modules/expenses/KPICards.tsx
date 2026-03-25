@@ -47,8 +47,15 @@ export function KPICards() {
     if (isCurrentMonth) {
       return getNextBillingSubscription(subscriptions)
     }
-    // For non-current month, find first billing in that month
-    const active = subscriptions.filter((s) => s.status === 'active')
+    // For non-current month, only include subs that actually bill in that month
+    const active = subscriptions.filter((s) => {
+      if (s.status !== 'active') return false
+      if (s.cycle === 'monthly') return true
+      if (s.cycle === 'annual' && s.started_at) {
+        return new Date(s.started_at).getMonth() + 1 === viewedMonth
+      }
+      return false
+    })
     if (active.length === 0) return null
     const daysInMonth = new Date(viewedYear, viewedMonth, 0).getDate()
     const sorted = [...active]
@@ -62,7 +69,7 @@ export function KPICards() {
 
   const displayTotal = notAmortizeYearly
     ? summary.totalMonthly * 12 + summary.totalQuarterly * 4 + summary.totalSemiannual * 2 + summary.totalAnnual
-    : summary.totalMonthlyEstimate
+    : summary.totalMonthly + summary.totalQuarterly / 3 + summary.totalSemiannual / 6 + summary.totalAnnual / 12
 
   const totalLabel = notAmortizeYearly ? 'GASTO ANUAL' : 'GASTO MENSUAL'
 

@@ -446,9 +446,8 @@ export const useExpensesStore = create<ExpensesStore>((set, get) => ({
     try {
       const payments = await getPaymentsApi(userId)
       set({ payments })
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Error al cargar pagos'
-      toast(msg, 'error')
+    } catch {
+      set({ payments: [] })
     }
   },
 
@@ -456,9 +455,8 @@ export const useExpensesStore = create<ExpensesStore>((set, get) => ({
     try {
       const monthlySpending = await getMonthlySpendingApi(userId, months)
       set({ monthlySpending })
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Error al cargar gasto mensual'
-      toast(msg, 'error')
+    } catch {
+      set({ monthlySpending: [] })
     }
   },
 
@@ -497,9 +495,8 @@ export const useExpensesStore = create<ExpensesStore>((set, get) => ({
         const payments = await getPaymentsApi(userId)
         set({ monthlySpending, payments })
       }
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Error al generar pagos'
-      toast(msg, 'error')
+    } catch {
+      // subscription_payments table may not exist yet — silently skip
     }
   },
 }))
@@ -511,12 +508,23 @@ export const useExpensesStore = create<ExpensesStore>((set, get) => ({
 /**
  * Suscripciones filtradas solo por cycleFilter (sin searchQuery).
  * Usada por KPIs, calendario, banner y budget para respetar el filtro de ciclo.
+ * Cuando cycleFilter='monthly', incluye también suscripciones anuales que cobran en viewedMonth.
  */
 export function useCycleFilteredSubscriptions(): SubscriptionWithCategory[] {
   const subscriptions = useExpensesStore((s) => s.subscriptions)
   const cycleFilter = useExpensesStore((s) => s.cycleFilter)
+  const viewedMonth = useExpensesStore((s) => s.viewedMonth)
 
   if (cycleFilter === 'all') return subscriptions
+  if (cycleFilter === 'monthly') {
+    return subscriptions.filter((sub) => {
+      if (sub.cycle === 'monthly') return true
+      if (sub.cycle === 'annual' && sub.started_at) {
+        return new Date(sub.started_at).getMonth() + 1 === viewedMonth
+      }
+      return false
+    })
+  }
   return subscriptions.filter((sub) => sub.cycle === cycleFilter)
 }
 
@@ -529,9 +537,22 @@ export function useFilteredSubscriptions(): SubscriptionWithCategory[] {
   const subscriptions = useExpensesStore((s) => s.subscriptions)
   const cycleFilter = useExpensesStore((s) => s.cycleFilter)
   const searchQuery = useExpensesStore((s) => s.searchQuery)
+  const viewedMonth = useExpensesStore((s) => s.viewedMonth)
+
+  const cycleMatch = (sub: SubscriptionWithCategory): boolean => {
+    if (cycleFilter === 'all') return true
+    if (cycleFilter === 'monthly') {
+      if (sub.cycle === 'monthly') return true
+      if (sub.cycle === 'annual' && sub.started_at) {
+        return new Date(sub.started_at).getMonth() + 1 === viewedMonth
+      }
+      return false
+    }
+    return sub.cycle === cycleFilter
+  }
 
   const filtered = subscriptions.filter((sub) => {
-    if (cycleFilter !== 'all' && sub.cycle !== cycleFilter) return false
+    if (!cycleMatch(sub)) return false
     if (searchQuery) {
       const q = searchQuery.toLowerCase()
       return (
