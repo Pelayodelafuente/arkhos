@@ -1,4 +1,4 @@
-// Supabase Database types — aligned with migrations 001 + 002 + 003 + 004 + 005 + 006
+// Supabase Database types — aligned with migrations 001 + 002 + 003 + 004 + 005 + 006 + 010
 
 export type Json =
   | string
@@ -87,6 +87,9 @@ export interface Database {
           created_at: string;
           logo_url: string | null;
           updated_at: string;
+          description: string | null;
+          target_date: string | null;
+          repository_url: string | null;
         };
         Insert: {
           id?: string;
@@ -102,6 +105,9 @@ export interface Database {
           sort_order?: number;
           created_at?: string;
           updated_at?: string;
+          description?: string | null;
+          target_date?: string | null;
+          repository_url?: string | null;
         };
         Update: {
           name?: string;
@@ -114,6 +120,9 @@ export interface Database {
           logo_url?: string | null;
           sort_order?: number;
           updated_at?: string;
+          description?: string | null;
+          target_date?: string | null;
+          repository_url?: string | null;
         };
         Relationships: [
           {
@@ -204,6 +213,9 @@ export interface Database {
           notes: string;
           sort_order: number;
           created_at: string;
+          start_date: string | null;
+          end_date: string | null;
+          color: string;
         };
         Insert: {
           id?: string;
@@ -213,12 +225,18 @@ export interface Database {
           notes?: string;
           sort_order?: number;
           created_at?: string;
+          start_date?: string | null;
+          end_date?: string | null;
+          color?: string;
         };
         Update: {
           name?: string;
           status?: string;
           notes?: string;
           sort_order?: number;
+          start_date?: string | null;
+          end_date?: string | null;
+          color?: string;
         };
         Relationships: [
           {
@@ -241,6 +259,16 @@ export interface Database {
           sort_order: number;
           created_at: string;
           updated_at: string;
+          status: string;
+          description: string;
+          due_date: string | null;
+          start_date: string | null;
+          estimated_hours: number;
+          tracked_seconds: number;
+          labels: string[];
+          subtasks: Json;
+          assigned_role: string;
+          color: string;
         };
         Insert: {
           id?: string;
@@ -252,6 +280,16 @@ export interface Database {
           sort_order?: number;
           created_at?: string;
           updated_at?: string;
+          status?: string;
+          description?: string;
+          due_date?: string | null;
+          start_date?: string | null;
+          estimated_hours?: number;
+          tracked_seconds?: number;
+          labels?: string[];
+          subtasks?: Json;
+          assigned_role?: string;
+          color?: string;
         };
         Update: {
           text?: string;
@@ -260,6 +298,16 @@ export interface Database {
           content?: string;
           sort_order?: number;
           updated_at?: string;
+          status?: string;
+          description?: string;
+          due_date?: string | null;
+          start_date?: string | null;
+          estimated_hours?: number;
+          tracked_seconds?: number;
+          labels?: string[];
+          subtasks?: Json;
+          assigned_role?: string;
+          color?: string;
         };
         Relationships: [
           {
@@ -297,6 +345,140 @@ export interface Database {
             columns: ["task_id"];
             isOneToOne: false;
             referencedRelation: "phase_tasks";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      project_time_entries: {
+        Row: {
+          id: string;
+          task_id: string;
+          project_id: string;
+          user_id: string;
+          started_at: string;
+          ended_at: string | null;
+          duration: number;
+          note: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          task_id: string;
+          project_id: string;
+          user_id: string;
+          started_at: string;
+          ended_at?: string | null;
+          duration?: number;
+          note?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          ended_at?: string | null;
+          duration?: number;
+          note?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "project_time_entries_task_id_fkey";
+            columns: ["task_id"];
+            isOneToOne: false;
+            referencedRelation: "phase_tasks";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "project_time_entries_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "project_time_entries_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      project_links: {
+        Row: {
+          id: string;
+          project_id: string;
+          user_id: string;
+          label: string;
+          url: string;
+          icon: string;
+          sort_order: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          project_id: string;
+          user_id: string;
+          label: string;
+          url: string;
+          icon?: string;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Update: {
+          label?: string;
+          url?: string;
+          icon?: string;
+          sort_order?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "project_links_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "project_links_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      project_templates: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          name: string;
+          description: string | null;
+          type: string;
+          phases: Json;
+          is_system: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string | null;
+          name: string;
+          description?: string | null;
+          type?: string;
+          phases?: Json;
+          is_system?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          name?: string;
+          description?: string | null;
+          type?: string;
+          phases?: Json;
+          is_system?: boolean;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "project_templates_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
             referencedColumns: ["id"];
           },
         ];

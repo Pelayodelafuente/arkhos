@@ -15,6 +15,11 @@ import {
   deleteTask as deleteTaskApi,
   reorderPhases as reorderPhasesApi,
   reorderTasks as reorderTasksApi,
+  createTimeEntry as createTimeEntryApi,
+  createProjectLink as createProjectLinkApi,
+  updateProjectLink as updateProjectLinkApi,
+  deleteProjectLink as deleteProjectLinkApi,
+  reorderProjectLinks as reorderProjectLinksApi,
 } from '@/lib/supabase/projects';
 import type {
   Project,
@@ -27,6 +32,11 @@ import type {
   UpdateTaskInput,
   ViewMode,
   ProjectFilters,
+  TaskStatus,
+  Subtask,
+  CreateProjectLinkInput,
+  UpdateProjectLinkInput,
+  ProjectLink,
 } from '@/types/projects';
 import { useUIStore } from './ui-store';
 
@@ -39,6 +49,7 @@ interface ProjectsState {
   error: string | null;
   viewMode: ViewMode;
   filters: ProjectFilters;
+  activeTimeEntry: { taskId: string; startedAt: Date } | null;
 }
 
 interface ProjectsActions {
@@ -58,6 +69,20 @@ interface ProjectsActions {
 
   reorderPhasesAction: (orderedIds: string[]) => Promise<void>;
   reorderTasksAction: (phaseId: string, orderedIds: string[]) => Promise<void>;
+
+  // v2: Time tracking
+  startTimer: (taskId: string) => void;
+  stopTimer: (projectId: string, userId: string) => Promise<void>;
+
+  // v2: Task status & subtasks
+  changeTaskStatus: (taskId: string, newStatus: TaskStatus) => Promise<void>;
+  updateSubtasks: (taskId: string, subtasks: Subtask[]) => Promise<void>;
+
+  // v2: Project links
+  addProjectLink: (userId: string, input: CreateProjectLinkInput) => Promise<void>;
+  editProjectLink: (linkId: string, input: UpdateProjectLinkInput) => Promise<void>;
+  removeProjectLink: (linkId: string) => Promise<void>;
+  reorderProjectLinksAction: (orderedIds: string[]) => Promise<void>;
 
   setViewMode: (mode: ViewMode) => void;
   setFilters: (filters: Partial<ProjectFilters>) => void;
@@ -81,7 +106,8 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
   loading: false,
   error: null,
   viewMode: 'list',
-  filters: { status: 'all', search: '' },
+  filters: { status: 'all', search: '', sortBy: 'recent' as const },
+  activeTimeEntry: null,
 
   // ── Projects ────────────────────────
 
@@ -124,7 +150,7 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
         done_task_count: 0,
       };
       set((s) => ({ projects: [listItem, ...s.projects] }));
-      logActivity(client, userId, 'proyectos', 'project_created', project.name);
+      logActivity(client, userId, 'proyectos', 'project_created', project.name, `project:${project.id}`);
       toast('Proyecto creado', 'success');
       return project;
     } catch (e) {
@@ -147,7 +173,7 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
       const client = createClient();
       const updated = await updateProjectApi(client, projectId, input);
       set({ activeProject: updated });
-      logActivity(client, updated.user_id, 'proyectos', 'project_edited', updated.name);
+      logActivity(client, updated.user_id, 'proyectos', 'project_edited', updated.name, `project:${projectId}`);
       toast('Proyecto actualizado', 'success');
     } catch (e) {
       set({ projects: prev });
@@ -170,7 +196,7 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
         set({ activeProject: null });
       }
       if (deleted) {
-        logActivity(client, deleted.user_id, 'proyectos', 'project_deleted', deleted.name);
+        logActivity(client, deleted.user_id, 'proyectos', 'project_deleted', deleted.name, `project:${projectId}`);
       }
       toast('Proyecto eliminado', 'success');
     } catch (e) {
@@ -379,6 +405,218 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
     }
   },
 
+  // ── Time tracking (v2) ─────────────
+
+  startTimer: (taskId) => {
+    set({ activeTimeEntry: { taskId, startedAt: new Date() } });
+  },
+
+  stopTimer: async (projectId, userId) => {
+    const entry = get().activeTimeEntry;
+    if (!entry) return;
+
+    const now = new Date();
+    const duration = Math.round((now.getTime() - entry.startedAt.getTime()) / 1000);
+    set({ activeTimeEntry: null });
+
+    // Optimistic: add duration to task
+    const active = get().activeProject;
+    if (active) {
+      set({
+        activeProject: {
+          ...active,
+          phases: active.phases.map((p) => ({
+            ...p,
+            tasks: p.tasks.map((t) =>
+              t.id === entry.taskId
+                ? { ...t, tracked_seconds: t.tracked_seconds + duration }
+                : t
+            ),
+          })),
+        },
+      });
+    }
+
+    try {
+      const client = createClient();
+      await createTimeEntryApi(client, userId, {
+        task_id: entry.taskId,
+        project_id: projectId,
+        started_at: entry.startedAt.toISOString(),
+        ended_at: now.toISOString(),
+        duration,
+      });
+      toast('Tiempo registrado', 'success');
+    } catch (e) {
+      // Rollback tracked_seconds
+      if (active) {
+        set({
+          activeProject: {
+            ...active,
+            phases: active.phases.map((p) => ({
+              ...p,
+              tasks: p.tasks.map((t) =>
+                t.id === entry.taskId
+                  ? { ...t, tracked_seconds: t.tracked_seconds }
+                  : t
+              ),
+            })),
+          },
+        });
+      }
+      const msg = e instanceof Error ? e.message : 'Error al registrar tiempo';
+      toast(msg, 'error');
+    }
+  },
+
+  // ── Task status & subtasks (v2) ───
+
+  changeTaskStatus: async (taskId, newStatus) => {
+    const active = get().activeProject;
+    if (!active) return;
+
+    const prevPhases = active.phases;
+    const done = newStatus === 'done';
+    set({
+      activeProject: {
+        ...active,
+        phases: active.phases.map((p) => ({
+          ...p,
+          tasks: p.tasks.map((t) =>
+            t.id === taskId ? { ...t, status: newStatus, done } : t
+          ),
+        })),
+      },
+    });
+
+    try {
+      const client = createClient();
+      await updateTaskApi(client, taskId, { status: newStatus, done });
+    } catch (e) {
+      set({ activeProject: { ...active, phases: prevPhases } });
+      const msg = e instanceof Error ? e.message : 'Error al cambiar estado';
+      toast(msg, 'error');
+    }
+  },
+
+  updateSubtasks: async (taskId, subtasks) => {
+    const active = get().activeProject;
+    if (!active) return;
+
+    const prevPhases = active.phases;
+    set({
+      activeProject: {
+        ...active,
+        phases: active.phases.map((p) => ({
+          ...p,
+          tasks: p.tasks.map((t) =>
+            t.id === taskId ? { ...t, subtasks } : t
+          ),
+        })),
+      },
+    });
+
+    try {
+      const client = createClient();
+      await updateTaskApi(client, taskId, { subtasks });
+    } catch (e) {
+      set({ activeProject: { ...active, phases: prevPhases } });
+      const msg = e instanceof Error ? e.message : 'Error al actualizar subtareas';
+      toast(msg, 'error');
+    }
+  },
+
+  // ── Project links (v2) ───────────
+
+  addProjectLink: async (userId, input) => {
+    const active = get().activeProject;
+    if (!active) return;
+
+    try {
+      const client = createClient();
+      const link = await createProjectLinkApi(client, userId, input);
+      set({
+        activeProject: {
+          ...active,
+          links: [...(active.links || []), link],
+        },
+      });
+      toast('Enlace añadido', 'success');
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Error al crear enlace';
+      toast(msg, 'error');
+    }
+  },
+
+  editProjectLink: async (linkId, input) => {
+    const active = get().activeProject;
+    if (!active) return;
+
+    const prevLinks = active.links || [];
+    set({
+      activeProject: {
+        ...active,
+        links: prevLinks.map((l) =>
+          l.id === linkId ? { ...l, ...input } : l
+        ),
+      },
+    });
+
+    try {
+      const client = createClient();
+      await updateProjectLinkApi(client, linkId, input);
+    } catch (e) {
+      set({ activeProject: { ...active, links: prevLinks } });
+      const msg = e instanceof Error ? e.message : 'Error al actualizar enlace';
+      toast(msg, 'error');
+    }
+  },
+
+  removeProjectLink: async (linkId) => {
+    const active = get().activeProject;
+    if (!active) return;
+
+    const prevLinks = active.links || [];
+    set({
+      activeProject: {
+        ...active,
+        links: prevLinks.filter((l) => l.id !== linkId),
+      },
+    });
+
+    try {
+      const client = createClient();
+      await deleteProjectLinkApi(client, linkId);
+      toast('Enlace eliminado', 'success');
+    } catch (e) {
+      set({ activeProject: { ...active, links: prevLinks } });
+      const msg = e instanceof Error ? e.message : 'Error al eliminar enlace';
+      toast(msg, 'error');
+    }
+  },
+
+  reorderProjectLinksAction: async (orderedIds) => {
+    const active = get().activeProject;
+    if (!active) return;
+
+    const prevLinks = active.links || [];
+    const reordered = orderedIds
+      .map((id) => prevLinks.find((l) => l.id === id))
+      .filter(Boolean) as ProjectLink[];
+    const withOrder = reordered.map((l, i) => ({ ...l, sort_order: i }));
+
+    set({ activeProject: { ...active, links: withOrder } });
+
+    try {
+      const client = createClient();
+      await reorderProjectLinksApi(client, withOrder.map((l, i) => ({ id: l.id, sort_order: i })));
+    } catch (e) {
+      set({ activeProject: { ...active, links: prevLinks } });
+      const msg = e instanceof Error ? e.message : 'Error al reordenar enlaces';
+      toast(msg, 'error');
+    }
+  },
+
   // ── UI state ────────────────────────
 
   setViewMode: (mode) => set({ viewMode: mode }),
@@ -395,18 +633,49 @@ export function useFilteredProjects(): ProjectListItem[] {
   const projects = useProjectsStore((s: ProjectsStore) => s.projects);
   const filters = useProjectsStore((s: ProjectsStore) => s.filters);
 
-  return projects.filter((p) => {
+  let filtered = projects.filter((p) => {
     if (filters.status !== 'all' && p.status !== filters.status) return false;
     if (filters.search) {
       const q = filters.search.toLowerCase();
       return (
         p.name.toLowerCase().includes(q) ||
+        p.type.toLowerCase().includes(q) ||
+        p.status.toLowerCase().includes(q) ||
         p.stack.some((s) => s.toLowerCase().includes(q)) ||
         (p.tags ?? []).some((t) => t.toLowerCase().includes(q))
       );
     }
     return true;
   });
+
+  // Sort
+  switch (filters.sortBy) {
+    case 'name':
+      filtered = [...filtered].sort((a, b) => a.name.localeCompare(b.name));
+      break;
+    case 'progress': {
+      filtered = [...filtered].sort((a, b) => {
+        const progA = a.task_count > 0 ? a.done_task_count / a.task_count : 0;
+        const progB = b.task_count > 0 ? b.done_task_count / b.task_count : 0;
+        return progB - progA;
+      });
+      break;
+    }
+    case 'urgent':
+      filtered = [...filtered].sort((a, b) => {
+        const statusOrder: Record<string, number> = { 'Activo': 0, 'Idea': 1, 'Pausado': 2, 'Completado': 3 };
+        return (statusOrder[a.status] ?? 4) - (statusOrder[b.status] ?? 4);
+      });
+      break;
+    case 'recent':
+    default:
+      filtered = [...filtered].sort((a, b) =>
+        new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+      );
+      break;
+  }
+
+  return filtered;
 }
 
 export function useProjectsByStatus(statuses: string[]): Record<string, ProjectListItem[]> {

@@ -50,3 +50,24 @@ export async function getRecentActivity(
   const result = await query;
   return (result.data ?? []) as ActivityEntry[];
 }
+
+export async function getProjectActivity(
+  client: Client,
+  userId: string,
+  projectId: string,
+  limit = 30,
+  offset = 0
+): Promise<{ entries: ActivityEntry[]; hasMore: boolean }> {
+  const result = await client
+    .from('activity_log')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('module', 'proyectos')
+    .ilike('detail', `%${projectId}%`)
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit);
+
+  const entries = (result.data ?? []) as ActivityEntry[];
+  const hasMore = entries.length > limit;
+  return { entries: entries.slice(0, limit), hasMore };
+}
