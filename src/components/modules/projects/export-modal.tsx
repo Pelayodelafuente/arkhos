@@ -5,7 +5,43 @@ import { Copy, Download, FileText, Braces } from "lucide-react";
 import { Modal, Button } from "@/components/ui";
 import { useUIStore } from "@/stores/ui-store";
 import { useToast } from "@/stores/ui-store";
-import type { Project } from "@/types/projects";
+import type { Project, TaskPriority, PhaseStatus } from "@/types/projects";
+
+const PRIORITY_LABELS: Record<TaskPriority, string> = {
+  none: "",
+  low: "baja",
+  medium: "media",
+  high: "alta",
+  urgent: "urgente",
+};
+
+const PHASE_STATUS_LABELS: Record<PhaseStatus, string> = {
+  pending: "Pendiente",
+  "in-progress": "En progreso",
+  done: "Completada",
+};
+
+function formatDateShort(dateStr: string): string {
+  const d = new Date(dateStr);
+  const day = d.getDate();
+  const months = [
+    "ene", "feb", "mar", "abr", "may", "jun",
+    "jul", "ago", "sep", "oct", "nov", "dic",
+  ];
+  return `${day} ${months[d.getMonth()]}`;
+}
+
+function formatDateLong(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString("es-ES");
+}
+
+function formatTime(totalSeconds: number): string {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  if (hours > 0 && minutes > 0) return `${hours}h ${minutes}m`;
+  if (hours > 0) return `${hours}h`;
+  return `${minutes}m`;
+}
 
 interface ExportModalProps {
   project: Project | null;
@@ -26,42 +62,98 @@ export function ExportModal({ project }: ExportModalProps) {
   function generateMarkdown(): string {
     if (!project) return "";
     const lines: string[] = [];
-    lines.push(`# ${project.name}\n`);
-    lines.push(`- **Tipo**: ${project.type}`);
-    lines.push(`- **Estado**: ${project.status}`);
-    if (project.start_date) {
-      lines.push(
-        `- **Inicio**: ${new Date(project.start_date).toLocaleDateString("es-ES")}`
-      );
-    }
-    if (project.stack.length > 0) {
-      lines.push(`- **Stack**: ${project.stack.join(", ")}`);
-    }
-    if (project.tags?.length) {
-      lines.push(`- **Tags**: ${project.tags.join(", ")}`);
-    }
 
+    // Title + description
+    lines.push(`# ${project.name}`);
+    if (project.description) {
+      lines.push(`> ${project.description}`);
+    }
+    lines.push("");
+
+    // Metadata line
+    const meta: string[] = [];
+    meta.push(`**Estado:** ${project.status}`);
+    meta.push(`**Tipo:** ${project.type}`);
+    if (project.stack.length > 0) {
+      meta.push(`**Stack:** ${project.stack.join(", ")}`);
+    }
+    lines.push(meta.join(" · "));
+
+    // Dates line
+    const dates: string[] = [];
+    if (project.start_date) {
+      dates.push(`**Inicio:** ${formatDateLong(project.start_date)}`);
+    }
+    if (project.target_date) {
+      dates.push(`**Objetivo:** ${formatDateLong(project.target_date)}`);
+    }
+    if (dates.length > 0) {
+      lines.push(dates.join(" · "));
+    }
+    lines.push("");
+
+    // Progress
     const totalTasks = project.phases.reduce((s, p) => s + p.tasks.length, 0);
     const doneTasks = project.phases.reduce(
       (s, p) => s + p.tasks.filter((t) => t.done).length,
       0
     );
     const progress = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
-    lines.push(`- **Progreso**: ${progress}% (${doneTasks}/${totalTasks} tareas)\n`);
+    lines.push("## Progreso");
+    lines.push(`${doneTasks}/${totalTasks} tareas completadas (${progress}%)`);
+    lines.push("");
 
+    // Phases
+    lines.push("## Fases");
+    lines.push("");
     for (const phase of project.phases) {
-      lines.push(`## ${phase.name} [${phase.status}]\n`);
+      const phaseLabel = PHASE_STATUS_LABELS[phase.status] || phase.status;
+      const phaseDone = phase.tasks.filter((t) => t.done).length;
+      const phaseTotal = phase.tasks.length;
+
+      lines.push(`### ${phase.name}`);
+      lines.push(`**Estado:** ${phaseLabel} · **Progreso:** ${phaseDone}/${phaseTotal} tareas`);
       if (phase.notes) {
-        lines.push(`> ${phase.notes}\n`);
+        lines.push(`> ${phase.notes}`);
       }
+      lines.push("");
+
       for (const task of phase.tasks) {
         const check = task.done ? "x" : " ";
-        const priority =
-          task.priority !== "none" ? ` [${task.priority}]` : "";
-        lines.push(`- [${check}] ${task.text}${priority}`);
-        for (const link of task.links) {
-          lines.push(`  - [${link.label || link.url}](${link.url})`);
+        let suffix = "";
+        if (task.due_date) {
+          suffix += ` (due: ${formatDateShort(task.due_date)})`;
         }
+        if (task.priority !== "none") {
+          suffix += ` (${PRIORITY_LABELS[task.priority]} prioridad)`;
+        }
+        lines.push(`- [${check}] ${task.text}${suffix}`);
+
+        // Subtasks
+        for (const sub of task.subtasks) {
+          const subCheck = sub.completed ? "x" : " ";
+          lines.push(`  - [${subCheck}] ${sub.title}`);
+        }
+      }
+      lines.push("");
+    }
+
+    // Time tracking
+    const totalSeconds = project.phases.reduce(
+      (s, p) => s + p.tasks.reduce((ts, t) => ts + t.tracked_seconds, 0),
+      0
+    );
+    if (totalSeconds > 0) {
+      lines.push("## Tiempo invertido");
+      lines.push(`Total: ${formatTime(totalSeconds)}`);
+      lines.push("");
+    }
+
+    // Project links
+    if (project.links.length > 0) {
+      lines.push("## Enlaces");
+      for (const link of project.links) {
+        lines.push(`- [${link.label || link.url}](${link.url})`);
       }
       lines.push("");
     }

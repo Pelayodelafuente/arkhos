@@ -167,18 +167,20 @@ export function EnrichedTaskItem({
         )}
 
         {/* Checkbox */}
-        <button
+        <motion.button
           onClick={onToggleDone}
+          whileTap={{ scale: 1.3 }}
+          transition={{ type: "spring", stiffness: 400, damping: 10 }}
           className={`mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded border transition-all ${
             task.done
-              ? "scale-100 border-accent bg-accent"
+              ? "border-accent bg-accent"
               : "border-border hover:border-accent"
           }`}
         >
           {task.done && (
             <Check size={10} strokeWidth={3} className="text-white" />
           )}
-        </button>
+        </motion.button>
 
         {/* Task name + meta row */}
         <div className="flex-1 min-w-0">
@@ -213,7 +215,7 @@ export function EnrichedTaskItem({
             {task.priority !== "none" && (
               <span
                 className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
-                  task.priority === "urgent" ? "animate-pulse" : ""
+                  task.priority === "urgent" ? "animate-pulse-slow" : ""
                 }`}
                 style={{
                   backgroundColor: `${PRIORITY_COLORS[task.priority]}14`,

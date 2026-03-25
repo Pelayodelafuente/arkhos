@@ -21,6 +21,8 @@ export function ProjectsToolbar({ statuses }: ProjectsToolbarProps) {
   const filters = useProjectsStore((s) => s.filters);
   const setViewMode = useProjectsStore((s) => s.setViewMode);
   const setFilters = useProjectsStore((s) => s.setFilters);
+  const projects = useProjectsStore((s) => s.projects);
+  const hasArchived = projects.some((p) => p.status === "Archivado");
 
   const [localSearch, setLocalSearch] = useState(filters.search);
   const [sortOpen, setSortOpen] = useState(false);
@@ -51,6 +53,7 @@ export function ProjectsToolbar({ statuses }: ProjectsToolbarProps) {
       label: s.name,
       color: s.color,
     })),
+    ...(hasArchived ? [{ value: "Archivado", label: "Archivados", color: "#888780" }] : []),
   ];
 
   return (

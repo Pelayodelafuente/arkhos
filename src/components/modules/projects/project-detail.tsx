@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -19,6 +19,10 @@ import {
   Calendar,
   Target,
   Clock,
+  ClipboardList,
+  Copy,
+  Archive,
+  ArchiveRestore,
 } from "lucide-react";
 import {
   DndContext,
@@ -129,6 +133,49 @@ function useDebounce(ms: number) {
   );
 }
 
+// ─── Confetti effect ─────────────────
+
+interface ConfettiParticle {
+  id: number;
+  x: number;
+  delay: number;
+  color: string;
+  size: number;
+}
+
+function Confetti() {
+  const particles = useMemo<ConfettiParticle[]>(
+    () =>
+      Array.from({ length: 20 }, (_, i) => ({
+        id: i,
+        x: Math.random() * 100,
+        delay: Math.random() * 0.5,
+        color: i % 2 === 0 ? "#C4704A" : "#5b8c6a",
+        size: 6 + Math.random() * 4,
+      })),
+    []
+  );
+
+  return (
+    <div className="pointer-events-none fixed inset-0 z-50 overflow-hidden">
+      {particles.map((p) => (
+        <div
+          key={p.id}
+          className="absolute animate-confetti-fall rounded-sm"
+          style={{
+            left: `${p.x}%`,
+            top: "-10px",
+            width: p.size,
+            height: p.size,
+            backgroundColor: p.color,
+            animationDelay: `${p.delay}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 // ─── Main component ──────────────────
 
 interface ProjectDetailProps {
@@ -150,6 +197,8 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
   const reorderPhasesAction = useProjectsStore((s) => s.reorderPhasesAction);
   const reorderTasksAction = useProjectsStore((s) => s.reorderTasksAction);
   const clearActiveProject = useProjectsStore((s) => s.clearActiveProject);
+  const duplicateProject = useProjectsStore((s) => s.duplicateProject);
+  const editProject = useProjectsStore((s) => s.editProject);
   const openModal = useUIStore((s) => s.openModal);
 
   const [expandedPhases, setExpandedPhases] = useState<Set<string>>(new Set());
@@ -180,6 +229,10 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
   const [templateDescription, setTemplateDescription] = useState("");
   const [savingTemplate, setSavingTemplate] = useState(false);
   const toast = useToast();
+
+  // Confetti state for 100% completion
+  const [showConfetti, setShowConfetti] = useState(false);
+  const prevProgressRef = useRef<number | null>(null);
 
   useEffect(() => {
     fetchProject(projectId);
@@ -296,6 +349,16 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
   );
   const overallProgress = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
 
+  // Confetti trigger when project reaches 100%
+  useEffect(() => {
+    if (overallProgress === 100 && prevProgressRef.current !== null && prevProgressRef.current < 100) {
+      setShowConfetti(true);
+      const timer = setTimeout(() => setShowConfetti(false), 2500);
+      return () => clearTimeout(timer);
+    }
+    prevProgressRef.current = overallProgress;
+  }, [overallProgress]);
+
   function togglePhase(phaseId: string) {
     setExpandedPhases((prev) => {
       const next = new Set(prev);
@@ -373,6 +436,24 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
     if (!project) return;
     await removeProject(project.id);
     window.location.href = "/proyectos";
+  }
+
+  async function handleDuplicate() {
+    const newId = await duplicateProject(userId);
+    if (newId) {
+      window.location.href = `/proyectos/${newId}`;
+    }
+  }
+
+  async function handleArchive() {
+    if (!project) return;
+    await editProject(project.id, { status: "Archivado" });
+    window.location.href = "/proyectos";
+  }
+
+  async function handleUnarchive() {
+    if (!project) return;
+    await editProject(project.id, { status: "Idea" });
   }
 
   async function handleSaveTemplate() {
@@ -457,10 +538,25 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
               <BookmarkPlus size={14} strokeWidth={2} />
               Plantilla
             </Button>
+            <Button variant="ghost" size="sm" onClick={handleDuplicate}>
+              <Copy size={14} strokeWidth={2} />
+              Duplicar
+            </Button>
             <Button variant="ghost" size="sm" onClick={() => openModal("export-project")}>
               <Download size={14} strokeWidth={2} />
               Exportar
             </Button>
+            {project.status === "Archivado" ? (
+              <Button variant="ghost" size="sm" onClick={handleUnarchive}>
+                <ArchiveRestore size={14} strokeWidth={2} />
+                Desarchivar
+              </Button>
+            ) : (
+              <Button variant="ghost" size="sm" onClick={handleArchive}>
+                <Archive size={14} strokeWidth={2} />
+                Archivar
+              </Button>
+            )}
             <Button variant="secondary" size="sm" onClick={() => openModal("edit-project")}>
               <Edit3 size={14} strokeWidth={2} />
               Editar
@@ -774,6 +870,9 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
       {/* Export modal */}
       <ExportModal project={project} />
 
+      {/* Confetti on 100% project completion */}
+      {showConfetti && <Confetti />}
+
       {/* Save as template modal */}
       <Modal
         open={showSaveTemplate}
@@ -915,9 +1014,10 @@ function SortablePhaseItem({
       ? Math.round((phaseDoneTasks / phase.tasks.length) * 100)
       : 0;
   const statusConfig = PHASE_STATUS_CONFIG[phase.status];
+  const allTasksDone = phase.tasks.length > 0 && phaseDoneTasks === phase.tasks.length;
 
   return (
-    <div ref={setNodeRef} style={style} className="rounded-xl border border-border bg-card transition-[transform,box-shadow] duration-150 ease-out hover:translate-x-0.5 hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+    <div ref={setNodeRef} style={style} className={`rounded-xl border border-border bg-card transition-[transform,box-shadow] duration-150 ease-out hover:translate-x-0.5 hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)] ${allTasksDone ? "animate-phase-complete" : ""}`}>
       {/* Phase header */}
       <div className="flex w-full items-center gap-3 p-4">
         {/* Drag handle or mobile arrows */}
@@ -1050,6 +1150,14 @@ function SortablePhaseItem({
       {/* Phase body (expanded) */}
       {isExpanded && (
         <div className="border-t border-border px-4 pb-4 pt-3">
+          {/* Empty state */}
+          {phase.tasks.length === 0 && (
+            <div className="flex flex-col items-center gap-2 py-6 text-text-tertiary">
+              <ClipboardList size={32} strokeWidth={1.5} />
+              <span className="text-sm">Sin tareas todavía</span>
+            </div>
+          )}
+
           {/* Tasks with drag */}
           <DndContext
             sensors={sensors}

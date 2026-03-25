@@ -318,6 +318,37 @@ mark {
   100% { top: 105%; left: 82%; opacity: 0; }
 }
 
+/* ── Projects: Phase completion border glow ── */
+@keyframes phase-complete-glow {
+  0% { border-color: var(--accent-terracotta); }
+  50% { border-color: #5b8c6a; }
+  100% { border-color: transparent; }
+}
+
+.animate-phase-complete {
+  animation: phase-complete-glow 1.5s ease-out forwards;
+}
+
+/* ── Projects: Confetti fall ── */
+@keyframes confetti-fall {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+.animate-confetti-fall {
+  animation: confetti-fall 2s ease-in forwards;
+}
+
+/* ── Projects: Urgent badge slow pulse ── */
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 2s ease-in-out infinite;
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .auth-draw-circle,
@@ -331,7 +362,10 @@ mark {
   .animate-scale-in,
   .animate-slide-in-right,
   .animate-slide-out-right,
-  .dot-pulse-active {
+  .dot-pulse-active,
+  .animate-phase-complete,
+  .animate-confetti-fall,
+  .animate-pulse-slow {
     animation: none !important;
   }
 

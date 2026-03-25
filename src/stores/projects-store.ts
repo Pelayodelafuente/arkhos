@@ -78,6 +78,9 @@ interface ProjectsActions {
   changeTaskStatus: (taskId: string, newStatus: TaskStatus) => Promise<void>;
   updateSubtasks: (taskId: string, subtasks: Subtask[]) => Promise<void>;
 
+  // v2: Duplicate project
+  duplicateProject: (userId: string) => Promise<string | null>;
+
   // v2: Project links
   addProjectLink: (userId: string, input: CreateProjectLinkInput) => Promise<void>;
   editProjectLink: (linkId: string, input: UpdateProjectLinkInput) => Promise<void>;
@@ -617,6 +620,66 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
     }
   },
 
+  // ── Duplicate project ───────────────
+
+  duplicateProject: async (userId) => {
+    const active = get().activeProject;
+    if (!active) return null;
+
+    try {
+      const client = createClient();
+      // Create new project
+      const newProject = await createProjectApi(client, userId, {
+        name: `${active.name} (copia)`,
+        icon: active.icon,
+        type: active.type,
+        status: 'Idea',
+        stack: active.stack,
+      });
+
+      // Copy phases and non-done tasks
+      for (const phase of active.phases) {
+        const newPhase = await createPhaseApi(client, {
+          project_id: newProject.id,
+          name: phase.name,
+          status: 'pending',
+          notes: phase.notes,
+          sort_order: phase.sort_order,
+        });
+
+        const tasksToKeep = phase.tasks.filter((t) => t.status !== 'done');
+        for (let i = 0; i < tasksToKeep.length; i++) {
+          const t = tasksToKeep[i];
+          await createTaskApi(client, {
+            phase_id: newPhase.id,
+            text: t.text,
+            priority: t.priority,
+            description: t.description,
+            labels: t.labels,
+            sort_order: i,
+          });
+        }
+      }
+
+      // Add to list
+      const listItem: ProjectListItem = {
+        ...newProject,
+        phase_count: active.phases.length,
+        task_count: active.phases.reduce((s, p) => s + p.tasks.filter((t) => t.status !== 'done').length, 0),
+        done_task_count: 0,
+      };
+      set((s) => ({ projects: [listItem, ...s.projects] }));
+
+      logActivity(client, userId, 'proyectos', 'project_duplicated', newProject.name, `project:${newProject.id}`);
+      toast('Proyecto duplicado', 'success');
+      return newProject.id;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Error al duplicar proyecto';
+      toast(msg, 'error');
+      return null;
+    }
+  },
+
   // ── UI state ────────────────────────
 
   setViewMode: (mode) => set({ viewMode: mode }),
@@ -634,6 +697,8 @@ export function useFilteredProjects(): ProjectListItem[] {
   const filters = useProjectsStore((s: ProjectsStore) => s.filters);
 
   let filtered = projects.filter((p) => {
+    // Hide archived unless explicitly filtering for them
+    if (filters.status !== 'Archivado' && p.status === 'Archivado') return false;
     if (filters.status !== 'all' && p.status !== filters.status) return false;
     if (filters.search) {
       const q = filters.search.toLowerCase();
