@@ -2,6 +2,7 @@
 
 import { useMemo } from "react"
 import { ChevronDown, CreditCard, Pencil, Pause, Play, Plus, MonitorPlay, Code2, Music, HardDrive, Zap, Gamepad2, Shield, Heart, BookOpen, TrendingUp, Layers } from "lucide-react"
+import { ICON_MAP } from "./CategoryManager"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import { Card, Badge, Button } from "@/components/ui"
 import { useExpensesStore, useFilteredSubscriptions } from "@/stores/expenses-store"
@@ -110,8 +111,12 @@ export function SubscriptionList({ onEdit, onNew }: SubscriptionListProps) {
 
 // ─── Category icon mapping ───────────
 
-function getCategoryIcon(name: string) {
-  const lower = name.toLowerCase()
+function getCategoryIcon(iconName: string, fallbackName: string) {
+  // Use stored Lucide icon name first
+  const Icon = ICON_MAP[iconName]
+  if (Icon) return <Icon size={13} strokeWidth={1.5} />
+  // Fallback: keyword matching on category name (legacy categories)
+  const lower = fallbackName.toLowerCase()
   if (lower.includes('stream') || lower.includes('video') || lower.includes('tv')) return <MonitorPlay size={13} strokeWidth={1.5} />
   if (lower.includes('softw') || lower.includes('cod') || lower.includes('dev') || lower.includes('programac')) return <Code2 size={13} strokeWidth={1.5} />
   if (lower.includes('mús') || lower.includes('music') || lower.includes('audio') || lower.includes('podcast')) return <Music size={13} strokeWidth={1.5} />
@@ -180,7 +185,7 @@ function CategoryView({
               />
               {group.category && (
                 <span className="text-foreground/50 flex-shrink-0 flex items-center">
-                  {getCategoryIcon(group.category.name)}
+                  {getCategoryIcon(group.category.icon, group.category.name)}
                 </span>
               )}
               <span className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">
