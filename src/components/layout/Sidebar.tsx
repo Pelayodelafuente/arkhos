@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -76,6 +76,8 @@ export function Sidebar({ userName }: SidebarProps) {
   const toggleCollapsed = useUIStore((s) => s.toggleSidebarCollapsed);
   const loadSidebarState = useUIStore((s) => s.loadSidebarState);
 
+  const collapseTimer = useRef<NodeJS.Timeout | undefined>(undefined);
+
   useEffect(() => {
     loadSidebarState();
   }, [loadSidebarState]);
@@ -83,6 +85,15 @@ export function Sidebar({ userName }: SidebarProps) {
   return (
     <aside
       className="relative flex h-screen flex-col border-r"
+      onMouseEnter={() => {
+        clearTimeout(collapseTimer.current);
+        if (useUIStore.getState().sidebarCollapsed) toggleCollapsed();
+      }}
+      onMouseLeave={() => {
+        collapseTimer.current = setTimeout(() => {
+          if (!useUIStore.getState().sidebarCollapsed) toggleCollapsed();
+        }, 200);
+      }}
       style={{
         width: collapsed ? 56 : 240,
         transition: "width 250ms cubic-bezier(0.16,1,0.3,1)",
