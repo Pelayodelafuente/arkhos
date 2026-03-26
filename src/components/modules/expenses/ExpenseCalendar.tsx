@@ -203,12 +203,13 @@ export function ExpenseCalendar({ onNewWithDay }: ExpenseCalendarProps) {
                   )
                 })}
                 {/* Weekly total */}
-                <div className="w-12 hidden sm:flex items-center justify-center">
-                  {weekTotal > 0 && (
-                    <span className="font-mono text-[10px] text-text-tertiary">
-                      {formatCurrency(weekTotal)}
-                    </span>
-                  )}
+                <div className="w-12 hidden sm:flex items-center justify-center rounded-md" style={{ background: weekTotal > 0 ? 'var(--bg-sand)' : undefined }}>
+                  <span
+                    className="font-mono text-[11px] text-text-tertiary tabular-nums leading-tight text-center px-1"
+                    style={{ fontVariantNumeric: 'tabular-nums' }}
+                  >
+                    {weekTotal > 0 ? formatCurrency(weekTotal) : '—'}
+                  </span>
                 </div>
               </div>
             )

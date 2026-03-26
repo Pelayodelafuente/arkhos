@@ -1,11 +1,11 @@
 "use client"
 
 import { useMemo } from "react"
-import { ChevronDown, CreditCard, Pencil, Pause, Play, Plus, MonitorPlay, Code2, Music, HardDrive, Zap, Gamepad2, Shield, Heart, BookOpen, TrendingUp, Layers } from "lucide-react"
+import { ChevronDown, CreditCard, Pencil, Pause, Play, Plus, X, MonitorPlay, Code2, Music, HardDrive, Zap, Gamepad2, Shield, Heart, BookOpen, TrendingUp, Layers } from "lucide-react"
 import { ICON_MAP } from "./CategoryManager"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import { Card, Badge, Button } from "@/components/ui"
-import { useExpensesStore, useFilteredSubscriptions } from "@/stores/expenses-store"
+import { useExpensesStore, useFilteredSubscriptions, useCycleFilteredSubscriptions } from "@/stores/expenses-store"
 import { ServiceAvatar } from "./ServiceAvatar"
 import { HighlightText } from "./HighlightText"
 import { formatCurrency, formatNextBilling, isBillingToday, groupByCategory, getCycleShortLabel, getDaysUntilBilling, getNextBillingDate } from "@/lib/gastos-utils"
@@ -25,6 +25,12 @@ export function SubscriptionList({ onEdit, onNew }: SubscriptionListProps) {
   const toggleCategoryCollapse = useExpensesStore((s) => s.toggleCategoryCollapse)
   const toggleActive = useExpensesStore((s) => s.toggleActive)
   const notAmortizeYearly = useExpensesStore((s) => s.notAmortizeYearly)
+  const categoryFilter = useExpensesStore((s) => s.categoryFilter)
+  const setCategoryFilter = useExpensesStore((s) => s.setCategoryFilter)
+  const allSubs = useCycleFilteredSubscriptions()
+  const activeCategoryName = categoryFilter
+    ? allSubs.find((s) => s.category_id === categoryFilter)?.category?.name ?? 'Categoría'
+    : null
 
   if (filtered.length === 0) {
     return <EmptyState onNew={onNew} searchQuery={searchQuery} />
@@ -37,8 +43,17 @@ export function SubscriptionList({ onEdit, onNew }: SubscriptionListProps) {
         <div className="flex items-center gap-2">
           <div className="h-4 w-0.5 rounded-full bg-accent" />
           <span className="font-mono text-[10px] tracking-[0.08em] text-accent">
-            TODAS LAS SUSCRIPCIONES
+            {activeCategoryName ? 'FILTRADO POR' : 'TODAS LAS SUSCRIPCIONES'}
           </span>
+          {activeCategoryName && (
+            <button
+              onClick={() => setCategoryFilter(null)}
+              className="flex items-center gap-1 rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-medium text-accent hover:bg-accent/20 transition-colors cursor-pointer"
+            >
+              {activeCategoryName}
+              <X size={10} strokeWidth={2} />
+            </button>
+          )}
         </div>
 
         {/* View mode toggle */}
@@ -240,16 +255,11 @@ function ChronologicalView({
   toggleActive,
   notAmortizeYearly,
 }: ViewProps) {
-  // Sort by next billing (closest first)
+  // Sort by next billing date (closest first) — uses full date to correctly handle annual/quarterly
   const sorted = useMemo(() => {
     return [...subscriptions]
       .filter((s) => s.status === 'active')
-      .sort((a, b) => {
-        const today = new Date().getDate()
-        const aDays = a.billing_day >= today ? a.billing_day - today : 31 - today + a.billing_day
-        const bDays = b.billing_day >= today ? b.billing_day - today : 31 - today + b.billing_day
-        return aDays - bDays
-      })
+      .sort((a, b) => getNextBillingDate(a).getTime() - getNextBillingDate(b).getTime())
   }, [subscriptions])
 
   return (
@@ -352,6 +362,8 @@ function SubscriptionRow({
         icon={subscription.icon}
         color={subscription.color}
         size="sm"
+        iconUrl={subscription.icon_url}
+        url={subscription.url}
       />
 
       {/* Name + next billing + tags + cycle progress */}
@@ -427,19 +439,28 @@ function SubscriptionRow({
             </span>
           )}
         </div>
-        {/* Cycle progress bar */}
+        {/* Cycle progress bar with tooltip */}
         {!isInactive && (
-          <div className="mt-1 h-[3px] w-full rounded-full overflow-hidden" style={{ backgroundColor: 'var(--border-subtle)' }}>
-            <div
-              className="h-full rounded-full transition-all duration-500"
-              style={{
-                width: `${cycleProgress}%`,
-                background: categoryColor
-                  ? `linear-gradient(90deg, ${categoryColor}B3, ${categoryColor})`
-                  : 'linear-gradient(90deg, rgba(95,27,41,0.7), var(--module-gastos))',
-                transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
-              }}
-            />
+          <div className="group/bar relative mt-1">
+            <div className="h-[3px] w-full rounded-full overflow-hidden" style={{ backgroundColor: 'var(--border-subtle)' }}>
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${cycleProgress}%`,
+                  background: categoryColor
+                    ? `linear-gradient(90deg, ${categoryColor}B3, ${categoryColor})`
+                    : 'linear-gradient(90deg, rgba(95,27,41,0.7), var(--module-gastos))',
+                  transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
+                }}
+              />
+            </div>
+            {/* Progress tooltip */}
+            <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 whitespace-nowrap rounded-lg border border-border bg-card px-2.5 py-1.5 text-[11px] opacity-0 group-hover/bar:opacity-100 transition-opacity duration-100 z-10" style={{ boxShadow: 'var(--shadow-modal)' }}>
+              <span className="text-text-secondary font-medium">{Math.round(cycleProgress)}% del ciclo</span>
+              {daysUntil !== null && (
+                <span className="text-text-tertiary"> · {daysUntil === 0 ? 'hoy' : `${daysUntil}d restantes`}</span>
+              )}
+            </div>
           </div>
         )}
       </div>

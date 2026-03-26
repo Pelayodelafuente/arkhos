@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Plus, Settings, Search, Sparkles, Download, X, Bell, PieChart } from "lucide-react"
+import { Plus, Settings, Search, Sparkles, Download, X, Bell } from "lucide-react"
 import { Button } from "@/components/ui"
 import { useExpensesStore } from "@/stores/expenses-store"
 import { KPICards } from "./KPICards"
@@ -42,6 +42,7 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
   const cycleFilter = useExpensesStore((s) => s.cycleFilter)
 
   const [localSearch, setLocalSearch] = useState("")
+  const [searchExpanded, setSearchExpanded] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
   const [editingSub, setEditingSub] = useState<SubscriptionWithCategory | null>(null)
   const [prefilledDay, setPrefilledDay] = useState<number | null>(null)
@@ -51,7 +52,6 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
   const [alertSettingsOpen, setAlertSettingsOpen] = useState(false)
 
   const searchRef = useRef<HTMLInputElement>(null)
-  const chartsRef = useRef<HTMLDivElement>(null)
 
   // Restore amortization preference
   useEffect(() => {
@@ -94,7 +94,7 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
       switch (e.key) {
         case 'n': setEditingSub(null); setPrefilledDay(null); setModalOpen(true); break
         case 's':
-        case '/': e.preventDefault(); searchRef.current?.focus(); break
+        case '/': e.preventDefault(); setSearchExpanded(true); setTimeout(() => searchRef.current?.focus(), 50); break
         case 'g': break // Handled by ExpenseChartDialog internally
         case '?': setShortcutsOpen(true); break
         case 'Escape':
@@ -137,10 +137,6 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
     exportToCSV(subscriptions, 'arkhos-gastos')
   }, [subscriptions])
 
-  const handleScrollToCharts = useCallback(() => {
-    chartsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }, [])
-
   return (
     <div>
       {/* Header */}
@@ -155,27 +151,43 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
       <div className="mb-6 flex flex-wrap items-center gap-3 animate-fade-in-up" style={{ animationDelay: '50ms' }}>
         <CycleFilterToggle />
 
-        {/* Search */}
-        <div className="relative flex-1 min-w-[200px]">
-          <Search
-            size={15}
-            strokeWidth={1.75}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary"
-          />
+        {/* Search — collapsible */}
+        <div
+          className={`relative flex h-9 items-center overflow-hidden rounded-full border border-border bg-card transition-all ${
+            searchExpanded ? 'w-[280px] px-3 gap-2' : 'w-9 justify-center cursor-pointer hover:bg-sand'
+          }`}
+          style={{
+            transitionDuration: 'var(--transition-normal)',
+            transitionTimingFunction: 'var(--ease-out-expo)',
+          }}
+          onClick={() => {
+            if (!searchExpanded) {
+              setSearchExpanded(true)
+              setTimeout(() => searchRef.current?.focus(), 50)
+            }
+          }}
+        >
+          <Search size={14} strokeWidth={1.75} className="text-text-tertiary flex-shrink-0" />
           <input
             ref={searchRef}
             type="text"
-            placeholder="Buscar suscripcion..."
+            placeholder="Buscar..."
             value={localSearch}
             onChange={(e) => setLocalSearch(e.target.value)}
-            className="w-full rounded-md border border-border bg-card py-2 pl-9 pr-8 text-sm text-foreground placeholder:text-text-tertiary focus:border-accent focus:outline-none"
+            onBlur={() => { if (!localSearch) setSearchExpanded(false) }}
+            tabIndex={searchExpanded ? 0 : -1}
+            className={`flex-1 bg-transparent text-sm text-foreground placeholder:text-text-tertiary focus:outline-none transition-opacity ${
+              searchExpanded ? 'opacity-100' : 'w-0 opacity-0 pointer-events-none'
+            }`}
+            style={{ transitionDuration: 'var(--transition-fast)' }}
           />
-          {localSearch && (
+          {localSearch && searchExpanded && (
             <button
-              onClick={() => { setLocalSearch(""); setSearchQuery("") }}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-foreground"
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setLocalSearch(""); setSearchQuery(""); searchRef.current?.focus() }}
+              className="flex-shrink-0 text-text-tertiary hover:text-foreground cursor-pointer"
             >
-              <X size={14} strokeWidth={1.75} />
+              <X size={13} strokeWidth={1.75} />
             </button>
           )}
         </div>
@@ -200,17 +212,6 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
         >
           <Settings size={16} strokeWidth={1.75} />
           <span className="hidden sm:inline">Categorias</span>
-        </Button>
-
-        {/* Chart — scroll to sidebar charts */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleScrollToCharts}
-          className="border border-border"
-        >
-          <PieChart size={16} strokeWidth={1.75} />
-          <span className="hidden sm:inline">Grafico</span>
         </Button>
 
         {/* Alert settings */}
@@ -295,10 +296,12 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
               </div>
 
               {/* Right column (sidebar) — sticky on desktop */}
-              <div ref={chartsRef} className="space-y-4 lg:sticky lg:top-4 lg:self-start">
-                <div className="animate-fade-in-up" style={{ animationDelay: '130ms' }}>
-                  <BudgetRing userId={userId} />
-                </div>
+              <div className="space-y-4 lg:sticky lg:top-4 lg:self-start">
+                {cycleFilter !== 'annual' && (
+                  <div className="animate-fade-in-up" style={{ animationDelay: '130ms' }}>
+                    <BudgetRing userId={userId} />
+                  </div>
+                )}
                 <div className="animate-fade-in-up" style={{ animationDelay: '200ms' }}>
                   <MiniDistributionChart />
                 </div>

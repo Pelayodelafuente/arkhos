@@ -515,6 +515,16 @@ mark {
   animation: progress-shimmer 2s ease-out forwards;
 }
 
+/* ─── Date input ─── */
+input[type="date"] {
+  color-scheme: light;
+  color: var(--text-primary);
+}
+input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0.4;
+  cursor: pointer;
+}
+
 /* ─── Global scrollbar ─── */
 
 ::-webkit-scrollbar        { width: 6px; height: 6px; }

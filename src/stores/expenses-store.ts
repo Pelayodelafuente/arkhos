@@ -59,6 +59,7 @@ interface ExpensesState {
   subscriptions: SubscriptionWithCategory[]
   categories: ExpenseCategory[]
   cycleFilter: CycleFilter
+  categoryFilter: string | null
   searchQuery: string
   isLoading: boolean
   selectedDay: number | null
@@ -81,6 +82,7 @@ interface ExpensesActions {
   removeSubscription: (id: string) => Promise<void>
   toggleActive: (id: string) => Promise<void>
   setCycleFilter: (filter: CycleFilter) => void
+  setCategoryFilter: (categoryId: string | null) => void
   setSearchQuery: (query: string) => void
   setSelectedDay: (day: number | null) => void
   setNotAmortizeYearly: (value: boolean) => void
@@ -110,6 +112,7 @@ export const useExpensesStore = create<ExpensesStore>((set, get) => ({
   subscriptions: [],
   categories: [],
   cycleFilter: 'all',
+  categoryFilter: null,
   searchQuery: '',
   isLoading: false,
   selectedDay: null,
@@ -422,6 +425,7 @@ export const useExpensesStore = create<ExpensesStore>((set, get) => ({
   // ── UI state ────────────────────────
 
   setCycleFilter: (filter) => set({ cycleFilter: filter }),
+  setCategoryFilter: (categoryId) => set({ categoryFilter: categoryId }),
   setSearchQuery: (query) => set({ searchQuery: query }),
   setSelectedDay: (day) => set({ selectedDay: day }),
   setNotAmortizeYearly: (value) => set({ notAmortizeYearly: value }),
@@ -538,6 +542,7 @@ export function useCycleFilteredSubscriptions(): SubscriptionWithCategory[] {
 export function useFilteredSubscriptions(): SubscriptionWithCategory[] {
   const subscriptions = useExpensesStore((s) => s.subscriptions)
   const cycleFilter = useExpensesStore((s) => s.cycleFilter)
+  const categoryFilter = useExpensesStore((s) => s.categoryFilter)
   const searchQuery = useExpensesStore((s) => s.searchQuery)
   const viewedMonth = useExpensesStore((s) => s.viewedMonth)
 
@@ -555,6 +560,11 @@ export function useFilteredSubscriptions(): SubscriptionWithCategory[] {
 
   const filtered = subscriptions.filter((sub) => {
     if (!cycleMatch(sub)) return false
+    // Category filter (from donut chart click)
+    if (categoryFilter !== null) {
+      const catId = sub.category_id ?? null
+      if (catId !== categoryFilter) return false
+    }
     if (searchQuery) {
       const q = searchQuery.toLowerCase()
       return (

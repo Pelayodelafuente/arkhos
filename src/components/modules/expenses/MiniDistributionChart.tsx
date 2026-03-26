@@ -1,14 +1,33 @@
 "use client"
 
 import { useMemo } from "react"
-import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts"
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
 import { Card } from "@/components/ui"
 import { useExpensesStore } from "@/stores/expenses-store"
 import { groupByCategory, formatCurrency } from "@/lib/gastos-utils"
-import { BarChart3 } from "lucide-react"
+import { BarChart3, X } from "lucide-react"
+
+function makePieTooltip(total: number) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return function PieTooltip({ active, payload }: any) {
+    if (!active || !payload?.[0]) return null
+    const name = payload[0].name as string | undefined
+    const value = payload[0].value as number | undefined
+    const pct = total > 0 && value ? ((value / total) * 100).toFixed(0) : '0'
+    return (
+      <div className="rounded-lg border border-border bg-card px-3 py-2" style={{ boxShadow: 'var(--shadow-modal)' }}>
+        <p className="text-xs text-text-secondary mb-0.5">{name}</p>
+        <p className="font-mono text-sm font-semibold text-foreground">{formatCurrency(value ?? 0)}</p>
+        <p className="font-mono text-[10px] text-text-tertiary">{pct}% del total</p>
+      </div>
+    )
+  }
+}
 
 export function MiniDistributionChart() {
   const subscriptions = useExpensesStore((s) => s.subscriptions)
+  const categoryFilter = useExpensesStore((s) => s.categoryFilter)
+  const setCategoryFilter = useExpensesStore((s) => s.setCategoryFilter)
 
   const active = useMemo(
     () => subscriptions.filter((s) => s.status === "active"),
@@ -18,6 +37,7 @@ export function MiniDistributionChart() {
   const { chartData, total } = useMemo(() => {
     const groups = groupByCategory(active)
     const allData = groups.map((g) => ({
+      id: g.category?.id ?? null,
       name: g.category?.name ?? "Sin categoria",
       value:
         g.totalMonthly +
@@ -33,14 +53,24 @@ export function MiniDistributionChart() {
     const rest = sorted.slice(5)
     const restTotal = rest.reduce((acc, d) => acc + d.value, 0)
 
-    const data =
+    const data: typeof allData =
       restTotal > 0
-        ? [...top5, { name: "Otros", value: restTotal, color: "#9a7a5a" }]
+        ? [...top5, { id: null, name: "Otros", value: restTotal, color: "#9a7a5a" }]
         : top5
 
     const t = data.reduce((acc, d) => acc + d.value, 0)
     return { chartData: data, total: t }
   }, [active])
+
+  const activeCategoryName = useMemo(() => {
+    if (!categoryFilter) return null
+    return chartData.find((d) => d.id === categoryFilter)?.name ?? null
+  }, [categoryFilter, chartData])
+
+  const handleCellClick = (entry: { id: string | null }) => {
+    if (entry.id === null) return // "Otros" not filterable
+    setCategoryFilter(categoryFilter === entry.id ? null : entry.id)
+  }
 
   if (chartData.length === 0) {
     return (
@@ -68,6 +98,15 @@ export function MiniDistributionChart() {
           <span className="font-mono text-[9px] uppercase tracking-[0.08em] text-text-tertiary font-semibold">
             Distribucion
           </span>
+          {activeCategoryName && (
+            <button
+              onClick={() => setCategoryFilter(null)}
+              className="ml-auto flex items-center gap-1 rounded-full bg-sand px-2 py-0.5 text-[9px] font-medium text-text-secondary hover:bg-border transition-colors cursor-pointer"
+            >
+              {activeCategoryName}
+              <X size={9} strokeWidth={2} />
+            </button>
+          )}
         </div>
 
         {/* Chart */}
@@ -88,9 +127,16 @@ export function MiniDistributionChart() {
                 animationEasing="ease-out"
               >
                 {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={entry.color}
+                    opacity={categoryFilter && categoryFilter !== entry.id ? 0.35 : 1}
+                    style={{ cursor: entry.id ? 'pointer' : 'default', outline: 'none' }}
+                    onClick={() => handleCellClick(entry)}
+                  />
                 ))}
               </Pie>
+              <Tooltip content={makePieTooltip(total)} />
             </PieChart>
           </ResponsiveContainer>
         </div>

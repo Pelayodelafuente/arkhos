@@ -172,6 +172,7 @@ export async function createSubscription(data: SubscriptionInsert): Promise<Subs
       trial_ends_at: data.trial_ends_at ?? null,
       service_key: data.service_key ?? null,
       url: data.url ?? null,
+      icon_url: data.icon_url ?? null,
       notes: data.notes ?? null,
       started_at: data.started_at ?? null,
       tags: data.tags ?? [],

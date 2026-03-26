@@ -1,14 +1,18 @@
 "use client"
 
-import { useState, useEffect, useCallback, useMemo } from "react"
-import { Play, Pause, Trash2, AlertTriangle } from "lucide-react"
+import { useState, useEffect, useCallback, useMemo, useRef } from "react"
+import { Play, Pause, Trash2, AlertTriangle, Upload, X } from "lucide-react"
 import { z } from "zod/v4"
-import { Modal, Button, Input, Select, Textarea } from "@/components/ui"
+import { Modal, Button, Input, Textarea } from "@/components/ui"
 import { useExpensesStore } from "@/stores/expenses-store"
 import type { SubscriptionWithCategory, BillingCycle } from "@/types/expenses"
 import type { SubscriptionService } from "@/data/subscriptionServices"
 import { ServicesCombobox } from "./ServicesCombobox"
+import { CustomSelect } from "./CustomSelect"
+import type { CustomSelectOption } from "./CustomSelect"
+import { ICON_MAP } from "./CategoryManager"
 import { findDuplicates } from "@/lib/duplicate-detection"
+import { Calendar, CalendarDays } from "lucide-react"
 
 // ── Zod schema ──────────────────────────
 
@@ -63,10 +67,12 @@ export function SubscriptionModal({
   const [url, setUrl] = useState("")
   const [notes, setNotes] = useState("")
   const [startedAt, setStartedAt] = useState("")
+  const [iconUrl, setIconUrl] = useState<string | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [dismissedDuplicates, setDismissedDuplicates] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   // ── Duplicate detection ───────────
 
@@ -91,6 +97,7 @@ export function SubscriptionModal({
     setUrl("")
     setNotes("")
     setStartedAt("")
+    setIconUrl(null)
     setErrors({})
     setConfirmDelete(false)
     setDismissedDuplicates(false)
@@ -110,6 +117,7 @@ export function SubscriptionModal({
       setUrl(subscription.url ?? "")
       setNotes(subscription.notes ?? "")
       setStartedAt(subscription.started_at ?? "")
+      setIconUrl(subscription.icon_url ?? null)
     } else {
       resetForm()
     }
@@ -130,6 +138,36 @@ export function SubscriptionModal({
     }
   }
 
+  // ── Auto-favicon from URL (debounced 500ms) ─
+  useEffect(() => {
+    if (iconUrl) return // manual upload takes priority, don't overwrite
+    if (!url) return
+    const timer = setTimeout(() => {
+      try {
+        const domain = new URL(url).hostname
+        if (domain) setIconUrl(`https://www.google.com/s2/favicons?domain=${domain}&sz=128`)
+      } catch {
+        // invalid URL — ignore
+      }
+    }, 500)
+    return () => clearTimeout(timer)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [url])
+
+  // ── Manual logo upload ──────────────
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const result = ev.target?.result
+      if (typeof result === 'string') setIconUrl(result)
+    }
+    reader.readAsDataURL(file)
+    // Reset input so the same file can be re-uploaded
+    e.target.value = ''
+  }
+
   // ── Submit ──────────────────────────
 
   const handleSubmit = async () => {
@@ -142,6 +180,7 @@ export function SubscriptionModal({
       billing_day: parseInt(billingDay, 10),
       category_id: categoryId || null,
       url: url || null,
+      icon_url: iconUrl || null,
       notes: notes || null,
       started_at: startedAt || null,
     }
@@ -200,19 +239,27 @@ export function SubscriptionModal({
 
   // ── Select options ──────────────────
 
-  const cycleOptions = [
-    { value: "monthly", label: "Mensual" },
-    { value: "annual", label: "Anual" },
+  const cycleOptions: CustomSelectOption[] = [
+    { value: "monthly", label: "Mensual", icon: <Calendar size={13} strokeWidth={1.75} /> },
+    { value: "annual", label: "Anual", icon: <CalendarDays size={13} strokeWidth={1.75} /> },
   ]
 
-  const dayOptions = Array.from({ length: 31 }, (_, i) => ({
+  const dayOptions: CustomSelectOption[] = Array.from({ length: 31 }, (_, i) => ({
     value: String(i + 1),
     label: String(i + 1),
   }))
 
-  const categoryOptions = [
-    { value: "", label: "Sin categoria" },
-    ...categories.map((c) => ({ value: c.id, label: c.name })),
+  const categoryOptions: CustomSelectOption[] = [
+    { value: "", label: "Sin categoría" },
+    ...categories.map((c) => {
+      const IconComp = ICON_MAP[c.icon]
+      return {
+        value: c.id,
+        label: c.name,
+        color: c.color,
+        icon: IconComp ? <IconComp size={13} strokeWidth={1.5} /> : undefined,
+      }
+    }),
   ]
 
   return (
@@ -259,17 +306,55 @@ export function SubscriptionModal({
           placeholder="Nombre del servicio"
         />
 
-        {/* Color */}
-        <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-text-secondary">Color</label>
-          <div className="flex items-center gap-2">
-            <input
-              type="color"
-              value={color}
-              onChange={(e) => setColor(e.target.value)}
-              className="h-9 w-9 cursor-pointer rounded-md border border-border bg-card"
-            />
-            <span className="font-mono text-xs text-text-tertiary">{color}</span>
+        {/* Color + Logo upload */}
+        <div className="flex items-end gap-4">
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-text-secondary">Color</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+                className="h-9 w-9 cursor-pointer rounded-md border border-border bg-card"
+              />
+              <span className="font-mono text-xs text-text-tertiary">{color}</span>
+            </div>
+          </div>
+
+          {/* Logo upload circle */}
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-text-secondary">Logo</label>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="relative h-12 w-12 rounded-full border-2 border-dashed border-border bg-card hover:border-accent hover:bg-sand transition-colors flex items-center justify-center overflow-hidden cursor-pointer"
+                title="Subir logo"
+              >
+                {iconUrl ? (
+                  <img src={iconUrl} alt="logo" className="h-full w-full object-contain p-1 rounded-full" />
+                ) : (
+                  <Upload size={14} strokeWidth={1.75} className="text-text-tertiary" />
+                )}
+              </button>
+              {iconUrl && (
+                <button
+                  type="button"
+                  onClick={() => setIconUrl(null)}
+                  className="flex h-5 w-5 items-center justify-center rounded-full bg-sand hover:bg-border transition-colors cursor-pointer"
+                  title="Quitar logo"
+                >
+                  <X size={10} strokeWidth={2} className="text-text-tertiary" />
+                </button>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleLogoUpload}
+              />
+            </div>
           </div>
         </div>
 
@@ -285,27 +370,28 @@ export function SubscriptionModal({
             error={errors.amount}
             placeholder=""
           />
-          <Select
+          <CustomSelect
             label="Ciclo"
             options={cycleOptions}
             value={cycle}
-            onChange={(e) => setCycle(e.target.value as BillingCycle)}
+            onChange={(v) => setCycle(v as BillingCycle)}
           />
         </div>
 
         {/* Billing day + Category */}
         <div className="grid grid-cols-2 gap-3">
-          <Select
-            label="Dia de cobro"
+          <CustomSelect
+            label="Día de cobro"
             options={dayOptions}
             value={billingDay}
-            onChange={(e) => setBillingDay(e.target.value)}
+            onChange={setBillingDay}
+            variant="grid"
           />
-          <Select
-            label="Categoria"
+          <CustomSelect
+            label="Categoría"
             options={categoryOptions}
             value={categoryId}
-            onChange={(e) => setCategoryId(e.target.value)}
+            onChange={setCategoryId}
           />
         </div>
 
@@ -336,40 +422,68 @@ export function SubscriptionModal({
 
         {/* Edit-only actions */}
         {isEdit && subscription && (
-          <div className="flex items-center gap-2 border-t border-border pt-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleToggleActive}
-              className="border border-border cursor-pointer"
-            >
-              {subscription.is_active ? (
-                <>
-                  <Pause size={14} strokeWidth={1.75} />
-                  Pausar
-                </>
-              ) : (
-                <>
-                  <Play size={14} strokeWidth={1.75} />
-                  Activar
-                </>
-              )}
-            </Button>
-            <button
-              onClick={handleDelete}
-              disabled={saving && confirmDelete}
-              className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-150 cursor-pointer border border-border
-                ${confirmDelete
-                  ? 'bg-[#C4704A]/10 text-[#C4704A] border-[#C4704A]/30'
-                  : 'text-foreground/60 hover:bg-sand hover:text-foreground/90 hover:border-stone/50'
-                }`}
-            >
-              {saving && confirmDelete && (
-                <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-              )}
-              <Trash2 size={14} strokeWidth={1.75} />
-              {confirmDelete ? "Confirmar eliminacion" : "Eliminar"}
-            </button>
+          <div className="border-t border-border pt-4 space-y-3">
+            {/* Pause/activate + Delete row */}
+            {!confirmDelete && (
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleToggleActive}
+                  className="border border-border cursor-pointer"
+                >
+                  {subscription.is_active ? (
+                    <>
+                      <Pause size={14} strokeWidth={1.75} />
+                      Pausar
+                    </>
+                  ) : (
+                    <>
+                      <Play size={14} strokeWidth={1.75} />
+                      Activar
+                    </>
+                  )}
+                </Button>
+                <button
+                  onClick={() => setConfirmDelete(true)}
+                  className="inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-150 cursor-pointer border border-border text-foreground/60 hover:bg-sand hover:text-foreground/90"
+                >
+                  <Trash2 size={14} strokeWidth={1.75} />
+                  Eliminar
+                </button>
+              </div>
+            )}
+
+            {/* Confirm delete panel */}
+            {confirmDelete && (
+              <div
+                className="rounded-xl border border-[var(--module-gastos)]/20 bg-[var(--module-gastos)]/5 p-3 space-y-2"
+                style={{ animation: 'fade-in 150ms ease-out, scale-in 150ms ease-out' }}
+              >
+                <p className="text-xs text-text-secondary">
+                  ¿Eliminar <span className="font-semibold text-foreground">{subscription.name}</span>? Esta acción no se puede deshacer.
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setConfirmDelete(false)}
+                    className="rounded-md px-3 py-1.5 text-xs font-medium border border-border bg-card text-text-secondary hover:bg-sand transition-colors cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    disabled={saving}
+                    className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold bg-[var(--module-gastos)] text-white hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-60"
+                  >
+                    {saving && (
+                      <span className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    )}
+                    <Trash2 size={13} strokeWidth={1.75} />
+                    Eliminar
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

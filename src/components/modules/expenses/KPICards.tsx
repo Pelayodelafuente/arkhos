@@ -35,19 +35,22 @@ const glassStyle = {
 export function KPICards() {
   const subscriptions = useCycleFilteredSubscriptions()
   const notAmortizeYearly = useExpensesStore((s) => s.notAmortizeYearly)
+  const cycleFilter = useExpensesStore((s) => s.cycleFilter)
   const viewedYear = useExpensesStore((s) => s.viewedYear)
   const viewedMonth = useExpensesStore((s) => s.viewedMonth)
   const summary = useExpenseSummary()
   const shouldReduce = useReducedMotion()
 
+  const isAnnualView = cycleFilter === 'annual'
   const now = new Date()
   const isCurrentMonth = viewedYear === now.getFullYear() && viewedMonth === now.getMonth() + 1
 
   const nextBilling = useMemo(() => {
-    if (isCurrentMonth) {
+    // Annual view: find nearest upcoming annual billing (may be in a future month)
+    if (isCurrentMonth || isAnnualView) {
       return getNextBillingSubscription(subscriptions)
     }
-    // For non-current month, only include subs that actually bill in that month
+    // For non-current month (monthly/all view): only include subs billing in that month
     const active = subscriptions.filter((s) => {
       if (s.status !== 'active') return false
       if (s.cycle === 'monthly') return true
@@ -62,16 +65,32 @@ export function KPICards() {
       .map((s) => ({ sub: s, effectiveDay: Math.min(s.billing_day, daysInMonth) }))
       .sort((a, b) => a.effectiveDay - b.effectiveDay)
     return sorted[0]?.sub ?? null
-  }, [subscriptions, isCurrentMonth, viewedYear, viewedMonth])
+  }, [subscriptions, isCurrentMonth, isAnnualView, viewedYear, viewedMonth])
 
   const topCategory = useMemo(() => getMostExpensiveCategory(subscriptions), [subscriptions])
   const nextRenewal = useMemo(() => getNextAnnualRenewal(subscriptions), [subscriptions])
 
-  const displayTotal = notAmortizeYearly
-    ? summary.totalMonthly * 12 + summary.totalQuarterly * 4 + summary.totalSemiannual * 2 + summary.totalAnnual
-    : summary.totalMonthly + summary.totalQuarterly / 3 + summary.totalSemiannual / 6 + summary.totalAnnual / 12
+  // Annual view: sum all active annual sub amounts (not restricted to billing month)
+  const annualViewTotal = useMemo(() => {
+    if (!isAnnualView) return 0
+    return subscriptions.filter((s) => s.is_active).reduce((sum, s) => sum + s.amount, 0)
+  }, [subscriptions, isAnnualView])
 
-  const totalLabel = notAmortizeYearly ? 'GASTO ANUAL' : 'GASTO MENSUAL'
+  // Top category total for annual view
+  const topCategoryAnnualTotal = useMemo(() => {
+    if (!topCategory || !isAnnualView) return 0
+    return subscriptions
+      .filter((s) => s.is_active && (topCategory.category ? s.category_id === topCategory.category.id : !s.category_id))
+      .reduce((sum, s) => sum + s.amount, 0)
+  }, [topCategory, subscriptions, isAnnualView])
+
+  const displayTotal = isAnnualView
+    ? annualViewTotal
+    : notAmortizeYearly
+      ? summary.totalMonthly * 12 + summary.totalQuarterly * 4 + summary.totalSemiannual * 2 + summary.totalAnnual
+      : summary.totalMonthly + summary.totalQuarterly / 3 + summary.totalSemiannual / 6 + summary.totalAnnual / 12
+
+  const totalLabel = (isAnnualView || notAmortizeYearly) ? 'GASTO ANUAL' : 'GASTO MENSUAL'
 
   const nextBillingDays = nextBilling && isCurrentMonth ? getDaysUntilBilling(nextBilling) : null
 
@@ -142,6 +161,8 @@ export function KPICards() {
                 icon={nextBilling.icon}
                 color={nextBilling.color}
                 size="sm"
+                iconUrl={nextBilling.icon_url}
+                url={nextBilling.url}
               />
               <span className="font-heading text-lg text-foreground truncate">
                 {nextBilling.name}
@@ -192,7 +213,12 @@ export function KPICards() {
               {topCategory.category?.name ?? 'Sin categoría'}
             </p>
             <p className="text-xs text-text-tertiary mt-1">
-              <AnimatedNumber value={topCategory.total} format={formatCurrency} />/mes — {topCategory.count} servicio{topCategory.count !== 1 ? 's' : ''}
+              <AnimatedNumber value={isAnnualView ? topCategoryAnnualTotal : topCategory.total} format={formatCurrency} />{isAnnualView ? '/año' : '/mes'} — {topCategory.count} servicio{topCategory.count !== 1 ? 's' : ''}
+              {displayTotal > 0 && (
+                <span className="ml-1 font-mono text-[10px] text-accent font-medium">
+                  ({Math.round(((isAnnualView ? topCategoryAnnualTotal : topCategory.total) / displayTotal) * 100)}%)
+                </span>
+              )}
             </p>
           </>
         ) : (
@@ -227,6 +253,8 @@ export function KPICards() {
                 icon={nextRenewal.subscription.icon}
                 color={nextRenewal.subscription.color}
                 size="sm"
+                iconUrl={nextRenewal.subscription.icon_url}
+                url={nextRenewal.subscription.url}
               />
               <span className="font-heading text-lg text-foreground truncate">
                 {nextRenewal.subscription.name}

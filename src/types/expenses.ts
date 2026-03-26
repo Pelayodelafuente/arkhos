@@ -57,6 +57,7 @@ export interface Subscription {
   trial_ends_at: string | null
   service_key: string | null
   url: string | null
+  icon_url: string | null
   notes: string | null
   started_at: string | null
   cancelled_at: string | null
@@ -80,6 +81,7 @@ export interface SubscriptionInsert {
   trial_ends_at?: string | null
   service_key?: string | null
   url?: string | null
+  icon_url?: string | null
   notes?: string | null
   started_at?: string | null
   tags?: string[]
@@ -99,6 +101,7 @@ export interface SubscriptionUpdate {
   trial_ends_at?: string | null
   service_key?: string | null
   url?: string | null
+  icon_url?: string | null
   notes?: string | null
   started_at?: string | null
   cancelled_at?: string | null
