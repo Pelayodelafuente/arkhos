@@ -15,17 +15,26 @@ export default async function DashboardLayout({
   } = await supabase.auth.getUser();
 
   let userName = user?.email || "usuario";
+  let initialProjectCount = 0;
+  let initialNoteCount = 0;
 
   if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("full_name")
-      .eq("id", user.id)
-      .single();
+    const [{ data: profile }, { count: projectCount }, { count: noteCount }] =
+      await Promise.all([
+        supabase.from("profiles").select("full_name").eq("id", user.id).single(),
+        supabase
+          .from("projects")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id),
+        supabase
+          .from("notes")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id),
+      ]);
 
-    if (profile?.full_name) {
-      userName = profile.full_name;
-    }
+    if (profile?.full_name) userName = profile.full_name;
+    initialProjectCount = projectCount ?? 0;
+    initialNoteCount = noteCount ?? 0;
   }
 
   return (
@@ -33,7 +42,11 @@ export default async function DashboardLayout({
       <NavigationProgress />
       {/* Desktop sidebar */}
       <div className="hidden lg:flex lg:flex-shrink-0">
-        <Sidebar userName={userName} />
+        <Sidebar
+          userName={userName}
+          initialProjectCount={initialProjectCount}
+          initialNoteCount={initialNoteCount}
+        />
       </div>
 
       {/* Main column */}

@@ -24,15 +24,7 @@ import { useToast } from "@/stores/ui-store";
 import { useProjectsStore } from "@/stores/projects-store";
 import { useNotesStore } from "@/stores/notes-store";
 
-const navItems = [
-  {
-    label: "Inicio",
-    href: "/",
-    icon: Home,
-    dot: null,
-    dotGlow: null,
-    countKey: "inicio" as const,
-  },
+const moduleItems = [
   {
     label: "Proyectos",
     href: "/proyectos",
@@ -77,9 +69,11 @@ const navItems = [
 
 interface SidebarProps {
   userName: string;
+  initialProjectCount?: number;
+  initialNoteCount?: number;
 }
 
-export function Sidebar({ userName }: SidebarProps) {
+export function Sidebar({ userName, initialProjectCount = 0, initialNoteCount = 0 }: SidebarProps) {
   const pathname = usePathname();
   const collapsed = useUIStore((s) => s.sidebarCollapsed);
   const toggleCollapsed = useUIStore((s) => s.toggleSidebarCollapsed);
@@ -92,8 +86,13 @@ export function Sidebar({ userName }: SidebarProps) {
   const [isAnimating, setIsAnimating] = useState(false);
   const prevCollapsed = useRef(collapsed);
 
-  const projectCount = useProjectsStore((s) => s.projects?.length ?? null);
-  const noteCount = useNotesStore((s) => s.notes?.length ?? null);
+  // Store counts — fallback a los valores del servidor mientras el store carga
+  const storeProjectCount = useProjectsStore((s) => s.projects?.length ?? null);
+  const storeNoteCount = useNotesStore((s) => s.notes?.length ?? null);
+  const projectCount = storeProjectCount ?? initialProjectCount;
+  const noteCount = storeNoteCount ?? initialNoteCount;
+
+  const isDashboard = pathname === "/";
 
   useEffect(() => {
     loadSidebarState();
@@ -109,7 +108,7 @@ export function Sidebar({ userName }: SidebarProps) {
     prevCollapsed.current = collapsed;
   }, [collapsed]);
 
-  function getCount(countKey: (typeof navItems)[number]["countKey"]): number | null {
+  function getCount(countKey: (typeof moduleItems)[number]["countKey"]): number | null {
     if (countKey === "proyectos") return projectCount;
     if (countKey === "notas") return noteCount;
     return null;
@@ -363,45 +362,87 @@ export function Sidebar({ userName }: SidebarProps) {
 
       {gradientDivider}
 
+      {/* DASHBOARD — bloque destacado */}
+      <div style={{ padding: collapsed ? "0 6px" : "0 12px", marginBottom: 4 }}>
+        <Link
+          href="/"
+          className="group relative flex items-center rounded-xl font-semibold transition-all duration-200"
+          style={{
+            gap: collapsed ? 0 : 10,
+            padding: collapsed ? "10px 0" : "10px 12px",
+            justifyContent: collapsed ? "center" : "flex-start",
+            background: isDashboard
+              ? "linear-gradient(135deg, rgba(196,112,74,0.18), rgba(95,27,41,0.22))"
+              : "rgba(255,255,255,0.03)",
+            border: isDashboard
+              ? "1px solid rgba(196,112,74,0.28)"
+              : "1px solid rgba(255,255,255,0.06)",
+            color: isDashboard ? "var(--accent-light)" : "var(--sb-text-secondary)",
+            boxShadow: isDashboard ? "0 2px 12px rgba(196,112,74,0.12)" : "none",
+            fontSize: 13,
+          }}
+          onMouseEnter={(e) => {
+            if (!isDashboard) {
+              (e.currentTarget as HTMLAnchorElement).style.background = "rgba(255,200,120,0.07)";
+              (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(255,255,255,0.09)";
+              (e.currentTarget as HTMLAnchorElement).style.color = "var(--sb-text-primary)";
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!isDashboard) {
+              (e.currentTarget as HTMLAnchorElement).style.background = "rgba(255,255,255,0.03)";
+              (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(255,255,255,0.06)";
+              (e.currentTarget as HTMLAnchorElement).style.color = "var(--sb-text-secondary)";
+            }
+          }}
+          title={collapsed ? "Dashboard" : undefined}
+        >
+          {isDashboard && (
+            <span style={{
+              position: "absolute", left: 0, top: "20%", bottom: "20%",
+              width: 3, borderRadius: 999,
+              backgroundColor: "var(--accent-light)",
+              boxShadow: "0 0 10px rgba(196,112,74,0.55)",
+            }} />
+          )}
+          <Home size={collapsed ? 18 : 16} strokeWidth={1.75} style={{ flexShrink: 0 }} />
+          {!collapsed && (
+            <>
+              <span style={{ flex: 1 }}>Dashboard</span>
+              <span
+                className={isDashboard ? "dot-pulse-active" : ""}
+                style={{
+                  width: 5, height: 5, borderRadius: "50%", flexShrink: 0,
+                  background: "var(--module-patrimonio)",
+                  boxShadow: "0 0 4px rgba(5,107,99,0.6)",
+                }}
+              />
+            </>
+          )}
+        </Link>
+      </div>
+
+      {gradientDivider}
+
       {/* Section label: MÓDULOS */}
       {!collapsed && (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            padding: "0 16px",
-            marginBottom: 3,
-          }}
-        >
-          <span
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: 9,
-              fontWeight: 600,
-              letterSpacing: "0.18em",
-              textTransform: "uppercase",
-              color: "rgba(196,150,100,0.38)",
-            }}
-          >
+        <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "0 16px", marginBottom: 3 }}>
+          <span style={{
+            fontFamily: "var(--font-mono)", fontSize: 9, fontWeight: 600,
+            letterSpacing: "0.18em", textTransform: "uppercase",
+            color: "rgba(196,150,100,0.38)",
+          }}>
             MÓDULOS
           </span>
-          <div
-            style={{
-              flex: 1,
-              height: 1,
-              background: "rgba(255,255,255,0.05)",
-            }}
-          />
+          <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.05)" }} />
         </div>
       )}
 
       {/* Nav */}
       <nav className="flex-1" style={{ padding: collapsed ? "0 6px" : "0 12px" }}>
         <ul className="space-y-0.5">
-          {navItems.map(({ label, href, icon: Icon, dot, dotGlow, countKey }, index) => {
-            const isActive =
-              href === "/" ? pathname === "/" : pathname.startsWith(href);
+          {moduleItems.map(({ label, href, icon: Icon, dot, dotGlow, countKey }, index) => {
+            const isActive = pathname.startsWith(href);
             const count = getCount(countKey);
 
             return (
@@ -485,24 +526,8 @@ export function Sidebar({ userName }: SidebarProps) {
                     {!collapsed && label}
                   </span>
 
-                  {/* Live dot for Inicio */}
-                  {href === "/" && !collapsed && (
-                    <span
-                      className="dot-pulse-active"
-                      style={{
-                        width: 5,
-                        height: 5,
-                        borderRadius: "50%",
-                        background: "var(--module-patrimonio)",
-                        boxShadow: "0 0 4px rgba(5,107,99,0.6)",
-                        marginLeft: "auto",
-                        flexShrink: 0,
-                      }}
-                    />
-                  )}
-
                   {/* Counter badge */}
-                  {!collapsed && count !== null && href !== "/" && (
+                  {!collapsed && count !== null && (
                     <span
                       style={{
                         fontFamily: "var(--font-mono)",
