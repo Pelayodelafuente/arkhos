@@ -832,7 +832,7 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
                 {by + bh < containerSize.h && <rect x={0} y={by + bh} width="100%" height={containerSize.h - (by + bh)} fill="rgba(0,0,0,0.03)" />}
                 <rect x={0} y={Math.max(0, by)} width={Math.max(0, bx)} height={bh} fill="rgba(0,0,0,0.03)" />
                 {bx + bw < containerSize.w && <rect x={bx + bw} y={Math.max(0, by)} width={containerSize.w - (bx + bw)} height={bh} fill="rgba(0,0,0,0.03)" />}
-                <rect x={bx} y={by} width={bw} height={bh} fill="none" stroke="#E2D9CA"
+                <rect x={bx} y={by} width={bw} height={bh} fill="none" stroke="var(--border-medium)"
                   strokeWidth={1 / viewport.scale} strokeDasharray={`${8 / viewport.scale} ${4 / viewport.scale}`} opacity={0.5} rx={4} />
               </>
             )
@@ -843,6 +843,7 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
       {snapGuides.length > 0 && (
         <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 5 }}>
           {snapGuides.map((g, i) => g.orientation === "vertical" ? (
+            /* TODO: revisar #6B8CC4 — indicador snap guide funcional */
             <line key={i} x1={g.position * viewport.scale + viewport.offsetX} y1={0}
               x2={g.position * viewport.scale + viewport.offsetX} y2="100%" stroke="#6B8CC4" strokeWidth={1} strokeDasharray="4 4" opacity={0.6} />
           ) : (

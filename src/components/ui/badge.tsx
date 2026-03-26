@@ -5,18 +5,20 @@ export type BadgeVariant =
   | "green"
   | "blue"
   | "gold"
-  | "gray";
+  | "gray"
+  | "notas";
 
 interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   variant?: BadgeVariant;
 }
 
 const variantStyles: Record<BadgeVariant, { bg: string; text: string; border?: string }> = {
-  terracotta: { bg: "rgba(196,112,74,0.12)", text: "#c4704a" },
-  green:      { bg: "rgba(5,107,99,0.10)", text: "#045950", border: "rgba(5,107,99,0.25)" },
-  blue:       { bg: "rgba(95,27,41,0.08)", text: "#5f1b29", border: "rgba(95,27,41,0.20)" },
-  gold:       { bg: "rgba(154,106,40,0.12)", text: "#9a6a28" },
-  gray:       { bg: "var(--bg-sand)", text: "var(--text-muted)", border: "var(--border-subtle)" },
+  terracotta: { bg: "var(--accent-glow)",  text: "var(--accent-text)",  border: "rgba(196,112,74,0.25)" },
+  green:      { bg: "var(--success-bg)",   text: "var(--success)",      border: "var(--success-border)" },
+  blue:       { bg: "var(--error-bg)",     text: "var(--error)",        border: "rgba(138,48,64,0.22)" },
+  gold:       { bg: "var(--warning-bg)",   text: "var(--warning)",      border: "rgba(154,106,40,0.22)" },
+  gray:       { bg: "var(--bg-sand)",      text: "var(--text-muted)",   border: "var(--border-subtle)" },
+  notas:      { bg: "rgba(122,155,118,0.10)", text: "var(--module-notas)", border: "rgba(122,155,118,0.22)" },
 };
 
 export function Badge({
@@ -29,7 +31,7 @@ export function Badge({
 
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${className}`}
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium font-mono ${className}`}
       style={{
         backgroundColor: bg,
         color: text,

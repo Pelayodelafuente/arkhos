@@ -273,7 +273,7 @@ export function WindowChat() {
           }
           className="flex-1 rounded-[8px] bg-[rgba(250,247,242,0.8)] px-[10px] py-[6px] font-sans text-[11px] text-text-secondary outline-none transition-all duration-150 placeholder:text-text-tertiary disabled:opacity-50"
           style={{
-            border: '0.5px solid #D4C8B8',
+            border: '0.5px solid var(--border-medium)',
             backdropFilter: 'blur(4px)',
           }}
           onFocus={(e) => {
@@ -282,7 +282,7 @@ export function WindowChat() {
               '0 0 0 3px rgba(196,112,74,0.08)';
           }}
           onBlur={(e) => {
-            e.currentTarget.style.borderColor = '#D4C8B8';
+            e.currentTarget.style.borderColor = 'var(--border-medium)';
             e.currentTarget.style.boxShadow = 'none';
           }}
         />

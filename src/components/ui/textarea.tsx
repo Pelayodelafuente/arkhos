@@ -6,7 +6,7 @@ interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
 }
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ label, error, className = "", id, ...props }, ref) => {
+  ({ label, error, className = "", id, onFocus, onBlur, ...props }, ref) => {
     const generatedId = useId();
     const textareaId = id ?? generatedId;
 
@@ -23,19 +23,27 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         <textarea
           ref={ref}
           id={textareaId}
-          className={`w-full resize-y rounded-md border bg-card px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-text-faint ${
+          className={`w-full resize-y rounded-xl border bg-white/60 px-3 py-2 text-sm text-foreground outline-none transition-all duration-300 placeholder:text-text-faint focus:bg-white ${
             error
-              ? "focus:border-crimson"
+              ? "focus:border-[var(--error)]"
               : "focus:border-accent"
           } ${className}`}
           style={{
-            borderColor: error ? "var(--crimson)" : "var(--border-medium)",
+            borderColor: error ? "var(--error)" : "var(--border-medium)",
             color: "var(--text-primary)",
+          }}
+          onFocus={(e) => {
+            if (!error) e.currentTarget.style.boxShadow = "0 0 0 3px var(--accent-ring)";
+            onFocus?.(e);
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.boxShadow = "";
+            onBlur?.(e);
           }}
           {...props}
         />
         {error && (
-          <p className="text-xs" style={{ color: "var(--crimson)" }}>{error}</p>
+          <p className="text-xs" style={{ color: "var(--error)" }}>{error}</p>
         )}
       </div>
     );

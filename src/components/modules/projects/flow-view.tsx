@@ -117,7 +117,7 @@ export default function FlowView({ phases }: FlowViewProps) {
         <defs>
           {/* Grid pattern */}
           <pattern id="flow-grid" width="20" height="20" patternUnits="userSpaceOnUse">
-            <circle cx="10" cy="10" r="0.5" fill="#E2D9CA" opacity="0.5" />
+            <circle cx="10" cy="10" r="0.5" fill="var(--border-medium)" opacity="0.5" />
           </pattern>
 
           {/* Glow filter for active phase */}
@@ -154,7 +154,7 @@ export default function FlowView({ phases }: FlowViewProps) {
             markerHeight="6"
             orient="auto-start-reverse"
           >
-            <path d="M 0 0 L 10 4 L 0 8 Z" fill="#E2D9CA" />
+            <path d="M 0 0 L 10 4 L 0 8 Z" fill="var(--border-medium)" />
           </marker>
 
           {/* Arrow marker — active */}
@@ -294,7 +294,7 @@ export default function FlowView({ phases }: FlowViewProps) {
                   width={NODE_WIDTH - 24}
                   height={4}
                   rx={2}
-                  fill="#E2D9CA"
+                  fill="var(--border-medium)"
                 />
 
                 {/* Progress bar fill */}

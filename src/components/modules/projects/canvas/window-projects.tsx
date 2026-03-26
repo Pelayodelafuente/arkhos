@@ -107,7 +107,7 @@ function ProjectCard({
         className="font-sans font-medium leading-tight"
         style={{
           fontSize: 9,
-          color: '#6a5a4a',
+          color: 'var(--text-secondary)',
           textAlign: 'center',
           lineHeight: 1.2,
           maxWidth: 70,
@@ -191,7 +191,7 @@ export function WindowProjects({ userId }: WindowProjectsProps) {
         className="flex items-center gap-[6px]"
         style={{
           background: '#F5F0EA',
-          border: '0.5px solid #D4C8B8',
+          border: '0.5px solid var(--border-medium)',
           borderRadius: 7,
           padding: '6px 9px',
           fontSize: 11,
@@ -240,9 +240,9 @@ export function WindowProjects({ userId }: WindowProjectsProps) {
           style={{
             padding: 6,
             borderRadius: 6,
-            border: '0.5px solid #D4C8B8',
+            border: '0.5px solid var(--border-medium)',
             background: 'transparent',
-            color: '#6a5a4a',
+            color: 'var(--text-secondary)',
             transition: 'all 0.13s ease',
           }}
           onClick={() => {

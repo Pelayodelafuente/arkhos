@@ -63,7 +63,7 @@ const PRIORITY_COLORS: Record<TaskPriority, string> = {
   low: "#9a6a28",
   medium: "#c4704a",
   high: "#c4704a",
-  urgent: "#b94444",
+  urgent: "var(--error)",
 };
 
 // ─── Props ──────────────────────────

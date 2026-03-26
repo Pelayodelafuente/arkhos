@@ -124,7 +124,7 @@ function StatCard({ data, animateDelay }: { data: StatCardData; animateDelay: nu
         style={{
           height: 3,
           borderRadius: 2,
-          background: '#E2D9CA',
+          background: 'var(--border-medium)',
           marginTop: 7,
           overflow: 'hidden',
         }}

@@ -51,7 +51,7 @@ export function CanvasWindow({
       className={`flex flex-col overflow-hidden ${className}`}
       style={{
         background: 'rgba(255,252,248,0.97)',
-        border: '0.5px solid #E2D9CA',
+        border: '0.5px solid var(--border-medium)',
         borderRadius: 14,
         boxShadow: '0 8px 32px rgba(0,0,0,0.09), 0 1px 4px rgba(0,0,0,0.05)',
         transition: 'box-shadow 200ms ease',
@@ -100,7 +100,7 @@ export function CanvasWindow({
         {/* Title */}
         <span
           className="select-none text-[11px] font-semibold"
-          style={{ color: '#6a5a4a' }}
+          style={{ color: 'var(--text-secondary)' }}
         >
           {title}
         </span>
@@ -134,7 +134,7 @@ export function CanvasWindow({
             className="flex h-[22px] w-[22px] items-center justify-center"
             style={{
               borderRadius: 5,
-              border: '0.5px solid #E2D9CA',
+              border: '0.5px solid var(--border-medium)',
               background: 'transparent',
             }}
             onClick={(e) => {

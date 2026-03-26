@@ -386,11 +386,30 @@ function SubscriptionRow({
               )}
             </span>
           )}
-          {/* Countdown badge */}
-          {daysUntil !== null && daysUntil > 0 && daysUntil <= 7 && !billingToday && (
-            <Badge variant={daysUntil <= 2 ? "terracotta" : "gold"}>
-              En {daysUntil} dia{daysUntil !== 1 ? 's' : ''}
-            </Badge>
+          {/* Countdown badge — urgency system */}
+          {daysUntil !== null && daysUntil > 0 && daysUntil <= 14 && !billingToday && (
+            <span
+              className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium font-mono border"
+              style={{
+                backgroundColor: daysUntil <= 2
+                  ? 'var(--urgency-critical-bg)'
+                  : daysUntil <= 5
+                    ? 'var(--urgency-warning-bg)'
+                    : 'var(--urgency-soon-bg)',
+                color: daysUntil <= 2
+                  ? 'var(--urgency-critical)'
+                  : daysUntil <= 5
+                    ? 'var(--urgency-warning)'
+                    : 'var(--urgency-soon)',
+                borderColor: daysUntil <= 2
+                  ? 'rgba(192,57,43,0.22)'
+                  : daysUntil <= 5
+                    ? 'rgba(212,121,14,0.22)'
+                    : 'rgba(154,106,40,0.22)',
+              }}
+            >
+              En {daysUntil} día{daysUntil !== 1 ? 's' : ''}
+            </span>
           )}
           {subscription.tags && subscription.tags.length > 0 && (
             <span className="flex items-center gap-1">
@@ -410,12 +429,14 @@ function SubscriptionRow({
         </div>
         {/* Cycle progress bar */}
         {!isInactive && (
-          <div className="mt-1 h-[2px] w-full rounded-full bg-border/50 overflow-hidden">
+          <div className="mt-1 h-[3px] w-full rounded-full overflow-hidden" style={{ backgroundColor: 'var(--border-subtle)' }}>
             <div
               className="h-full rounded-full transition-all duration-500"
               style={{
                 width: `${cycleProgress}%`,
-                backgroundColor: categoryColor ?? 'var(--module-gastos)',
+                background: categoryColor
+                  ? `linear-gradient(90deg, ${categoryColor}B3, ${categoryColor})`
+                  : 'linear-gradient(90deg, rgba(95,27,41,0.7), var(--module-gastos))',
                 transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
               }}
             />

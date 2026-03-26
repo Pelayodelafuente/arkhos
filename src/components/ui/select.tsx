@@ -14,7 +14,7 @@ interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
 }
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
-  ({ label, error, options, placeholder, className = "", id, ...props }, ref) => {
+  ({ label, error, options, placeholder, className = "", id, onFocus, onBlur, ...props }, ref) => {
     const generatedId = useId();
     const selectId = id ?? generatedId;
 
@@ -32,14 +32,22 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           <select
             ref={ref}
             id={selectId}
-            className={`w-full appearance-none rounded-md border bg-card px-3 py-2 pr-8 text-sm text-foreground outline-none transition-colors placeholder:text-text-faint ${
+            className={`w-full appearance-none rounded-xl border bg-white/60 px-3 py-2 pr-8 text-sm text-foreground outline-none transition-all duration-300 placeholder:text-text-faint focus:bg-white ${
               error
-                ? "focus:border-crimson"
+                ? "focus:border-[var(--error)]"
                 : "focus:border-accent"
             } ${className}`}
             style={{
-              borderColor: error ? "var(--crimson)" : "var(--border-medium)",
+              borderColor: error ? "var(--error)" : "var(--border-medium)",
               color: "var(--text-primary)",
+            }}
+            onFocus={(e) => {
+              if (!error) e.currentTarget.style.boxShadow = "0 0 0 3px var(--accent-ring)";
+              onFocus?.(e);
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.boxShadow = "";
+              onBlur?.(e);
             }}
             {...props}
           >
@@ -61,7 +69,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           />
         </div>
         {error && (
-          <p className="text-xs" style={{ color: "var(--crimson)" }}>{error}</p>
+          <p className="text-xs" style={{ color: "var(--error)" }}>{error}</p>
         )}
       </div>
     );

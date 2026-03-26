@@ -144,13 +144,13 @@ export default function DashboardView({ phases }: DashboardViewProps) {
           <div className="flex items-center gap-2 mb-2">
             <AlertTriangle
               size={18}
-              className={urgentTasks > 0 ? 'text-[#b94444]' : 'text-text-tertiary'}
+              className={urgentTasks > 0 ? 'text-[var(--error)]' : 'text-text-tertiary'}
             />
             <span className="text-xs text-text-tertiary">Tareas urgentes</span>
           </div>
           <p
             className="font-mono text-2xl"
-            style={{ color: urgentTasks > 0 ? '#b94444' : undefined }}
+            style={{ color: urgentTasks > 0 ? 'var(--error)' : undefined }}
           >
             {urgentTasks}
           </p>
@@ -194,7 +194,7 @@ export default function DashboardView({ phases }: DashboardViewProps) {
               cy={100}
               r={radius}
               fill="none"
-              stroke="#E2D9CA"
+              stroke="var(--border-medium)"
               strokeWidth={20}
             />
             {/* Progress arc */}

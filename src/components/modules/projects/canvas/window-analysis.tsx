@@ -65,7 +65,7 @@ function StepRow({
     },
     pending: {
       background: 'transparent',
-      border: '1.5px solid #D4C8B8',
+      border: '1.5px solid var(--border-medium)',
     },
   };
 
@@ -92,7 +92,7 @@ function StepRow({
           className="absolute left-[8px] top-[20px] w-px"
           style={{
             height: 'calc(100% - 8px)',
-            background: '#E2D9CA',
+            background: 'var(--border-medium)',
             transformOrigin: 'top',
           }}
         />

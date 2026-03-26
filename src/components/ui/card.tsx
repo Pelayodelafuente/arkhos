@@ -24,9 +24,9 @@ export function Card({
   return (
     <div
       onClick={onClick}
-      className={`rounded-xl bg-card ${paddingClasses[padding]} ${
+      className={`rounded-2xl bg-card shadow-[var(--shadow-card)] ${paddingClasses[padding]} ${
         isClickable
-          ? "cursor-pointer transition-all hover:[box-shadow:0_4px_20px_rgba(160,80,40,0.10)] hover:[border-color:var(--border-accent)]"
+          ? "cursor-pointer transition-all duration-300 ease-out hover:shadow-[var(--shadow-md)] hover:-translate-y-[3px] hover:[border-color:var(--border-accent)]"
           : ""
       } ${className}`}
       style={{ border: "1px solid var(--border-subtle)" }}

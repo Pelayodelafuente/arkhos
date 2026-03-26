@@ -12,7 +12,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    "bg-accent text-white hover:bg-[var(--accent-dark)] disabled:opacity-50",
+    "btn-shimmer bg-accent text-white font-semibold hover:bg-[var(--accent-dark)] disabled:opacity-50",
   secondary:
     "border text-text-secondary bg-card hover:border-accent hover:text-accent disabled:opacity-50",
   ghost:
@@ -20,7 +20,7 @@ const variantClasses: Record<ButtonVariant, string> = {
   danger:
     "bg-crimson text-white hover:bg-[var(--crimson-soft)] disabled:opacity-50",
   crimson:
-    "bg-crimson text-[#e6c498] hover:bg-[var(--crimson-soft)] disabled:opacity-50",
+    "bg-crimson text-[var(--amber)] hover:bg-[var(--crimson-soft)] disabled:opacity-50",
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
@@ -52,7 +52,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         disabled={disabled || loading}
-        className={`inline-flex items-center justify-center gap-2 rounded-md font-medium transition-all duration-150 focus:outline-none disabled:cursor-not-allowed hover:-translate-y-px active:translate-y-0 active:scale-[0.98] disabled:hover:translate-y-0 disabled:active:scale-100 ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
+        className={`inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-all duration-200 focus:outline-none disabled:cursor-not-allowed hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] disabled:hover:translate-y-0 disabled:active:scale-100 ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
         style={{ ...variantStyles[variant], ...style }}
         {...props}
       >

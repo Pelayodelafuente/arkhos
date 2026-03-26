@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState } from "react"
 import { Check, X, Target } from "lucide-react"
 import { motion, useReducedMotion } from "framer-motion"
 import { Card } from "@/components/ui"
@@ -17,15 +17,22 @@ const RADIUS = (RING_SIZE - STROKE_WIDTH) / 2
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS
 
 function getRingColor(percentage: number): string {
-  if (percentage >= 90) return "#C4704A"
-  if (percentage >= 70) return "#9a6a28"
-  return "#056b63"
+  if (percentage >= 95) return "var(--urgency-critical)"
+  if (percentage >= 80) return "var(--urgency-warning)"
+  if (percentage >= 60) return "var(--urgency-soon)"
+  return "var(--urgency-safe)"
 }
 
-function getTextColor(percentage: number): string {
-  if (percentage >= 90) return "text-[#C4704A]"
-  if (percentage >= 70) return "text-[#9a6a28]"
-  return "text-[#056b63]"
+function getTextColorClass(percentage: number): string {
+  if (percentage >= 95) return "animate-pulse-slow"
+  return ""
+}
+
+function getTextStyle(percentage: number): React.CSSProperties {
+  if (percentage >= 95) return { color: "var(--urgency-critical)" }
+  if (percentage >= 80) return { color: "var(--urgency-warning)" }
+  if (percentage >= 60) return { color: "var(--urgency-soon)" }
+  return { color: "var(--urgency-safe)" }
 }
 
 export function BudgetRing({ userId }: BudgetRingProps) {
@@ -182,7 +189,10 @@ export function BudgetRing({ userId }: BudgetRingProps) {
           </svg>
           {/* Center text */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className={`font-mono text-2xl font-bold ${getTextColor(percentage)}`}>
+            <span
+              className={`font-mono text-2xl font-bold ${getTextColorClass(percentage)}`}
+              style={getTextStyle(percentage)}
+            >
               {percentage.toFixed(0)}%
             </span>
           </div>

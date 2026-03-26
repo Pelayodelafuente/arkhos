@@ -4,7 +4,8 @@ import { useEffect, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 
-const EASE_OUT = [0.22, 1, 0.36, 1] as const;
+// Matches --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1)
+const EASE_OUT = [0.16, 1, 0.3, 1] as const;
 
 const overlayVariants = {
   hidden: { opacity: 0 },
@@ -64,15 +65,27 @@ export function Modal({ open, onClose, title, children, className = "" }: ModalP
             initial="hidden"
             animate="visible"
             exit="exit"
-            className={`relative z-[61] w-full max-w-md overflow-hidden rounded-xl bg-card p-6 ${className}`}
+            className={`relative z-[61] w-full max-w-md overflow-hidden rounded-2xl bg-card p-6 ${className}`}
             style={{ boxShadow: "var(--shadow-modal)" }}
           >
+            {/* Decorative top line */}
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: 1,
+                background: 'linear-gradient(90deg, transparent, var(--accent-terracotta), transparent)',
+                opacity: 0.6,
+              }}
+            />
             {title && (
               <div className="mb-5 flex items-start justify-between gap-4">
                 <h2 className="font-heading text-xl text-foreground">{title}</h2>
                 <button
                   onClick={onClose}
-                  className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md text-text-tertiary transition-colors hover:bg-sand hover:text-foreground"
+                  className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-xl text-text-tertiary transition-colors hover:bg-sand hover:text-foreground"
                   aria-label="Cerrar"
                 >
                   <X size={16} strokeWidth={1.75} />

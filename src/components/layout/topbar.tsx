@@ -15,9 +15,9 @@ export function Topbar({ userName }: TopbarProps) {
   return (
     <>
       <header
-        className="flex h-14 items-center justify-between border-b px-4 lg:hidden"
+        className="relative flex h-14 items-center justify-between border-b px-4 lg:hidden"
         style={{
-          backgroundColor: "rgba(247, 241, 232, 0.88)",
+          backgroundColor: "rgba(242, 237, 230, 0.88)",
           backdropFilter: "blur(12px)",
           WebkitBackdropFilter: "blur(12px)",
           borderBottomColor: "var(--border-subtle)",
@@ -32,6 +32,14 @@ export function Topbar({ userName }: TopbarProps) {
         >
           <Menu size={20} strokeWidth={1.75} />
         </button>
+        {/* Decorative gradient line */}
+        <div
+          style={{
+            position: 'absolute', bottom: 0, left: 0, right: 0,
+            height: 1,
+            background: 'linear-gradient(90deg, transparent, rgba(196,112,74,0.20), transparent)',
+          }}
+        />
       </header>
 
       <MobileDrawer open={open} onClose={() => setOpen(false)} userName={userName} />

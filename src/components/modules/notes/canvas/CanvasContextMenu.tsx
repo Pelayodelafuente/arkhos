@@ -19,11 +19,11 @@ import {
 import type { EdgeColor } from "@/types/notes"
 
 const EDGE_COLORS: { value: EdgeColor; color: string; label: string }[] = [
-  { value: "default", color: "#B0A48F", label: "Neutro" },
-  { value: "sage", color: "#7a9b76", label: "Sage" },
+  { value: "default", color: "var(--text-faint)", label: "Neutro" },
+  { value: "sage", color: "var(--module-notas)", label: "Sage" },
   { value: "terracotta", color: "#C4704A", label: "Terracotta" },
   { value: "stone", color: "#8A7A6A", label: "Stone" },
-  { value: "blue", color: "#6B8CC4", label: "Blue" },
+  { value: "blue", color: "#6B8CC4", label: "Blue" }, /* TODO: revisar #6B8CC4 */
 ]
 
 interface Props {

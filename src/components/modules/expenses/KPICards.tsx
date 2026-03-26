@@ -28,8 +28,8 @@ const glassStyle = {
   background: 'rgba(255,255,255,0.6)',
   backdropFilter: 'blur(12px)',
   WebkitBackdropFilter: 'blur(12px)',
-  border: '1px solid rgba(255,255,255,0.3)',
-  boxShadow: '0 4px 24px rgba(26,23,20,0.06)',
+  border: '1px solid rgba(160,120,80,0.20)',
+  boxShadow: 'var(--shadow-card)',
 } as const
 
 export function KPICards() {
@@ -90,16 +90,18 @@ export function KPICards() {
       {/* Card 1: Total */}
       <motion.div
         {...cardMotionProps(0)}
-        className="relative overflow-hidden rounded-xl p-4"
-        style={glassStyle}
+        className="relative overflow-hidden rounded-2xl p-4 transition-all duration-200 hover:shadow-[var(--shadow-md)] hover:-translate-y-0.5"
+        style={{
+          ...glassStyle,
+          borderLeft: '4px solid var(--module-gastos)',
+        }}
       >
         <div className="flex items-center gap-2 mb-2">
-          <div className="h-4 w-0.5 rounded-full bg-[var(--module-gastos)]" />
-          <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-tertiary font-semibold">
+          <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-medium">
             {totalLabel}
           </span>
         </div>
-        <p className="font-heading text-2xl text-foreground">
+        <p className="font-heading text-2xl font-bold text-foreground">
           <AnimatedNumber value={displayTotal} format={formatCurrency} />
         </p>
         <p className="text-xs text-text-tertiary mt-1">
@@ -115,15 +117,20 @@ export function KPICards() {
       {/* Card 2: Next billing */}
       <motion.div
         {...cardMotionProps(1)}
-        className={`relative overflow-hidden rounded-xl p-4 ${nextBillingDays === 0 ? 'border-accent/30 bg-[rgba(196,112,74,0.04)]' : ''}`}
+        className="relative overflow-hidden rounded-2xl p-4 transition-all duration-200 hover:shadow-[var(--shadow-md)] hover:-translate-y-0.5"
         style={{
           ...glassStyle,
-          ...(nextBillingDays === 0 ? { border: '1px solid rgba(196,112,74,0.3)', background: 'rgba(196,112,74,0.04)' } : {}),
+          borderLeft: nextBillingDays === 0
+            ? '4px solid var(--urgency-critical)'
+            : nextBillingDays !== null && nextBillingDays <= 3
+              ? '4px solid var(--urgency-warning)'
+              : '4px solid var(--module-gastos)',
+          ...(nextBillingDays === 0 ? { background: 'var(--urgency-critical-bg)' } : {}),
+          ...(nextBillingDays !== null && nextBillingDays > 0 && nextBillingDays <= 3 ? { background: 'var(--urgency-warning-bg)' } : {}),
         }}
       >
         <div className="flex items-center gap-2 mb-2">
-          <div className="h-4 w-0.5 rounded-full bg-[var(--module-gastos)]" />
-          <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-tertiary font-semibold">
+          <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-medium">
             {isCurrentMonth ? 'PRÓXIMO COBRO' : `PRIMER COBRO · ${MONTH_NAMES[viewedMonth - 1]?.toUpperCase()}`}
           </span>
         </div>
@@ -168,12 +175,14 @@ export function KPICards() {
       {/* Card 3: Top category */}
       <motion.div
         {...cardMotionProps(2)}
-        className="relative overflow-hidden rounded-xl p-4"
-        style={glassStyle}
+        className="relative overflow-hidden rounded-2xl p-4 transition-all duration-200 hover:shadow-[var(--shadow-md)] hover:-translate-y-0.5"
+        style={{
+          ...glassStyle,
+          borderLeft: '4px solid var(--module-patrimonio)',
+        }}
       >
         <div className="flex items-center gap-2 mb-2">
-          <div className="h-4 w-0.5 rounded-full bg-[var(--module-gastos)]" />
-          <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-tertiary font-semibold">
+          <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-medium">
             MAYOR GASTO
           </span>
         </div>
@@ -199,12 +208,14 @@ export function KPICards() {
       {/* Card 4: Next renewal */}
       <motion.div
         {...cardMotionProps(3)}
-        className="relative overflow-hidden rounded-xl p-4"
-        style={glassStyle}
+        className="relative overflow-hidden rounded-2xl p-4 transition-all duration-200 hover:shadow-[var(--shadow-md)] hover:-translate-y-0.5"
+        style={{
+          ...glassStyle,
+          borderLeft: '4px solid var(--module-mercados)',
+        }}
       >
         <div className="flex items-center gap-2 mb-2">
-          <div className="h-4 w-0.5 rounded-full bg-[var(--module-gastos)]" />
-          <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-tertiary font-semibold">
+          <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-medium">
             RENOVACIÓN PRÓXIMA
           </span>
         </div>

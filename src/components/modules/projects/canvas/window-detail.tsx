@@ -207,7 +207,7 @@ function PhaseSection({ phase }: { phase: ProjectPhase }) {
 
       {/* Tasks (expanded) */}
       {expanded && (
-        <div className="ml-[14px] flex flex-col gap-[1px] border-l border-[#E2D9CA] pl-[6px]">
+        <div className="ml-[14px] flex flex-col gap-[1px] border-l border-[var(--border-medium)] pl-[6px]">
           {phase.tasks
             .slice()
             .sort((a, b) => a.sort_order - b.sort_order)
@@ -324,7 +324,7 @@ export function WindowDetail() {
       </div>
 
       {/* Divider */}
-      <div className="h-px" style={{ background: '#E2D9CA' }} />
+      <div className="h-px" style={{ background: 'var(--border-medium)' }} />
 
       {/* Phases list */}
       <div className="flex flex-col gap-[2px]">

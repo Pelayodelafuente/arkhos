@@ -121,10 +121,10 @@ export interface SnapGuide {
 
 export const NOTE_COLOR_CONFIG: { value: NoteColor; bg: string; border: string; label: string }[] = [
   { value: 'default', bg: '#f7f1e8', border: 'rgba(160,120,80,0.35)', label: 'Neutro' },
-  { value: 'sage', bg: '#eef3ee', border: '#7a9b76', label: 'Sage' },
+  { value: 'sage', bg: '#eef3ee', border: 'var(--module-notas)', label: 'Sage' },
   { value: 'terracotta', bg: '#faf0ec', border: '#C4704A', label: 'Terracotta' },
-  { value: 'stone', bg: '#f5f2ee', border: '#B0A48F', label: 'Stone' },
-  { value: 'blue', bg: '#eef2f8', border: '#6B8CC4', label: 'Blue' },
+  { value: 'stone', bg: '#f5f2ee', border: 'var(--text-faint)', label: 'Stone' },
+  { value: 'blue', bg: '#eef2f8', border: '#6B8CC4', label: 'Blue' }, /* TODO: revisar #6B8CC4 */
   { value: 'gold', bg: '#faf5ec', border: '#C4974A', label: 'Gold' },
 ]
 
@@ -136,9 +136,9 @@ export interface HistoryEntry {
 }
 
 export const EDGE_COLOR_CONFIG: Record<string, string> = {
-  default: '#B0A48F',
-  sage: '#7a9b76',
+  default: 'var(--text-faint)',
+  sage: 'var(--module-notas)',
   terracotta: '#C4704A',
   stone: '#8A7A6A',
-  blue: '#6B8CC4',
+  blue: '#6B8CC4', /* TODO: revisar #6B8CC4 */
 }

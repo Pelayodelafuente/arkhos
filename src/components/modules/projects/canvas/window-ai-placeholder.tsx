@@ -15,7 +15,7 @@ export function WindowAIPlaceholder() {
         <Sparkles className="h-5 w-5" style={{ color: '#C4704A', opacity: 0.6 }} />
       </div>
       <div className="text-center">
-        <p className="text-[11px] font-semibold" style={{ color: '#6a5a4a' }}>
+        <p className="text-[11px] font-semibold" style={{ color: 'var(--text-secondary)' }}>
           Análisis IA
         </p>
         <p className="mt-1 text-[10px] text-text-tertiary">

@@ -17,7 +17,7 @@ const MINIMAP_H = 140
 
 function getColorForNode(color: string): string {
   const cfg = NOTE_COLOR_CONFIG.find((c) => c.value === color)
-  return cfg?.border ?? "#B0A48F"
+  return cfg?.border ?? "var(--text-faint)"
 }
 
 export function CanvasMinimap({

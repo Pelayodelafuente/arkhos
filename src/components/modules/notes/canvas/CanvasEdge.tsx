@@ -5,11 +5,11 @@ import type { CanvasEdge as CanvasEdgeType, CanvasNode, EdgeSide } from "@/types
 
 // ─── Edge Colors ─────────────────────────
 const EDGE_COLORS: Record<string, string> = {
-  default: '#B0A48F',
-  sage: '#7a9b76',
+  default: 'var(--text-faint)',
+  sage: 'var(--module-notas)',
   terracotta: '#C4704A',
   stone: '#8A7A6A',
-  blue: '#6B8CC4',
+  blue: '#6B8CC4', /* TODO: revisar #6B8CC4 — color funcional de tipo "blue" */
   gold: '#C4AA4A',
 }
 

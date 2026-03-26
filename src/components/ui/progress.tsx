@@ -9,10 +9,13 @@ export function Progress({ value, showLabel = false, className = "" }: ProgressP
 
   return (
     <div className={`flex items-center gap-3 ${className}`}>
-      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-sand">
+      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[var(--border-subtle)]">
         <div
-          className="h-full rounded-full bg-accent transition-all duration-300"
-          style={{ width: `${clamped}%` }}
+          className="progress-shimmer-once h-full rounded-full transition-all duration-300"
+          style={{
+            width: `${clamped}%`,
+            background: `linear-gradient(90deg, rgba(196,112,74,0.7), var(--accent-terracotta))`,
+          }}
         />
       </div>
       {showLabel && (

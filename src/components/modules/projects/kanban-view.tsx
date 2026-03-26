@@ -171,7 +171,7 @@ function DraggableCard({
         {task.due_date && (
           <span
             className={`inline-flex items-center gap-1 text-xs font-mono ${
-              isOverdue(task.due_date) ? 'text-[#b94444]' : 'text-[--text-tertiary]'
+              isOverdue(task.due_date) ? 'text-[var(--error)]' : 'text-[--text-tertiary]'
             }`}
           >
             <Calendar size={11} />
