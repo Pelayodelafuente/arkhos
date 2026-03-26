@@ -89,10 +89,13 @@ export function Sidebar({ userName }: SidebarProps) {
         clearTimeout(collapseTimer.current);
         if (useUIStore.getState().sidebarCollapsed) toggleCollapsed();
       }}
-      onMouseLeave={() => {
+      onMouseLeave={(e) => {
+        // Solo colapsar si el ratón sale realmente del aside (no entre hijos internos)
+        const related = e.relatedTarget as Node | null;
+        if (e.currentTarget.contains(related)) return;
         collapseTimer.current = setTimeout(() => {
           if (!useUIStore.getState().sidebarCollapsed) toggleCollapsed();
-        }, 200);
+        }, 400);
       }}
       style={{
         width: collapsed ? 56 : 240,
@@ -228,7 +231,7 @@ export function Sidebar({ userName }: SidebarProps) {
                   onMouseLeave={(e) => {
                     if (!isActive) {
                       (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "";
-                      (e.currentTarget as HTMLAnchorElement).style.color = "";
+                      (e.currentTarget as HTMLAnchorElement).style.color = "var(--sb-text-secondary)";
                     }
                   }}
                   style={{
