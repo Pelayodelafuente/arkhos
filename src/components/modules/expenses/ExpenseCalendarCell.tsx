@@ -168,6 +168,8 @@ export function ExpenseCalendarCell({
                 icon={sub.icon}
                 color={sub.color}
                 size="xs"
+                iconUrl={sub.icon_url}
+                url={sub.url}
               />
               {/* Tooltip on badge hover */}
               <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1 opacity-0 group-hover/badge:opacity-100 transition-opacity z-50 whitespace-nowrap">

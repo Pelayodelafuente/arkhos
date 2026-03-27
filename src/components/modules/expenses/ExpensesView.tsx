@@ -176,7 +176,7 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
             onChange={(e) => setLocalSearch(e.target.value)}
             onBlur={() => { if (!localSearch) setSearchExpanded(false) }}
             tabIndex={searchExpanded ? 0 : -1}
-            className={`flex-1 bg-transparent text-sm text-foreground placeholder:text-text-tertiary focus:outline-none transition-opacity ${
+            className={`flex-1 min-w-0 bg-transparent text-sm text-foreground placeholder:text-text-tertiary focus:outline-none transition-opacity ${
               searchExpanded ? 'opacity-100' : 'w-0 opacity-0 pointer-events-none'
             }`}
             style={{ transitionDuration: 'var(--transition-fast)' }}
