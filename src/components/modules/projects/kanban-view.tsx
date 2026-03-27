@@ -10,6 +10,7 @@ import {
   closestCorners,
 } from '@dnd-kit/core';
 import { GripVertical, CheckSquare, Calendar } from 'lucide-react';
+import { TagChip } from './tag-chip';
 import { useProjectsStore } from '@/stores/projects-store';
 import {
   TASK_STATUS_CONFIG,
@@ -60,10 +61,12 @@ function KanbanColumn({
   column,
   tasks,
   activeId,
+  onOpenTask,
 }: {
   column: ColumnDef;
   tasks: KanbanTask[];
   activeId: string | null;
+  onOpenTask: (task: PhaseTask) => void;
 }) {
   const { isOver, setNodeRef } = useDroppable({ id: column.status });
 
@@ -81,13 +84,13 @@ function KanbanColumn({
       </div>
 
       {/* Scrollable task list */}
-      <div className="overflow-y-auto max-h-[60vh] flex flex-col gap-2 pr-1">
+      <div className="overflow-y-auto max-h-[60vh] flex flex-col gap-3 pr-1">
         {tasks.map((task) => (
-          <DraggableCard key={task.id} task={task} isDragOverlay={false} isBeingDragged={activeId === task.id} />
+          <DraggableCard key={task.id} task={task} isDragOverlay={false} isBeingDragged={activeId === task.id} onOpenTask={onOpenTask} />
         ))}
 
         {tasks.length === 0 && (
-          <div className="text-center py-6 text-xs text-[--text-tertiary]">
+          <div className="flex min-h-[200px] items-center justify-center text-xs text-[--text-tertiary]">
             Sin tareas
           </div>
         )}
@@ -102,10 +105,12 @@ function DraggableCard({
   task,
   isDragOverlay,
   isBeingDragged,
+  onOpenTask,
 }: {
   task: KanbanTask;
   isDragOverlay: boolean;
   isBeingDragged: boolean;
+  onOpenTask: (task: KanbanTask) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: task.id,
@@ -128,7 +133,8 @@ function DraggableCard({
     <div
       ref={isDragOverlay ? undefined : setNodeRef}
       style={style}
-      className={`bg-white rounded-xl p-3 border border-[--border-stone] transition-all duration-150 ${
+      onClick={() => !isDragOverlay && onOpenTask(task)}
+      className={`bg-white rounded-xl p-3 border border-[--border-stone] transition-all duration-150 cursor-pointer ${
         isBeingDragged ? 'opacity-30' : ''
       } ${isDragOverlay ? 'rotate-2 scale-105' : ''}`}
     >
@@ -137,6 +143,7 @@ function DraggableCard({
         <button
           {...(isDragOverlay ? {} : listeners)}
           {...(isDragOverlay ? {} : attributes)}
+          onClick={(e) => e.stopPropagation()}
           className="mt-0.5 cursor-grab active:cursor-grabbing text-[--text-tertiary] hover:text-[--text-secondary] transition-all duration-150 shrink-0"
           aria-label="Arrastrar tarea"
         >
@@ -186,6 +193,15 @@ function DraggableCard({
             {completedSubtasks}/{totalSubtasks}
           </span>
         )}
+
+        {/* Tags */}
+        {(task.tags ?? []).length > 0 && (
+          <>
+            {(task.tags ?? []).map((tag) => (
+              <TagChip key={tag.id} tag={tag} size="sm" />
+            ))}
+          </>
+        )}
       </div>
     </div>
   );
@@ -197,9 +213,10 @@ interface KanbanViewProps {
   phases: ProjectPhase[];
   projectId: string;
   userId: string;
+  onOpenTask: (task: PhaseTask) => void;
 }
 
-export default function KanbanView({ phases, projectId: _projectId, userId: _userId }: KanbanViewProps) {
+export default function KanbanView({ phases, projectId: _projectId, userId: _userId, onOpenTask }: KanbanViewProps) {
   const changeTaskStatus = useProjectsStore((s) => s.changeTaskStatus);
   const [activePhaseFilter, setActivePhaseFilter] = useState<string | null>(null);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
@@ -303,6 +320,7 @@ export default function KanbanView({ phases, projectId: _projectId, userId: _use
               column={col}
               tasks={tasksByStatus[col.status]}
               activeId={activeDragId}
+              onOpenTask={onOpenTask}
             />
           ))}
         </div>
@@ -310,7 +328,7 @@ export default function KanbanView({ phases, projectId: _projectId, userId: _use
         <DragOverlay dropAnimation={null}>
           {draggedTask ? (
             <div className="w-[260px]">
-              <DraggableCard task={draggedTask} isDragOverlay={true} isBeingDragged={false} />
+              <DraggableCard task={draggedTask} isDragOverlay={true} isBeingDragged={false} onOpenTask={() => {}} />
             </div>
           ) : null}
         </DragOverlay>

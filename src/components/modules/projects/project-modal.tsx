@@ -20,6 +20,7 @@ import { StatusBadge } from "./status-badge";
 import { IconPicker } from "./icon-picker";
 import { LogoUpload } from "./logo-upload";
 import { TypeStatusSelect } from "./type-status-manager";
+import { TagManager } from "./tag-manager";
 import type {
   CreateProjectInput,
   Project,
@@ -417,6 +418,11 @@ export function ProjectModal({
               </>
             )}
           </div>
+        )}
+
+        {/* Tags (only when editing — tags need a project to exist) */}
+        {isEditing && editProject && (
+          <TagManager projectId={editProject.id} />
         )}
 
         {/* Stack */}

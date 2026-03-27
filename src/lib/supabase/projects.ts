@@ -25,6 +25,7 @@ import type {
   UpdateProjectLinkInput,
   ProjectTemplate,
   TemplatePhase,
+  Tag,
 } from '@/types/projects';
 
 type Client = SupabaseClient<Database>;
@@ -39,6 +40,8 @@ type StatusRow = Database['public']['Tables']['project_statuses']['Row'];
 type TimeEntryRow = Database['public']['Tables']['project_time_entries']['Row'];
 type ProjectLinkRow = Database['public']['Tables']['project_links']['Row'];
 type TemplateRow = Database['public']['Tables']['project_templates']['Row'];
+type TagRow = Database['public']['Tables']['tags']['Row'];
+type TaskTagRow = Database['public']['Tables']['task_tags']['Row'];
 
 // ─── Error helper ─────────────────────
 
@@ -112,7 +115,7 @@ function mapPhase(row: PhaseRow, tasks: PhaseTask[] = []): ProjectPhase {
   };
 }
 
-function mapTask(row: TaskRow, links: TaskLink[] = []): PhaseTask {
+function mapTask(row: TaskRow, links: TaskLink[] = [], tags: Tag[] = []): PhaseTask {
   return {
     id: row.id,
     phase_id: row.phase_id,
@@ -134,6 +137,7 @@ function mapTask(row: TaskRow, links: TaskLink[] = []): PhaseTask {
     created_at: row.created_at,
     updated_at: row.updated_at,
     links,
+    tags,
   };
 }
 
@@ -420,11 +424,47 @@ export async function getProject(client: Client, projectId: string): Promise<Pro
     linkMap.set(link.task_id, arr);
   }
 
+  // Fetch tags for this project
+  const tagsResult = await client
+    .from('tags')
+    .select('*')
+    .eq('project_id', projectId)
+    .order('sort_order', { ascending: true });
+
+  const tagRows = (tagsResult.data ?? []) as TagRow[];
+
+  // Fetch task_tags for all tasks
+  let taskTagRows: TaskTagRow[] = [];
+  if (taskRows.length > 0) {
+    const taskIds = taskRows.map((t) => t.id);
+    const taskTagsResult = await client
+      .from('task_tags')
+      .select('*')
+      .in('task_id', taskIds);
+    taskTagRows = (taskTagsResult.data ?? []) as TaskTagRow[];
+  }
+
+  // Build tag map: tag_id → Tag
+  const tagMap = new Map<string, Tag>();
+  for (const tag of tagRows) {
+    tagMap.set(tag.id, tag as Tag);
+  }
+
+  // Build task tag map: task_id → Tag[]
+  const taskTagMap = new Map<string, Tag[]>();
+  for (const tt of taskTagRows) {
+    const tag = tagMap.get(tt.tag_id);
+    if (!tag) continue;
+    const arr = taskTagMap.get(tt.task_id) ?? [];
+    arr.push(tag);
+    taskTagMap.set(tt.task_id, arr);
+  }
+
   // Build task map: phase_id → tasks
   const taskMap = new Map<string, PhaseTask[]>();
   for (const task of taskRows) {
     const arr = taskMap.get(task.phase_id) ?? [];
-    arr.push(mapTask(task, linkMap.get(task.id) ?? []));
+    arr.push(mapTask(task, linkMap.get(task.id) ?? [], taskTagMap.get(task.id) ?? []));
     taskMap.set(task.phase_id, arr);
   }
 
@@ -814,6 +854,88 @@ export async function deleteProjectTemplate(client: Client, templateId: string):
   assertNoError(
     await client.from('project_templates').delete().eq('id', templateId),
     'Error deleting project template'
+  );
+}
+
+// ══════════════════════════════════════
+// TAGS
+// ══════════════════════════════════════
+
+export async function getTags(client: Client, projectId: string): Promise<Tag[]> {
+  const result = await client
+    .from('tags')
+    .select('*')
+    .eq('project_id', projectId)
+    .order('sort_order', { ascending: true });
+
+  return assertData<TagRow[]>(result, 'Error fetching tags') as Tag[];
+}
+
+export async function createTag(
+  client: Client,
+  projectId: string,
+  name: string,
+  color: string
+): Promise<Tag> {
+  const result = await client
+    .from('tags')
+    .insert({
+      project_id: projectId,
+      name,
+      color,
+      sort_order: 0,
+    })
+    .select()
+    .single();
+
+  return assertData<TagRow>(result, 'Error creating tag') as Tag;
+}
+
+export async function updateTag(
+  client: Client,
+  tagId: string,
+  data: { name?: string; color?: string; sort_order?: number }
+): Promise<Tag> {
+  const result = await client
+    .from('tags')
+    .update(data)
+    .eq('id', tagId)
+    .select()
+    .single();
+
+  return assertData<TagRow>(result, 'Error updating tag') as Tag;
+}
+
+export async function deleteTag(client: Client, tagId: string): Promise<void> {
+  assertNoError(
+    await client.from('tags').delete().eq('id', tagId),
+    'Error deleting tag'
+  );
+}
+
+export async function addTagToTask(
+  client: Client,
+  taskId: string,
+  tagId: string
+): Promise<void> {
+  assertNoError(
+    await client.from('task_tags').insert({ task_id: taskId, tag_id: tagId }),
+    'Error adding tag to task'
+  );
+}
+
+export async function removeTagFromTask(
+  client: Client,
+  taskId: string,
+  tagId: string
+): Promise<void> {
+  assertNoError(
+    await client
+      .from('task_tags')
+      .delete()
+      .eq('task_id', taskId)
+      .eq('tag_id', tagId),
+    'Error removing tag from task'
   );
 }
 

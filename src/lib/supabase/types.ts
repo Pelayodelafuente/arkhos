@@ -1,4 +1,4 @@
-// Supabase Database types — aligned with migrations 001 + 002 + 003 + 004 + 005 + 006 + 010
+// Supabase Database types — aligned with migrations 001 + 002 + 003 + 004 + 005 + 006 + 010 + 012
 
 export type Json =
   | string
@@ -868,6 +868,68 @@ export interface Database {
             columns: ["to_node_id"];
             isOneToOne: false;
             referencedRelation: "canvas_nodes";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      tags: {
+        Row: {
+          id: string;
+          project_id: string;
+          name: string;
+          color: string;
+          sort_order: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          project_id: string;
+          name: string;
+          color?: string;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Update: {
+          name?: string;
+          color?: string;
+          sort_order?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "tags_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      task_tags: {
+        Row: {
+          task_id: string;
+          tag_id: string;
+        };
+        Insert: {
+          task_id: string;
+          tag_id: string;
+        };
+        Update: {
+          task_id?: string;
+          tag_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "task_tags_task_id_fkey";
+            columns: ["task_id"];
+            isOneToOne: false;
+            referencedRelation: "phase_tasks";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "task_tags_tag_id_fkey";
+            columns: ["tag_id"];
+            isOneToOne: false;
+            referencedRelation: "tags";
             referencedColumns: ["id"];
           },
         ];

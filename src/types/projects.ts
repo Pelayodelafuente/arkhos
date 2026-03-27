@@ -135,6 +135,20 @@ export interface TaskLink {
   sort_order: number;
 }
 
+export interface Tag {
+  id: string;
+  project_id: string;
+  name: string;
+  color: string;
+  sort_order: number;
+  created_at: string;
+}
+
+export interface TaskTag {
+  task_id: string;
+  tag_id: string;
+}
+
 export interface PhaseTask {
   id: string;
   phase_id: string;
@@ -156,6 +170,7 @@ export interface PhaseTask {
   created_at: string;
   updated_at: string;
   links: TaskLink[];
+  tags?: Tag[];
 }
 
 export interface ProjectPhase {

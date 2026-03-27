@@ -20,6 +20,12 @@ import {
   updateProjectLink as updateProjectLinkApi,
   deleteProjectLink as deleteProjectLinkApi,
   reorderProjectLinks as reorderProjectLinksApi,
+  getTags as getTagsApi,
+  createTag as createTagApi,
+  updateTag as updateTagApi,
+  deleteTag as deleteTagApi,
+  addTagToTask as addTagToTaskApi,
+  removeTagFromTask as removeTagFromTaskApi,
 } from '@/lib/supabase/projects';
 import type {
   Project,
@@ -37,6 +43,7 @@ import type {
   CreateProjectLinkInput,
   UpdateProjectLinkInput,
   ProjectLink,
+  Tag,
 } from '@/types/projects';
 import { useUIStore } from './ui-store';
 
@@ -50,6 +57,7 @@ interface ProjectsState {
   viewMode: ViewMode;
   filters: ProjectFilters;
   activeTimeEntry: { taskId: string; startedAt: Date } | null;
+  projectTags: Tag[];
 }
 
 interface ProjectsActions {
@@ -87,6 +95,14 @@ interface ProjectsActions {
   removeProjectLink: (linkId: string) => Promise<void>;
   reorderProjectLinksAction: (orderedIds: string[]) => Promise<void>;
 
+  // Tags
+  fetchTags: (projectId: string) => Promise<void>;
+  addTag: (projectId: string, name: string, color: string) => Promise<void>;
+  updateTag: (tagId: string, data: { name?: string; color?: string }) => Promise<void>;
+  removeTag: (tagId: string) => Promise<void>;
+  addTagToTask: (taskId: string, tagId: string) => Promise<void>;
+  removeTagFromTask: (taskId: string, tagId: string) => Promise<void>;
+
   setViewMode: (mode: ViewMode) => void;
   setFilters: (filters: Partial<ProjectFilters>) => void;
   clearActiveProject: () => void;
@@ -111,6 +127,7 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
   viewMode: 'list',
   filters: { status: 'all', search: '', sortBy: 'recent' as const },
   activeTimeEntry: null,
+  projectTags: [],
 
   // ── Projects ────────────────────────
 
@@ -133,6 +150,10 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
       const client = createClient();
       const project = await getProject(client, projectId);
       set({ activeProject: project, loading: false });
+
+      // Also fetch tags for this project
+      const tags = await getTagsApi(client, projectId);
+      set({ projectTags: tags });
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Error al cargar proyecto';
       set({ error: msg, loading: false });
@@ -620,6 +641,144 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
     }
   },
 
+  // ── Tags ──────────────────────────
+
+  fetchTags: async (projectId) => {
+    try {
+      const client = createClient();
+      const tags = await getTagsApi(client, projectId);
+      set({ projectTags: tags });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Error al cargar etiquetas';
+      toast(msg, 'error');
+    }
+  },
+
+  addTag: async (projectId, name, color) => {
+    try {
+      const client = createClient();
+      const tag = await createTagApi(client, projectId, name, color);
+      set((s) => ({ projectTags: [...s.projectTags, tag] }));
+      toast('Etiqueta creada', 'success');
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Error al crear etiqueta';
+      toast(msg, 'error');
+    }
+  },
+
+  updateTag: async (tagId, data) => {
+    const prev = get().projectTags;
+    set((s) => ({
+      projectTags: s.projectTags.map((t) =>
+        t.id === tagId ? { ...t, ...data } : t
+      ),
+    }));
+
+    try {
+      const client = createClient();
+      await updateTagApi(client, tagId, data);
+    } catch (e) {
+      set({ projectTags: prev });
+      const msg = e instanceof Error ? e.message : 'Error al actualizar etiqueta';
+      toast(msg, 'error');
+    }
+  },
+
+  removeTag: async (tagId) => {
+    const prev = get().projectTags;
+    set((s) => ({
+      projectTags: s.projectTags.filter((t) => t.id !== tagId),
+    }));
+
+    // Also remove this tag from any tasks in activeProject
+    const active = get().activeProject;
+    if (active) {
+      set({
+        activeProject: {
+          ...active,
+          phases: active.phases.map((p) => ({
+            ...p,
+            tasks: p.tasks.map((t) => ({
+              ...t,
+              tags: (t.tags ?? []).filter((tag) => tag.id !== tagId),
+            })),
+          })),
+        },
+      });
+    }
+
+    try {
+      const client = createClient();
+      await deleteTagApi(client, tagId);
+      toast('Etiqueta eliminada', 'success');
+    } catch (e) {
+      set({ projectTags: prev });
+      const msg = e instanceof Error ? e.message : 'Error al eliminar etiqueta';
+      toast(msg, 'error');
+    }
+  },
+
+  addTagToTask: async (taskId, tagId) => {
+    const active = get().activeProject;
+    if (!active) return;
+
+    const tag = get().projectTags.find((t) => t.id === tagId);
+    if (!tag) return;
+
+    const prevPhases = active.phases;
+    set({
+      activeProject: {
+        ...active,
+        phases: active.phases.map((p) => ({
+          ...p,
+          tasks: p.tasks.map((t) =>
+            t.id === taskId
+              ? { ...t, tags: [...(t.tags ?? []), tag] }
+              : t
+          ),
+        })),
+      },
+    });
+
+    try {
+      const client = createClient();
+      await addTagToTaskApi(client, taskId, tagId);
+    } catch (e) {
+      set({ activeProject: { ...active, phases: prevPhases } });
+      const msg = e instanceof Error ? e.message : 'Error al añadir etiqueta';
+      toast(msg, 'error');
+    }
+  },
+
+  removeTagFromTask: async (taskId, tagId) => {
+    const active = get().activeProject;
+    if (!active) return;
+
+    const prevPhases = active.phases;
+    set({
+      activeProject: {
+        ...active,
+        phases: active.phases.map((p) => ({
+          ...p,
+          tasks: p.tasks.map((t) =>
+            t.id === taskId
+              ? { ...t, tags: (t.tags ?? []).filter((tag) => tag.id !== tagId) }
+              : t
+          ),
+        })),
+      },
+    });
+
+    try {
+      const client = createClient();
+      await removeTagFromTaskApi(client, taskId, tagId);
+    } catch (e) {
+      set({ activeProject: { ...active, phases: prevPhases } });
+      const msg = e instanceof Error ? e.message : 'Error al quitar etiqueta';
+      toast(msg, 'error');
+    }
+  },
+
   // ── Duplicate project ───────────────
 
   duplicateProject: async (userId) => {
@@ -687,7 +846,7 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
   setFilters: (partial) =>
     set((s) => ({ filters: { ...s.filters, ...partial } })),
 
-  clearActiveProject: () => set({ activeProject: null }),
+  clearActiveProject: () => set({ activeProject: null, projectTags: [] }),
 }));
 
 // ─── Selectors ────────────────────────

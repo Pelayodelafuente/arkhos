@@ -67,8 +67,11 @@ import { EnrichedTaskItem } from "./enriched-task-item";
 import { ProjectLinks } from "./project-links";
 import KanbanView from "./kanban-view";
 import DashboardView from "./dashboard-view";
-import FlowView from "./flow-view";
 import ActivityView from "./activity-view";
+import { TaskSlideOver } from "./task-slide-over";
+import TableView from "./table-view";
+import TimelineView from "./timeline-view";
+import type { PhaseTask } from "@/types/projects";
 
 // ─── Framer Motion variants ──────────
 const EASE_OUT = [0.22, 1, 0.36, 1] as [number, number, number, number];
@@ -203,7 +206,8 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
   const [expandedPhases, setExpandedPhases] = useState<Set<string>>(new Set());
   const [newTaskText, setNewTaskText] = useState<Record<string, string>>({});
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [viewTab, setViewTab] = useState<"progress" | "kanban" | "dashboard" | "flow" | "activity">("progress");
+  const [viewTab, setViewTab] = useState<"progress" | "kanban" | "dashboard" | "table" | "timeline" | "activity">("progress");
+  const [slideOverTask, setSlideOverTask] = useState<PhaseTask | null>(null);
   const [projectTypes, setProjectTypes] = useState<ProjectTypeRecord[]>([]);
   const [projectStatuses, setProjectStatuses] = useState<ProjectStatusRecord[]>([]);
 
@@ -218,9 +222,6 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [editingTaskText, setEditingTaskText] = useState("");
   const [deleteTaskTarget, setDeleteTaskTarget] = useState<{ id: string; text: string } | null>(null);
-
-  // Task notes state
-  const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
 
   // Save as template state
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
@@ -364,15 +365,6 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
       const next = new Set(prev);
       if (next.has(phaseId)) next.delete(phaseId);
       else next.add(phaseId);
-      return next;
-    });
-  }
-
-  function toggleNotes(taskId: string) {
-    setExpandedNotes((prev) => {
-      const next = new Set(prev);
-      if (next.has(taskId)) next.delete(taskId);
-      else next.add(taskId);
       return next;
     });
   }
@@ -651,7 +643,8 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
           { key: "progress", label: "Progreso" },
           { key: "kanban", label: "Kanban" },
           { key: "dashboard", label: "Dashboard" },
-          { key: "flow", label: "Flujo" },
+          { key: "table", label: "Tabla" },
+          { key: "timeline", label: "Timeline" },
           { key: "activity", label: "Actividad" },
         ] as const).map((tab) => (
           <button
@@ -720,7 +713,6 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
                   editingPhaseName={editingPhaseName}
                   editingTaskId={editingTaskId}
                   editingTaskText={editingTaskText}
-                  expandedNotes={expandedNotes}
                   newTaskText={newTaskText[phase.id] ?? ""}
                   sensors={sensors}
                   onTogglePhase={togglePhase}
@@ -730,7 +722,6 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
                   onEditPhaseNameChange={setEditingPhaseName}
                   onSaveEditPhase={handleSaveEditPhase}
                   onCancelEditPhase={() => setEditingPhaseId(null)}
-                  onToggleNotes={toggleNotes}
                   onEditTask={editTask}
                   onStartEditTask={handleStartEditTask}
                   onEditTaskTextChange={setEditingTaskText}
@@ -746,6 +737,7 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
                   debouncedEditTask={debouncedEditTask}
                   onMovePhase={(dir) => movePhase(idx, dir)}
                   onMoveTask={(taskIdx, dir) => moveTask(phase.id, taskIdx, dir)}
+                  onOpenSlideOver={(task) => setSlideOverTask(task)}
                 />
                 </motion.div>
               ))}
@@ -798,14 +790,26 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
 
       {/* Kanban view */}
       {viewTab === "kanban" && (
-        <KanbanView phases={project.phases} projectId={projectId} userId={userId} />
+        <KanbanView phases={project.phases} projectId={projectId} userId={userId} onOpenTask={setSlideOverTask} />
       )}
 
       {/* Dashboard view */}
       {viewTab === "dashboard" && <DashboardView phases={project.phases} />}
 
-      {/* Flow view */}
-      {viewTab === "flow" && <FlowView phases={project.phases} />}
+      {/* Table view */}
+      {viewTab === "table" && (
+        <TableView
+          phases={project.phases}
+          projectId={projectId}
+          userId={userId}
+          onOpenTask={setSlideOverTask}
+        />
+      )}
+
+      {/* Timeline view */}
+      {viewTab === "timeline" && (
+        <TimelineView phases={project.phases} />
+      )}
 
       {/* Activity view */}
       {viewTab === "activity" && (
@@ -912,6 +916,14 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
           </div>
         </div>
       </Modal>
+
+      {/* Task slide-over */}
+      <TaskSlideOver
+        task={slideOverTask}
+        projectId={projectId}
+        userId={userId}
+        onClose={() => setSlideOverTask(null)}
+      />
     </motion.div>
   );
 }
@@ -930,7 +942,6 @@ interface SortablePhaseItemProps {
   editingPhaseName: string;
   editingTaskId: string | null;
   editingTaskText: string;
-  expandedNotes: Set<string>;
   newTaskText: string;
   sensors: ReturnType<typeof useSensors>;
   onTogglePhase: (id: string) => void;
@@ -940,7 +951,6 @@ interface SortablePhaseItemProps {
   onEditPhaseNameChange: (name: string) => void;
   onSaveEditPhase: () => void;
   onCancelEditPhase: () => void;
-  onToggleNotes: (id: string) => void;
   onEditTask: (id: string, input: import("@/types/projects").UpdateTaskInput) => void;
   onStartEditTask: (id: string, text: string) => void;
   onEditTaskTextChange: (text: string) => void;
@@ -954,6 +964,7 @@ interface SortablePhaseItemProps {
   debouncedEditTask: (taskId: string, content: string) => void;
   onMovePhase: (direction: -1 | 1) => void;
   onMoveTask: (taskIdx: number, direction: -1 | 1) => void;
+  onOpenSlideOver: (task: PhaseTask) => void;
 }
 
 function SortablePhaseItem({
@@ -968,7 +979,6 @@ function SortablePhaseItem({
   editingPhaseName,
   editingTaskId,
   editingTaskText,
-  expandedNotes,
   newTaskText,
   sensors,
   onTogglePhase,
@@ -978,7 +988,6 @@ function SortablePhaseItem({
   onEditPhaseNameChange,
   onSaveEditPhase,
   onCancelEditPhase,
-  onToggleNotes,
   onEditTask,
   onStartEditTask,
   onEditTaskTextChange,
@@ -992,6 +1001,7 @@ function SortablePhaseItem({
   debouncedEditTask,
   onMovePhase,
   onMoveTask,
+  onOpenSlideOver,
 }: SortablePhaseItemProps) {
   const {
     attributes,
@@ -1195,6 +1205,7 @@ function SortablePhaseItem({
                     onDelete={() => onDeleteTask(task.id, task.text)}
                     debouncedEditTask={debouncedEditTask}
                     onMoveTask={(dir) => onMoveTask(taskIdx, dir)}
+                    onOpenSlideOver={() => onOpenSlideOver(task)}
                   />
                   </motion.div>
                 ))}
