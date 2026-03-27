@@ -1,11 +1,20 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { useCanvasStore } from '@/stores/canvas-store';
 import { useProjectsStore } from '@/stores/projects-store';
 import { useUIStore } from '@/stores/ui-store';
+import { createClient } from '@/lib/supabase/client';
+import { getProjectTypes, getProjectStatuses, seedUserDefaults } from '@/lib/supabase/projects';
+import {
+  DEFAULT_PROJECT_TYPES,
+  DEFAULT_PROJECT_STATUSES,
+  type ProjectTypeRecord,
+  type ProjectStatusRecord,
+} from '@/types/projects';
+import { ProjectModal } from '../project-modal';
 import { CanvasGrid } from './canvas-grid';
 import { CanvasWindow } from './canvas-window';
 import { WindowProjects } from './window-projects';
@@ -28,10 +37,31 @@ export function ProjectCanvas({ userId }: ProjectCanvasProps) {
   const projects = useProjectsStore((s) => s.projects);
   const openModal = useUIStore((s) => s.openModal);
 
+  const [projectTypes, setProjectTypes] = useState<ProjectTypeRecord[]>([]);
+  const [projectStatuses, setProjectStatuses] = useState<ProjectStatusRecord[]>([]);
+
   // Load projects on mount
   useEffect(() => {
     fetchProjects(userId);
   }, [userId, fetchProjects]);
+
+  // Load project types and statuses for the new-project modal
+  useEffect(() => {
+    async function loadMeta() {
+      const client = createClient();
+      await seedUserDefaults(client, userId, {
+        types: DEFAULT_PROJECT_TYPES,
+        statuses: DEFAULT_PROJECT_STATUSES,
+      });
+      const [types, statuses] = await Promise.all([
+        getProjectTypes(client, userId),
+        getProjectStatuses(client, userId),
+      ]);
+      setProjectTypes(types);
+      setProjectStatuses(statuses);
+    }
+    loadMeta();
+  }, [userId]);
 
   // Derive selected project name for stats window title
   const selectedProject = projects.find((p) => p.id === selectedProjectId);
@@ -114,6 +144,15 @@ export function ProjectCanvas({ userId }: ProjectCanvasProps) {
           </CanvasWindow>
         </div>
       </div>
+
+      {/* New project modal */}
+      <ProjectModal
+        userId={userId}
+        projectTypes={projectTypes}
+        projectStatuses={projectStatuses}
+        onTypesChange={setProjectTypes}
+        onStatusesChange={setProjectStatuses}
+      />
 
       {/* Responsive styles */}
       <style>{`

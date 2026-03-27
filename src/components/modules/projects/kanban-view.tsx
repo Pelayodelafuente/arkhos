@@ -1,19 +1,28 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   DndContext,
   useDroppable,
-  useDraggable,
   DragEndEvent,
+  DragStartEvent,
   DragOverlay,
   closestCorners,
+  PointerSensor,
+  useSensor,
+  useSensors,
 } from '@dnd-kit/core';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, CheckSquare, Calendar } from 'lucide-react';
 import { TagChip } from './tag-chip';
 import { useProjectsStore } from '@/stores/projects-store';
 import {
-  TASK_STATUS_CONFIG,
   TASK_PRIORITY_CONFIG,
   type ProjectPhase,
   type PhaseTask,
@@ -85,9 +94,20 @@ function KanbanColumn({
 
       {/* Scrollable task list */}
       <div className="overflow-y-auto max-h-[60vh] flex flex-col gap-3 pr-1">
-        {tasks.map((task) => (
-          <DraggableCard key={task.id} task={task} isDragOverlay={false} isBeingDragged={activeId === task.id} onOpenTask={onOpenTask} />
-        ))}
+        <SortableContext
+          items={tasks.map((t) => t.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          {tasks.map((task) => (
+            <SortableCard
+              key={task.id}
+              task={task}
+              isDragOverlay={false}
+              isBeingDragged={activeId === task.id}
+              onOpenTask={onOpenTask}
+            />
+          ))}
+        </SortableContext>
 
         {tasks.length === 0 && (
           <div className="flex min-h-[200px] items-center justify-center text-xs text-[--text-tertiary]">
@@ -99,9 +119,9 @@ function KanbanColumn({
   );
 }
 
-// ─── Draggable Card ─────────────────────
+// ─── Sortable Card ─────────────────────
 
-function DraggableCard({
+function SortableCard({
   task,
   isDragOverlay,
   isBeingDragged,
@@ -112,18 +132,18 @@ function DraggableCard({
   isBeingDragged: boolean;
   onOpenTask: (task: KanbanTask) => void;
 }) {
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: task.id,
     data: { task },
+    disabled: isDragOverlay,
   });
 
   const style = isDragOverlay
     ? undefined
-    : transform
-      ? {
-          transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-        }
-      : undefined;
+    : {
+        transform: CSS.Transform.toString(transform),
+        transition,
+      };
 
   const priorityConfig = TASK_PRIORITY_CONFIG[task.priority];
   const completedSubtasks = task.subtasks.filter((s) => s.completed).length;
@@ -135,8 +155,8 @@ function DraggableCard({
       style={style}
       onClick={() => !isDragOverlay && onOpenTask(task)}
       className={`bg-white rounded-xl p-3 border border-[--border-stone] transition-all duration-150 cursor-pointer ${
-        isBeingDragged ? 'opacity-30' : ''
-      } ${isDragOverlay ? 'rotate-2 scale-105' : ''}`}
+        isBeingDragged ? 'opacity-0' : ''
+      } ${isDragOverlay ? 'rotate-2 scale-105 shadow-lg' : ''}`}
     >
       {/* Top row: drag handle + task name */}
       <div className="flex items-start gap-2">
@@ -216,59 +236,160 @@ interface KanbanViewProps {
   onOpenTask: (task: PhaseTask) => void;
 }
 
-export default function KanbanView({ phases, projectId: _projectId, userId: _userId, onOpenTask }: KanbanViewProps) {
+export default function KanbanView({
+  phases,
+  projectId: _projectId,
+  userId: _userId,
+  onOpenTask,
+}: KanbanViewProps) {
   const changeTaskStatus = useProjectsStore((s) => s.changeTaskStatus);
   const [activePhaseFilter, setActivePhaseFilter] = useState<string | null>(null);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
-
-  // Flatten all tasks and enrich with phase info
-  const allTasks: KanbanTask[] = phases.flatMap((phase) =>
-    phase.tasks.map((task) => ({
-      ...task,
-      phaseName: phase.name,
-      phaseId: phase.id,
-    }))
-  );
-
-  // Apply phase filter
-  const filteredTasks = activePhaseFilter
-    ? allTasks.filter((t) => t.phaseId === activePhaseFilter)
-    : allTasks;
-
-  // Group by status
-  const tasksByStatus: Record<TaskStatus, KanbanTask[]> = {
+  const [localOrder, setLocalOrder] = useState<Record<TaskStatus, string[]>>({
     todo: [],
     in_progress: [],
     review: [],
     done: [],
     blocked: [],
-  };
+  });
 
-  for (const task of filteredTasks) {
-    tasksByStatus[task.status].push(task);
-  }
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+  );
+
+  // Flatten all tasks and enrich with phase info
+  const allTasks = useMemo<KanbanTask[]>(
+    () =>
+      phases.flatMap((phase) =>
+        phase.tasks.map((task) => ({
+          ...task,
+          phaseName: phase.name,
+          phaseId: phase.id,
+        }))
+      ),
+    [phases]
+  );
+
+  // Apply phase filter
+  const filteredTasks = useMemo(
+    () =>
+      activePhaseFilter
+        ? allTasks.filter((t) => t.phaseId === activePhaseFilter)
+        : allTasks,
+    [allTasks, activePhaseFilter]
+  );
+
+  // Group by status
+  const tasksByStatus = useMemo(() => {
+    const result: Record<TaskStatus, KanbanTask[]> = {
+      todo: [],
+      in_progress: [],
+      review: [],
+      done: [],
+      blocked: [],
+    };
+    for (const task of filteredTasks) {
+      result[task.status].push(task);
+    }
+    return result;
+  }, [filteredTasks]);
+
+  // Sync local order when tasks change from external source (e.g. after cross-column move)
+  useEffect(() => {
+    setLocalOrder((prev) => {
+      const next = { ...prev };
+      for (const col of COLUMNS) {
+        const currentIds = tasksByStatus[col.status].map((t) => t.id);
+        const prevIds = prev[col.status];
+        if (prevIds.length === 0) {
+          next[col.status] = currentIds;
+        } else {
+          // Maintain relative order, add new tasks at end, drop removed tasks
+          const kept = prevIds.filter((id) => currentIds.includes(id));
+          const added = currentIds.filter((id) => !prevIds.includes(id));
+          next[col.status] = [...kept, ...added];
+        }
+      }
+      return next;
+    });
+  }, [tasksByStatus]);
+
+  // Get tasks in locally-sorted order for display
+  const sortedTasksByStatus = useMemo(() => {
+    const result: Record<TaskStatus, KanbanTask[]> = {
+      todo: [],
+      in_progress: [],
+      review: [],
+      done: [],
+      blocked: [],
+    };
+    for (const col of COLUMNS) {
+      const order = localOrder[col.status];
+      const tasks = tasksByStatus[col.status];
+      if (order.length === 0) {
+        result[col.status] = tasks;
+      } else {
+        const ordered = order
+          .map((id) => tasks.find((t) => t.id === id))
+          .filter(Boolean) as KanbanTask[];
+        const extras = tasks.filter((t) => !order.includes(t.id));
+        result[col.status] = [...ordered, ...extras];
+      }
+    }
+    return result;
+  }, [tasksByStatus, localOrder]);
 
   // Find the currently dragged task for overlay
   const draggedTask = activeDragId ? allTasks.find((t) => t.id === activeDragId) : null;
 
-  function handleDragStart(event: { active: { id: string | number } }) {
+  function handleDragStart(event: DragStartEvent) {
     setActiveDragId(String(event.active.id));
   }
 
   function handleDragEnd(event: DragEndEvent) {
     setActiveDragId(null);
-
     const { active, over } = event;
     if (!over) return;
 
     const taskId = String(active.id);
-    const newStatus = String(over.id) as TaskStatus;
+    const overId = String(over.id);
 
-    // Only update if status actually changed
     const task = allTasks.find((t) => t.id === taskId);
-    if (!task || task.status === newStatus) return;
+    if (!task) return;
 
-    changeTaskStatus(taskId, newStatus);
+    // Check if dropping on a column droppable (empty column area)
+    const isColumnDrop = COLUMNS.some((c) => c.status === overId);
+
+    if (isColumnDrop) {
+      const newStatus = overId as TaskStatus;
+      if (task.status !== newStatus) {
+        changeTaskStatus(taskId, newStatus);
+      }
+    } else {
+      // Dropping on another card
+      const overTask = allTasks.find((t) => t.id === overId);
+      if (!overTask) return;
+
+      if (task.status !== overTask.status) {
+        // Cross-column move — persist to DB
+        changeTaskStatus(taskId, overTask.status);
+      } else {
+        // Same-column reorder — local view only (not persisted)
+        const status = task.status;
+        setLocalOrder((prev) => {
+          const ids =
+            prev[status].length > 0
+              ? [...prev[status]]
+              : tasksByStatus[status].map((t) => t.id);
+          const oldIdx = ids.indexOf(taskId);
+          const newIdx = ids.indexOf(overId);
+          if (oldIdx !== -1 && newIdx !== -1 && oldIdx !== newIdx) {
+            return { ...prev, [status]: arrayMove(ids, oldIdx, newIdx) };
+          }
+          return prev;
+        });
+      }
+    }
   }
 
   function handleDragCancel() {
@@ -276,7 +397,7 @@ export default function KanbanView({ phases, projectId: _projectId, userId: _use
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className={`flex flex-col gap-4${activeDragId ? ' select-none' : ''}`}>
       {/* Phase filter pills */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1">
         <button
@@ -308,6 +429,7 @@ export default function KanbanView({ phases, projectId: _projectId, userId: _use
 
       {/* Kanban columns */}
       <DndContext
+        sensors={sensors}
         collisionDetection={closestCorners}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
@@ -318,7 +440,7 @@ export default function KanbanView({ phases, projectId: _projectId, userId: _use
             <KanbanColumn
               key={col.status}
               column={col}
-              tasks={tasksByStatus[col.status]}
+              tasks={sortedTasksByStatus[col.status]}
               activeId={activeDragId}
               onOpenTask={onOpenTask}
             />
@@ -328,7 +450,12 @@ export default function KanbanView({ phases, projectId: _projectId, userId: _use
         <DragOverlay dropAnimation={null}>
           {draggedTask ? (
             <div className="w-[260px]">
-              <DraggableCard task={draggedTask} isDragOverlay={true} isBeingDragged={false} onOpenTask={() => {}} />
+              <SortableCard
+                task={draggedTask}
+                isDragOverlay={true}
+                isBeingDragged={false}
+                onOpenTask={() => {}}
+              />
             </div>
           ) : null}
         </DragOverlay>

@@ -129,11 +129,15 @@ export function WindowProjects({ userId }: WindowProjectsProps) {
 
   const projects = useProjectsStore((s) => s.projects);
   const fetchProject = useProjectsStore((s) => s.fetchProject);
+  const editProject = useProjectsStore((s) => s.editProject);
+  const clearActiveProject = useProjectsStore((s) => s.clearActiveProject);
   const selectedProjectId = useCanvasStore((s) => s.selectedProjectId);
   const setSelectedProjectId = useCanvasStore((s) => s.setSelectedProjectId);
 
   const [searchValue, setSearchValue] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [confirmingArchive, setConfirmingArchive] = useState(false);
+  const confirmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Debounce search input (300ms)
@@ -180,6 +184,20 @@ export function WindowProjects({ userId }: WindowProjectsProps) {
       router.push(`/proyectos/${selectedProjectId}`);
     }
   }, [router, selectedProjectId]);
+
+  function handleArchive() {
+    if (!selectedProjectId) return;
+    if (!confirmingArchive) {
+      setConfirmingArchive(true);
+      confirmTimerRef.current = setTimeout(() => setConfirmingArchive(false), 3000);
+      return;
+    }
+    if (confirmTimerRef.current) clearTimeout(confirmTimerRef.current);
+    editProject(selectedProjectId, { status: 'Archivado' });
+    clearActiveProject();
+    setSelectedProjectId(null);
+    setConfirmingArchive(false);
+  }
 
   // Suppress unused var — userId is required for future use
   void userId;
@@ -236,20 +254,19 @@ export function WindowProjects({ userId }: WindowProjectsProps) {
       <div className="flex gap-[6px]">
         <button
           type="button"
-          className="flex-1 cursor-pointer font-sans text-[10px] font-medium"
+          disabled={!selectedProjectId}
+          className="flex-1 cursor-pointer font-sans text-[10px] font-medium disabled:opacity-40 disabled:cursor-not-allowed"
           style={{
             padding: 6,
             borderRadius: 6,
-            border: '0.5px solid var(--border-medium)',
-            background: 'transparent',
-            color: 'var(--text-secondary)',
+            border: confirmingArchive ? '0.5px solid #c4704a' : '0.5px solid var(--border-medium)',
+            background: confirmingArchive ? 'rgba(196,112,74,0.08)' : 'transparent',
+            color: confirmingArchive ? '#c4704a' : 'var(--text-secondary)',
             transition: 'all 0.13s ease',
           }}
-          onClick={() => {
-            // Placeholder — archive functionality
-          }}
+          onClick={handleArchive}
         >
-          Archivar
+          {confirmingArchive ? '¿Confirmar?' : 'Archivar'}
         </button>
         <button
           type="button"

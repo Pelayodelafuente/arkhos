@@ -67,7 +67,6 @@ import { EnrichedTaskItem } from "./enriched-task-item";
 import { ProjectLinks } from "./project-links";
 import KanbanView from "./kanban-view";
 import DashboardView from "./dashboard-view";
-import ActivityView from "./activity-view";
 import { TaskSlideOver } from "./task-slide-over";
 import TableView from "./table-view";
 import TimelineView from "./timeline-view";
@@ -206,7 +205,7 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
   const [expandedPhases, setExpandedPhases] = useState<Set<string>>(new Set());
   const [newTaskText, setNewTaskText] = useState<Record<string, string>>({});
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [viewTab, setViewTab] = useState<"progress" | "kanban" | "dashboard" | "table" | "timeline" | "activity">("progress");
+  const [viewTab, setViewTab] = useState<"progress" | "kanban" | "dashboard" | "table" | "timeline">("progress");
   const [slideOverTask, setSlideOverTask] = useState<PhaseTask | null>(null);
   const [projectTypes, setProjectTypes] = useState<ProjectTypeRecord[]>([]);
   const [projectStatuses, setProjectStatuses] = useState<ProjectStatusRecord[]>([]);
@@ -645,7 +644,6 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
           { key: "dashboard", label: "Dashboard" },
           { key: "table", label: "Tabla" },
           { key: "timeline", label: "Timeline" },
-          { key: "activity", label: "Actividad" },
         ] as const).map((tab) => (
           <button
             key={tab.key}
@@ -811,11 +809,6 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
         <TimelineView phases={project.phases} />
       )}
 
-      {/* Activity view */}
-      {viewTab === "activity" && (
-        <ActivityView projectId={projectId} userId={userId} />
-      )}
-
       {/* Delete project confirmation */}
       <ConfirmModal
         open={confirmDelete}
@@ -861,7 +854,7 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
         }
       />
 
-      {/* Edit modal */}
+      {/* Edit modal — disableNewProject prevents stale modal state from canvas page */}
       <ProjectModal
         userId={userId}
         editProject={project}
@@ -869,6 +862,7 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
         projectStatuses={projectStatuses}
         onTypesChange={setProjectTypes}
         onStatusesChange={setProjectStatuses}
+        disableNewProject
       />
 
       {/* Export modal */}

@@ -37,6 +37,8 @@ interface ProjectModalProps {
   projectStatuses: ProjectStatusRecord[];
   onTypesChange?: (types: ProjectTypeRecord[]) => void;
   onStatusesChange?: (statuses: ProjectStatusRecord[]) => void;
+  /** When true, only "edit-project" modal is allowed (prevents stale "new-project" state from canvas) */
+  disableNewProject?: boolean;
 }
 
 export function ProjectModal({
@@ -46,6 +48,7 @@ export function ProjectModal({
   projectStatuses,
   onTypesChange,
   onStatusesChange,
+  disableNewProject = false,
 }: ProjectModalProps) {
   const activeModal = useUIStore((s) => s.activeModal);
   const closeModal = useUIStore((s) => s.closeModal);
@@ -54,7 +57,9 @@ export function ProjectModal({
   const fetchProject = useProjectsStore((s) => s.fetchProject);
   const toast = useToast();
 
-  const isOpen = activeModal === "new-project" || activeModal === "edit-project";
+  const isOpen = disableNewProject
+    ? activeModal === "edit-project"
+    : (activeModal === "new-project" || activeModal === "edit-project");
   const isEditing = activeModal === "edit-project" && !!editProject;
 
   const defaultStatus = projectStatuses.find((s) => s.is_default)?.name ?? projectStatuses[0]?.name ?? "Idea";
