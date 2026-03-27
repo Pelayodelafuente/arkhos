@@ -50,6 +50,8 @@ export function ExpensePopupContent({
               icon={sub.icon}
               color={sub.color}
               size="sm"
+              iconUrl={sub.icon_url}
+              url={sub.url}
             />
             <div className="flex-1 min-w-0">
               <span className="text-sm font-semibold text-foreground truncate block">
