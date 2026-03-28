@@ -5,6 +5,8 @@ import { ChevronRight, ChevronDown, Plus, AlertCircle } from 'lucide-react';
 import { useProjectsStore } from '@/stores/projects-store';
 import { useCanvasStore } from '@/stores/canvas-store';
 import { Badge, Progress } from '@/components/ui';
+import KanbanView from '../kanban-view';
+import { TaskSlideOver } from '../task-slide-over';
 import {
   PHASE_STATUS_CONFIG,
   TASK_PRIORITY_CONFIG,
@@ -50,7 +52,7 @@ function nextPhaseStatus(current: PhaseStatus): PhaseStatus {
 
 // ─── Task Row ───────────────────────
 
-function TaskRow({ task }: { task: PhaseTask }) {
+function TaskRow({ task, onOpen }: { task: PhaseTask; onOpen: (t: PhaseTask) => void }) {
   const editTask = useProjectsStore((s) => s.editTask);
   const stale = isStale(task);
   const priorityCfg = TASK_PRIORITY_CONFIG[task.priority];
@@ -82,13 +84,14 @@ function TaskRow({ task }: { task: PhaseTask }) {
         )}
       </button>
 
-      {/* Task text */}
+      {/* Task text — clickable to open slide-over */}
       <span
-        className="flex-1 truncate text-[11px] leading-tight"
+        className="flex-1 truncate cursor-pointer text-[11px] leading-tight"
         style={{
           color: task.done ? '#9a7a5a' : '#5a3e28',
           textDecoration: task.done ? 'line-through' : 'none',
         }}
+        onClick={() => onOpen(task)}
       >
         {task.text}
       </span>
@@ -152,7 +155,7 @@ function AddTaskInline({ phaseId }: { phaseId: string }) {
 
 // ─── Phase Section ──────────────────
 
-function PhaseSection({ phase }: { phase: ProjectPhase }) {
+function PhaseSection({ phase, onOpenTask }: { phase: ProjectPhase; onOpenTask: (t: PhaseTask) => void }) {
   const [expanded, setExpanded] = useState(phase.status === 'in-progress');
   const editPhase = useProjectsStore((s) => s.editPhase);
   const statusCfg = PHASE_STATUS_CONFIG[phase.status];
@@ -212,7 +215,7 @@ function PhaseSection({ phase }: { phase: ProjectPhase }) {
             .slice()
             .sort((a, b) => a.sort_order - b.sort_order)
             .map((task) => (
-              <TaskRow key={task.id} task={task} />
+              <TaskRow key={task.id} task={task} onOpen={onOpenTask} />
             ))}
           <AddTaskInline phaseId={phase.id} />
         </div>
@@ -283,9 +286,16 @@ function AddPhaseButton({ projectId }: { projectId: string }) {
 
 // ─── Main Component ─────────────────
 
-export function WindowDetail() {
+interface WindowDetailProps {
+  userId?: string;
+}
+
+export function WindowDetail({ userId }: WindowDetailProps) {
   const selectedProjectId = useCanvasStore((s) => s.selectedProjectId);
   const activeProject = useProjectsStore((s) => s.activeProject);
+
+  const [tab, setTab] = useState<'progress' | 'kanban'>('progress');
+  const [slideOverTask, setSlideOverTask] = useState<PhaseTask | null>(null);
 
   // No project selected
   if (!selectedProjectId || !activeProject || activeProject.id !== selectedProjectId) {
@@ -298,6 +308,7 @@ export function WindowDetail() {
     );
   }
 
+  const resolvedUserId = userId ?? activeProject.user_id;
   const progress = computeProgress(activeProject.phases);
   const sortedPhases = activeProject.phases
     .slice()
@@ -326,13 +337,54 @@ export function WindowDetail() {
       {/* Divider */}
       <div className="h-px" style={{ background: 'var(--border-medium)' }} />
 
-      {/* Phases list */}
-      <div className="flex flex-col gap-[2px]">
-        {sortedPhases.map((phase) => (
-          <PhaseSection key={phase.id} phase={phase} />
+      {/* Tab switcher */}
+      <div className="flex gap-[4px]">
+        {(['progress', 'kanban'] as const).map((t) => (
+          <button
+            key={t}
+            type="button"
+            onClick={() => setTab(t)}
+            className="flex-1 font-sans text-[10px] font-medium transition-colors"
+            style={{
+              padding: '4px 0',
+              borderRadius: 5,
+              border: tab === t ? '0.5px solid rgba(196,112,74,0.4)' : '0.5px solid var(--border-medium)',
+              background: tab === t ? 'rgba(196,112,74,0.10)' : 'transparent',
+              color: tab === t ? '#C4704A' : 'var(--text-tertiary)',
+            }}
+          >
+            {t === 'progress' ? 'Progreso' : 'Kanban'}
+          </button>
         ))}
-        <AddPhaseButton projectId={activeProject.id} />
       </div>
+
+      {/* Phases list (progress tab) */}
+      {tab === 'progress' && (
+        <div className="flex flex-col gap-[2px]">
+          {sortedPhases.map((phase) => (
+            <PhaseSection key={phase.id} phase={phase} onOpenTask={setSlideOverTask} />
+          ))}
+          <AddPhaseButton projectId={activeProject.id} />
+        </div>
+      )}
+
+      {/* Kanban tab */}
+      {tab === 'kanban' && (
+        <KanbanView
+          phases={sortedPhases}
+          projectId={activeProject.id}
+          userId={resolvedUserId}
+          onOpenTask={setSlideOverTask}
+        />
+      )}
+
+      {/* Task slide-over */}
+      <TaskSlideOver
+        task={slideOverTask}
+        projectId={activeProject.id}
+        userId={resolvedUserId}
+        onClose={() => setSlideOverTask(null)}
+      />
     </div>
   );
 }

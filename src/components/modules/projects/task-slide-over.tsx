@@ -30,10 +30,10 @@ interface TaskSlideOverProps {
 
 const PRIORITY_COLORS: Record<TaskPriority, string> = {
   none: '#9a7a5a',
-  low: '#9a6a28',
-  medium: '#c4704a',
-  high: '#c4704a',
-  urgent: '#5f1b29',
+  low: '#16a34a',
+  medium: '#ca8a04',
+  high: '#ea580c',
+  urgent: '#dc2626',
 };
 
 function formatDuration(seconds: number): string {
@@ -60,22 +60,19 @@ export function TaskSlideOver({ task, projectId, userId, onClose }: TaskSlideOve
   const toast = useToast();
 
   const [description, setDescription] = useState('');
-  const [content, setContent] = useState('');
   const [newSubtaskText, setNewSubtaskText] = useState('');
   const [newLabel, setNewLabel] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [elapsed, setElapsed] = useState(0);
 
   const descTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const contentTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const isTimerRunning = activeTimeEntry?.taskId === task?.id;
 
   // Sync local state when task changes
   useEffect(() => {
     if (task) {
-      setDescription(task.description || '');
-      setContent(task.content || '');
+      setDescription(task.description || task.content || '');
       setConfirmDelete(false);
     }
   }, [task?.id]);
@@ -105,15 +102,7 @@ export function TaskSlideOver({ task, projectId, userId, onClose }: TaskSlideOve
     setDescription(value);
     clearTimeout(descTimerRef.current);
     descTimerRef.current = setTimeout(() => {
-      if (task) editTask(task.id, { description: value });
-    }, 500);
-  }, [task, editTask]);
-
-  const handleContentChange = useCallback((value: string) => {
-    setContent(value);
-    clearTimeout(contentTimerRef.current);
-    contentTimerRef.current = setTimeout(() => {
-      if (task) editTask(task.id, { content: value });
+      if (task) editTask(task.id, { description: value, content: value });
     }, 500);
   }, [task, editTask]);
 
@@ -293,14 +282,14 @@ export function TaskSlideOver({ task, projectId, userId, onClose }: TaskSlideOve
                 </label>
               </div>
 
-              {/* Description */}
+              {/* Descripción */}
               <div>
                 <p className="mb-1.5 text-[10px] font-medium uppercase tracking-wide text-text-tertiary">Descripción</p>
                 <textarea
                   value={description}
                   onChange={(e) => handleDescriptionChange(e.target.value)}
-                  placeholder="Añade una descripción..."
-                  rows={3}
+                  placeholder="Añade una descripción, notas, código, ideas..."
+                  rows={5}
                   className="w-full resize-y rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-text-tertiary focus:border-accent focus:outline-none"
                 />
               </div>
@@ -432,18 +421,6 @@ export function TaskSlideOver({ task, projectId, userId, onClose }: TaskSlideOve
                     </span>
                   )}
                 </div>
-              </div>
-
-              {/* Notes */}
-              <div>
-                <p className="mb-1.5 text-[10px] font-medium uppercase tracking-wide text-text-tertiary">Apuntes</p>
-                <textarea
-                  value={content}
-                  onChange={(e) => handleContentChange(e.target.value)}
-                  placeholder="Notas, código, ideas..."
-                  rows={4}
-                  className="w-full resize-y rounded-md border border-border bg-background px-3 py-2 font-mono text-xs text-foreground placeholder:text-text-tertiary focus:border-accent focus:outline-none"
-                />
               </div>
 
               {/* Task links */}

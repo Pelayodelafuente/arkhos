@@ -1,0 +1,174 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { TASK_PRIORITY_CONFIG, type TaskPriority } from '@/types/projects';
+
+interface FocusTask {
+  id: string;
+  text: string;
+  priority: TaskPriority;
+  due_date: string | null;
+  done: boolean;
+  project_name: string;
+  project_id: string;
+}
+
+interface WindowFocusProps {
+  userId: string;
+}
+
+function priorityOrder(p: TaskPriority): number {
+  const order: Record<TaskPriority, number> = { urgent: 4, high: 3, medium: 2, low: 1, none: 0 };
+  return order[p];
+}
+
+function isOverdue(date: string): boolean {
+  return new Date(date) < new Date(new Date().toDateString());
+}
+
+export function WindowFocus({ userId }: WindowFocusProps) {
+  const [tasks, setTasks] = useState<FocusTask[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      setLoading(true);
+      const client = createClient();
+
+      // Fetch pending tasks across all user's projects via RLS
+      const { data, error } = await client
+        .from('phase_tasks')
+        .select(`
+          id, text, priority, due_date, done,
+          project_phases!inner(
+            project_id,
+            projects!inner(id, name, user_id)
+          )
+        `)
+        .eq('done', false)
+        .neq('priority', 'none')
+        .order('due_date', { ascending: true, nullsFirst: false })
+        .limit(30);
+
+      if (error || !data) {
+        setLoading(false);
+        return;
+      }
+
+      const mapped: FocusTask[] = (data as unknown[]).map((row) => {
+        const r = row as {
+          id: string;
+          text: string;
+          priority: string;
+          due_date: string | null;
+          done: boolean;
+          project_phases: {
+            project_id: string;
+            projects: { id: string; name: string; user_id: string };
+          };
+        };
+        return {
+          id: r.id,
+          text: r.text,
+          priority: r.priority as TaskPriority,
+          due_date: r.due_date,
+          done: r.done,
+          project_name: r.project_phases.projects.name,
+          project_id: r.project_phases.projects.id,
+        };
+      }).sort((a, b) => priorityOrder(b.priority) - priorityOrder(a.priority));
+
+      setTasks(mapped);
+      setLoading(false);
+    }
+    load();
+  }, [userId]);
+
+  async function toggleDone(taskId: string) {
+    const client = createClient();
+    await client.from('phase_tasks').update({ done: true }).eq('id', taskId);
+    setTasks((prev) => prev.filter((t) => t.id !== taskId));
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-6">
+        <p className="font-sans text-[10px] text-text-tertiary">Cargando...</p>
+      </div>
+    );
+  }
+
+  if (tasks.length === 0) {
+    return (
+      <div className="flex items-center justify-center py-6">
+        <p className="font-sans text-[10px] text-text-tertiary">Sin tareas pendientes</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-[3px]" style={{ maxHeight: 280, overflowY: 'auto' }}>
+      {tasks.map((task) => {
+        const cfg = TASK_PRIORITY_CONFIG[task.priority];
+        const overdue = task.due_date && isOverdue(task.due_date);
+        return (
+          <div
+            key={task.id}
+            className="group flex items-start gap-[6px] rounded-md px-[6px] py-[5px] transition-colors hover:bg-[rgba(196,112,74,0.04)]"
+          >
+            {/* Checkbox */}
+            <button
+              type="button"
+              onClick={() => toggleDone(task.id)}
+              className="mt-[1px] flex h-[13px] w-[13px] shrink-0 items-center justify-center rounded-[3px] border transition-colors"
+              style={{
+                borderColor: 'rgba(160,120,80,0.35)',
+                background: 'transparent',
+              }}
+              title="Marcar como hecho"
+            />
+
+            {/* Content */}
+            <div className="flex-1 min-w-0">
+              <p
+                className="truncate font-sans leading-tight"
+                style={{ fontSize: 10, color: '#5a3e28' }}
+              >
+                {task.text}
+              </p>
+              <div className="flex items-center gap-[4px] mt-[2px]">
+                <span
+                  style={{ fontSize: 8, color: cfg.color, fontWeight: 600, letterSpacing: 0.2 }}
+                >
+                  {cfg.label.toUpperCase()}
+                </span>
+                <span style={{ fontSize: 8, color: '#aaa' }}>·</span>
+                <span
+                  className="truncate"
+                  style={{ fontSize: 8, color: '#9a7a5a', maxWidth: 80 }}
+                >
+                  {task.project_name}
+                </span>
+                {task.due_date && (
+                  <>
+                    <span style={{ fontSize: 8, color: '#aaa' }}>·</span>
+                    <span
+                      style={{
+                        fontSize: 8,
+                        color: overdue ? '#dc2626' : '#9a7a5a',
+                        fontFamily: 'monospace',
+                      }}
+                    >
+                      {new Date(task.due_date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}

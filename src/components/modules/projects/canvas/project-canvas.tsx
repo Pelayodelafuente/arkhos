@@ -22,6 +22,7 @@ import { WindowStats } from './window-stats';
 import { WindowDetail } from './window-detail';
 import { WindowContext } from './window-context';
 import { WindowAIPlaceholder } from './window-ai-placeholder';
+import { WindowFocus } from './window-focus';
 
 // ─── Types ───────────────────────────
 
@@ -116,16 +117,19 @@ export function ProjectCanvas({ userId }: ProjectCanvasProps) {
           <CanvasWindow
             id="stats"
             title={statsTitle}
-            badge={{ text: `${projects.length} proyectos`, variant: 'terracotta' }}
           >
             <WindowStats />
+          </CanvasWindow>
+
+          <CanvasWindow id="focus" title="Focus — Tareas pendientes">
+            <WindowFocus userId={userId} />
           </CanvasWindow>
         </div>
 
         {/* Center column: Project detail */}
         <div className="canvas-col-center flex min-w-0 flex-col overflow-y-auto">
           <CanvasWindow id="detail" title="Detalle del proyecto" className="flex-1">
-            <WindowDetail />
+            <WindowDetail userId={userId} />
           </CanvasWindow>
         </div>
 

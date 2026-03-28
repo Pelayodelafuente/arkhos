@@ -7,13 +7,22 @@ import { useCanvasStore } from '@/stores/canvas-store';
 import { useProjectsStore } from '@/stores/projects-store';
 import type { ProjectListItem } from '@/types/projects';
 
-// ─── Types ───────────────────────────
+type FilterMode = 'active' | 'all' | 'archived';
 
 interface WindowProjectsProps {
   userId: string;
 }
 
-// ─── Folder icon component ──────────
+function getStatusColor(status: string): string {
+  const map: Record<string, string> = {
+    'Activo': '#056b63',
+    'Archivado': '#9a7a5a',
+    'Idea': '#c4a07a',
+    'Pausado': '#9a6a28',
+    'Completado': '#c4704a',
+  };
+  return map[status] ?? '#9a7a5a';
+}
 
 function ProjectFolder({ logoUrl, isHovered }: { logoUrl: string | null; isHovered: boolean }) {
   if (logoUrl) {
@@ -45,7 +54,6 @@ function ProjectFolder({ logoUrl, isHovered }: { logoUrl: string | null; isHover
         transform: isHovered ? 'translateX(-2px) rotate(-5deg)' : undefined,
       }}
     >
-      {/* Folder tab */}
       <span
         style={{
           content: '""',
@@ -63,8 +71,6 @@ function ProjectFolder({ logoUrl, isHovered }: { logoUrl: string | null; isHover
   );
 }
 
-// ─── Project card component ─────────
-
 function ProjectCard({
   project,
   isActive,
@@ -75,6 +81,7 @@ function ProjectCard({
   onClick: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
+  const statusColor = getStatusColor(project.status);
 
   return (
     <button
@@ -105,6 +112,7 @@ function ProjectCard({
       </div>
       <span
         className="font-sans font-medium leading-tight"
+        title={project.name}
         style={{
           fontSize: 9,
           color: 'var(--text-secondary)',
@@ -118,6 +126,18 @@ function ProjectCard({
       >
         {project.name}
       </span>
+      {/* Status dot */}
+      <div
+        style={{
+          width: 6,
+          height: 6,
+          borderRadius: '50%',
+          background: statusColor,
+          opacity: 0.85,
+          flexShrink: 0,
+        }}
+        title={project.status}
+      />
     </button>
   );
 }
@@ -131,12 +151,14 @@ export function WindowProjects({ userId }: WindowProjectsProps) {
   const fetchProject = useProjectsStore((s) => s.fetchProject);
   const editProject = useProjectsStore((s) => s.editProject);
   const clearActiveProject = useProjectsStore((s) => s.clearActiveProject);
+  const activeProject = useProjectsStore((s) => s.activeProject);
   const selectedProjectId = useCanvasStore((s) => s.selectedProjectId);
   const setSelectedProjectId = useCanvasStore((s) => s.setSelectedProjectId);
 
   const [searchValue, setSearchValue] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [confirmingArchive, setConfirmingArchive] = useState(false);
+  const [filterMode, setFilterMode] = useState<FilterMode>('active');
   const confirmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -155,21 +177,30 @@ export function WindowProjects({ userId }: WindowProjectsProps) {
     };
   }, [searchValue]);
 
-  // Auto-select first project if none selected
+  // Re-fetch active project if selectedProjectId is set but activeProject is null/stale
   useEffect(() => {
-    if (!selectedProjectId && projects.length > 0) {
+    if (selectedProjectId && (!activeProject || activeProject.id !== selectedProjectId)) {
+      fetchProject(selectedProjectId);
+    } else if (!selectedProjectId && projects.length > 0) {
       const firstId = projects[0].id;
       setSelectedProjectId(firstId);
       fetchProject(firstId);
     }
-  }, [selectedProjectId, projects, setSelectedProjectId, fetchProject]);
+  }, [selectedProjectId, activeProject, projects, setSelectedProjectId, fetchProject]);
 
-  // Filter projects by search
+  // Base filter by status tab
+  const baseFiltered = useMemo(() => {
+    if (filterMode === 'active') return projects.filter((p) => p.status !== 'Archivado');
+    if (filterMode === 'archived') return projects.filter((p) => p.status === 'Archivado');
+    return projects;
+  }, [projects, filterMode]);
+
+  // Filter by search
   const filteredProjects = useMemo(() => {
-    if (!debouncedSearch) return projects;
+    if (!debouncedSearch) return baseFiltered;
     const q = debouncedSearch.toLowerCase();
-    return projects.filter((p) => p.name.toLowerCase().includes(q));
-  }, [projects, debouncedSearch]);
+    return baseFiltered.filter((p) => p.name.toLowerCase().includes(q));
+  }, [baseFiltered, debouncedSearch]);
 
   const handleSelectProject = useCallback(
     (projectId: string) => {
@@ -199,11 +230,37 @@ export function WindowProjects({ userId }: WindowProjectsProps) {
     setConfirmingArchive(false);
   }
 
-  // Suppress unused var — userId is required for future use
   void userId;
+
+  const filterTabs: { key: FilterMode; label: string }[] = [
+    { key: 'active', label: 'Activos' },
+    { key: 'all', label: 'Todos' },
+    { key: 'archived', label: 'Archivados' },
+  ];
 
   return (
     <div className="flex flex-col gap-[10px]">
+      {/* Filter tabs */}
+      <div className="flex gap-[4px]">
+        {filterTabs.map((tab) => (
+          <button
+            key={tab.key}
+            type="button"
+            onClick={() => setFilterMode(tab.key)}
+            className="flex-1 font-sans text-[10px] font-medium transition-colors"
+            style={{
+              padding: '4px 0',
+              borderRadius: 5,
+              border: filterMode === tab.key ? '0.5px solid rgba(196,112,74,0.4)' : '0.5px solid var(--border-medium)',
+              background: filterMode === tab.key ? 'rgba(196,112,74,0.10)' : 'transparent',
+              color: filterMode === tab.key ? '#C4704A' : 'var(--text-tertiary)',
+            }}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       {/* Search */}
       <div
         className="flex items-center gap-[6px]"

@@ -183,7 +183,7 @@ function computeStats(project: Project): StatCardData[] {
     {
       label: 'Alta prioridad',
       value: highPriorityTasks,
-      sub: 'Urgentes',
+      sub: 'de alta prioridad',
       barPercent: highBarPercent,
       barColor: '#E07050',
     },

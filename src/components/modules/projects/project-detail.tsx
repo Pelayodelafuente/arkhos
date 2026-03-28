@@ -659,25 +659,27 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
         ))}
       </div>
 
-      {/* Overall progress */}
-      <div className="mb-6 rounded-xl border border-border bg-card p-5">
-        <div className="mb-2 flex items-center justify-between">
-          <span className="text-sm font-medium text-foreground">Progreso general</span>
-          <span className="font-mono text-lg font-medium text-accent">{overallProgress}%</span>
+      {/* Overall progress — only show in progress and dashboard tabs */}
+      {(viewTab === 'progress' || viewTab === 'dashboard') && (
+        <div className="mb-6 rounded-xl border border-border bg-card p-5">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-sm font-medium text-foreground">Progreso general</span>
+            <span className="font-mono text-lg font-medium text-accent">{overallProgress}%</span>
+          </div>
+          <Progress value={overallProgress} />
+          <div className="mt-2 flex items-center gap-3 text-xs text-text-tertiary">
+            <span>
+              <span className="font-mono font-medium text-foreground">{doneTasks}</span>/{totalTasks}{" "}
+              tareas completadas
+            </span>
+            <span className="text-border">·</span>
+            <span>
+              <span className="font-mono font-medium text-foreground">{project.phases.length}</span>{" "}
+              fases
+            </span>
+          </div>
         </div>
-        <Progress value={overallProgress} />
-        <div className="mt-2 flex items-center gap-3 text-xs text-text-tertiary">
-          <span>
-            <span className="font-mono font-medium text-foreground">{doneTasks}</span>/{totalTasks}{" "}
-            tareas completadas
-          </span>
-          <span className="text-border">·</span>
-          <span>
-            <span className="font-mono font-medium text-foreground">{project.phases.length}</span>{" "}
-            fases
-          </span>
-        </div>
-      </div>
+      )}
 
       {/* ═══ PROGRESS VIEW ═══ */}
       {viewTab === "progress" && (

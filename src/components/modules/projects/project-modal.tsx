@@ -66,6 +66,7 @@ export function ProjectModal({
   const defaultType = projectTypes[0]?.name ?? "Web";
 
   const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
   const [icon, setIcon] = useState("Globe");
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [type, setType] = useState(defaultType);
@@ -104,6 +105,7 @@ export function ProjectModal({
   useEffect(() => {
     if (isEditing && editProject) {
       setName(editProject.name);
+      setDescription(editProject.description ?? "");
       setIcon(editProject.icon);
       setLogoUrl(editProject.logo_url);
       setType(editProject.type);
@@ -111,6 +113,7 @@ export function ProjectModal({
       setStack(editProject.stack);
     } else if (activeModal === "new-project") {
       setName("");
+      setDescription("");
       setIcon("Globe");
       setLogoUrl(null);
       setType(defaultType);
@@ -219,6 +222,7 @@ export function ProjectModal({
     if (isEditing && editProject) {
       await editProjectAction(editProject.id, {
         name: name.trim(),
+        description: description.trim() || null,
         icon,
         logo_url: logoUrl,
         type,
@@ -309,12 +313,28 @@ export function ProjectModal({
           placeholder="Mi proyecto"
         />
 
+        {/* Description */}
+        <div>
+          <label className="mb-1.5 block text-xs font-medium text-text-secondary">
+            Descripción
+          </label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Breve descripción del proyecto..."
+            rows={3}
+            className="w-full resize-y rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-text-tertiary focus:border-accent focus:outline-none"
+          />
+        </div>
+
         {/* Type + Status row */}
         <div className="grid grid-cols-2 gap-3">
           <TypeStatusSelect
             label="Tipo"
             value={type}
-            options={localTypes.map((t) => ({ value: t.name, label: t.name }))}
+            options={localTypes
+              .filter((t, i, arr) => arr.findIndex((x) => x.name === t.name) === i)
+              .map((t) => ({ value: t.name, label: t.name }))}
             onChange={setType}
             onCreateNew={handleCreateType}
             mode="type"

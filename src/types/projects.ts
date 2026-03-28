@@ -23,10 +23,10 @@ export const PHASE_STATUS_CONFIG: Record<PhaseStatus, { label: string; color: st
 
 export const TASK_PRIORITY_CONFIG: Record<TaskPriority, { label: string; color: string }> = {
   none: { label: 'Sin prioridad', color: '#9a7a5a' },
-  low: { label: 'Baja', color: '#9a6a28' },
-  medium: { label: 'Media', color: '#c4704a' },
-  high: { label: 'Alta', color: '#C4704A' },
-  urgent: { label: 'Urgente', color: '#5f1b29' },
+  low: { label: 'Baja', color: '#16a34a' },
+  medium: { label: 'Media', color: '#ca8a04' },
+  high: { label: 'Alta', color: '#ea580c' },
+  urgent: { label: 'Urgente', color: '#dc2626' },
 };
 
 export const TASK_STATUS_CONFIG: Record<TaskStatus, { label: string; color: string }> = {
@@ -221,6 +221,7 @@ export interface CreateProjectInput {
 
 export interface UpdateProjectInput {
   name?: string;
+  description?: string | null;
   icon?: string;
   logo_url?: string | null;
   type?: string;
