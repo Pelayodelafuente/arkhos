@@ -147,6 +147,55 @@ function ProjectCard({
   );
 }
 
+const MAX_VISIBLE_PROJECTS = 8;
+
+function ProjectsGrid({
+  projects,
+  selectedProjectId,
+  onSelect,
+}: {
+  projects: ProjectListItem[];
+  selectedProjectId: string | null;
+  onSelect: (id: string) => void;
+}) {
+  const [showAll, setShowAll] = useState(false);
+  const visible = showAll ? projects : projects.slice(0, MAX_VISIBLE_PROJECTS);
+  const hasMore = projects.length > MAX_VISIBLE_PROJECTS;
+
+  return (
+    <div className="flex flex-col gap-[6px]">
+      <div className="grid grid-cols-2 gap-[6px]">
+        {visible.map((project) => (
+          <ProjectCard
+            key={project.id}
+            project={project}
+            isActive={project.id === selectedProjectId}
+            onClick={() => onSelect(project.id)}
+          />
+        ))}
+      </div>
+      {hasMore && !showAll && (
+        <button
+          type="button"
+          onClick={() => setShowAll(true)}
+          className="font-sans text-[10px] font-medium text-accent transition-colors hover:underline"
+        >
+          Ver todos ({projects.length})
+        </button>
+      )}
+      {hasMore && showAll && (
+        <button
+          type="button"
+          onClick={() => setShowAll(false)}
+          className="font-sans text-[10px] font-medium text-text-tertiary transition-colors hover:underline"
+        >
+          Mostrar menos
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ─── Main component ─────────────────
 
 export function WindowProjects({ userId }: WindowProjectsProps) {
@@ -235,8 +284,17 @@ export function WindowProjects({ userId }: WindowProjectsProps) {
     }
   }, [router, selectedProjectId]);
 
-  function handleArchive() {
+  const isArchivedTab = filterMode === 'archived';
+
+  function handleArchiveOrUnarchive() {
     if (!selectedProjectId) return;
+    if (isArchivedTab) {
+      // Unarchive: restore to 'Activo'
+      editProject(selectedProjectId, { status: 'Activo' });
+      setFilterMode('active');
+      return;
+    }
+    // Archive flow with confirmation
     if (!confirmingArchive) {
       setConfirmingArchive(true);
       confirmTimerRef.current = setTimeout(() => setConfirmingArchive(false), 3000);
@@ -308,22 +366,11 @@ export function WindowProjects({ userId }: WindowProjectsProps) {
           {projects.length === 0 ? 'Sin proyectos' : 'Sin resultados'}
         </p>
       ) : (
-        <div
-          className="grid grid-cols-2 gap-[6px]"
-          style={{
-            maxHeight: 200,
-            overflowY: 'auto',
-          }}
-        >
-          {filteredProjects.map((project) => (
-            <ProjectCard
-              key={project.id}
-              project={project}
-              isActive={project.id === selectedProjectId}
-              onClick={() => handleSelectProject(project.id)}
-            />
-          ))}
-        </div>
+        <ProjectsGrid
+          projects={filteredProjects}
+          selectedProjectId={selectedProjectId}
+          onSelect={handleSelectProject}
+        />
       )}
 
       {/* Action buttons */}
@@ -340,9 +387,9 @@ export function WindowProjects({ userId }: WindowProjectsProps) {
             color: confirmingArchive ? '#c4704a' : 'var(--text-secondary)',
             transition: 'all 0.13s ease',
           }}
-          onClick={handleArchive}
+          onClick={handleArchiveOrUnarchive}
         >
-          {confirmingArchive ? '¿Confirmar?' : 'Archivar'}
+          {isArchivedTab ? 'Desarchivar' : confirmingArchive ? '¿Confirmar?' : 'Archivar'}
         </button>
         <button
           type="button"

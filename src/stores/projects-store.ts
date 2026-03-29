@@ -26,6 +26,9 @@ import {
   deleteTag as deleteTagApi,
   addTagToTask as addTagToTaskApi,
   removeTagFromTask as removeTagFromTaskApi,
+  getTaskComments as getTaskCommentsApi,
+  addTaskComment as addTaskCommentApi,
+  deleteTaskComment as deleteTaskCommentApi,
 } from '@/lib/supabase/projects';
 import type {
   Project,
@@ -44,6 +47,7 @@ import type {
   UpdateProjectLinkInput,
   ProjectLink,
   Tag,
+  TaskComment,
 } from '@/types/projects';
 import { useUIStore } from './ui-store';
 
@@ -58,6 +62,7 @@ interface ProjectsState {
   filters: ProjectFilters;
   activeTimeEntry: { taskId: string; startedAt: Date } | null;
   projectTags: Tag[];
+  taskComments: Record<string, TaskComment[]>;
 }
 
 interface ProjectsActions {
@@ -103,6 +108,11 @@ interface ProjectsActions {
   addTagToTask: (taskId: string, tagId: string) => Promise<void>;
   removeTagFromTask: (taskId: string, tagId: string) => Promise<void>;
 
+  // Task comments
+  loadTaskComments: (taskId: string) => Promise<void>;
+  addComment: (taskId: string, content: string) => Promise<void>;
+  deleteComment: (taskId: string, commentId: string) => Promise<void>;
+
   setViewMode: (mode: ViewMode) => void;
   setFilters: (filters: Partial<ProjectFilters>) => void;
   clearActiveProject: () => void;
@@ -128,6 +138,7 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
   filters: { status: 'all', search: '', sortBy: 'recent' as const },
   activeTimeEntry: null,
   projectTags: [],
+  taskComments: {},
 
   // ── Projects ────────────────────────
 
@@ -801,6 +812,60 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
     }
   },
 
+  // ── Task comments ─────────────────
+
+  loadTaskComments: async (taskId) => {
+    try {
+      const client = createClient();
+      const comments = await getTaskCommentsApi(client, taskId);
+      set((s) => ({
+        taskComments: { ...s.taskComments, [taskId]: comments },
+      }));
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Error al cargar comentarios';
+      toast(msg, 'error');
+    }
+  },
+
+  addComment: async (taskId, content) => {
+    try {
+      const client = createClient();
+      const { data: { user } } = await client.auth.getUser();
+      if (!user) throw new Error('No autenticado');
+      const comment = await addTaskCommentApi(client, taskId, user.id, content);
+      set((s) => ({
+        taskComments: {
+          ...s.taskComments,
+          [taskId]: [comment, ...(s.taskComments[taskId] ?? [])],
+        },
+      }));
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Error al añadir comentario';
+      toast(msg, 'error');
+    }
+  },
+
+  deleteComment: async (taskId, commentId) => {
+    const prev = get().taskComments[taskId] ?? [];
+    set((s) => ({
+      taskComments: {
+        ...s.taskComments,
+        [taskId]: (s.taskComments[taskId] ?? []).filter((c) => c.id !== commentId),
+      },
+    }));
+
+    try {
+      const client = createClient();
+      await deleteTaskCommentApi(client, commentId);
+    } catch (e) {
+      set((s) => ({
+        taskComments: { ...s.taskComments, [taskId]: prev },
+      }));
+      const msg = e instanceof Error ? e.message : 'Error al eliminar comentario';
+      toast(msg, 'error');
+    }
+  },
+
   // ── Duplicate project ───────────────
 
   duplicateProject: async (userId) => {
@@ -868,7 +933,7 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
   setFilters: (partial) =>
     set((s) => ({ filters: { ...s.filters, ...partial } })),
 
-  clearActiveProject: () => set({ activeProject: null, projectTags: [] }),
+  clearActiveProject: () => set({ activeProject: null, projectTags: [], taskComments: {} }),
 }));
 
 // ─── Selectors ────────────────────────

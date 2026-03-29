@@ -26,6 +26,7 @@ import type {
   ProjectTemplate,
   TemplatePhase,
   Tag,
+  TaskComment,
 } from '@/types/projects';
 
 type Client = SupabaseClient<Database>;
@@ -1047,4 +1048,42 @@ export async function getWeeklySummary(
   const secondsTracked = timeRows.reduce((sum, r) => sum + (r.duration ?? 0), 0);
 
   return { tasksCompleted, secondsTracked };
+}
+
+// ══════════════════════════════════════
+// TASK COMMENTS
+// ══════════════════════════════════════
+
+export async function getTaskComments(client: Client, taskId: string): Promise<TaskComment[]> {
+  const { data, error } = await client
+    .from('task_comments')
+    .select('*')
+    .eq('task_id', taskId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw new ProjectsError('Error fetching task comments', error.message);
+  return (data ?? []) as TaskComment[];
+}
+
+export async function addTaskComment(
+  client: Client,
+  taskId: string,
+  userId: string,
+  content: string
+): Promise<TaskComment> {
+  const { data, error } = await client
+    .from('task_comments')
+    .insert({ task_id: taskId, user_id: userId, content })
+    .select()
+    .single();
+
+  if (error || !data) throw new ProjectsError('Error adding task comment', error?.message);
+  return data as TaskComment;
+}
+
+export async function deleteTaskComment(client: Client, commentId: string): Promise<void> {
+  assertNoError(
+    await client.from('task_comments').delete().eq('id', commentId),
+    'Error deleting task comment'
+  );
 }

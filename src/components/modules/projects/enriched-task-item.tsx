@@ -1,6 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Check,
   ChevronDown,
@@ -12,16 +13,26 @@ import {
   CheckSquare,
   Calendar,
   Maximize2,
+  Minimize2,
+  Plus,
+  X,
+  MessageSquare,
 } from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useProjectsStore } from "@/stores/projects-store";
 import {
   TASK_PRIORITY_CONFIG,
+  TASK_STATUS_CONFIG,
+  TASK_STATUSES,
+  TASK_PRIORITIES,
   type PhaseTask,
   type TaskPriority,
+  type TaskStatus,
+  type Subtask,
 } from "@/types/projects";
 import { TagChip } from "./tag-chip";
+import { TagSelector } from "./tag-selector";
 
 // ─── Helpers ────────────────────────
 
@@ -44,6 +55,18 @@ function formatDate(date: string): string {
 
 function isOverdue(date: string): boolean {
   return new Date(date) < new Date(new Date().toDateString());
+}
+
+function timeAgo(dateStr: string): string {
+  const now = Date.now();
+  const then = new Date(dateStr).getTime();
+  const diff = Math.floor((now - then) / 1000);
+  if (diff < 60) return "ahora";
+  if (diff < 3600) return `hace ${Math.floor(diff / 60)}m`;
+  if (diff < 86400) return `hace ${Math.floor(diff / 3600)}h`;
+  const days = Math.floor(diff / 86400);
+  if (days < 7) return `hace ${days}d`;
+  return formatDate(dateStr);
 }
 
 // ─── Priority colors ────────────────
@@ -97,7 +120,6 @@ export function EnrichedTaskItem({
   onDelete,
   debouncedEditTask,
   onMoveTask,
-  onOpenSlideOver,
 }: EnrichedTaskItemProps) {
   const {
     attributes,
@@ -114,11 +136,81 @@ export function EnrichedTaskItem({
     opacity: isDragging ? 0.5 : 1,
   };
 
+  // ─── Live task from store (fixes stale data bug) ───
+  const liveTask = useProjectsStore((state) => {
+    const project = state.activeProject;
+    if (!project) return task;
+    for (const phase of project.phases) {
+      const found = phase.tasks.find((t) => t.id === task.id);
+      if (found) return found;
+    }
+    return task;
+  });
+
   const activeTimeEntry = useProjectsStore((s) => s.activeTimeEntry);
+  const editTask = useProjectsStore((s) => s.editTask);
+  const changeTaskStatus = useProjectsStore((s) => s.changeTaskStatus);
+  const updateSubtasks = useProjectsStore((s) => s.updateSubtasks);
+  const projectTags = useProjectsStore((s) => s.projectTags);
+  const taskComments = useProjectsStore((s) => s.taskComments[task.id]);
+  const loadTaskComments = useProjectsStore((s) => s.loadTaskComments);
+  const addComment = useProjectsStore((s) => s.addComment);
+  const deleteComment = useProjectsStore((s) => s.deleteComment);
+
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [description, setDescription] = useState(liveTask.description || liveTask.content || "");
+  const [newSubtaskText, setNewSubtaskText] = useState("");
+  const [newCommentText, setNewCommentText] = useState("");
+  const descTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const isTimerRunning = activeTimeEntry?.taskId === task.id;
-  const subtasksDone = task.subtasks.filter((s) => s.completed).length;
-  const hasSubtasks = task.subtasks.length > 0;
+  const subtasksDone = liveTask.subtasks.filter((s) => s.completed).length;
+  const hasSubtasks = liveTask.subtasks.length > 0;
+
+  // Sync description from live task
+  useEffect(() => {
+    setDescription(liveTask.description || liveTask.content || "");
+  }, [liveTask.description, liveTask.content]);
+
+  // Load comments when expanding
+  useEffect(() => {
+    if (isExpanded && !taskComments) {
+      loadTaskComments(task.id);
+    }
+  }, [isExpanded, taskComments, loadTaskComments, task.id]);
+
+  const handleDescriptionChange = useCallback((value: string) => {
+    setDescription(value);
+    clearTimeout(descTimerRef.current);
+    descTimerRef.current = setTimeout(() => {
+      editTask(task.id, { description: value, content: value });
+    }, 500);
+  }, [task.id, editTask]);
+
+  function addSubtask() {
+    if (!newSubtaskText.trim()) return;
+    const newSub: Subtask = {
+      id: crypto.randomUUID(),
+      title: newSubtaskText.trim(),
+      completed: false,
+    };
+    updateSubtasks(task.id, [...liveTask.subtasks, newSub]);
+    setNewSubtaskText("");
+  }
+
+  function toggleSubtask(subId: string) {
+    updateSubtasks(task.id, liveTask.subtasks.map((s) => s.id === subId ? { ...s, completed: !s.completed } : s));
+  }
+
+  function removeSubtask(subId: string) {
+    updateSubtasks(task.id, liveTask.subtasks.filter((s) => s.id !== subId));
+  }
+
+  async function handleAddComment() {
+    if (!newCommentText.trim()) return;
+    await addComment(task.id, newCommentText.trim());
+    setNewCommentText("");
+  }
 
   return (
     <div ref={setNodeRef} style={style}>
@@ -159,12 +251,12 @@ export function EnrichedTaskItem({
           whileTap={{ scale: 1.3 }}
           transition={{ type: "spring", stiffness: 400, damping: 10 }}
           className={`mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded border transition-all ${
-            task.done
+            liveTask.done
               ? "border-accent bg-accent"
               : "border-border hover:border-accent"
           }`}
         >
-          {task.done && (
+          {liveTask.done && (
             <Check size={10} strokeWidth={3} className="text-white" />
           )}
         </motion.button>
@@ -186,53 +278,53 @@ export function EnrichedTaskItem({
           ) : (
             <span
               className={`block cursor-text text-sm transition-all duration-300 ${
-                task.done
+                liveTask.done
                   ? "text-text-tertiary line-through opacity-60"
                   : "text-foreground"
               }`}
               onClick={onStartEdit}
             >
-              {task.text}
+              {liveTask.text}
             </span>
           )}
 
           {/* Meta row */}
           <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
             {/* Priority badge */}
-            {task.priority !== "none" && (
+            {liveTask.priority !== "none" && (
               <span
                 className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
-                  task.priority === "urgent" ? "animate-pulse-slow" : ""
+                  liveTask.priority === "urgent" ? "animate-pulse-slow" : ""
                 }`}
                 style={{
-                  backgroundColor: `${PRIORITY_COLORS[task.priority]}14`,
-                  color: PRIORITY_COLORS[task.priority],
+                  backgroundColor: `${PRIORITY_COLORS[liveTask.priority]}14`,
+                  color: PRIORITY_COLORS[liveTask.priority],
                 }}
               >
                 <span
                   className="h-1.5 w-1.5 rounded-full"
-                  style={{ backgroundColor: PRIORITY_COLORS[task.priority] }}
+                  style={{ backgroundColor: PRIORITY_COLORS[liveTask.priority] }}
                 />
-                {TASK_PRIORITY_CONFIG[task.priority].label}
+                {TASK_PRIORITY_CONFIG[liveTask.priority].label}
               </span>
             )}
 
             {/* Due date */}
-            {task.due_date && (
+            {liveTask.due_date && (
               <span
                 className={`inline-flex items-center gap-0.5 text-[10px] ${
-                  isOverdue(task.due_date) && !task.done
+                  isOverdue(liveTask.due_date) && !liveTask.done
                     ? "font-medium text-red-500"
                     : "text-text-tertiary"
                 }`}
               >
                 <Calendar size={10} strokeWidth={2} />
-                {formatDate(task.due_date)}
+                {formatDate(liveTask.due_date)}
               </span>
             )}
 
             {/* Labels */}
-            {task.labels.map((label) => (
+            {liveTask.labels.map((label) => (
               <span
                 key={label}
                 className="rounded-full bg-sand px-1.5 py-0.5 text-[10px] text-text-secondary"
@@ -242,7 +334,7 @@ export function EnrichedTaskItem({
             ))}
 
             {/* Tags */}
-            {(task.tags ?? []).map((tag) => (
+            {(liveTask.tags ?? []).map((tag) => (
               <TagChip key={tag.id} tag={tag} size="sm" />
             ))}
           </div>
@@ -254,15 +346,15 @@ export function EnrichedTaskItem({
           {hasSubtasks && (
             <span className="inline-flex items-center gap-0.5 text-[10px] text-text-tertiary">
               <CheckSquare size={10} strokeWidth={2} />
-              {subtasksDone}/{task.subtasks.length}
+              {subtasksDone}/{liveTask.subtasks.length}
             </span>
           )}
 
           {/* Tracked time */}
-          {task.tracked_seconds > 0 && (
+          {liveTask.tracked_seconds > 0 && (
             <span className="inline-flex items-center gap-0.5 font-mono text-[10px] text-text-tertiary">
               <Clock size={10} strokeWidth={2} />
-              {formatDuration(task.tracked_seconds)}
+              {formatDuration(liveTask.tracked_seconds)}
             </span>
           )}
 
@@ -276,15 +368,15 @@ export function EnrichedTaskItem({
             onClick={onCyclePriority}
             className="mt-0.5 h-2 w-2 rounded-full transition-transform hover:scale-150"
             style={{
-              backgroundColor: PRIORITY_COLORS[task.priority],
+              backgroundColor: PRIORITY_COLORS[liveTask.priority],
             }}
-            title={TASK_PRIORITY_CONFIG[task.priority].label}
+            title={TASK_PRIORITY_CONFIG[liveTask.priority].label}
           />
 
           {/* Links */}
-          {task.links.length > 0 && (
+          {liveTask.links.length > 0 && (
             <div className="flex items-center gap-0.5">
-              {task.links.map((link) => (
+              {liveTask.links.map((link) => (
                 <a
                   key={link.id}
                   href={link.url}
@@ -299,13 +391,17 @@ export function EnrichedTaskItem({
             </div>
           )}
 
-          {/* Open slide-over */}
+          {/* Toggle inline expand */}
           <button
-            onClick={onOpenSlideOver}
+            onClick={() => setIsExpanded(!isExpanded)}
             className="text-text-tertiary opacity-0 transition-opacity hover:text-accent group-hover:opacity-100"
-            title="Abrir detalle"
+            title={isExpanded ? "Colapsar" : "Expandir detalle"}
           >
-            <Maximize2 size={12} strokeWidth={2} />
+            {isExpanded ? (
+              <Minimize2 size={12} strokeWidth={2} />
+            ) : (
+              <Maximize2 size={12} strokeWidth={2} />
+            )}
           </button>
 
           {/* Delete */}
@@ -318,6 +414,217 @@ export function EnrichedTaskItem({
         </div>
       </div>
 
+      {/* ── Inline expanded panel ───────── */}
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            className="overflow-hidden"
+          >
+            <div className="ml-8 mr-2 space-y-3 border-l-2 border-border pb-3 pl-4 pt-2">
+
+              {/* Status pills */}
+              <div>
+                <p className="mb-1 text-[10px] font-medium uppercase tracking-wide text-text-tertiary">Estado</p>
+                <div className="flex flex-wrap gap-1">
+                  {TASK_STATUSES.map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => changeTaskStatus(task.id, s)}
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-medium transition-all ${
+                        liveTask.status === s ? "text-white" : "bg-sand text-text-tertiary hover:bg-border"
+                      }`}
+                      style={liveTask.status === s ? { backgroundColor: TASK_STATUS_CONFIG[s].color } : undefined}
+                    >
+                      {TASK_STATUS_CONFIG[s].label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Priority pills */}
+              <div>
+                <p className="mb-1 text-[10px] font-medium uppercase tracking-wide text-text-tertiary">Prioridad</p>
+                <div className="flex flex-wrap gap-1">
+                  {TASK_PRIORITIES.map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => editTask(task.id, { priority: p })}
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-medium transition-all ${
+                        liveTask.priority === p ? "text-white" : "bg-sand text-text-secondary hover:bg-border"
+                      }`}
+                      style={liveTask.priority === p ? { backgroundColor: TASK_PRIORITY_CONFIG[p].color } : undefined}
+                    >
+                      {TASK_PRIORITY_CONFIG[p].label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Dates */}
+              <div className="grid grid-cols-2 gap-2">
+                <label className="flex flex-col gap-0.5">
+                  <span className="text-[10px] font-medium uppercase tracking-wide text-text-tertiary">Inicio</span>
+                  <input
+                    type="date"
+                    value={liveTask.start_date || ""}
+                    onChange={(e) => editTask(task.id, { start_date: e.target.value || null })}
+                    className="rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground focus:border-accent focus:outline-none"
+                  />
+                </label>
+                <label className="flex flex-col gap-0.5">
+                  <span className={`text-[10px] font-medium uppercase tracking-wide ${
+                    liveTask.due_date && isOverdue(liveTask.due_date) && !liveTask.done ? "text-red-500" : "text-text-tertiary"
+                  }`}>Limite</span>
+                  <input
+                    type="date"
+                    value={liveTask.due_date || ""}
+                    onChange={(e) => editTask(task.id, { due_date: e.target.value || null })}
+                    className={`rounded-md border bg-background px-2 py-1 text-xs focus:border-accent focus:outline-none ${
+                      liveTask.due_date && isOverdue(liveTask.due_date) && !liveTask.done
+                        ? "border-red-300 text-red-500"
+                        : "border-border text-foreground"
+                    }`}
+                  />
+                </label>
+              </div>
+
+              {/* Description */}
+              <div>
+                <p className="mb-1 text-[10px] font-medium uppercase tracking-wide text-text-tertiary">Descripcion</p>
+                <textarea
+                  value={description}
+                  onChange={(e) => handleDescriptionChange(e.target.value)}
+                  placeholder="Notas, descripcion, ideas..."
+                  rows={3}
+                  className="w-full resize-y rounded-md border border-border bg-background px-2.5 py-1.5 text-xs text-foreground placeholder:text-text-tertiary focus:border-accent focus:outline-none"
+                />
+              </div>
+
+              {/* Subtasks */}
+              <div>
+                <p className="mb-1 text-[10px] font-medium uppercase tracking-wide text-text-tertiary">
+                  Subtareas {liveTask.subtasks.length > 0 && `(${subtasksDone}/${liveTask.subtasks.length})`}
+                </p>
+                <div className="space-y-1">
+                  {liveTask.subtasks.map((sub) => (
+                    <div key={sub.id} className="group/sub flex items-center gap-2">
+                      <button
+                        onClick={() => toggleSubtask(sub.id)}
+                        className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded border transition-colors ${
+                          sub.completed ? "border-accent bg-accent" : "border-border hover:border-accent"
+                        }`}
+                      >
+                        {sub.completed && <Check size={8} strokeWidth={3} className="text-white" />}
+                      </button>
+                      <span className={`flex-1 text-xs ${sub.completed ? "text-text-tertiary line-through" : "text-foreground"}`}>
+                        {sub.title}
+                      </span>
+                      <button
+                        onClick={() => removeSubtask(sub.id)}
+                        className="text-text-tertiary opacity-0 transition-opacity hover:text-red-500 group-hover/sub:opacity-100"
+                      >
+                        <X size={10} strokeWidth={2} />
+                      </button>
+                    </div>
+                  ))}
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={newSubtaskText}
+                      onChange={(e) => setNewSubtaskText(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") addSubtask();
+                        if (e.key === "Escape") setNewSubtaskText("");
+                      }}
+                      placeholder="Nueva subtarea..."
+                      className="flex-1 rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground placeholder:text-text-tertiary focus:border-accent focus:outline-none"
+                    />
+                    <button onClick={addSubtask} className="text-text-tertiary transition-colors hover:text-accent">
+                      <Plus size={12} strokeWidth={2} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tags */}
+              {projectTags.length > 0 && (
+                <div>
+                  <p className="mb-1 text-[10px] font-medium uppercase tracking-wide text-text-tertiary">Tags</p>
+                  <TagSelector taskId={task.id} selectedTags={liveTask.tags ?? []} />
+                </div>
+              )}
+
+              {/* Comments / Notes section */}
+              <div>
+                <p className="mb-1.5 flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide text-text-tertiary">
+                  <MessageSquare size={10} strokeWidth={2} />
+                  Notas / Versiones
+                </p>
+
+                {/* Add comment input */}
+                <div className="mb-2 flex items-start gap-2">
+                  <textarea
+                    value={newCommentText}
+                    onChange={(e) => setNewCommentText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                        e.preventDefault();
+                        handleAddComment();
+                      }
+                    }}
+                    placeholder="Escribir una nota..."
+                    rows={2}
+                    className="flex-1 resize-none rounded-md border border-border bg-background px-2.5 py-1.5 font-mono text-xs text-foreground placeholder:text-text-tertiary focus:border-accent focus:outline-none"
+                  />
+                  <button
+                    onClick={handleAddComment}
+                    disabled={!newCommentText.trim()}
+                    className="shrink-0 rounded-md bg-accent px-2.5 py-1.5 text-[10px] font-medium text-white transition-opacity disabled:opacity-40"
+                  >
+                    Añadir
+                  </button>
+                </div>
+
+                {/* Comments list */}
+                {(taskComments ?? []).length > 0 && (
+                  <div className="space-y-1.5">
+                    {(taskComments ?? []).map((comment) => (
+                      <div
+                        key={comment.id}
+                        className="group/comment flex items-start gap-2 rounded-md border-l-2 border-border bg-sand/30 px-2.5 py-1.5"
+                      >
+                        {/* Avatar initial */}
+                        <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent/15 text-[9px] font-bold text-accent">
+                          P
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="whitespace-pre-wrap break-words font-mono text-[11px] leading-relaxed text-foreground">
+                            {comment.content}
+                          </p>
+                          <span className="mt-0.5 block text-[9px] text-text-tertiary">
+                            {timeAgo(comment.created_at)}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => deleteComment(task.id, comment.id)}
+                          className="shrink-0 text-text-tertiary opacity-0 transition-opacity hover:text-red-500 group-hover/comment:opacity-100"
+                          title="Eliminar nota"
+                        >
+                          <X size={10} strokeWidth={2} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

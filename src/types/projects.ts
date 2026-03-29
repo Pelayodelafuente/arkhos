@@ -351,6 +351,16 @@ export interface ProjectTemplate {
   created_at: string;
 }
 
+// ─── Task comments ──────────────────
+
+export interface TaskComment {
+  id: string;
+  task_id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+}
+
 // ─── List item (without nested data) ──
 
 export type ProjectListItem = Omit<Project, 'phases' | 'links'> & {

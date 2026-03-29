@@ -130,9 +130,15 @@ export function WindowFocus({ userId }: WindowFocusProps) {
     );
   }
 
-  const visibleTasks = filterProjectId
+  const MAX_VISIBLE_TASKS = 6;
+  const [showAllTasks, setShowAllTasks] = useState(false);
+
+  const filteredTasks = filterProjectId
     ? tasks.filter((t) => t.project_id === filterProjectId)
     : tasks;
+
+  const visibleTasks = showAllTasks ? filteredTasks : filteredTasks.slice(0, MAX_VISIBLE_TASKS);
+  const hasMoreTasks = filteredTasks.length > MAX_VISIBLE_TASKS;
 
   return (
     <div className="flex flex-col gap-[6px]">
@@ -169,7 +175,7 @@ export function WindowFocus({ userId }: WindowFocusProps) {
         </div>
       )}
 
-    <div className="flex flex-col gap-[3px]" style={{ maxHeight: 250, overflowY: 'auto' }}>
+    <div className="flex flex-col gap-[3px]">
       {visibleTasks.map((task) => {
         const cfg = TASK_PRIORITY_CONFIG[task.priority];
         const overdue = task.due_date && isOverdue(task.due_date);
@@ -231,6 +237,24 @@ export function WindowFocus({ userId }: WindowFocusProps) {
         );
       })}
     </div>
+    {hasMoreTasks && !showAllTasks && (
+      <button
+        type="button"
+        onClick={() => setShowAllTasks(true)}
+        className="font-sans text-[10px] font-medium text-accent transition-colors hover:underline"
+      >
+        Ver {filteredTasks.length - MAX_VISIBLE_TASKS} más
+      </button>
+    )}
+    {hasMoreTasks && showAllTasks && (
+      <button
+        type="button"
+        onClick={() => setShowAllTasks(false)}
+        className="font-sans text-[10px] font-medium text-text-tertiary transition-colors hover:underline"
+      >
+        Mostrar menos
+      </button>
+    )}
     </div>
   );
 }

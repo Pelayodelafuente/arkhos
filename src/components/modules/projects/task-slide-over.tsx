@@ -59,6 +59,18 @@ export function TaskSlideOver({ task, projectId, userId, onClose }: TaskSlideOve
   const projectTags = useProjectsStore((s) => s.projectTags);
   const toast = useToast();
 
+  // Live task from store to prevent stale data
+  const liveTask = useProjectsStore((state) => {
+    if (!task) return null;
+    const project = state.activeProject;
+    if (!project) return task;
+    for (const phase of project.phases) {
+      const found = phase.tasks.find((t) => t.id === task.id);
+      if (found) return found;
+    }
+    return task;
+  });
+
   const [description, setDescription] = useState('');
   const [newSubtaskText, setNewSubtaskText] = useState('');
   const [newLabel, setNewLabel] = useState('');
@@ -71,11 +83,11 @@ export function TaskSlideOver({ task, projectId, userId, onClose }: TaskSlideOve
 
   // Sync local state when task changes
   useEffect(() => {
-    if (task) {
-      setDescription(task.description || task.content || '');
+    if (liveTask) {
+      setDescription(liveTask.description || liveTask.content || '');
       setConfirmDelete(false);
     }
-  }, [task?.id]);
+  }, [liveTask?.id]);
 
   // Timer interval
   useEffect(() => {
@@ -102,62 +114,62 @@ export function TaskSlideOver({ task, projectId, userId, onClose }: TaskSlideOve
     setDescription(value);
     clearTimeout(descTimerRef.current);
     descTimerRef.current = setTimeout(() => {
-      if (task) editTask(task.id, { description: value, content: value });
+      if (liveTask) editTask(liveTask.id, { description: value, content: value });
     }, 500);
-  }, [task, editTask]);
+  }, [liveTask, editTask]);
 
   function addSubtask() {
-    if (!task || !newSubtaskText.trim()) return;
+    if (!liveTask || !newSubtaskText.trim()) return;
     const newSub: Subtask = {
       id: crypto.randomUUID(),
       title: newSubtaskText.trim(),
       completed: false,
     };
-    updateSubtasks(task.id, [...task.subtasks, newSub]);
+    updateSubtasks(liveTask.id, [...liveTask.subtasks, newSub]);
     setNewSubtaskText('');
   }
 
   function toggleSubtask(subId: string) {
-    if (!task) return;
-    updateSubtasks(task.id, task.subtasks.map((s) => s.id === subId ? { ...s, completed: !s.completed } : s));
+    if (!liveTask) return;
+    updateSubtasks(liveTask.id, liveTask.subtasks.map((s) => s.id === subId ? { ...s, completed: !s.completed } : s));
   }
 
   function removeSubtask(subId: string) {
-    if (!task) return;
-    updateSubtasks(task.id, task.subtasks.filter((s) => s.id !== subId));
+    if (!liveTask) return;
+    updateSubtasks(liveTask.id, liveTask.subtasks.filter((s) => s.id !== subId));
   }
 
   function addLabel() {
-    if (!task || !newLabel.trim()) return;
+    if (!liveTask || !newLabel.trim()) return;
     const val = newLabel.trim();
-    if (task.labels.includes(val)) return;
-    editTask(task.id, { labels: [...task.labels, val] } as UpdateTaskInput);
+    if (liveTask.labels.includes(val)) return;
+    editTask(liveTask.id, { labels: [...liveTask.labels, val] } as UpdateTaskInput);
     setNewLabel('');
   }
 
   function removeLabel(label: string) {
-    if (!task) return;
-    editTask(task.id, { labels: task.labels.filter((l) => l !== label) } as UpdateTaskInput);
+    if (!liveTask) return;
+    editTask(liveTask.id, { labels: liveTask.labels.filter((l) => l !== label) } as UpdateTaskInput);
   }
 
   async function handleDelete() {
-    if (!task) return;
+    if (!liveTask) return;
     if (!confirmDelete) {
       setConfirmDelete(true);
       setTimeout(() => setConfirmDelete(false), 3000);
       return;
     }
-    await removeTask(task.id);
+    await removeTask(liveTask.id);
     onClose();
   }
 
-  const subtasksDone = task?.subtasks.filter((s) => s.completed).length ?? 0;
-  const subtasksTotal = task?.subtasks.length ?? 0;
+  const subtasksDone = liveTask?.subtasks.filter((s) => s.completed).length ?? 0;
+  const subtasksTotal = liveTask?.subtasks.length ?? 0;
   const subtasksProgress = subtasksTotal > 0 ? Math.round((subtasksDone / subtasksTotal) * 100) : 0;
 
   return (
     <AnimatePresence>
-      {task && (
+      {task && liveTask && (
         <>
           {/* Overlay */}
           <motion.div
@@ -185,18 +197,18 @@ export function TaskSlideOver({ task, projectId, userId, onClose }: TaskSlideOve
                   {TASK_STATUSES.map((s) => (
                     <button
                       key={s}
-                      onClick={() => changeTaskStatus(task.id, s)}
+                      onClick={() => changeTaskStatus(liveTask.id, s)}
                       className={`rounded-full px-2 py-0.5 text-[10px] font-medium transition-all ${
-                        task.status === s ? 'text-white' : 'bg-sand text-text-tertiary hover:bg-border'
+                        liveTask.status === s ? 'text-white' : 'bg-sand text-text-tertiary hover:bg-border'
                       }`}
-                      style={task.status === s ? { backgroundColor: TASK_STATUS_CONFIG[s].color } : undefined}
+                      style={liveTask.status === s ? { backgroundColor: TASK_STATUS_CONFIG[s].color } : undefined}
                     >
                       {TASK_STATUS_CONFIG[s].label}
                     </button>
                   ))}
                 </div>
                 {/* Title */}
-                <h2 className="font-heading text-lg leading-tight text-foreground">{task.text}</h2>
+                <h2 className="font-heading text-lg leading-tight text-foreground">{liveTask.text}</h2>
               </div>
               <div className="flex items-center gap-1 shrink-0">
                 <button
@@ -227,11 +239,11 @@ export function TaskSlideOver({ task, projectId, userId, onClose }: TaskSlideOve
                   {TASK_PRIORITIES.map((p) => (
                     <button
                       key={p}
-                      onClick={() => editTask(task.id, { priority: p })}
+                      onClick={() => editTask(liveTask.id, { priority: p })}
                       className={`rounded-full px-2.5 py-1 text-xs font-medium transition-all ${
-                        task.priority === p ? 'text-white' : 'bg-sand text-text-secondary hover:bg-border'
+                        liveTask.priority === p ? 'text-white' : 'bg-sand text-text-secondary hover:bg-border'
                       }`}
-                      style={task.priority === p ? { backgroundColor: PRIORITY_COLORS[p] } : undefined}
+                      style={liveTask.priority === p ? { backgroundColor: PRIORITY_COLORS[p] } : undefined}
                     >
                       {TASK_PRIORITY_CONFIG[p].label}
                     </button>
@@ -245,21 +257,21 @@ export function TaskSlideOver({ task, projectId, userId, onClose }: TaskSlideOve
                   <span className="text-[10px] font-medium uppercase tracking-wide text-text-tertiary">Inicio</span>
                   <input
                     type="date"
-                    value={task.start_date || ''}
-                    onChange={(e) => editTask(task.id, { start_date: e.target.value || null })}
+                    value={liveTask.start_date || ''}
+                    onChange={(e) => editTask(liveTask.id, { start_date: e.target.value || null })}
                     className="rounded-md border border-border bg-background px-2 py-1.5 text-xs text-foreground focus:border-accent focus:outline-none"
                   />
                 </label>
                 <label className="flex flex-col gap-1">
                   <span className={`text-[10px] font-medium uppercase tracking-wide ${
-                    task.due_date && isOverdue(task.due_date) && !task.done ? 'text-red-500' : 'text-text-tertiary'
-                  }`}>Límite</span>
+                    liveTask.due_date && isOverdue(liveTask.due_date) && !liveTask.done ? 'text-red-500' : 'text-text-tertiary'
+                  }`}>Limite</span>
                   <input
                     type="date"
-                    value={task.due_date || ''}
-                    onChange={(e) => editTask(task.id, { due_date: e.target.value || null })}
+                    value={liveTask.due_date || ''}
+                    onChange={(e) => editTask(liveTask.id, { due_date: e.target.value || null })}
                     className={`rounded-md border bg-background px-2 py-1.5 text-xs focus:border-accent focus:outline-none ${
-                      task.due_date && isOverdue(task.due_date) && !task.done
+                      liveTask.due_date && isOverdue(liveTask.due_date) && !liveTask.done
                         ? 'border-red-300 text-red-500'
                         : 'border-border text-foreground'
                     }`}
@@ -272,8 +284,8 @@ export function TaskSlideOver({ task, projectId, userId, onClose }: TaskSlideOve
                       type="number"
                       min={0}
                       step={0.5}
-                      value={task.estimated_hours || ''}
-                      onChange={(e) => editTask(task.id, { estimated_hours: parseFloat(e.target.value) || 0 })}
+                      value={liveTask.estimated_hours || ''}
+                      onChange={(e) => editTask(liveTask.id, { estimated_hours: parseFloat(e.target.value) || 0 })}
                       placeholder="0"
                       className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs text-foreground focus:border-accent focus:outline-none"
                     />
@@ -282,13 +294,13 @@ export function TaskSlideOver({ task, projectId, userId, onClose }: TaskSlideOve
                 </label>
               </div>
 
-              {/* Descripción */}
+              {/* Descripcion */}
               <div>
-                <p className="mb-1.5 text-[10px] font-medium uppercase tracking-wide text-text-tertiary">Descripción</p>
+                <p className="mb-1.5 text-[10px] font-medium uppercase tracking-wide text-text-tertiary">Descripcion</p>
                 <textarea
                   value={description}
                   onChange={(e) => handleDescriptionChange(e.target.value)}
-                  placeholder="Añade una descripción, notas, código, ideas..."
+                  placeholder="Notas, descripcion, ideas..."
                   rows={5}
                   className="w-full resize-y rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-text-tertiary focus:border-accent focus:outline-none"
                 />
@@ -312,7 +324,7 @@ export function TaskSlideOver({ task, projectId, userId, onClose }: TaskSlideOve
                 )}
 
                 <div className="space-y-1.5">
-                  {task.subtasks.map((sub) => (
+                  {liveTask.subtasks.map((sub) => (
                     <div key={sub.id} className="group flex items-center gap-2">
                       <button
                         onClick={() => toggleSubtask(sub.id)}
@@ -356,7 +368,7 @@ export function TaskSlideOver({ task, projectId, userId, onClose }: TaskSlideOve
               <div>
                 <p className="mb-1.5 text-[10px] font-medium uppercase tracking-wide text-text-tertiary">Etiquetas de texto</p>
                 <div className="flex flex-wrap items-center gap-1.5">
-                  {task.labels.map((label) => (
+                  {liveTask.labels.map((label) => (
                     <span
                       key={label}
                       className="inline-flex items-center gap-1 rounded-full bg-sand px-2 py-0.5 text-[10px] text-text-secondary"
@@ -384,7 +396,7 @@ export function TaskSlideOver({ task, projectId, userId, onClose }: TaskSlideOve
               {projectTags.length > 0 && (
                 <div>
                   <p className="mb-1.5 text-[10px] font-medium uppercase tracking-wide text-text-tertiary">Tags</p>
-                  <TagSelector taskId={task.id} selectedTags={task.tags ?? []} />
+                  <TagSelector taskId={liveTask.id} selectedTags={liveTask.tags ?? []} />
                 </div>
               )}
 
@@ -395,7 +407,7 @@ export function TaskSlideOver({ task, projectId, userId, onClose }: TaskSlideOve
                   <button
                     onClick={() => {
                       if (isTimerRunning) stopTimer(projectId, userId);
-                      else startTimer(task.id);
+                      else startTimer(liveTask.id);
                     }}
                     className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
                       isTimerRunning
@@ -414,21 +426,21 @@ export function TaskSlideOver({ task, projectId, userId, onClose }: TaskSlideOve
                       {Math.floor(elapsed / 60).toString().padStart(2, '0')}:{(elapsed % 60).toString().padStart(2, '0')}
                     </span>
                   )}
-                  {task.tracked_seconds > 0 && (
+                  {liveTask.tracked_seconds > 0 && (
                     <span className="inline-flex items-center gap-1 font-mono text-xs text-text-tertiary">
                       <Clock size={12} strokeWidth={1.75} />
-                      {formatDuration(task.tracked_seconds)}
+                      {formatDuration(liveTask.tracked_seconds)}
                     </span>
                   )}
                 </div>
               </div>
 
               {/* Task links */}
-              {task.links.length > 0 && (
+              {liveTask.links.length > 0 && (
                 <div>
                   <p className="mb-1.5 text-[10px] font-medium uppercase tracking-wide text-text-tertiary">Enlaces</p>
                   <div className="space-y-1">
-                    {task.links.map((link) => (
+                    {liveTask.links.map((link) => (
                       <a
                         key={link.id}
                         href={link.url}
