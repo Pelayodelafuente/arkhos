@@ -42,7 +42,8 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { motion } from "framer-motion";
-import { Button, Progress, Skeleton, Modal, Input } from "@/components/ui";
+import { Button, Progress, Skeleton, Modal, Input, DropdownMenu, Tooltip } from "@/components/ui";
+import type { DropdownMenuItem } from "@/components/ui";
 import { useProjectsStore } from "@/stores/projects-store";
 import { useUIStore, useToast } from "@/stores/ui-store";
 import { createClient } from "@/lib/supabase/client";
@@ -265,10 +266,13 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project?.id]);
 
-  // Mobile detection for dnd fallback
-  const [isMobile] = useState(() =>
-    typeof window !== 'undefined' ? window.matchMedia("(max-width: 640px)").matches : false
-  );
+  // Mobile detection for dnd fallback — start false, set after mount to avoid hydration mismatch
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsMobile(window.matchMedia('(max-width: 640px)').matches);
+    }
+  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -521,40 +525,51 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={() => {
-              setTemplateName(project.name);
-              setTemplateDescription("");
-              setShowSaveTemplate(true);
-            }}>
-              <BookmarkPlus size={14} strokeWidth={2} />
-              Plantilla
-            </Button>
-            <Button variant="ghost" size="sm" onClick={handleDuplicate}>
-              <Copy size={14} strokeWidth={2} />
-              Duplicar
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => openModal("export-project")}>
-              <Download size={14} strokeWidth={2} />
-              Exportar
-            </Button>
-            {project.status === "Archivado" ? (
-              <Button variant="ghost" size="sm" onClick={handleUnarchive}>
-                <ArchiveRestore size={14} strokeWidth={2} />
-                Desarchivar
-              </Button>
-            ) : (
-              <Button variant="ghost" size="sm" onClick={handleArchive}>
-                <Archive size={14} strokeWidth={2} />
-                Archivar
-              </Button>
-            )}
             <Button variant="secondary" size="sm" onClick={() => openModal("edit-project")}>
               <Edit3 size={14} strokeWidth={2} />
               Editar
             </Button>
-            <Button variant="danger" size="sm" onClick={() => setConfirmDelete(true)}>
-              <Trash2 size={14} strokeWidth={2} />
-            </Button>
+            <DropdownMenu
+              align="right"
+              items={[
+                {
+                  label: "Guardar plantilla",
+                  icon: <BookmarkPlus size={14} strokeWidth={2} />,
+                  onClick: () => {
+                    setTemplateName(project.name);
+                    setTemplateDescription("");
+                    setShowSaveTemplate(true);
+                  },
+                },
+                {
+                  label: "Duplicar",
+                  icon: <Copy size={14} strokeWidth={2} />,
+                  onClick: handleDuplicate,
+                },
+                {
+                  label: "Exportar",
+                  icon: <Download size={14} strokeWidth={2} />,
+                  onClick: () => openModal("export-project"),
+                },
+                project.status === "Archivado"
+                  ? {
+                      label: "Desarchivar",
+                      icon: <ArchiveRestore size={14} strokeWidth={2} />,
+                      onClick: handleUnarchive,
+                    }
+                  : {
+                      label: "Archivar",
+                      icon: <Archive size={14} strokeWidth={2} />,
+                      onClick: handleArchive,
+                    },
+                {
+                  label: "Eliminar",
+                  icon: <Trash2 size={14} strokeWidth={2} />,
+                  onClick: () => setConfirmDelete(true),
+                  variant: "danger",
+                },
+              ] as DropdownMenuItem[]}
+            />
           </div>
         </div>
 
@@ -617,9 +632,11 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
                   </span>
                 ))}
                 {project.stack.length > 4 && (
-                  <span className="text-[10px] text-text-tertiary">
-                    +{project.stack.length - 4} más
-                  </span>
+                  <Tooltip content={project.stack.slice(4).join(', ')} position="top">
+                    <span className="cursor-default text-[10px] text-text-tertiary">
+                      +{project.stack.length - 4} más
+                    </span>
+                  </Tooltip>
                 )}
               </div>
             </>

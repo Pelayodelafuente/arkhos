@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
+import { Tooltip } from '@/components/ui';
 import { useCanvasStore } from '@/stores/canvas-store';
 import { useProjectsStore } from '@/stores/projects-store';
 import type { ProjectListItem } from '@/types/projects';
@@ -24,7 +25,7 @@ function getStatusColor(status: string): string {
   return map[status] ?? '#9a7a5a';
 }
 
-function ProjectFolder({ logoUrl, isHovered }: { logoUrl: string | null; isHovered: boolean }) {
+function ProjectFolder({ logoUrl, isHovered, color }: { logoUrl: string | null; isHovered: boolean; color?: string }) {
   if (logoUrl) {
     return (
       /* eslint-disable-next-line @next/next/no-img-element */
@@ -42,13 +43,14 @@ function ProjectFolder({ logoUrl, isHovered }: { logoUrl: string | null; isHover
     );
   }
 
+  const folderColor = color ?? '#C4704A';
   return (
     <div
       style={{
         width: 40,
         height: 32,
         borderRadius: 5,
-        background: '#C4704A',
+        background: folderColor,
         position: 'relative',
         transition: 'transform 0.2s ease',
         transform: isHovered ? 'translateX(-2px) rotate(-5deg)' : undefined,
@@ -62,7 +64,7 @@ function ProjectFolder({ logoUrl, isHovered }: { logoUrl: string | null; isHover
           left: 3,
           width: 13,
           height: 7,
-          background: '#C4704A',
+          background: folderColor,
           borderRadius: '3px 3px 0 0',
           opacity: 0.72,
         }}
@@ -108,36 +110,39 @@ function ProjectCard({
       }}
     >
       <div style={{ opacity: isActive ? 1 : 0.35 }}>
-        <ProjectFolder logoUrl={project.logo_url} isHovered={hovered} />
+        <ProjectFolder logoUrl={project.logo_url} isHovered={hovered} color={statusColor} />
       </div>
-      <span
-        className="font-sans font-medium leading-tight"
-        title={project.name}
-        style={{
-          fontSize: 9,
-          color: 'var(--text-secondary)',
-          textAlign: 'center',
-          lineHeight: 1.2,
-          maxWidth: 70,
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-        }}
-      >
-        {project.name}
-      </span>
-      {/* Status dot */}
-      <div
-        style={{
-          width: 6,
-          height: 6,
-          borderRadius: '50%',
-          background: statusColor,
-          opacity: 0.85,
-          flexShrink: 0,
-        }}
-        title={project.status}
-      />
+      <Tooltip content={project.name} position="bottom">
+        <span
+          className="font-sans font-medium leading-tight"
+          style={{
+            fontSize: 9,
+            color: 'var(--text-secondary)',
+            textAlign: 'center',
+            lineHeight: 1.2,
+            maxWidth: 70,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            display: 'block',
+          }}
+        >
+          {project.name}
+        </span>
+      </Tooltip>
+      {/* Status dot with tooltip */}
+      <Tooltip content={project.status} position="bottom">
+        <div
+          style={{
+            width: 6,
+            height: 6,
+            borderRadius: '50%',
+            background: statusColor,
+            opacity: 0.85,
+            flexShrink: 0,
+          }}
+        />
+      </Tooltip>
     </button>
   );
 }
@@ -201,6 +206,20 @@ export function WindowProjects({ userId }: WindowProjectsProps) {
     const q = debouncedSearch.toLowerCase();
     return baseFiltered.filter((p) => p.name.toLowerCase().includes(q));
   }, [baseFiltered, debouncedSearch]);
+
+  // Auto-select first visible project when selected project is filtered out
+  useEffect(() => {
+    if (
+      selectedProjectId &&
+      filteredProjects.length > 0 &&
+      !filteredProjects.some((p) => p.id === selectedProjectId)
+    ) {
+      const firstId = filteredProjects[0].id;
+      setSelectedProjectId(firstId);
+      fetchProject(firstId);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filteredProjects]);
 
   const handleSelectProject = useCallback(
     (projectId: string) => {

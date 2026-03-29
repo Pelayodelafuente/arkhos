@@ -69,15 +69,22 @@ interface KanbanTask extends PhaseTask {
 function KanbanColumn({
   column,
   tasks,
+  allTasksForColumn,
   activeId,
   onOpenTask,
 }: {
   column: ColumnDef;
   tasks: KanbanTask[];
+  allTasksForColumn?: KanbanTask[];
   activeId: string | null;
   onOpenTask: (task: PhaseTask) => void;
 }) {
   const { isOver, setNodeRef } = useDroppable({ id: column.status });
+
+  // Calculate completion progress for this column
+  const total = tasks.length;
+  const done = tasks.filter((t) => t.done).length;
+  const progressPercent = total > 0 ? Math.round((done / total) * 100) : 0;
 
   return (
     <div
@@ -89,8 +96,20 @@ function KanbanColumn({
       {/* Header */}
       <div className="flex items-center justify-between mb-1 px-1">
         <h3 className="text-sm font-medium text-[--text-primary]">{column.label}</h3>
-        <span className="text-xs font-mono text-[--text-tertiary]">{tasks.length}</span>
+        <span className="text-xs font-mono text-[--text-tertiary]">{done}/{total}</span>
       </div>
+      {/* Progress bar */}
+      {total > 0 && (
+        <div className="h-0.5 w-full overflow-hidden rounded-full bg-border/40">
+          <div
+            className="h-full rounded-full transition-all duration-500"
+            style={{
+              width: `${progressPercent}%`,
+              background: column.status === 'done' ? '#056b63' : '#C4704A',
+            }}
+          />
+        </div>
+      )}
 
       {/* Scrollable task list */}
       <div className="overflow-y-auto max-h-[60vh] flex flex-col gap-3 pr-1">
@@ -441,6 +460,7 @@ export default function KanbanView({
               key={col.status}
               column={col}
               tasks={sortedTasksByStatus[col.status]}
+              allTasksForColumn={tasksByStatus[col.status]}
               activeId={activeDragId}
               onOpenTask={onOpenTask}
             />

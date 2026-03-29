@@ -27,7 +27,18 @@ function ToastItem({ toast }: { toast: Toast }) {
       >
         <Icon size={13} style={{ color }} strokeWidth={2} />
       </span>
-      <p className="flex-1 text-sm text-foreground">{toast.message}</p>
+      <div className="flex flex-1 flex-col gap-1 min-w-0">
+        <p className="text-sm text-foreground">{toast.message}</p>
+        {toast.action && (
+          <button
+            onClick={() => { toast.action!.onClick(); removeToast(toast.id); }}
+            className="self-start text-xs font-medium underline underline-offset-2 transition-opacity hover:opacity-70"
+            style={{ color }}
+          >
+            {toast.action.label}
+          </button>
+        )}
+      </div>
       <button
         onClick={() => removeToast(toast.id)}
         className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md text-text-tertiary transition-colors hover:text-foreground"

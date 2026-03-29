@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { useToast } from '@/stores/ui-store';
 import { TASK_PRIORITY_CONFIG, type TaskPriority } from '@/types/projects';
 
 interface FocusTask {
@@ -30,6 +31,13 @@ function isOverdue(date: string): boolean {
 export function WindowFocus({ userId }: WindowFocusProps) {
   const [tasks, setTasks] = useState<FocusTask[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filterProjectId, setFilterProjectId] = useState<string | null>(null);
+  const toast = useToast();
+
+  // Derive unique projects from tasks
+  const projectOptions = Array.from(
+    new Map(tasks.map((t) => [t.project_id, t.project_name])).entries()
+  );
 
   useEffect(() => {
     async function load() {
@@ -87,8 +95,23 @@ export function WindowFocus({ userId }: WindowFocusProps) {
 
   async function toggleDone(taskId: string) {
     const client = createClient();
-    await client.from('phase_tasks').update({ done: true }).eq('id', taskId);
+    // Optimistic removal with undo
+    const taskToUndo = tasks.find((t) => t.id === taskId);
     setTasks((prev) => prev.filter((t) => t.id !== taskId));
+    await client.from('phase_tasks').update({ done: true }).eq('id', taskId);
+    if (taskToUndo) {
+      toast.success('Tarea completada', {
+        label: 'Deshacer',
+        onClick: async () => {
+          await createClient().from('phase_tasks').update({ done: false }).eq('id', taskId);
+          setTasks((prev) => {
+            const exists = prev.some((t) => t.id === taskId);
+            if (exists) return prev;
+            return [{ ...taskToUndo, done: false }, ...prev];
+          });
+        },
+      });
+    }
   }
 
   if (loading) {
@@ -107,9 +130,47 @@ export function WindowFocus({ userId }: WindowFocusProps) {
     );
   }
 
+  const visibleTasks = filterProjectId
+    ? tasks.filter((t) => t.project_id === filterProjectId)
+    : tasks;
+
   return (
-    <div className="flex flex-col gap-[3px]" style={{ maxHeight: 280, overflowY: 'auto' }}>
-      {tasks.map((task) => {
+    <div className="flex flex-col gap-[6px]">
+      {/* Project filter pills */}
+      {projectOptions.length > 1 && (
+        <div className="flex flex-wrap gap-[4px]">
+          <button
+            type="button"
+            onClick={() => setFilterProjectId(null)}
+            className="rounded-[4px] px-[6px] py-[2px] font-sans text-[9px] font-medium transition-colors"
+            style={{
+              background: filterProjectId === null ? 'rgba(196,112,74,0.12)' : 'transparent',
+              color: filterProjectId === null ? '#C4704A' : 'var(--text-tertiary)',
+              border: filterProjectId === null ? '0.5px solid rgba(196,112,74,0.35)' : '0.5px solid var(--border-stone)',
+            }}
+          >
+            Todos
+          </button>
+          {projectOptions.map(([id, name]) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setFilterProjectId(filterProjectId === id ? null : id)}
+              className="max-w-[90px] truncate rounded-[4px] px-[6px] py-[2px] font-sans text-[9px] font-medium transition-colors"
+              style={{
+                background: filterProjectId === id ? 'rgba(196,112,74,0.12)' : 'transparent',
+                color: filterProjectId === id ? '#C4704A' : 'var(--text-tertiary)',
+                border: filterProjectId === id ? '0.5px solid rgba(196,112,74,0.35)' : '0.5px solid var(--border-stone)',
+              }}
+            >
+              {name}
+            </button>
+          ))}
+        </div>
+      )}
+
+    <div className="flex flex-col gap-[3px]" style={{ maxHeight: 250, overflowY: 'auto' }}>
+      {visibleTasks.map((task) => {
         const cfg = TASK_PRIORITY_CONFIG[task.priority];
         const overdue = task.due_date && isOverdue(task.due_date);
         return (
@@ -169,6 +230,7 @@ export function WindowFocus({ userId }: WindowFocusProps) {
           </div>
         );
       })}
+    </div>
     </div>
   );
 }

@@ -4,10 +4,16 @@ import { create } from "zustand";
 
 export type ToastVariant = "success" | "error" | "info";
 
+export interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
+
 export interface Toast {
   id: string;
   message: string;
   variant: ToastVariant;
+  action?: ToastAction;
 }
 
 // ─── Store ────────────────────────────
@@ -26,7 +32,7 @@ export interface UIStore {
 
   // Toasts
   toasts: Toast[];
-  addToast: (message: string, variant?: ToastVariant) => void;
+  addToast: (message: string, variant?: ToastVariant, action?: ToastAction) => void;
   removeToast: (id: string) => void;
 
   // Active modal
@@ -64,9 +70,9 @@ export const useUIStore = create<UIStore>((set) => ({
 
   // Toasts
   toasts: [],
-  addToast: (message, variant = "info") => {
+  addToast: (message, variant = "info", action?) => {
     const id = Math.random().toString(36).slice(2);
-    set((s) => ({ toasts: [...s.toasts, { id, message, variant }] }));
+    set((s) => ({ toasts: [...s.toasts, { id, message, variant, action }] }));
     setTimeout(() => {
       set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) }));
     }, 4000);
@@ -85,8 +91,8 @@ export const useUIStore = create<UIStore>((set) => ({
 export function useToast() {
   const addToast = useUIStore((s) => s.addToast);
   return {
-    success: (message: string) => addToast(message, "success"),
-    error: (message: string) => addToast(message, "error"),
-    info: (message: string) => addToast(message, "info"),
+    success: (message: string, action?: ToastAction) => addToast(message, "success", action),
+    error: (message: string, action?: ToastAction) => addToast(message, "error", action),
+    info: (message: string, action?: ToastAction) => addToast(message, "info", action),
   };
 }

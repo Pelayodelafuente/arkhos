@@ -33,10 +33,11 @@ interface ModalProps {
   onClose: () => void;
   title?: string;
   children: ReactNode;
+  footer?: ReactNode;
   className?: string;
 }
 
-export function Modal({ open, onClose, title, children, className = "" }: ModalProps) {
+export function Modal({ open, onClose, title, children, footer, className = "" }: ModalProps) {
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -49,7 +50,7 @@ export function Modal({ open, onClose, title, children, className = "" }: ModalP
   return (
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto p-4 pt-8">
           {/* Overlay */}
           <motion.div
             variants={overlayVariants}
@@ -65,7 +66,7 @@ export function Modal({ open, onClose, title, children, className = "" }: ModalP
             initial="hidden"
             animate="visible"
             exit="exit"
-            className={`relative z-[61] w-full max-w-md overflow-hidden rounded-2xl bg-card p-6 ${className}`}
+            className={`relative z-[61] my-auto w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-card ${className}`}
             style={{ boxShadow: "var(--shadow-modal)" }}
           >
             {/* Decorative top line */}
@@ -78,10 +79,11 @@ export function Modal({ open, onClose, title, children, className = "" }: ModalP
                 height: 1,
                 background: 'linear-gradient(90deg, transparent, var(--accent-terracotta), transparent)',
                 opacity: 0.6,
+                zIndex: 1,
               }}
             />
             {title && (
-              <div className="mb-5 flex items-start justify-between gap-4">
+              <div className="sticky top-0 z-10 flex flex-shrink-0 items-start justify-between gap-4 border-b border-border bg-card px-6 pb-4 pt-6">
                 <h2 className="font-heading text-xl text-foreground">{title}</h2>
                 <button
                   onClick={onClose}
@@ -92,7 +94,14 @@ export function Modal({ open, onClose, title, children, className = "" }: ModalP
                 </button>
               </div>
             )}
-            {children}
+            <div className="flex-1 overflow-y-auto p-6">
+              {children}
+            </div>
+            {footer && (
+              <div className="flex-shrink-0 border-t border-border bg-card px-6 py-4">
+                {footer}
+              </div>
+            )}
           </motion.div>
         </div>
       )}

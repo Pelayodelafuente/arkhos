@@ -326,17 +326,28 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
 
     // Optimistic
     const prevPhases = active.phases;
-    set({
-      activeProject: {
-        ...active,
-        phases: active.phases.map((p) => ({
-          ...p,
-          tasks: p.tasks.map((t) =>
-            t.id === taskId ? { ...t, ...input } : t
-          ),
-        })),
-      },
+
+    // If done/status is being changed, recalculate phase status too
+    const updatedPhases = active.phases.map((p) => {
+      const updatedTasks = p.tasks.map((t) =>
+        t.id === taskId ? { ...t, ...input } : t
+      );
+      const taskChanged = p.tasks.some((t) => t.id === taskId);
+      if (!taskChanged || (input.done === undefined && input.status === undefined)) {
+        return { ...p, tasks: updatedTasks };
+      }
+      const total = updatedTasks.length;
+      const doneCount = updatedTasks.filter((t) => t.done).length;
+      let phaseStatus: import('@/types/projects').PhaseStatus = p.status;
+      if (total > 0) {
+        if (doneCount === total) phaseStatus = 'done';
+        else if (doneCount > 0) phaseStatus = 'in-progress';
+        else phaseStatus = 'pending';
+      }
+      return { ...p, tasks: updatedTasks, status: phaseStatus };
     });
+
+    set({ activeProject: { ...active, phases: updatedPhases } });
 
     try {
       const client = createClient();
@@ -501,17 +512,28 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
 
     const prevPhases = active.phases;
     const done = newStatus === 'done';
-    set({
-      activeProject: {
-        ...active,
-        phases: active.phases.map((p) => ({
-          ...p,
-          tasks: p.tasks.map((t) =>
-            t.id === taskId ? { ...t, status: newStatus, done } : t
-          ),
-        })),
-      },
+
+    // Update task and auto-recalculate phase status
+    const updatedPhases = active.phases.map((p) => {
+      const updatedTasks = p.tasks.map((t) =>
+        t.id === taskId ? { ...t, status: newStatus, done } : t
+      );
+      const taskChanged = updatedTasks.some((t) => t.id === taskId);
+      if (!taskChanged) return p;
+
+      // Recalculate phase status based on tasks
+      const total = updatedTasks.length;
+      const doneCount = updatedTasks.filter((t) => t.done).length;
+      let phaseStatus: import('@/types/projects').PhaseStatus = p.status;
+      if (total > 0) {
+        if (doneCount === total) phaseStatus = 'done';
+        else if (doneCount > 0) phaseStatus = 'in-progress';
+        else phaseStatus = 'pending';
+      }
+      return { ...p, tasks: updatedTasks, status: phaseStatus };
     });
+
+    set({ activeProject: { ...active, phases: updatedPhases } });
 
     try {
       const client = createClient();
@@ -830,7 +852,7 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
       set((s) => ({ projects: [listItem, ...s.projects] }));
 
       logActivity(client, userId, 'proyectos', 'project_duplicated', newProject.name, `project:${newProject.id}`);
-      toast('Proyecto duplicado', 'success');
+      toast(`"${active.name}" duplicado`, 'success');
       return newProject.id;
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Error al duplicar proyecto';

@@ -64,7 +64,7 @@ function TaskRow({ task, onOpen }: { task: PhaseTask; onOpen: (t: PhaseTask) => 
       {/* Checkbox */}
       <button
         type="button"
-        onClick={() => editTask(task.id, { done: !task.done })}
+        onClick={() => editTask(task.id, { done: !task.done, status: !task.done ? 'done' : 'todo' })}
         className="flex h-[14px] w-[14px] shrink-0 items-center justify-center rounded-[3px] border transition-colors duration-150"
         style={{
           borderColor: task.done ? '#056b63' : 'rgba(160,120,80,0.35)',

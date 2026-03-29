@@ -261,8 +261,18 @@ export function ProjectModal({
       onClose={closeModal}
       title={isEditing ? "Editar proyecto" : "Nuevo proyecto"}
       className="max-w-lg"
+      footer={
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="secondary" size="sm" onClick={closeModal}>
+            Cancelar
+          </Button>
+          <Button type="submit" form="project-modal-form" size="sm" loading={saving}>
+            {isEditing ? "Guardar" : "Crear proyecto"}
+          </Button>
+        </div>
+      }
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form id="project-modal-form" onSubmit={handleSubmit} className="space-y-4">
         {/* Preview */}
         <div className="flex items-center gap-3 rounded-lg border border-border bg-sand/40 p-3">
           {logoUrl ? (
@@ -482,15 +492,6 @@ export function ProjectModal({
           />
         </div>
 
-        {/* Actions */}
-        <div className="flex justify-end gap-2 pt-2">
-          <Button type="button" variant="secondary" size="sm" onClick={closeModal}>
-            Cancelar
-          </Button>
-          <Button type="submit" size="sm" loading={saving}>
-            {isEditing ? "Guardar" : "Crear proyecto"}
-          </Button>
-        </div>
       </form>
     </Modal>
   );

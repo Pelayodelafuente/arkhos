@@ -24,3 +24,6 @@ export { Progress } from "./progress";
 
 export { ArkhosIcon } from "./arkhos-icon";
 export { ArkhosLogo } from "./arkhos-logo";
+
+export { DropdownMenu } from "./dropdown-menu";
+export type { DropdownMenuItem } from "./dropdown-menu";
