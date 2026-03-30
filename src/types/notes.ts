@@ -33,8 +33,36 @@ export interface Note {
   word_count: number
   tags: string[]
   sort_order: number
+  folder_id?: string | null
+  archived?: boolean
+  favorited?: boolean
   created_at: string
   updated_at: string
+}
+
+// ─── Folders ────────────────────────
+
+export interface NoteFolder {
+  id: string
+  user_id: string
+  name: string
+  icon: string        // nombre icono Lucide
+  color: NoteColor
+  sort_order: number
+  created_at: string
+  updated_at: string
+}
+
+// ─── Versions ────────────────────────
+
+export interface NoteVersion {
+  id: string
+  note_id: string
+  user_id: string
+  title: string
+  content: string
+  version_number: number
+  created_at: string
 }
 
 export interface NoteFormData {

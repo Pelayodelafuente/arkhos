@@ -18,6 +18,7 @@ import type {
   HistoryEntry,
   EdgeSide,
   EdgeColor,
+  NoteFolder,
 } from '@/types/notes'
 import { CANVAS_BOUNDS } from '@/types/notes'
 import * as notesApi from '@/lib/supabase/notes'
@@ -103,6 +104,14 @@ interface NotesState {
 
   // Canvas search
   canvasSearchQuery: string
+
+  // Folders
+  folders: NoteFolder[]
+  activeFolderId: string | null  // null = todas, 'archived' = archivo, 'favorites' = favoritas, 'no-folder' = sin carpeta
+
+  // Note multi-select (list view)
+  selectedNoteIds: Set<string>
+  isSelectionMode: boolean
 }
 
 interface NotesActions {
@@ -198,6 +207,30 @@ interface NotesActions {
 
   // Auto-layout
   autoLayoutNodes: () => void
+
+  // Folders
+  fetchFolders: (userId: string) => Promise<void>
+  addFolder: (userId: string, data: Pick<NoteFolder, 'name' | 'icon' | 'color'>) => Promise<void>
+  editFolder: (id: string, data: Partial<Pick<NoteFolder, 'name' | 'icon' | 'color'>>) => Promise<void>
+  removeFolder: (id: string) => Promise<void>
+  moveNoteToFolder: (noteId: string, folderId: string | null) => Promise<void>
+  setActiveFolderId: (id: string | null) => void
+
+  // Archive
+  archiveNote: (noteId: string) => Promise<void>
+  unarchiveNote: (noteId: string) => Promise<void>
+
+  // Favorites
+  toggleFavorite: (noteId: string) => Promise<void>
+
+  // Note multi-select
+  toggleNoteSelection: (noteId: string) => void
+  selectAllNotes: () => void
+  clearSelection: () => void
+  setSelectionMode: (v: boolean) => void
+  bulkArchive: () => Promise<void>
+  bulkDelete: () => Promise<void>
+  bulkMove: (folderId: string | null) => Promise<void>
 }
 
 type NotesStore = NotesState & NotesActions
@@ -228,6 +261,10 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
   historyIndex: -1,
   clipboard: null,
   canvasSearchQuery: '',
+  folders: [],
+  activeFolderId: null,
+  selectedNoteIds: new Set<string>(),
+  isSelectionMode: false,
 
   // ── Fetch ───────────────────────────
 
@@ -1109,6 +1146,239 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
 
     notesApi.batchUpdateNodePositions(updates).catch(console.error)
   },
+
+  // ── Folders ───────────────────────
+
+  fetchFolders: async (userId) => {
+    try {
+      const folders = await notesApi.getFolders(userId)
+      set({ folders })
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Error al cargar las carpetas'
+      toast(msg, 'error')
+    }
+  },
+
+  addFolder: async (userId, data) => {
+    try {
+      const folder = await notesApi.createFolder(userId, data)
+      set((s) => ({ folders: [...s.folders, folder] }))
+      toast('Carpeta creada', 'success')
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Error al crear la carpeta'
+      toast(msg, 'error')
+    }
+  },
+
+  editFolder: async (id, data) => {
+    const prev = get().folders
+    set((s) => ({
+      folders: s.folders.map((f) => (f.id === id ? { ...f, ...data } : f)),
+    }))
+    try {
+      await notesApi.updateFolder(id, data)
+    } catch (e) {
+      set({ folders: prev })
+      const msg = e instanceof Error ? e.message : 'Error al editar la carpeta'
+      toast(msg, 'error')
+    }
+  },
+
+  removeFolder: async (id) => {
+    const prev = get().folders
+    set((s) => ({ folders: s.folders.filter((f) => f.id !== id) }))
+    // If removed folder was active, reset to all
+    if (get().activeFolderId === id) {
+      set({ activeFolderId: null })
+    }
+    try {
+      await notesApi.deleteFolder(id)
+      // Notes' folder_id set to null by DB cascade; update local state
+      set((s) => ({
+        notes: s.notes.map((n) => (n.folder_id === id ? { ...n, folder_id: null } : n)),
+      }))
+      toast('Carpeta eliminada', 'success')
+    } catch (e) {
+      set({ folders: prev })
+      const msg = e instanceof Error ? e.message : 'Error al eliminar la carpeta'
+      toast(msg, 'error')
+    }
+  },
+
+  moveNoteToFolder: async (noteId, folderId) => {
+    const prev = get().notes
+    set((s) => ({
+      notes: s.notes.map((n) => (n.id === noteId ? { ...n, folder_id: folderId } : n)),
+    }))
+    try {
+      await notesApi.moveNoteToFolder(noteId, folderId)
+    } catch (e) {
+      set({ notes: prev })
+      const msg = e instanceof Error ? e.message : 'Error al mover la nota'
+      toast(msg, 'error')
+    }
+  },
+
+  setActiveFolderId: (id) => set({ activeFolderId: id }),
+
+  // ── Archive ───────────────────────
+
+  archiveNote: async (noteId) => {
+    const prev = get().notes
+    set((s) => ({
+      notes: s.notes.map((n) => (n.id === noteId ? { ...n, archived: true } : n)),
+    }))
+    try {
+      await notesApi.archiveNote(noteId, true)
+      toast('Nota archivada', 'success')
+    } catch (e) {
+      set({ notes: prev })
+      const msg = e instanceof Error ? e.message : 'Error al archivar la nota'
+      toast(msg, 'error')
+    }
+  },
+
+  unarchiveNote: async (noteId) => {
+    const prev = get().notes
+    set((s) => ({
+      notes: s.notes.map((n) => (n.id === noteId ? { ...n, archived: false } : n)),
+    }))
+    try {
+      await notesApi.archiveNote(noteId, false)
+      toast('Nota restaurada', 'success')
+    } catch (e) {
+      set({ notes: prev })
+      const msg = e instanceof Error ? e.message : 'Error al restaurar la nota'
+      toast(msg, 'error')
+    }
+  },
+
+  // ── Favorites ─────────────────────
+
+  toggleFavorite: async (noteId) => {
+    const note = get().notes.find((n) => n.id === noteId)
+    if (!note) return
+    const newFavorited = !note.favorited
+    set((s) => ({
+      notes: s.notes.map((n) => (n.id === noteId ? { ...n, favorited: newFavorited } : n)),
+    }))
+    try {
+      await notesApi.toggleFavorite(noteId, newFavorited)
+    } catch (e) {
+      set((s) => ({
+        notes: s.notes.map((n) => (n.id === noteId ? { ...n, favorited: !newFavorited } : n)),
+      }))
+      const msg = e instanceof Error ? e.message : 'Error al actualizar favorito'
+      toast(msg, 'error')
+    }
+  },
+
+  // ── Note multi-select ─────────────
+
+  toggleNoteSelection: (noteId) => {
+    set((s) => {
+      const next = new Set(s.selectedNoteIds)
+      if (next.has(noteId)) next.delete(noteId)
+      else next.add(noteId)
+      return { selectedNoteIds: next }
+    })
+  },
+
+  selectAllNotes: () => {
+    const { notes, activeFolderId, searchQuery, activeTag } = get()
+    // Select all currently visible notes
+    let visible = notes.filter((n) => !n.archived)
+    if (activeFolderId === 'archived') visible = notes.filter((n) => n.archived)
+    else if (activeFolderId === 'favorites') visible = notes.filter((n) => n.favorited && !n.archived)
+    else if (activeFolderId === 'no-folder') visible = notes.filter((n) => !n.folder_id && !n.archived)
+    else if (activeFolderId) visible = notes.filter((n) => n.folder_id === activeFolderId && !n.archived)
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase()
+      visible = visible.filter((n) =>
+        n.title.toLowerCase().includes(q) ||
+        n.content.toLowerCase().includes(q) ||
+        n.tags.some((t) => t.toLowerCase().includes(q))
+      )
+    }
+    if (activeTag) visible = visible.filter((n) => n.tags.includes(activeTag))
+    set({ selectedNoteIds: new Set(visible.map((n) => n.id)) })
+  },
+
+  clearSelection: () => set({ selectedNoteIds: new Set<string>(), isSelectionMode: false }),
+
+  setSelectionMode: (v) => {
+    set({ isSelectionMode: v })
+    if (!v) set({ selectedNoteIds: new Set<string>() })
+  },
+
+  bulkArchive: async () => {
+    const { selectedNoteIds } = get()
+    if (selectedNoteIds.size === 0) return
+    const ids = Array.from(selectedNoteIds)
+    const prev = get().notes
+    set((s) => ({
+      notes: s.notes.map((n) => (ids.includes(n.id) ? { ...n, archived: true } : n)),
+      selectedNoteIds: new Set<string>(),
+      isSelectionMode: false,
+    }))
+    try {
+      await Promise.all(ids.map((id) => notesApi.archiveNote(id, true)))
+      toast(`${ids.length} nota${ids.length !== 1 ? 's' : ''} archivada${ids.length !== 1 ? 's' : ''}`, 'success')
+    } catch (e) {
+      set({ notes: prev })
+      const msg = e instanceof Error ? e.message : 'Error al archivar las notas'
+      toast(msg, 'error')
+    }
+  },
+
+  bulkDelete: async () => {
+    const { selectedNoteIds } = get()
+    if (selectedNoteIds.size === 0) return
+    const ids = Array.from(selectedNoteIds)
+    const prev = get().notes
+    const prevNodes = get().canvasNodes
+    const prevEdges = get().canvasEdges
+    set((s) => ({
+      notes: s.notes.filter((n) => !ids.includes(n.id)),
+      canvasNodes: s.canvasNodes.filter((cn) => !cn.note_id || !ids.includes(cn.note_id)),
+      canvasEdges: s.canvasEdges.filter((e) => {
+        const removedNodeIds = new Set(
+          prevNodes.filter((cn) => cn.note_id && ids.includes(cn.note_id)).map((cn) => cn.id)
+        )
+        return !removedNodeIds.has(e.from_node_id) && !removedNodeIds.has(e.to_node_id)
+      }),
+      selectedNoteIds: new Set<string>(),
+      isSelectionMode: false,
+    }))
+    try {
+      await Promise.all(ids.map((id) => notesApi.deleteNote(id)))
+      toast(`${ids.length} nota${ids.length !== 1 ? 's' : ''} eliminada${ids.length !== 1 ? 's' : ''}`, 'success')
+    } catch (e) {
+      set({ notes: prev, canvasNodes: prevNodes, canvasEdges: prevEdges })
+      const msg = e instanceof Error ? e.message : 'Error al eliminar las notas'
+      toast(msg, 'error')
+    }
+  },
+
+  bulkMove: async (folderId) => {
+    const { selectedNoteIds } = get()
+    if (selectedNoteIds.size === 0) return
+    const ids = Array.from(selectedNoteIds)
+    const prev = get().notes
+    set((s) => ({
+      notes: s.notes.map((n) => (ids.includes(n.id) ? { ...n, folder_id: folderId } : n)),
+      selectedNoteIds: new Set<string>(),
+      isSelectionMode: false,
+    }))
+    try {
+      await Promise.all(ids.map((id) => notesApi.moveNoteToFolder(id, folderId)))
+      toast(`${ids.length} nota${ids.length !== 1 ? 's' : ''} movida${ids.length !== 1 ? 's' : ''}`, 'success')
+    } catch (e) {
+      set({ notes: prev })
+      const msg = e instanceof Error ? e.message : 'Error al mover las notas'
+      toast(msg, 'error')
+    }
+  },
 }))
 
 // ══════════════════════════════════════
@@ -1124,8 +1394,23 @@ export function useFilteredNotes(): Note[] {
   const searchQuery = useNotesStore((s) => s.searchQuery)
   const activeTag = useNotesStore((s) => s.activeTag)
   const sortMode = useNotesStore((s) => s.sortMode)
+  const activeFolderId = useNotesStore((s) => s.activeFolderId)
 
-  let result = [...notes]
+  let result: Note[]
+
+  // Filter by folder/view
+  if (activeFolderId === 'archived') {
+    result = notes.filter((n) => n.archived)
+  } else if (activeFolderId === 'favorites') {
+    result = notes.filter((n) => n.favorited && !n.archived)
+  } else if (activeFolderId === 'no-folder') {
+    result = notes.filter((n) => !n.folder_id && !n.archived)
+  } else if (activeFolderId) {
+    result = notes.filter((n) => n.folder_id === activeFolderId && !n.archived)
+  } else {
+    // null = all non-archived
+    result = notes.filter((n) => !n.archived)
+  }
 
   if (searchQuery) {
     const q = searchQuery.toLowerCase()

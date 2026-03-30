@@ -7,6 +7,7 @@ import { useNotesStore } from "@/stores/notes-store"
 import { NotesToolbar } from "./NotesToolbar"
 import { NotesList } from "./NotesList"
 import { NoteModal } from "./NoteModal"
+import { NotesSidebar } from "./NotesSidebar"
 import { NotesCanvas } from "./canvas/NotesCanvas"
 import type { Note, NoteCanvas } from "@/types/notes"
 
@@ -111,7 +112,12 @@ export function NotesView({ initialNotes, initialCanvas, userId }: Props) {
   }, [handleNew])
 
   return (
-    <div>
+    <div className="flex h-full -mx-6 -mt-6">
+      {/* Folder sidebar */}
+      <NotesSidebar userId={userId} />
+
+      {/* Main content */}
+      <div className="flex-1 min-w-0 flex flex-col overflow-y-auto px-6 pt-6">
       {/* Header */}
       <div className="mb-6 animate-fade-in-up">
         <div className="flex items-center justify-between">
@@ -180,6 +186,7 @@ export function NotesView({ initialNotes, initialCanvas, userId }: Props) {
         userId={userId}
         note={editingNote}
       />
+      </div>
     </div>
   )
 }

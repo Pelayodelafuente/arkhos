@@ -12,6 +12,8 @@ import type {
   CanvasEdge,
   EdgeSide,
   EdgeColor,
+  NoteFolder,
+  NoteVersion,
 } from '@/types/notes'
 
 // ─── Client factory ───────────────────
@@ -611,4 +613,123 @@ export async function exportCanvasToJSON(canvasId: string): Promise<string> {
     })),
   }
   return JSON.stringify(exportData, null, 2)
+}
+
+// ══════════════════════════════════════
+// FOLDERS
+// ══════════════════════════════════════
+
+export async function getFolders(userId: string): Promise<NoteFolder[]> {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from('note_folders')
+    .select('*')
+    .eq('user_id', userId)
+    .order('sort_order', { ascending: true })
+  if (error) throw new NotesError('Error fetching folders', error.message)
+  return (data ?? []) as NoteFolder[]
+}
+
+export async function createFolder(
+  userId: string,
+  data: Pick<NoteFolder, 'name' | 'icon' | 'color'>
+): Promise<NoteFolder> {
+  const supabase = createClient()
+  const { data: folder, error } = await supabase
+    .from('note_folders')
+    .insert({ user_id: userId, ...data })
+    .select()
+    .single()
+  if (error) throw new NotesError('Error creating folder', error.message)
+  if (!folder) throw new NotesError('Error creating folder: no data returned')
+  return folder as NoteFolder
+}
+
+export async function updateFolder(
+  id: string,
+  data: Partial<Pick<NoteFolder, 'name' | 'icon' | 'color' | 'sort_order'>>
+): Promise<void> {
+  const supabase = createClient()
+  const { error } = await supabase.from('note_folders').update(data).eq('id', id)
+  if (error) throw new NotesError('Error updating folder', error.message)
+}
+
+export async function deleteFolder(id: string): Promise<void> {
+  // Notes in this folder get folder_id = null (ON DELETE SET NULL)
+  const supabase = createClient()
+  const { error } = await supabase.from('note_folders').delete().eq('id', id)
+  if (error) throw new NotesError('Error deleting folder', error.message)
+}
+
+export async function moveNoteToFolder(noteId: string, folderId: string | null): Promise<void> {
+  const supabase = createClient()
+  const { error } = await supabase
+    .from('notes')
+    .update({ folder_id: folderId })
+    .eq('id', noteId)
+  if (error) throw new NotesError('Error moving note to folder', error.message)
+}
+
+export async function archiveNote(noteId: string, archived: boolean): Promise<void> {
+  const supabase = createClient()
+  const { error } = await supabase
+    .from('notes')
+    .update({ archived })
+    .eq('id', noteId)
+  if (error) throw new NotesError('Error archiving note', error.message)
+}
+
+export async function toggleFavorite(noteId: string, favorited: boolean): Promise<void> {
+  const supabase = createClient()
+  const { error } = await supabase
+    .from('notes')
+    .update({ favorited })
+    .eq('id', noteId)
+  if (error) throw new NotesError('Error toggling favorite', error.message)
+}
+
+// ══════════════════════════════════════
+// VERSIONS
+// ══════════════════════════════════════
+
+export async function saveNoteVersion(
+  noteId: string,
+  userId: string,
+  title: string,
+  content: string
+): Promise<void> {
+  const supabase = createClient()
+  // Get current max version_number
+  const { data: latest } = await supabase
+    .from('note_versions')
+    .select('version_number')
+    .eq('note_id', noteId)
+    .order('version_number', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  const nextVersion = (latest?.version_number ?? 0) + 1
+  await supabase
+    .from('note_versions')
+    .insert({ note_id: noteId, user_id: userId, title, content, version_number: nextVersion })
+  // Keep only last 20 versions
+  const { data: allVersions } = await supabase
+    .from('note_versions')
+    .select('id')
+    .eq('note_id', noteId)
+    .order('version_number', { ascending: true })
+  if (allVersions && allVersions.length > 20) {
+    const toDelete = allVersions.slice(0, allVersions.length - 20).map((v) => v.id)
+    await supabase.from('note_versions').delete().in('id', toDelete)
+  }
+}
+
+export async function getNoteVersions(noteId: string): Promise<NoteVersion[]> {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from('note_versions')
+    .select('*')
+    .eq('note_id', noteId)
+    .order('version_number', { ascending: false })
+  if (error) throw new NotesError('Error fetching note versions', error.message)
+  return (data ?? []) as NoteVersion[]
 }

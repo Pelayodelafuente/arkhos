@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, type ReactNode } from "react"
-import { Pin, MoreHorizontal, Pencil, Trash2, Layout } from "lucide-react"
+import { Pin, Star, MoreHorizontal, Pencil, Trash2, Layout, Square, CheckSquare } from "lucide-react"
 import * as LucideIcons from "lucide-react"
 import type { Note } from "@/types/notes"
 import { NOTE_COLORS } from "./NoteColorPicker"
@@ -11,11 +11,15 @@ interface Props {
   onEdit: (note: Note) => void
   onDelete: (id: string) => void
   onTogglePin: (id: string) => void
+  onToggleFavorite?: (id: string) => void
   onAddToCanvas?: (id: string) => void
   searchQuery?: string
+  isSelected?: boolean
+  isSelectionMode?: boolean
+  onToggleSelect?: (id: string) => void
 }
 
-export function NoteCard({ note, onEdit, onDelete, onTogglePin, onAddToCanvas, searchQuery }: Props) {
+export function NoteCard({ note, onEdit, onDelete, onTogglePin, onToggleFavorite, onAddToCanvas, searchQuery, isSelected, isSelectionMode, onToggleSelect }: Props) {
   const [menuOpen, setMenuOpen] = useState(false)
   const colorConfig = NOTE_COLORS.find((c) => c.value === note.color) ?? NOTE_COLORS[0]
 
@@ -41,15 +45,42 @@ export function NoteCard({ note, onEdit, onDelete, onTogglePin, onAddToCanvas, s
         backgroundColor: colorConfig.bg,
         borderColor: colorConfig.border + '40',
       }}
-      onClick={() => onEdit(note)}
+      onClick={() => isSelectionMode ? onToggleSelect?.(note.id) : onEdit(note)}
     >
       <div className="p-4">
         {/* Header */}
         <div className="flex items-start gap-2 mb-2">
+          {/* Selection checkbox */}
+          {isSelectionMode && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onToggleSelect?.(note.id) }}
+              className="flex-shrink-0 mt-0.5 text-text-tertiary hover:text-accent transition-colors"
+            >
+              {isSelected
+                ? <CheckSquare size={15} strokeWidth={1.75} className="text-accent" />
+                : <Square size={15} strokeWidth={1.75} />}
+            </button>
+          )}
           <IconComponent size={16} strokeWidth={1.75} className="text-text-secondary mt-0.5 flex-shrink-0" />
           <h3 className="flex-1 font-heading text-[15px] text-foreground leading-snug line-clamp-2">
             {searchQuery ? highlightText(note.title, searchQuery) : note.title}
           </h3>
+          {/* Favorite toggle */}
+          {onToggleFavorite && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onToggleFavorite(note.id) }}
+              className={`flex-shrink-0 mt-0.5 rounded transition-colors ${
+                note.favorited
+                  ? "text-amber-400"
+                  : "text-text-tertiary/40 opacity-0 group-hover:opacity-100 hover:text-amber-400"
+              }`}
+              title={note.favorited ? "Quitar de favoritas" : "Añadir a favoritas"}
+            >
+              <Star size={12} strokeWidth={2} className={note.favorited ? "fill-amber-400" : ""} />
+            </button>
+          )}
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); onTogglePin(note.id) }}

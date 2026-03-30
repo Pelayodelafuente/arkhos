@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Trash2, Maximize2, Minimize2 } from "lucide-react"
+import { Trash2, Maximize2, Minimize2, Archive, History, X, RotateCcw } from "lucide-react"
 import * as LucideIcons from "lucide-react"
 import { Modal, Button } from "@/components/ui"
 import { useNotesStore, useAllTags } from "@/stores/notes-store"
@@ -9,7 +9,8 @@ import { useToast } from "@/stores/ui-store"
 import { NoteColorPicker } from "./NoteColorPicker"
 import { TagInput } from "./TagInput"
 import { NoteEditor } from "./NoteEditor"
-import type { Note, NoteColor } from "@/types/notes"
+import type { Note, NoteColor, NoteVersion } from "@/types/notes"
+import * as notesApi from "@/lib/supabase/notes"
 
 // Common icons for notes
 const NOTE_ICONS = [
@@ -29,6 +30,7 @@ export function NoteModal({ open, onClose, userId, note }: Props) {
   const addNote = useNotesStore((s) => s.addNote)
   const editNote = useNotesStore((s) => s.editNote)
   const removeNote = useNotesStore((s) => s.removeNote)
+  const archiveNote = useNotesStore((s) => s.archiveNote)
   const allTags = useAllTags()
   const toast = useToast()
 
@@ -43,6 +45,12 @@ export function NoteModal({ open, onClose, userId, note }: Props) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [showIcons, setShowIcons] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
+
+  // History panel
+  const [historyOpen, setHistoryOpen] = useState(false)
+  const [versions, setVersions] = useState<NoteVersion[]>([])
+  const [loadingVersions, setLoadingVersions] = useState(false)
+  const [selectedVersion, setSelectedVersion] = useState<NoteVersion | null>(null)
 
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const snapshotRef = useRef<{ title: string; content: string; color: NoteColor; icon: string; tags: string[] } | null>(null)
@@ -66,7 +74,21 @@ export function NoteModal({ open, onClose, userId, note }: Props) {
     }
     setConfirmDelete(false)
     setShowIcons(false)
+    setHistoryOpen(false)
+    setVersions([])
+    setSelectedVersion(null)
   }, [note, open])
+
+  // Load versions when history panel opens
+  useEffect(() => {
+    if (historyOpen && note) {
+      setLoadingVersions(true)
+      notesApi.getNoteVersions(note.id)
+        .then(setVersions)
+        .catch(() => toast.error('Error al cargar el historial'))
+        .finally(() => setLoadingVersions(false))
+    }
+  }, [historyOpen, note]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-save for existing notes (debounce 800ms) — only when there are real changes
   useEffect(() => {
@@ -103,6 +125,12 @@ export function NoteModal({ open, onClose, userId, note }: Props) {
         onClose()
         return
       }
+      // Save the PREVIOUS state as a version before overwriting
+      if (snap) {
+        notesApi.saveNoteVersion(note.id, userId, snap.title, snap.content).catch(() => {
+          // Non-blocking: version save failure is not critical
+        })
+      }
     }
     setSaving(true)
     try {
@@ -126,6 +154,19 @@ export function NoteModal({ open, onClose, userId, note }: Props) {
     onClose()
   }
 
+  const handleArchive = async () => {
+    if (!note) return
+    await archiveNote(note.id)
+    onClose()
+  }
+
+  const handleRestoreVersion = (version: NoteVersion) => {
+    setContent(version.content)
+    if (version.title) setTitle(version.title)
+    setHistoryOpen(false)
+    toast.success(`Versión ${version.version_number} restaurada`)
+  }
+
   const wordCount = content.replace(/<[^>]*>/g, ' ').trim().split(/\s+/).filter(Boolean).length
 
   const SelectedIcon = (LucideIcons as unknown as Record<string, LucideIcons.LucideIcon>)[icon] ?? LucideIcons.FileText
@@ -134,8 +175,8 @@ export function NoteModal({ open, onClose, userId, note }: Props) {
 
   return (
     <Modal open={open} onClose={onClose} className={modalSizeClass}>
-      <div className={`flex flex-col gap-4 ${isFullscreen ? 'h-full' : ''}`}>
-        {/* Title row with icon + fullscreen toggle */}
+      <div className={`flex flex-col gap-4 ${isFullscreen ? 'h-full' : ''} relative overflow-hidden`}>
+        {/* Title row with icon + history + fullscreen toggle */}
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -152,6 +193,21 @@ export function NoteModal({ open, onClose, userId, note }: Props) {
             className="flex-1 font-heading text-xl text-foreground bg-transparent outline-none placeholder:text-text-tertiary"
             autoFocus={!isEdit}
           />
+          {/* History button — edit mode only */}
+          {isEdit && (
+            <button
+              type="button"
+              onClick={() => setHistoryOpen((v) => !v)}
+              className={`flex h-7 w-7 items-center justify-center rounded-md transition-colors flex-shrink-0 ${
+                historyOpen
+                  ? "bg-sand text-text-secondary"
+                  : "text-text-tertiary hover:text-text-secondary hover:bg-sand/60"
+              }`}
+              title="Historial de versiones"
+            >
+              <History size={15} strokeWidth={1.75} />
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setIsFullscreen((v) => !v)}
@@ -207,10 +263,16 @@ export function NoteModal({ open, onClose, userId, note }: Props) {
               {wordCount} palabra{wordCount !== 1 ? 's' : ''}
             </span>
             {isEdit && (
-              <Button variant="danger" size="sm" onClick={handleDelete} loading={saving && confirmDelete}>
-                <Trash2 size={13} strokeWidth={1.75} />
-                {confirmDelete ? 'Confirmar' : 'Eliminar'}
-              </Button>
+              <>
+                <Button variant="ghost" size="sm" onClick={handleArchive}>
+                  <Archive size={13} strokeWidth={1.75} />
+                  Archivar
+                </Button>
+                <Button variant="danger" size="sm" onClick={handleDelete} loading={saving && confirmDelete}>
+                  <Trash2 size={13} strokeWidth={1.75} />
+                  {confirmDelete ? 'Confirmar' : 'Eliminar'}
+                </Button>
+              </>
             )}
           </div>
           <div className="flex items-center gap-3">
@@ -220,7 +282,88 @@ export function NoteModal({ open, onClose, userId, note }: Props) {
             </Button>
           </div>
         </div>
+
+        {/* History panel — slides from the right */}
+        {historyOpen && (
+          <div className="absolute top-0 right-0 bottom-0 w-64 bg-card border-l border-border flex flex-col z-10">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+              <span className="text-sm font-medium text-foreground">Historial</span>
+              <button
+                onClick={() => { setHistoryOpen(false); setSelectedVersion(null) }}
+                className="flex h-6 w-6 items-center justify-center rounded-md text-text-tertiary hover:text-text-secondary hover:bg-sand transition-colors"
+              >
+                <X size={13} strokeWidth={2} />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              {loadingVersions ? (
+                <div className="p-4 text-center text-sm text-text-tertiary">Cargando...</div>
+              ) : versions.length === 0 ? (
+                <div className="p-4 text-center text-sm text-text-tertiary">
+                  Sin versiones guardadas
+                </div>
+              ) : (
+                <div className="divide-y divide-border">
+                  {versions.map((version) => (
+                    <button
+                      key={version.id}
+                      onClick={() => setSelectedVersion(selectedVersion?.id === version.id ? null : version)}
+                      className={`w-full text-left px-4 py-2.5 transition-colors ${
+                        selectedVersion?.id === version.id
+                          ? "bg-sand"
+                          : "hover:bg-sand/50"
+                      }`}
+                    >
+                      <div className="text-[13px] font-medium text-foreground">
+                        Versión {version.version_number}
+                      </div>
+                      <div className="text-[11px] text-text-tertiary mt-0.5">
+                        {getRelativeTime(version.created_at)}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            {selectedVersion && (
+              <div className="border-t border-border p-3 space-y-2">
+                <div className="rounded-md border border-border bg-[#FAF7F2] p-2.5 max-h-32 overflow-y-auto">
+                  <p className="text-[12px] font-medium text-foreground mb-1">
+                    {selectedVersion.title || 'Sin título'}
+                  </p>
+                  <div
+                    className="text-[11px] text-text-secondary leading-relaxed line-clamp-4 tiptap-content"
+                    dangerouslySetInnerHTML={{
+                      __html: selectedVersion.content.replace(/<[^>]*>/g, ' ').trim().slice(0, 200),
+                    }}
+                  />
+                </div>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => handleRestoreVersion(selectedVersion)}
+                  className="w-full"
+                >
+                  <RotateCcw size={13} strokeWidth={1.75} />
+                  Restaurar versión {selectedVersion.version_number}
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </Modal>
   )
+}
+
+function getRelativeTime(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 1) return 'ahora'
+  if (mins < 60) return `hace ${mins}m`
+  const hours = Math.floor(mins / 60)
+  if (hours < 24) return `hace ${hours}h`
+  const days = Math.floor(hours / 24)
+  if (days < 7) return `hace ${days}d`
+  return new Date(dateStr).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
 }

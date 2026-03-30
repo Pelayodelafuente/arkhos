@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback } from "react"
-import { BookOpen, Plus, ArrowUpDown, GripVertical, Pin } from "lucide-react"
+import { BookOpen, Plus, ArrowUpDown, GripVertical, Pin, CheckSquare, Archive, Trash2, X } from "lucide-react"
 import { Button, Badge } from "@/components/ui"
 import { useFilteredNotes, useNotesStore } from "@/stores/notes-store"
 import type { NoteSortMode } from "@/stores/notes-store"
@@ -39,8 +39,12 @@ interface SortableNoteCardProps {
   onEdit: (note: Note) => void
   onDelete: (id: string) => void
   onTogglePin: (id: string) => void
+  onToggleFavorite: (id: string) => void
   onAddToCanvas: (id: string) => void
+  onToggleSelect: (id: string) => void
   searchQuery: string
+  isSelected: boolean
+  isSelectionMode: boolean
 }
 
 function SortableNoteCard({
@@ -50,8 +54,12 @@ function SortableNoteCard({
   onEdit,
   onDelete,
   onTogglePin,
+  onToggleFavorite,
   onAddToCanvas,
+  onToggleSelect,
   searchQuery,
+  isSelected,
+  isSelectionMode,
 }: SortableNoteCardProps) {
   const {
     attributes,
@@ -76,7 +84,7 @@ function SortableNoteCard({
       className={isManual ? "" : "animate-fade-in-up"}
     >
       <div className="relative">
-        {isManual && (
+        {isManual && !isSelectionMode && (
           <button
             {...attributes}
             {...listeners}
@@ -86,14 +94,18 @@ function SortableNoteCard({
             <GripVertical size={14} strokeWidth={1.5} />
           </button>
         )}
-        <div className={isManual ? "ml-5" : ""}>
+        <div className={isManual && !isSelectionMode ? "ml-5" : ""}>
           <NoteCard
             note={note}
             onEdit={onEdit}
             onDelete={onDelete}
             onTogglePin={onTogglePin}
+            onToggleFavorite={onToggleFavorite}
             onAddToCanvas={onAddToCanvas}
             searchQuery={searchQuery}
+            isSelected={isSelected}
+            isSelectionMode={isSelectionMode}
+            onToggleSelect={onToggleSelect}
           />
         </div>
       </div>
@@ -107,11 +119,21 @@ export function NotesList({ onEdit, onNew }: Props) {
   const notes = useFilteredNotes()
   const removeNote = useNotesStore((s) => s.removeNote)
   const togglePin = useNotesStore((s) => s.togglePin)
+  const toggleFavorite = useNotesStore((s) => s.toggleFavorite)
   const addNoteToCanvas = useNotesStore((s) => s.addNoteToCanvas)
   const searchQuery = useNotesStore((s) => s.searchQuery)
   const sortMode = useNotesStore((s) => s.sortMode)
   const setSortMode = useNotesStore((s) => s.setSortMode)
   const setNotes = useNotesStore((s) => s.setNotes)
+
+  const isSelectionMode = useNotesStore((s) => s.isSelectionMode)
+  const setSelectionMode = useNotesStore((s) => s.setSelectionMode)
+  const selectedNoteIds = useNotesStore((s) => s.selectedNoteIds)
+  const toggleNoteSelection = useNotesStore((s) => s.toggleNoteSelection)
+  const selectAllNotes = useNotesStore((s) => s.selectAllNotes)
+  const clearSelection = useNotesStore((s) => s.clearSelection)
+  const bulkArchive = useNotesStore((s) => s.bulkArchive)
+  const bulkDelete = useNotesStore((s) => s.bulkDelete)
 
   const handleAddToCanvas = async (noteId: string) => {
     await addNoteToCanvas(noteId, { x: 100, y: 100 })
@@ -129,21 +151,16 @@ export function NotesList({ onEdit, onNew }: Props) {
       const newIndex = allNotes.findIndex((n) => n.id === over.id)
       if (oldIndex === -1 || newIndex === -1) return
 
-      // Reorder
       const reordered = [...allNotes]
       const [moved] = reordered.splice(oldIndex, 1)
       reordered.splice(newIndex, 0, moved)
 
-      // Update sort_order on each note
       const updated = reordered.map((n, i) => ({ ...n, sort_order: i }))
       setNotes(updated)
 
-      // Persist sort_order changes — fire and forget
       for (const note of updated) {
         if (note.sort_order !== allNotes.find((n) => n.id === note.id)?.sort_order) {
-          useNotesStore.getState().editNote(note.id, { title: note.title }).catch(() => {
-            // editNote only accepts NoteFormData fields, so we use the API directly below
-          })
+          useNotesStore.getState().editNote(note.id, { title: note.title }).catch(() => {})
         }
       }
     },
@@ -192,8 +209,12 @@ export function NotesList({ onEdit, onNew }: Props) {
           onEdit={onEdit}
           onDelete={removeNote}
           onTogglePin={togglePin}
+          onToggleFavorite={toggleFavorite}
           onAddToCanvas={handleAddToCanvas}
+          onToggleSelect={toggleNoteSelection}
           searchQuery={searchQuery}
+          isSelected={selectedNoteIds.has(note.id)}
+          isSelectionMode={isSelectionMode}
         />
       ))}
     </div>
@@ -203,7 +224,6 @@ export function NotesList({ onEdit, onNew }: Props) {
 
   const content = (
     <div className="space-y-5">
-      {/* Pinned section */}
       {pinnedNotes.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center gap-1.5">
@@ -219,7 +239,6 @@ export function NotesList({ onEdit, onNew }: Props) {
         </div>
       )}
 
-      {/* Regular notes section */}
       {regularNotes.length > 0 && (
         <div className="space-y-3">
           {pinnedNotes.length > 0 && (
@@ -234,34 +253,61 @@ export function NotesList({ onEdit, onNew }: Props) {
   )
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-24">
       {/* Sort bar */}
       <div className="flex items-center justify-between gap-3">
-        <Badge variant="gray">
-          {notes.length} {notes.length === 1 ? "nota" : "notas"}
-        </Badge>
         <div className="flex items-center gap-2">
-          <ArrowUpDown
-            size={14}
-            strokeWidth={1.5}
-            className="text-text-tertiary"
-          />
-          <select
-            value={sortMode}
-            onChange={(e) => setSortMode(e.target.value as NoteSortMode)}
-            className="text-sm bg-background border border-border rounded-md px-2 py-1 text-text-secondary cursor-pointer focus:outline-none focus:ring-1 focus:ring-accent"
+          <Badge variant="gray">
+            {notes.length} {notes.length === 1 ? "nota" : "notas"}
+          </Badge>
+          {isSelectionMode && selectedNoteIds.size > 0 && (
+            <span className="text-[12px] text-text-tertiary">
+              {selectedNoteIds.size} seleccionada{selectedNoteIds.size !== 1 ? "s" : ""}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          {/* Selection mode toggle */}
+          <button
+            onClick={() => isSelectionMode ? clearSelection() : setSelectionMode(true)}
+            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors ${
+              isSelectionMode
+                ? "bg-[#7a9b76]/10 text-[#7a9b76]"
+                : "text-text-tertiary hover:text-text-secondary hover:bg-sand"
+            }`}
           >
-            {SORT_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+            <CheckSquare size={13} strokeWidth={1.75} />
+            {isSelectionMode ? "Cancelar" : "Seleccionar"}
+          </button>
+          {!isSelectionMode && (
+            <>
+              <ArrowUpDown size={14} strokeWidth={1.5} className="text-text-tertiary" />
+              <select
+                value={sortMode}
+                onChange={(e) => setSortMode(e.target.value as NoteSortMode)}
+                className="text-sm bg-background border border-border rounded-md px-2 py-1 text-text-secondary cursor-pointer focus:outline-none focus:ring-1 focus:ring-accent"
+              >
+                {SORT_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </>
+          )}
+          {isSelectionMode && (
+            <button
+              onClick={selectAllNotes}
+              className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+            >
+              Todo
+            </button>
+          )}
         </div>
       </div>
 
       {/* Notes grid */}
-      {isManual ? (
+      {isManual && !isSelectionMode ? (
         <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={allIds} strategy={verticalListSortingStrategy}>
             {content}
@@ -269,6 +315,37 @@ export function NotesList({ onEdit, onNew }: Props) {
         </DndContext>
       ) : (
         content
+      )}
+
+      {/* Floating bulk action bar */}
+      {isSelectionMode && selectedNoteIds.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 rounded-xl bg-foreground px-4 py-2.5 shadow-lg">
+          <span className="text-[12px] font-medium text-card mr-1">
+            {selectedNoteIds.size} seleccionada{selectedNoteIds.size !== 1 ? "s" : ""}
+          </span>
+          <div className="w-px h-4 bg-card/20" />
+          <button
+            onClick={bulkArchive}
+            className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-card/80 hover:text-card hover:bg-card/10 transition-colors"
+          >
+            <Archive size={13} strokeWidth={1.75} />
+            Archivar
+          </button>
+          <button
+            onClick={bulkDelete}
+            className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-red-400 hover:text-red-300 hover:bg-card/10 transition-colors"
+          >
+            <Trash2 size={13} strokeWidth={1.75} />
+            Eliminar
+          </button>
+          <div className="w-px h-4 bg-card/20" />
+          <button
+            onClick={clearSelection}
+            className="flex h-6 w-6 items-center justify-center rounded-md text-card/60 hover:text-card hover:bg-card/10 transition-colors"
+          >
+            <X size={13} strokeWidth={2} />
+          </button>
+        </div>
       )}
     </div>
   )
