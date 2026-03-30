@@ -626,7 +626,7 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
   const fitAllNodes = useCallback(() => {
     if (nodes.length === 0) { setViewport({ offsetX: 0, offsetY: 0, scale: 1 }); return }
     const rect = containerRef.current?.getBoundingClientRect()
-    if (!rect) return
+    if (!rect || rect.width === 0 || rect.height === 0) return
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
     for (const n of nodes) {
       minX = Math.min(minX, n.pos_x); minY = Math.min(minY, n.pos_y)
@@ -636,7 +636,22 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
     const contentW = maxX - minX + padding * 2, contentH = maxY - minY + padding * 2
     const newScale = Math.min(Math.max(Math.min(rect.width / contentW, rect.height / contentH), 0.2), 1.5)
     const centerX = (minX + maxX) / 2, centerY = (minY + maxY) / 2
-    setViewport({ scale: newScale, offsetX: rect.width / 2 - centerX * newScale, offsetY: rect.height / 2 - centerY * newScale })
+    const target = { scale: newScale, offsetX: rect.width / 2 - centerX * newScale, offsetY: rect.height / 2 - centerY * newScale }
+    // Animate with easeOutCubic over 400ms
+    const from = viewportRef.current
+    const duration = 400
+    const startTime = performance.now()
+    const ease = (t: number) => 1 - Math.pow(1 - t, 3)
+    const step = (now: number) => {
+      const t = ease(Math.min((now - startTime) / duration, 1))
+      setViewport({
+        scale: from.scale + (target.scale - from.scale) * t,
+        offsetX: from.offsetX + (target.offsetX - from.offsetX) * t,
+        offsetY: from.offsetY + (target.offsetY - from.offsetY) * t,
+      })
+      if (t < 1) requestAnimationFrame(step)
+    }
+    requestAnimationFrame(step)
   }, [nodes, setViewport])
 
   const centerOnNode = useCallback((nodeId: string) => {

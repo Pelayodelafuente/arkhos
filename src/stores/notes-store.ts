@@ -25,7 +25,7 @@ import { useUIStore } from './ui-store'
 
 // ─── Toast helper ─────────────────────
 
-function toast(message: string, variant: 'success' | 'error') {
+function toast(message: string, variant: 'success' | 'error' | 'info' = 'info') {
   useUIStore.getState().addToast(message, variant)
 }
 
@@ -276,7 +276,22 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
         notesApi.batchUpdateNodePositions(corrections).catch(console.error)
       }
 
-      set({ canvas, canvasNodes: fixedNodes, canvasEdges: edges })
+      // Deduplicate note nodes — keep the first occurrence per note_id
+      const seenNoteIds = new Set<string>()
+      const deduped = fixedNodes.filter(n => {
+        if (!n.note_id) return true
+        if (seenNoteIds.has(n.note_id)) return false
+        seenNoteIds.add(n.note_id)
+        return true
+      })
+      const duplicateIds = fixedNodes
+        .filter(n => n.note_id && !deduped.includes(n))
+        .map(n => n.id)
+      if (duplicateIds.length > 0) {
+        notesApi.batchRemoveNodes(duplicateIds).catch(console.error)
+      }
+
+      set({ canvas, canvasNodes: deduped, canvasEdges: edges })
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Error al cargar el canvas'
       toast(msg, 'error')
@@ -425,7 +440,10 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
 
     // Check if already on canvas (client-side)
     const existing = get().canvasNodes.find((cn) => cn.note_id === noteId)
-    if (existing) return existing
+    if (existing) {
+      toast('Esta nota ya está en el canvas', 'info')
+      return existing
+    }
 
     try {
       const node = await notesApi.addNoteToCanvas(canvas.id, noteId, pos)

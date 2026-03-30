@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback } from "react"
-import { BookOpen, Plus, ArrowUpDown, GripVertical } from "lucide-react"
+import { BookOpen, Plus, ArrowUpDown, GripVertical, Pin } from "lucide-react"
 import { Button, Badge } from "@/components/ui"
 import { useFilteredNotes, useNotesStore } from "@/stores/notes-store"
 import type { NoteSortMode } from "@/stores/notes-store"
@@ -178,15 +178,16 @@ export function NotesList({ onEdit, onNew }: Props) {
     )
   }
 
-  const noteIds = notes.map((n) => n.id)
+  const pinnedNotes = notes.filter((n) => n.is_pinned)
+  const regularNotes = notes.filter((n) => !n.is_pinned)
 
-  const gridContent = (
+  const renderGrid = (list: Note[], indexOffset = 0) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {notes.map((note, i) => (
+      {list.map((note, i) => (
         <SortableNoteCard
           key={note.id}
           note={note}
-          index={i}
+          index={indexOffset + i}
           isManual={isManual}
           onEdit={onEdit}
           onDelete={removeNote}
@@ -195,6 +196,40 @@ export function NotesList({ onEdit, onNew }: Props) {
           searchQuery={searchQuery}
         />
       ))}
+    </div>
+  )
+
+  const allIds = notes.map((n) => n.id)
+
+  const content = (
+    <div className="space-y-5">
+      {/* Pinned section */}
+      {pinnedNotes.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-1.5">
+            <Pin size={12} strokeWidth={2} className="text-accent fill-accent" />
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-text-tertiary">
+              Fijadas
+            </span>
+          </div>
+          {renderGrid(pinnedNotes, 0)}
+          {regularNotes.length > 0 && (
+            <div className="border-t border-border" />
+          )}
+        </div>
+      )}
+
+      {/* Regular notes section */}
+      {regularNotes.length > 0 && (
+        <div className="space-y-3">
+          {pinnedNotes.length > 0 && (
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-text-tertiary">
+              Notas
+            </span>
+          )}
+          {renderGrid(regularNotes, pinnedNotes.length)}
+        </div>
+      )}
     </div>
   )
 
@@ -228,12 +263,12 @@ export function NotesList({ onEdit, onNew }: Props) {
       {/* Notes grid */}
       {isManual ? (
         <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={noteIds} strategy={verticalListSortingStrategy}>
-            {gridContent}
+          <SortableContext items={allIds} strategy={verticalListSortingStrategy}>
+            {content}
           </SortableContext>
         </DndContext>
       ) : (
-        gridContent
+        content
       )}
     </div>
   )

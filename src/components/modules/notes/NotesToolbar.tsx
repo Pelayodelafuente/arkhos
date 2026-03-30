@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
-import { Search, Tag, X } from "lucide-react"
+import { useState, useEffect, useRef, useCallback } from "react"
+import { Search, Tag, X, ChevronLeft, ChevronRight } from "lucide-react"
 import { useNotesStore, useAllTags } from "@/stores/notes-store"
 
 export function NotesToolbar() {
@@ -13,11 +13,39 @@ export function NotesToolbar() {
   const [localSearch, setLocalSearch] = useState("")
   const searchRef = useRef<HTMLInputElement>(null)
 
+  // Tags scroll state
+  const tagsScrollRef = useRef<HTMLDivElement>(null)
+  const [canScrollLeft, setCanScrollLeft] = useState(false)
+  const [canScrollRight, setCanScrollRight] = useState(false)
+
   // Debounced search
   useEffect(() => {
     const t = setTimeout(() => setSearchQuery(localSearch), 150)
     return () => clearTimeout(t)
   }, [localSearch, setSearchQuery])
+
+  const checkScroll = useCallback(() => {
+    const el = tagsScrollRef.current
+    if (!el) return
+    setCanScrollLeft(el.scrollLeft > 2)
+    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 2)
+  }, [])
+
+  useEffect(() => {
+    const el = tagsScrollRef.current
+    if (!el) return
+    checkScroll()
+    el.addEventListener("scroll", checkScroll, { passive: true })
+    const ro = new ResizeObserver(checkScroll)
+    ro.observe(el)
+    return () => {
+      el.removeEventListener("scroll", checkScroll)
+      ro.disconnect()
+    }
+  }, [allTags, checkScroll])
+
+  const scrollLeft = () => tagsScrollRef.current?.scrollBy({ left: -160, behavior: "smooth" })
+  const scrollRight = () => tagsScrollRef.current?.scrollBy({ left: 160, behavior: "smooth" })
 
   return (
     <div className="flex flex-wrap items-center gap-3">
@@ -39,31 +67,65 @@ export function NotesToolbar() {
         )}
       </div>
 
-      {/* Tag filters */}
+      {/* Tag filters with scroll */}
       {allTags.length > 0 && (
-        <div className="flex items-center gap-1.5 overflow-x-auto">
+        <div className="flex items-center gap-1">
           <Tag size={13} strokeWidth={1.75} className="text-text-tertiary flex-shrink-0" />
-          {activeTag && (
-            <button
-              onClick={() => setActiveTag(null)}
-              className="rounded-md px-2 py-1 text-[11px] font-medium bg-foreground text-card transition-colors"
+
+          {/* Scroll wrapper */}
+          <div className="relative flex items-center">
+            {/* Left arrow */}
+            {canScrollLeft && (
+              <button
+                onClick={scrollLeft}
+                className="absolute left-0 z-10 flex h-full items-center pl-0.5 pr-2"
+                style={{ background: "linear-gradient(to right, var(--bg-cream) 60%, transparent)" }}
+              >
+                <ChevronLeft size={13} strokeWidth={2} className="text-text-tertiary" />
+              </button>
+            )}
+
+            {/* Scrollable tag list */}
+            <div
+              ref={tagsScrollRef}
+              className="flex items-center gap-1.5 overflow-x-auto"
+              style={{ maxWidth: "min(480px, 50vw)", scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
-              Todas
-            </button>
-          )}
-          {allTags.slice(0, 8).map((tag) => (
-            <button
-              key={tag}
-              onClick={() => setActiveTag(activeTag === tag ? null : tag)}
-              className={`rounded-md px-2 py-1 text-[11px] font-medium transition-colors whitespace-nowrap ${
-                activeTag === tag
-                  ? 'bg-[#7a9b76] text-white'
-                  : 'bg-sand text-text-secondary hover:bg-border'
-              }`}
-            >
-              {tag}
-            </button>
-          ))}
+              <style>{`.notes-tags-scroll::-webkit-scrollbar { display: none; }`}</style>
+              {activeTag && (
+                <button
+                  onClick={() => setActiveTag(null)}
+                  className="rounded-md px-2 py-1 text-[11px] font-medium bg-foreground text-card transition-colors whitespace-nowrap flex-shrink-0"
+                >
+                  Todas
+                </button>
+              )}
+              {allTags.map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => setActiveTag(activeTag === tag ? null : tag)}
+                  className={`rounded-md px-2 py-1 text-[11px] font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
+                    activeTag === tag
+                      ? "bg-[#7a9b76] text-white"
+                      : "bg-sand text-text-secondary hover:bg-border"
+                  }`}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+
+            {/* Right arrow */}
+            {canScrollRight && (
+              <button
+                onClick={scrollRight}
+                className="absolute right-0 z-10 flex h-full items-center pr-0.5 pl-2"
+                style={{ background: "linear-gradient(to left, var(--bg-cream) 60%, transparent)" }}
+              >
+                <ChevronRight size={13} strokeWidth={2} className="text-text-tertiary" />
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>

@@ -6,6 +6,7 @@ import * as LucideIcons from "lucide-react"
 import { marked } from "marked"
 import { Modal, Button } from "@/components/ui"
 import { useNotesStore, useAllTags } from "@/stores/notes-store"
+import { useToast } from "@/stores/ui-store"
 import { NoteColorPicker } from "./NoteColorPicker"
 import { TagInput } from "./TagInput"
 import type { Note, NoteColor } from "@/types/notes"
@@ -36,6 +37,7 @@ export function NoteModal({ open, onClose, userId, note }: Props) {
   const editNote = useNotesStore((s) => s.editNote)
   const removeNote = useNotesStore((s) => s.removeNote)
   const allTags = useAllTags()
+  const toast = useToast()
 
   const isEdit = Boolean(note)
 
@@ -51,8 +53,9 @@ export function NoteModal({ open, onClose, userId, note }: Props) {
 
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const snapshotRef = useRef<{ title: string; content: string; color: NoteColor; icon: string; tags: string[] } | null>(null)
 
-  // Populate form
+  // Populate form + capture snapshot (must set ref before auto-save effect can fire)
   useEffect(() => {
     if (note) {
       setTitle(note.title)
@@ -60,21 +63,33 @@ export function NoteModal({ open, onClose, userId, note }: Props) {
       setColor(note.color)
       setIcon(note.icon)
       setTags([...note.tags])
+      snapshotRef.current = { title: note.title, content: note.content, color: note.color, icon: note.icon, tags: [...note.tags] }
     } else {
       setTitle("")
       setContent("")
       setColor("default")
       setIcon("FileText")
       setTags([])
+      snapshotRef.current = null
     }
     setConfirmDelete(false)
     setShowIcons(false)
     setShowPreview(false)
   }, [note, open])
 
-  // Auto-save for existing notes (debounce 800ms)
+  // Auto-save for existing notes (debounce 800ms) — only when there are real changes
   useEffect(() => {
     if (!isEdit || !note || !open) return
+    const snap = snapshotRef.current
+    if (!snap) return
+    const isDirty = (
+      title !== snap.title ||
+      content !== snap.content ||
+      color !== snap.color ||
+      icon !== snap.icon ||
+      JSON.stringify(tags) !== JSON.stringify(snap.tags)
+    )
+    if (!isDirty) return
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current)
     autoSaveTimer.current = setTimeout(() => {
       editNote(note.id, { title: title || 'Sin título', content, color, icon, tags })
@@ -91,6 +106,21 @@ export function NoteModal({ open, onClose, userId, note }: Props) {
   }, [content])
 
   const handleSave = async () => {
+    if (isEdit && note) {
+      const snap = snapshotRef.current
+      const isDirty = !snap || (
+        (title || 'Sin título') !== snap.title ||
+        content !== snap.content ||
+        color !== snap.color ||
+        icon !== snap.icon ||
+        JSON.stringify(tags) !== JSON.stringify(snap.tags)
+      )
+      if (!isDirty) {
+        toast.info('No hay cambios que guardar')
+        onClose()
+        return
+      }
+    }
     setSaving(true)
     try {
       if (isEdit && note) {

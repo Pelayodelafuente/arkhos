@@ -50,9 +50,18 @@ export function NoteCard({ note, onEdit, onDelete, onTogglePin, onAddToCanvas, s
           <h3 className="flex-1 font-heading text-[15px] text-foreground leading-snug line-clamp-2">
             {searchQuery ? highlightText(note.title, searchQuery) : note.title}
           </h3>
-          {note.is_pinned && (
-            <Pin size={12} strokeWidth={2} className="text-accent flex-shrink-0 mt-1 fill-accent" />
-          )}
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onTogglePin(note.id) }}
+            className={`flex-shrink-0 mt-0.5 rounded transition-colors ${
+              note.is_pinned
+                ? "text-accent"
+                : "text-text-tertiary/40 opacity-0 group-hover:opacity-100 hover:text-text-tertiary"
+            }`}
+            title={note.is_pinned ? "Desfijar" : "Fijar"}
+          >
+            <Pin size={12} strokeWidth={2} className={note.is_pinned ? "fill-accent" : ""} />
+          </button>
           {/* Menu button */}
           <div className="relative flex-shrink-0">
             <button
