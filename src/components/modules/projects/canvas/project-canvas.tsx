@@ -110,7 +110,7 @@ export function ProjectCanvas({ userId }: ProjectCanvasProps) {
       <div className="canvas-columns relative z-10 min-h-0 flex-1 gap-3 overflow-y-auto overflow-x-hidden p-3">
         {/* Left column: Projects + Stats */}
         <div className="canvas-col-left flex flex-col gap-3 overflow-y-auto">
-          <CanvasWindow id="projects" title="Mis proyectos">
+          <CanvasWindow id="projects" title="Mis proyectos" className="flex-1">
             <WindowProjects userId={userId} />
           </CanvasWindow>
 
@@ -119,10 +119,6 @@ export function ProjectCanvas({ userId }: ProjectCanvasProps) {
             title={statsTitle}
           >
             <WindowStats />
-          </CanvasWindow>
-
-          <CanvasWindow id="focus" title="Focus — Tareas pendientes">
-            <WindowFocus userId={userId} />
           </CanvasWindow>
         </div>
 
@@ -133,7 +129,7 @@ export function ProjectCanvas({ userId }: ProjectCanvasProps) {
           </CanvasWindow>
         </div>
 
-        {/* Right column: Context + AI placeholder */}
+        {/* Right column: Context + AI placeholder + Focus */}
         <div className="canvas-col-right flex flex-col gap-3 overflow-y-auto">
           <CanvasWindow id="context" title="Contexto activo">
             <WindowContext />
@@ -145,6 +141,10 @@ export function ProjectCanvas({ userId }: ProjectCanvasProps) {
             badge={{ text: 'Próximamente', variant: 'gray' }}
           >
             <WindowAIPlaceholder />
+          </CanvasWindow>
+
+          <CanvasWindow id="focus" title="Focus — Tareas pendientes" className="flex-1">
+            <WindowFocus userId={userId} />
           </CanvasWindow>
         </div>
       </div>
