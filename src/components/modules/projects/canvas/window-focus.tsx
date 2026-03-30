@@ -32,6 +32,7 @@ export function WindowFocus({ userId }: WindowFocusProps) {
   const [tasks, setTasks] = useState<FocusTask[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterProjectId, setFilterProjectId] = useState<string | null>(null);
+  const [showAllTasks, setShowAllTasks] = useState(false);
   const toast = useToast();
 
   // Derive unique projects from tasks
@@ -131,7 +132,6 @@ export function WindowFocus({ userId }: WindowFocusProps) {
   }
 
   const MAX_VISIBLE_TASKS = 6;
-  const [showAllTasks, setShowAllTasks] = useState(false);
 
   const filteredTasks = filterProjectId
     ? tasks.filter((t) => t.project_id === filterProjectId)
