@@ -108,24 +108,21 @@ export function ProjectCanvas({ userId }: ProjectCanvasProps) {
 
       {/* 3-column layout (stacks vertically below 1200px) */}
       <div className="canvas-columns relative z-10 min-h-0 flex-1 gap-3 overflow-y-auto overflow-x-hidden p-3">
-        {/* Left column: Project detail */}
-        <div className="canvas-col-left flex min-w-0 flex-col overflow-y-auto">
-          <CanvasWindow id="detail" title="Detalle del proyecto" className="flex-1">
-            <WindowDetail userId={userId} />
+        {/* Left column: Stats + Projects */}
+        <div className="canvas-col-left flex flex-col gap-3 overflow-y-auto">
+          <CanvasWindow id="stats" title={statsTitle}>
+            <WindowStats />
           </CanvasWindow>
-        </div>
 
-        {/* Center column: Projects + Stats */}
-        <div className="canvas-col-center flex flex-col gap-3 overflow-y-auto">
           <CanvasWindow id="projects" title="Mis proyectos">
             <WindowProjects userId={userId} />
           </CanvasWindow>
+        </div>
 
-          <CanvasWindow
-            id="stats"
-            title={statsTitle}
-          >
-            <WindowStats />
+        {/* Center column: Project detail */}
+        <div className="canvas-col-center flex min-w-0 flex-col overflow-y-auto">
+          <CanvasWindow id="detail" title="Detalle del proyecto" className="flex-1">
+            <WindowDetail userId={userId} />
           </CanvasWindow>
         </div>
 
@@ -163,8 +160,8 @@ export function ProjectCanvas({ userId }: ProjectCanvasProps) {
         .canvas-columns {
           display: flex;
         }
-        .canvas-col-left { flex: 1; }
-        .canvas-col-center { width: 280px; flex-shrink: 0; }
+        .canvas-col-left { width: 280px; flex-shrink: 0; }
+        .canvas-col-center { flex: 1; }
         .canvas-col-right { width: 280px; flex-shrink: 0; }
 
         @media (max-width: 1199px) {
