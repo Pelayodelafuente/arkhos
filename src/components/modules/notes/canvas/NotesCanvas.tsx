@@ -1003,19 +1003,17 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
           containerHeight={containerSize.h} onViewportChange={setViewport} />
       )}
 
-      <div className="relative">
-        <CanvasToolbar onNewNote={handleNewNote} onAddTextNode={handleAddTextNode} onAddUrlNode={handleAddUrlNode}
-          onAddImageNode={() => handleAddImageNode()} onAddGroupNode={handleAddGroupNode} onFitAll={fitAllNodes}
-          snapEnabled={snapEnabled} onToggleSnap={toggleSnap} onUndo={undo} onRedo={redo}
-          onDuplicate={duplicateSelectedNodes} canUndo={historyIndex > 0} canRedo={historyIndex < history.length - 1}
-          hasSelection={selectedNodeIds.size > 0} onAutoLayout={handleAutoLayout} onGroupSelection={handleGroupSelected}
-          onToggleSearch={() => setShowSearch(s => !s)} selectionCount={selectedNodeIds.size}
-          onToggleFilters={() => setShowFilters(v => !v)}
-          activeFilterCount={canvasFilters.types.length + canvasFilters.colors.length}
-          onSyncBacklinks={generateBacklinkEdges}
-          hasSyncableBacklinks={hasSyncableBacklinks} />
-        {showFilters && <CanvasFilterPanel onClose={() => setShowFilters(false)} />}
-      </div>
+      <CanvasToolbar onNewNote={handleNewNote} onAddTextNode={handleAddTextNode} onAddUrlNode={handleAddUrlNode}
+        onAddImageNode={() => handleAddImageNode()} onAddGroupNode={handleAddGroupNode} onFitAll={fitAllNodes}
+        snapEnabled={snapEnabled} onToggleSnap={toggleSnap} onUndo={undo} onRedo={redo}
+        onDuplicate={duplicateSelectedNodes} canUndo={historyIndex > 0} canRedo={historyIndex < history.length - 1}
+        hasSelection={selectedNodeIds.size > 0} onAutoLayout={handleAutoLayout} onGroupSelection={handleGroupSelected}
+        onToggleSearch={() => setShowSearch(s => !s)} selectionCount={selectedNodeIds.size}
+        onToggleFilters={() => setShowFilters(v => !v)}
+        activeFilterCount={canvasFilters.types.length + canvasFilters.colors.length}
+        onSyncBacklinks={generateBacklinkEdges}
+        hasSyncableBacklinks={hasSyncableBacklinks} />
+      {showFilters && <CanvasFilterPanel onClose={() => setShowFilters(false)} />}
 
       {selectedNodeIds.size > 1 && !showSearch && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 rounded-lg bg-card/90 backdrop-blur-sm border border-border px-3 py-1.5 text-xs text-text-secondary shadow-sm">
