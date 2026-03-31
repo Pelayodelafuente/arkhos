@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
-import { useEditor, EditorContent, type Editor } from '@tiptap/react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useEditor, EditorContent, type Editor, ReactRenderer } from '@tiptap/react'
 import { BubbleMenu } from '@tiptap/react/menus'
 import StarterKit from '@tiptap/starter-kit'
+import Mention from '@tiptap/extension-mention'
 import Underline from '@tiptap/extension-underline'
 import Link from '@tiptap/extension-link'
 import Image from '@tiptap/extension-image'
@@ -41,6 +42,10 @@ import {
   Minus,
 } from 'lucide-react'
 import { markdownToHtml } from '@/lib/notes/markdown-to-html'
+import { MentionList } from './canvas/MentionList'
+import type { MentionListRef } from './canvas/MentionList'
+import { useNotesStore } from '@/stores/notes-store'
+import type { Note } from '@/types/notes'
 
 const lowlight = createLowlight(common)
 
@@ -159,6 +164,69 @@ interface BubbleMenuShouldShowProps {
   to: number
 }
 
+// ─── Mention Extension Factory ──────────────────────────
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SuggestionPropsAny = any
+
+function createMentionExtension(notesRef: React.MutableRefObject<Note[]>) {
+  return Mention.configure({
+    HTMLAttributes: {
+      class: 'note-mention-chip',
+    },
+    renderLabel: ({ node }) => `[[${node.attrs.label as string}]]`,
+    suggestion: {
+      char: '[[',
+      allowSpaces: true,
+      items: ({ query }: { query: string }) =>
+        notesRef.current
+          .filter(n => n.title.toLowerCase().includes(query.toLowerCase()))
+          .slice(0, 8),
+      render: () => {
+        let component: ReactRenderer<MentionListRef>
+        let containerEl: HTMLDivElement
+
+        return {
+          onStart: (props: SuggestionPropsAny) => {
+            containerEl = document.createElement('div')
+            document.body.appendChild(containerEl)
+            component = new ReactRenderer(MentionList, {
+              props,
+              editor: props.editor,
+            })
+            containerEl.appendChild(component.element)
+
+            const rect = props.clientRect?.()
+            if (rect) {
+              (component.element as HTMLElement).style.position = 'fixed';
+              (component.element as HTMLElement).style.top = `${rect.bottom + 8}px`;
+              (component.element as HTMLElement).style.left = `${rect.left}px`
+            }
+          },
+          onUpdate: (props: SuggestionPropsAny) => {
+            component.updateProps(props)
+            const rect = props.clientRect?.()
+            if (rect && component.element) {
+              (component.element as HTMLElement).style.top = `${rect.bottom + 8}px`;
+              (component.element as HTMLElement).style.left = `${rect.left}px`
+            }
+          },
+          onKeyDown: ({ event }: { event: KeyboardEvent }) => {
+            if (event.key === 'Escape') {
+              return false
+            }
+            return component.ref?.onKeyDown(event) ?? false
+          },
+          onExit: () => {
+            component.destroy()
+            containerEl?.remove()
+          },
+        }
+      },
+    },
+  })
+}
+
 // ─── NoteEditor ──────────────────────────────────────────
 
 export function NoteEditor({
@@ -180,6 +248,15 @@ export function NoteEditor({
   const linkInputRef = useRef<HTMLInputElement>(null)
   const slashStartPos = useRef<number | null>(null)
   const slashMenuVisibleRef = useRef(false)
+
+  // Keep notes up to date for mention autocomplete without recreating extensions
+  const storeNotes = useNotesStore((s) => s.notes)
+  const notesRef = useRef<Note[]>(storeNotes)
+  useEffect(() => { notesRef.current = storeNotes }, [storeNotes])
+  // Create mention extension once — it reads from notesRef.current at query time
+  const mentionExtRef = useRef(createMentionExtension(notesRef))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const mentionExt = useMemo(() => mentionExtRef.current, [])
 
   const filteredCommands = SLASH_COMMANDS.filter(
     (cmd) =>
@@ -222,6 +299,7 @@ export function NoteEditor({
       TableHeader,
       HorizontalRule,
       Placeholder.configure({ placeholder }),
+      mentionExt,
     ],
     content: markdownToHtml(content),
     autofocus: autoFocus ? 'end' : false,

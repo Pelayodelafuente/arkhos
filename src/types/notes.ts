@@ -37,8 +37,18 @@ export interface Note {
   folder_id?: string | null
   archived?: boolean
   favorited?: boolean
+  backlink_count?: number
   created_at: string
   updated_at: string
+}
+
+// ─── Backlinks ────────────────────────
+
+export interface NoteBacklink {
+  id: string
+  source_note_id: string
+  target_note_id: string
+  created_at: string
 }
 
 // ─── Folders ────────────────────────

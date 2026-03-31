@@ -17,6 +17,7 @@ import {
   LayoutGrid,
   Layers,
   Filter,
+  Share2,
 } from "lucide-react"
 import { useNotesStore } from "@/stores/notes-store"
 
@@ -41,6 +42,8 @@ interface Props {
   selectionCount: number
   onToggleFilters: () => void
   activeFilterCount: number
+  onSyncBacklinks: () => void
+  hasSyncableBacklinks: boolean
 }
 
 export function CanvasToolbar({
@@ -64,6 +67,8 @@ export function CanvasToolbar({
   selectionCount,
   onToggleFilters,
   activeFilterCount,
+  onSyncBacklinks,
+  hasSyncableBacklinks,
 }: Props) {
   const viewport = useNotesStore((s) => s.viewport)
   const setViewport = useNotesStore((s) => s.setViewport)
@@ -222,6 +227,17 @@ export function CanvasToolbar({
         aria-label="Agrupar selección"
       >
         <Layers size={14} strokeWidth={1.75} />
+      </button>
+
+      {/* Sync backlinks */}
+      <button
+        onClick={onSyncBacklinks}
+        disabled={!hasSyncableBacklinks}
+        className={`${btnBase} ${!hasSyncableBacklinks ? 'opacity-40 cursor-not-allowed' : ''}`}
+        title="Sincronizar backlinks al canvas"
+        aria-label="Sincronizar backlinks al canvas"
+      >
+        <Share2 size={14} strokeWidth={1.75} />
       </button>
     </div>
   )

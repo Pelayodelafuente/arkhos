@@ -674,3 +674,20 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .tiptap-content mark { background: rgba(196,112,74,0.2); border-radius: 0.2rem; padding: 0 0.15em; }
 .tiptap-content .is-editor-empty:first-child::before { content: attr(data-placeholder); color: var(--color-text-tertiary); pointer-events: none; float: left; height: 0; }
 .tiptap-content .selectedCell { background: rgba(122,155,118,0.12); }
+
+/* ─── Note mention chip (Tiptap) ──────────────── */
+.note-mention-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(122, 155, 118, 0.15);
+  border: 1px solid rgba(122, 155, 118, 0.4);
+  color: var(--module-notas);
+  font-size: 0.875em;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}

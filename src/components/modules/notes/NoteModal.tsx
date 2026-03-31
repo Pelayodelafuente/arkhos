@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Trash2, Maximize2, Minimize2, Archive, History, X, RotateCcw } from "lucide-react"
+import { Trash2, Maximize2, Minimize2, Archive, History, X, RotateCcw, Link2, ArrowRight } from "lucide-react"
 import * as LucideIcons from "lucide-react"
 import { Modal, Button } from "@/components/ui"
 import { useNotesStore, useAllTags } from "@/stores/notes-store"
@@ -24,13 +24,17 @@ interface Props {
   onClose: () => void
   userId: string
   note?: Note | null
+  onOpenNote?: (note: Note) => void
 }
 
-export function NoteModal({ open, onClose, userId, note }: Props) {
+export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
   const addNote = useNotesStore((s) => s.addNote)
   const editNote = useNotesStore((s) => s.editNote)
   const removeNote = useNotesStore((s) => s.removeNote)
   const archiveNote = useNotesStore((s) => s.archiveNote)
+  const loadNoteLinks = useNotesStore((s) => s.loadNoteLinks)
+  const noteReferences = useNotesStore((s) => s.noteReferences)
+  const noteBacklinks = useNotesStore((s) => s.noteBacklinks)
   const allTags = useAllTags()
   const toast = useToast()
 
@@ -54,6 +58,17 @@ export function NoteModal({ open, onClose, userId, note }: Props) {
 
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const snapshotRef = useRef<{ title: string; content: string; color: NoteColor; icon: string; tags: string[] } | null>(null)
+
+  // Backlinks
+  useEffect(() => {
+    if (note?.id && open) {
+      loadNoteLinks(note.id)
+    }
+  }, [note?.id, open, loadNoteLinks])
+
+  const references = note?.id ? (noteReferences[note.id] ?? []) : []
+  const backlinks = note?.id ? (noteBacklinks[note.id] ?? []) : []
+  const hasLinks = references.length > 0 || backlinks.length > 0
 
   // Populate form + capture snapshot (must set ref before auto-save effect can fire)
   useEffect(() => {
@@ -252,6 +267,74 @@ export function NoteModal({ open, onClose, userId, note }: Props) {
             autoFocus={!isEdit}
           />
         </div>
+
+        {/* Backlinks panel */}
+        {note?.id && hasLinks && (
+          <div style={{
+            borderTop: '1px solid var(--border-stone)',
+            padding: '12px 16px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 8,
+          }}>
+            {references.length > 0 && (
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-tertiary)', marginBottom: 6 }}>
+                  Esta nota menciona ({references.length})
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                  {references.map(ref => (
+                    <button
+                      key={ref.id}
+                      type="button"
+                      onClick={() => onOpenNote?.(ref)}
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 4,
+                        padding: '2px 8px', borderRadius: 6,
+                        background: 'rgba(122,155,118,0.1)',
+                        border: '1px solid rgba(122,155,118,0.3)',
+                        color: 'var(--module-notas)',
+                        fontSize: 11, fontWeight: 500,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <ArrowRight size={10} strokeWidth={2} />
+                      {ref.title}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {backlinks.length > 0 && (
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-tertiary)', marginBottom: 6 }}>
+                  Mencionada en ({backlinks.length})
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                  {backlinks.map(bl => (
+                    <button
+                      key={bl.id}
+                      type="button"
+                      onClick={() => onOpenNote?.(bl)}
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 4,
+                        padding: '2px 8px', borderRadius: 6,
+                        background: 'rgba(122,155,118,0.06)',
+                        border: '1px solid rgba(122,155,118,0.2)',
+                        color: 'var(--text-secondary)',
+                        fontSize: 11, fontWeight: 500,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <Link2 size={10} strokeWidth={2} />
+                      {bl.title}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Tags */}
         <TagInput tags={tags} onChange={setTags} suggestions={allTags} />

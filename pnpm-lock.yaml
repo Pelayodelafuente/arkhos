@@ -44,6 +44,9 @@ importers:
       '@tiptap/extension-link':
         specifier: ^3.21.0
         version: 3.21.0(@tiptap/core@3.21.0(@tiptap/pm@3.21.0))(@tiptap/pm@3.21.0)
+      '@tiptap/extension-mention':
+        specifier: ^3.22.0
+        version: 3.22.0(@tiptap/core@3.21.0(@tiptap/pm@3.21.0))(@tiptap/pm@3.21.0)(@tiptap/suggestion@3.22.0(@tiptap/core@3.21.0(@tiptap/pm@3.21.0))(@tiptap/pm@3.21.0))
       '@tiptap/extension-placeholder':
         specifier: ^3.21.0
         version: 3.21.0(@tiptap/extensions@3.21.0(@tiptap/core@3.21.0(@tiptap/pm@3.21.0))(@tiptap/pm@3.21.0))
@@ -1406,6 +1409,13 @@ packages:
       '@tiptap/core': ^3.21.0
       '@tiptap/pm': ^3.21.0
 
+  '@tiptap/extension-mention@3.22.0':
+    resolution: {integrity: sha512-Ndjn8YTcZMyyEV5cm+3TupRsQ4b8+4gRrZXfsqbEbXN/IGXgl+ObBx+bxBU+aAe2ZRgqEeuVIBIVWBzYaxLxrg==}
+    peerDependencies:
+      '@tiptap/core': ^3.22.0
+      '@tiptap/pm': ^3.22.0
+      '@tiptap/suggestion': ^3.22.0
+
   '@tiptap/extension-ordered-list@3.21.0':
     resolution: {integrity: sha512-+d+0orokMfqaBfvr9tUBgGvo2ZCV+fR3JzsJTmnLBWOkhBSJN7H4pnfXPTue0qwspUwRmkLJxdIlU+J7HkMrng==}
     peerDependencies:
@@ -1493,6 +1503,12 @@ packages:
 
   '@tiptap/starter-kit@3.21.0':
     resolution: {integrity: sha512-w7fWxglDtqXFBgRYH+LforJyUboSAQllnWQbGVSTyX4rsICqZjkb3f6CTSUWpGoGKmlmbb2ZpEuoik7tur9d8Q==}
+
+  '@tiptap/suggestion@3.22.0':
+    resolution: {integrity: sha512-qdZ4v7sXkM4p2+M7OWCGVoNmHmiaHhiGQN3lUzaNG7mG1gZ2SDirSaeOfL8lHxpnPlGzmE4tUe5eCWMpNKHypA==}
+    peerDependencies:
+      '@tiptap/core': ^3.22.0
+      '@tiptap/pm': ^3.22.0
 
   '@tybys/wasm-util@0.10.1':
     resolution: {integrity: sha512-9tTaPJLSiejZKx+Bmog4uSubteqTvFrVrURwkmHixBo0G4seD0zUxp98E1DzUBJxLQ3NPwXrGKDiVjwx/DpPsg==}
@@ -4804,6 +4820,12 @@ snapshots:
       '@tiptap/core': 3.21.0(@tiptap/pm@3.21.0)
       '@tiptap/pm': 3.21.0
 
+  '@tiptap/extension-mention@3.22.0(@tiptap/core@3.21.0(@tiptap/pm@3.21.0))(@tiptap/pm@3.21.0)(@tiptap/suggestion@3.22.0(@tiptap/core@3.21.0(@tiptap/pm@3.21.0))(@tiptap/pm@3.21.0))':
+    dependencies:
+      '@tiptap/core': 3.21.0(@tiptap/pm@3.21.0)
+      '@tiptap/pm': 3.21.0
+      '@tiptap/suggestion': 3.22.0(@tiptap/core@3.21.0(@tiptap/pm@3.21.0))(@tiptap/pm@3.21.0)
+
   '@tiptap/extension-ordered-list@3.21.0(@tiptap/extension-list@3.21.0(@tiptap/core@3.21.0(@tiptap/pm@3.21.0))(@tiptap/pm@3.21.0))':
     dependencies:
       '@tiptap/extension-list': 3.21.0(@tiptap/core@3.21.0(@tiptap/pm@3.21.0))(@tiptap/pm@3.21.0)
@@ -4925,6 +4947,11 @@ snapshots:
       '@tiptap/extension-text': 3.21.0(@tiptap/core@3.21.0(@tiptap/pm@3.21.0))
       '@tiptap/extension-underline': 3.21.0(@tiptap/core@3.21.0(@tiptap/pm@3.21.0))
       '@tiptap/extensions': 3.21.0(@tiptap/core@3.21.0(@tiptap/pm@3.21.0))(@tiptap/pm@3.21.0)
+      '@tiptap/pm': 3.21.0
+
+  '@tiptap/suggestion@3.22.0(@tiptap/core@3.21.0(@tiptap/pm@3.21.0))(@tiptap/pm@3.21.0)':
+    dependencies:
+      '@tiptap/core': 3.21.0(@tiptap/pm@3.21.0)
       '@tiptap/pm': 3.21.0
 
   '@tybys/wasm-util@0.10.1':

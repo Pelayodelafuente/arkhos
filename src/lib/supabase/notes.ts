@@ -737,3 +737,68 @@ export async function getNoteVersions(noteId: string): Promise<NoteVersion[]> {
   if (error) throw new NotesError('Error fetching note versions', error.message)
   return (data ?? []) as NoteVersion[]
 }
+
+// ─── Backlinks ───────────────────────────────────────────────────
+
+/** Parsea [[título]] del contenido y devuelve IDs de notas referenciadas */
+export function parseBacklinksFromContent(content: string, allNotes: Note[]): string[] {
+  if (!content) return []
+  const titleMap = new Map(allNotes.map(n => [n.title.toLowerCase(), n.id]))
+  const matches = [...content.matchAll(/\[\[([^\]]+)\]\]/g)]
+  const ids: string[] = []
+  for (const [, title] of matches) {
+    const id = titleMap.get(title.toLowerCase())
+    if (id && !ids.includes(id)) ids.push(id)
+  }
+  return ids
+}
+
+/** Sincroniza backlinks de una nota: borra los viejos e inserta los nuevos */
+export async function syncNoteBacklinks(
+  sourceNoteId: string,
+  targetNoteIds: string[]
+): Promise<void> {
+  const supabase = createClient()
+  await supabase.from('note_backlinks').delete().eq('source_note_id', sourceNoteId)
+  if (targetNoteIds.length > 0) {
+    await supabase.from('note_backlinks').insert(
+      targetNoteIds.map(tid => ({ source_note_id: sourceNoteId, target_note_id: tid }))
+    )
+  }
+}
+
+/** Notas que ESTA nota menciona (outgoing) */
+export async function getNoteReferences(noteId: string): Promise<Note[]> {
+  const supabase = createClient()
+  const { data } = await supabase
+    .from('note_backlinks')
+    .select('notes!note_backlinks_target_note_id_fkey(*)')
+    .eq('source_note_id', noteId)
+  if (!data) return []
+  return data.map((r: Record<string, unknown>) => r.notes as Note).filter(Boolean)
+}
+
+/** Notas que MENCIONAN esta nota (incoming) */
+export async function getNoteBacklinks(noteId: string): Promise<Note[]> {
+  const supabase = createClient()
+  const { data } = await supabase
+    .from('note_backlinks')
+    .select('notes!note_backlinks_source_note_id_fkey(*)')
+    .eq('target_note_id', noteId)
+  if (!data) return []
+  return data.map((r: Record<string, unknown>) => r.notes as Note).filter(Boolean)
+}
+
+/** Context builder para IA */
+export async function buildNoteContext(
+  noteId: string
+): Promise<{ note: Note; references: Note[]; backlinks: Note[] } | null> {
+  const supabase = createClient()
+  const [noteRes, references, backlinks] = await Promise.all([
+    supabase.from('notes').select('*').eq('id', noteId).single(),
+    getNoteReferences(noteId),
+    getNoteBacklinks(noteId),
+  ])
+  if (!noteRes.data) return null
+  return { note: noteRes.data as Note, references, backlinks }
+}

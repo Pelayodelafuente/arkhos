@@ -118,6 +118,10 @@ interface NotesState {
 
   // Canvas filters
   canvasFilters: { types: NodeType[]; colors: NoteColor[] }
+
+  // Backlinks
+  noteReferences: Record<string, Note[]>  // noteId → notas que menciona
+  noteBacklinks: Record<string, Note[]>   // noteId → notas que la mencionan
 }
 
 interface NotesActions {
@@ -247,6 +251,11 @@ interface NotesActions {
 
   // Node color
   updateNodeColor: (id: string, color: NoteColor) => void
+
+  // Backlinks
+  loadNoteLinks: (noteId: string) => Promise<void>
+  syncBacklinksOnSave: (noteId: string, content: string) => Promise<void>
+  generateBacklinkEdges: () => Promise<void>
 }
 
 type NotesStore = NotesState & NotesActions
@@ -282,6 +291,8 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
   selectedNoteIds: new Set<string>(),
   isSelectionMode: false,
   canvasFilters: { types: [], colors: [] },
+  noteReferences: {},
+  noteBacklinks: {},
 
   // ── Fetch ───────────────────────────
 
@@ -419,6 +430,10 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
 
     try {
       await notesApi.updateNote(id, data)
+      // Fire-and-forget backlink sync whenever content changed
+      if (data.content !== undefined) {
+        get().syncBacklinksOnSave(id, data.content).catch(console.error)
+      }
     } catch (e) {
       // Rollback
       set((s) => ({ notes: s.notes.map((n) => (n.id === id ? prev : n)) }))
@@ -1437,6 +1452,57 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
         toast(msg, 'error')
       }
     })
+  },
+
+  // ── Backlinks ─────────────────────
+
+  loadNoteLinks: async (noteId) => {
+    try {
+      const [references, backlinks] = await Promise.all([
+        notesApi.getNoteReferences(noteId),
+        notesApi.getNoteBacklinks(noteId),
+      ])
+      set((s) => ({
+        noteReferences: { ...s.noteReferences, [noteId]: references },
+        noteBacklinks: { ...s.noteBacklinks, [noteId]: backlinks },
+      }))
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Error al cargar backlinks'
+      toast(msg, 'error')
+    }
+  },
+
+  syncBacklinksOnSave: async (noteId, content) => {
+    const { notes } = get()
+    const targetIds = notesApi.parseBacklinksFromContent(content, notes)
+    await notesApi.syncNoteBacklinks(noteId, targetIds)
+    await get().loadNoteLinks(noteId)
+  },
+
+  generateBacklinkEdges: async () => {
+    const { canvasNodes, canvasEdges, noteBacklinks, addEdge } = get()
+
+    // Build map noteId → nodeId
+    const noteToNode = new Map<string, string>()
+    for (const node of canvasNodes) {
+      if (node.note_id) noteToNode.set(node.note_id, node.id)
+    }
+
+    for (const [targetNoteId, sourcingNotes] of Object.entries(noteBacklinks)) {
+      const targetNodeId = noteToNode.get(targetNoteId)
+      if (!targetNodeId) continue
+      for (const srcNote of sourcingNotes) {
+        const sourceNodeId = noteToNode.get(srcNote.id)
+        if (!sourceNodeId) continue
+        const exists = canvasEdges.some(
+          e => (e.from_node_id === sourceNodeId && e.to_node_id === targetNodeId) ||
+               (e.from_node_id === targetNodeId && e.to_node_id === sourceNodeId)
+        )
+        if (!exists) {
+          await addEdge(sourceNodeId, targetNodeId, 'right', 'left', 'sage', '')
+        }
+      }
+    }
   },
 }))
 

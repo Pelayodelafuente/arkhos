@@ -165,6 +165,8 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
   const groupSelectedNodes = useNotesStore((s) => s.groupSelectedNodes)
   const canvasFilters = useNotesStore((s) => s.canvasFilters)
   const toggleGroupCollapsed = useNotesStore((s) => s.toggleGroupCollapsed)
+  const generateBacklinkEdges = useNotesStore((s) => s.generateBacklinkEdges)
+  const noteBacklinks = useNotesStore((s) => s.noteBacklinks)
 
   const { matchingIds: searchMatchingIds } = useCanvasSearchResults()
 
@@ -202,6 +204,12 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
   const searchMatchIndexRef = useRef(0)
 
   const nodeMap = useMemo(() => new Map(nodes.map((n) => [n.id, n])), [nodes])
+
+  // hasSyncableBacklinks: there are canvas notes with backlinks already loaded
+  const hasSyncableBacklinks = useMemo(() => {
+    const noteIds = new Set(nodes.filter(n => n.note_id).map(n => n.note_id!))
+    return Object.keys(noteBacklinks).some(k => noteIds.has(k) && noteBacklinks[k].length > 0)
+  }, [nodes, noteBacklinks])
 
   // Collapsed group IDs
   const collapsedGroupIds = useMemo(() => {
@@ -1003,7 +1011,9 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
           hasSelection={selectedNodeIds.size > 0} onAutoLayout={handleAutoLayout} onGroupSelection={handleGroupSelected}
           onToggleSearch={() => setShowSearch(s => !s)} selectionCount={selectedNodeIds.size}
           onToggleFilters={() => setShowFilters(v => !v)}
-          activeFilterCount={canvasFilters.types.length + canvasFilters.colors.length} />
+          activeFilterCount={canvasFilters.types.length + canvasFilters.colors.length}
+          onSyncBacklinks={generateBacklinkEdges}
+          hasSyncableBacklinks={hasSyncableBacklinks} />
         {showFilters && <CanvasFilterPanel onClose={() => setShowFilters(false)} />}
       </div>
 
