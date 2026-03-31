@@ -196,6 +196,7 @@ export function CanvasEdgeComponent({
         strokeWidth={16}
         fill="none"
         className="cursor-pointer"
+        style={{ pointerEvents: 'all' }}
         onClick={handleClick}
         onDoubleClick={handleDoubleClick}
         onContextMenu={handleContextMenu}

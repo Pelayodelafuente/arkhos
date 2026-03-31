@@ -31,7 +31,8 @@ export function NodePropertiesPanel({ node }: Props) {
 
   return (
     <div
-      className="absolute right-0 top-1/2 -translate-y-1/2 z-30 w-52 rounded-xl border border-border bg-card/95 backdrop-blur-sm shadow-md p-3 flex flex-col gap-3"
+      className="fixed right-4 top-1/2 -translate-y-1/2 w-52 rounded-xl border border-border bg-card/95 backdrop-blur-sm shadow-md p-3 flex flex-col gap-3"
+      style={{ zIndex: 9999 }}
       onMouseDown={(e) => e.stopPropagation()}
     >
       {/* Header */}

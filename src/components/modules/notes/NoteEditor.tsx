@@ -199,6 +199,7 @@ function createMentionExtension(notesRef: React.MutableRefObject<Note[]>) {
             const rect = props.clientRect?.()
             if (rect) {
               (component.element as HTMLElement).style.position = 'fixed';
+              (component.element as HTMLElement).style.zIndex = '9999';
               (component.element as HTMLElement).style.top = `${rect.bottom + 8}px`;
               (component.element as HTMLElement).style.left = `${rect.left}px`
             }
