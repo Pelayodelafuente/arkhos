@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useCallback } from "react"
-import type { CanvasEdge as CanvasEdgeType, CanvasNode, EdgeSide } from "@/types/notes"
+import type { CanvasEdge as CanvasEdgeType, CanvasNode, EdgeSide, EdgeStyle } from "@/types/notes"
 
 // ─── Edge Colors ─────────────────────────
 const EDGE_COLORS: Record<string, string> = {
@@ -170,6 +170,11 @@ export function CanvasEdgeComponent({
   const angle = bezierTangentAtEnd(cp2, to)
   const arrowSize = 6 * (isSelected ? 1.15 : 1)
   const arrow = arrowHeadPath(to, angle, arrowSize)
+  const edgeStyle: EdgeStyle = edge.style ?? 'arrow'
+
+  // For bidirectional: arrowhead at origin (tangent at t=0, inverted)
+  const angleFrom = Math.atan2(from.y - cp1.y, from.x - cp1.x)
+  const arrowFrom = arrowHeadPath(from, angleFrom, arrowSize)
 
   // Stroke widths
   const strokeWidth = isSelected ? 3 / scale : isHovered ? 2 / scale : 1.5 / scale
@@ -221,13 +226,25 @@ export function CanvasEdgeComponent({
         style={{ pointerEvents: 'none' }}
       />
 
-      {/* Arrowhead at destination */}
-      <path
-        d={arrow}
-        fill={color}
-        opacity={opacity}
-        style={{ pointerEvents: 'none' }}
-      />
+      {/* Arrowhead at destination (arrow + bidirectional) */}
+      {edgeStyle !== 'line' && (
+        <path
+          d={arrow}
+          fill={color}
+          opacity={opacity}
+          style={{ pointerEvents: 'none' }}
+        />
+      )}
+
+      {/* Arrowhead at origin (bidirectional only) */}
+      {edgeStyle === 'bidirectional' && (
+        <path
+          d={arrowFrom}
+          fill={color}
+          opacity={opacity}
+          style={{ pointerEvents: 'none' }}
+        />
+      )}
 
       {/* Label */}
       {edge.label && (

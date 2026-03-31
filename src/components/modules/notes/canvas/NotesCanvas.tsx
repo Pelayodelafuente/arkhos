@@ -8,6 +8,8 @@ import { CanvasEdgeComponent } from "./CanvasEdge"
 import { CanvasToolbar } from "./CanvasToolbar"
 import { CanvasMinimap } from "./CanvasMinimap"
 import { CanvasContextMenu } from "./CanvasContextMenu"
+import { CanvasFilterPanel } from "./CanvasFilterPanel"
+import { NodePropertiesPanel } from "./NodePropertiesPanel"
 import { uploadCanvasImage } from "@/lib/supabase/notes"
 import { Search, X } from "lucide-react"
 import type { CanvasNode, CanvasViewport, SnapGuide, EdgeSide } from "@/types/notes"
@@ -161,6 +163,8 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
   const setCanvasSearch = useNotesStore((s) => s.setCanvasSearch)
   const autoLayoutNodes = useNotesStore((s) => s.autoLayoutNodes)
   const groupSelectedNodes = useNotesStore((s) => s.groupSelectedNodes)
+  const canvasFilters = useNotesStore((s) => s.canvasFilters)
+  const toggleGroupCollapsed = useNotesStore((s) => s.toggleGroupCollapsed)
 
   const { matchingIds: searchMatchingIds } = useCanvasSearchResults()
 
@@ -193,13 +197,69 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
   const pendingImagePosRef = useRef<{ x: number; y: number } | null>(null)
   const lastInteractionTimestamp = useRef(0)
   const [showSearch, setShowSearch] = useState(false)
+  const [showFilters, setShowFilters] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const searchMatchIndexRef = useRef(0)
 
   const nodeMap = useMemo(() => new Map(nodes.map((n) => [n.id, n])), [nodes])
+
+  // Collapsed group IDs
+  const collapsedGroupIds = useMemo(() => {
+    const ids = new Set<string>()
+    for (const n of nodes) {
+      if (n.node_type === 'group' && n.collapsed) ids.add(n.id)
+    }
+    return ids
+  }, [nodes])
+
+  // Nodes hidden because they are inside a collapsed group
+  const hiddenByCollapse = useMemo(() => {
+    if (collapsedGroupIds.size === 0) return new Set<string>()
+    const hidden = new Set<string>()
+    for (const n of nodes) {
+      if (n.node_type !== 'group') {
+        // Check group_id
+        if (n.group_id && collapsedGroupIds.has(n.group_id)) {
+          hidden.add(n.id)
+          continue
+        }
+        // Check spatial containment
+        for (const gid of collapsedGroupIds) {
+          const group = nodeMap.get(gid)
+          if (!group) continue
+          const cx = n.pos_x + n.width / 2
+          const cy = n.pos_y + n.height / 2
+          if (cx >= group.pos_x && cx <= group.pos_x + group.width &&
+              cy >= group.pos_y && cy <= group.pos_y + group.height) {
+            hidden.add(n.id)
+          }
+        }
+      }
+    }
+    return hidden
+  }, [nodes, nodeMap, collapsedGroupIds])
+
+  // Filter dimmed IDs
+  const filterDimmedIds = useMemo(() => {
+    const { types, colors } = canvasFilters
+    if (types.length === 0 && colors.length === 0) return new Set<string>()
+    return new Set(
+      nodes
+        .filter(n => {
+          const typeMatch = types.length === 0 || types.includes(n.node_type)
+          const colorMatch = colors.length === 0 || colors.includes(n.color)
+          return !(typeMatch && colorMatch)
+        })
+        .map(n => n.id)
+    )
+  }, [nodes, canvasFilters])
+
   const visibleNodes = useMemo(
-    () => nodes.filter((n) => isNodeVisible(n, viewport, containerSize.w, containerSize.h)),
-    [nodes, viewport, containerSize.w, containerSize.h]
+    () => nodes.filter((n) =>
+      isNodeVisible(n, viewport, containerSize.w, containerSize.h) &&
+      !hiddenByCollapse.has(n.id)
+    ),
+    [nodes, viewport, containerSize.w, containerSize.h, hiddenByCollapse]
   )
 
   useEffect(() => {
@@ -906,14 +966,16 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
         {visibleNodes.map((node) => {
           const isConnTarget = connectionTargetId === node.id
           const isDimmedBySearch = isSearchActive && !searchMatchingIds!.has(node.id)
+          const isDimmed = isDimmedBySearch || filterDimmedIds.has(node.id)
           return (
             <div key={node.id} data-node-id={node.id}
-              style={{ pointerEvents: "auto", opacity: isDimmedBySearch ? 0.3 : 1, transition: "opacity 200ms ease" }}>
+              style={{ pointerEvents: "auto", opacity: isDimmed ? 0.3 : 1, transition: "opacity 200ms ease" }}>
               <CanvasNodeComponent node={node} viewport={viewport} isSelected={selectedNodeIds.has(node.id)}
                 isEditing={editingNodeId === node.id} onSelect={handleNodeSelect} onDragStart={handleNodeDragStart}
                 onDoubleClick={handleNodeDoubleClick} onConnectionStart={handleConnectionStart}
                 onResizeStart={handleResizeStart} onContentChange={handleContentChange}
-                isConnectionTarget={isConnTarget} searchDimmed={isDimmedBySearch} />
+                isConnectionTarget={isConnTarget} searchDimmed={isDimmed}
+                onToggleCollapsed={toggleGroupCollapsed} />
             </div>
           )
         })}
@@ -933,12 +995,17 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
           containerHeight={containerSize.h} onViewportChange={setViewport} />
       )}
 
-      <CanvasToolbar onNewNote={handleNewNote} onAddTextNode={handleAddTextNode} onAddUrlNode={handleAddUrlNode}
-        onAddImageNode={() => handleAddImageNode()} onAddGroupNode={handleAddGroupNode} onFitAll={fitAllNodes}
-        snapEnabled={snapEnabled} onToggleSnap={toggleSnap} onUndo={undo} onRedo={redo}
-        onDuplicate={duplicateSelectedNodes} canUndo={historyIndex > 0} canRedo={historyIndex < history.length - 1}
-        hasSelection={selectedNodeIds.size > 0} onAutoLayout={handleAutoLayout} onGroupSelection={handleGroupSelected}
-        onToggleSearch={() => setShowSearch(s => !s)} selectionCount={selectedNodeIds.size} />
+      <div className="relative">
+        <CanvasToolbar onNewNote={handleNewNote} onAddTextNode={handleAddTextNode} onAddUrlNode={handleAddUrlNode}
+          onAddImageNode={() => handleAddImageNode()} onAddGroupNode={handleAddGroupNode} onFitAll={fitAllNodes}
+          snapEnabled={snapEnabled} onToggleSnap={toggleSnap} onUndo={undo} onRedo={redo}
+          onDuplicate={duplicateSelectedNodes} canUndo={historyIndex > 0} canRedo={historyIndex < history.length - 1}
+          hasSelection={selectedNodeIds.size > 0} onAutoLayout={handleAutoLayout} onGroupSelection={handleGroupSelected}
+          onToggleSearch={() => setShowSearch(s => !s)} selectionCount={selectedNodeIds.size}
+          onToggleFilters={() => setShowFilters(v => !v)}
+          activeFilterCount={canvasFilters.types.length + canvasFilters.colors.length} />
+        {showFilters && <CanvasFilterPanel onClose={() => setShowFilters(false)} />}
+      </div>
 
       {selectedNodeIds.size > 1 && !showSearch && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 rounded-lg bg-card/90 backdrop-blur-sm border border-border px-3 py-1.5 text-xs text-text-secondary shadow-sm">
@@ -967,6 +1034,15 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
         </div>
       )}
 
+      {/* Node properties panel — single selection */}
+      {selectedNodeIds.size === 1 && (() => {
+        const selectedId = [...selectedNodeIds][0]
+        const selectedNode = nodeMap.get(selectedId)
+        return selectedNode ? (
+          <NodePropertiesPanel key={selectedId} node={selectedNode} />
+        ) : null
+      })()}
+
       {contextMenu && (
         <CanvasContextMenu x={contextMenu.x} y={contextMenu.y} worldX={contextMenu.worldX} worldY={contextMenu.worldY}
           targetNodeId={contextMenu.nodeId} onClose={() => setContextMenu(null)} onNewNote={onNewNote}
@@ -978,6 +1054,7 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
           hasSelection={selectedNodeIds.size > 0} hasClipboard={clipboard !== null && clipboard.nodes.length > 0}
           targetEdgeId={contextMenu.edgeId ?? null}
           onEdgeColorChange={(edgeId, color) => { editEdge(edgeId, { color }); setContextMenu(null) }}
+          onEdgeStyleChange={(edgeId, style) => { editEdge(edgeId, { style }); setContextMenu(null) }}
           onEdgeEditLabel={(edgeId) => {
             const edg = edges.find(e => e.id === edgeId)
             const lbl = prompt("Etiqueta de la conexion:", edg?.label || "")

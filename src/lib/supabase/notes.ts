@@ -25,6 +25,10 @@ function createClient() {
   )
 }
 
+export function getClient() {
+  return createClient()
+}
+
 // ─── Error helper ─────────────────────
 
 class NotesError extends Error {
@@ -560,7 +564,7 @@ export async function createEdge(
 
 export async function updateEdge(
   edgeId: string,
-  data: Partial<Pick<CanvasEdge, 'label' | 'color' | 'from_side' | 'to_side'>>
+  data: Partial<Pick<CanvasEdge, 'label' | 'color' | 'style' | 'from_side' | 'to_side'>>
 ): Promise<CanvasEdge> {
   const client = createClient()
   const { data: row, error } = await client

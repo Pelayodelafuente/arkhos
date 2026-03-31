@@ -8,6 +8,7 @@
 export type NoteColor = 'default' | 'sage' | 'terracotta' | 'stone' | 'blue' | 'gold'
 export type NodeType = 'note' | 'text' | 'url' | 'group' | 'image'
 export type EdgeColor = 'default' | 'sage' | 'terracotta' | 'stone' | 'blue'
+export type EdgeStyle = 'arrow' | 'line' | 'bidirectional'
 export type EdgeSide = 'top' | 'right' | 'bottom' | 'left'
 export type NoteSortMode = 'recent' | 'oldest' | 'az' | 'za' | 'color' | 'tag' | 'manual'
 
@@ -103,6 +104,7 @@ export interface CanvasNode {
   z_index: number
   locked: boolean
   group_id: string | null
+  collapsed?: boolean
   created_at: string
   note?: Note
 }
@@ -116,6 +118,7 @@ export interface CanvasEdge {
   to_node_id: string
   label: string
   color: EdgeColor
+  style?: EdgeStyle
   from_side: EdgeSide
   to_side: EdgeSide
   created_at: string

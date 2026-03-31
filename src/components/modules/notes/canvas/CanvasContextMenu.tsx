@@ -15,8 +15,11 @@ import {
   Link,
   Image as ImageIcon,
   Tag,
+  ArrowRight,
+  Minus,
+  ArrowLeftRight,
 } from "lucide-react"
-import type { EdgeColor } from "@/types/notes"
+import type { EdgeColor, EdgeStyle } from "@/types/notes"
 
 const EDGE_COLORS: { value: EdgeColor; color: string; label: string }[] = [
   { value: "default", color: "var(--text-faint)", label: "Neutro" },
@@ -49,6 +52,7 @@ interface Props {
   hasSelection?: boolean
   hasClipboard: boolean
   onEdgeColorChange: (edgeId: string, color: EdgeColor) => void
+  onEdgeStyleChange: (edgeId: string, style: EdgeStyle) => void
   onEdgeEditLabel: (edgeId: string) => void
   onEdgeDelete: (edgeId: string) => void
 }
@@ -82,6 +86,7 @@ export function CanvasContextMenu({
   onDuplicate,
   hasClipboard,
   onEdgeColorChange,
+  onEdgeStyleChange,
   onEdgeEditLabel,
   onEdgeDelete,
 }: Props) {
@@ -146,6 +151,36 @@ export function CanvasContextMenu({
                 aria-label={`Color ${ec.label}`}
               />
             ))}
+          </div>
+        </div>
+
+        {/* Style submenu */}
+        <div className="px-3 py-1.5">
+          <span className="text-[10px] font-medium uppercase tracking-wider text-text-tertiary">
+            Estilo
+          </span>
+          <div className="mt-1.5 flex items-center gap-1.5">
+            <button
+              onClick={() => { onEdgeStyleChange(targetEdgeId, 'arrow'); onClose() }}
+              title="Flecha"
+              className="flex h-7 w-7 items-center justify-center rounded-lg border border-border text-text-secondary hover:bg-sand hover:text-foreground transition-colors"
+            >
+              <ArrowRight size={14} strokeWidth={1.75} />
+            </button>
+            <button
+              onClick={() => { onEdgeStyleChange(targetEdgeId, 'line'); onClose() }}
+              title="Línea"
+              className="flex h-7 w-7 items-center justify-center rounded-lg border border-border text-text-secondary hover:bg-sand hover:text-foreground transition-colors"
+            >
+              <Minus size={14} strokeWidth={1.75} />
+            </button>
+            <button
+              onClick={() => { onEdgeStyleChange(targetEdgeId, 'bidirectional'); onClose() }}
+              title="Bidireccional"
+              className="flex h-7 w-7 items-center justify-center rounded-lg border border-border text-text-secondary hover:bg-sand hover:text-foreground transition-colors"
+            >
+              <ArrowLeftRight size={14} strokeWidth={1.75} />
+            </button>
           </div>
         </div>
 

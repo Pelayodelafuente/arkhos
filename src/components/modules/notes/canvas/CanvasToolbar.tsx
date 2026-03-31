@@ -16,6 +16,7 @@ import {
   Search,
   LayoutGrid,
   Layers,
+  Filter,
 } from "lucide-react"
 import { useNotesStore } from "@/stores/notes-store"
 
@@ -38,6 +39,8 @@ interface Props {
   onAutoLayout: () => void
   onGroupSelection: () => void
   selectionCount: number
+  onToggleFilters: () => void
+  activeFilterCount: number
 }
 
 export function CanvasToolbar({
@@ -59,6 +62,8 @@ export function CanvasToolbar({
   onAutoLayout,
   onGroupSelection,
   selectionCount,
+  onToggleFilters,
+  activeFilterCount,
 }: Props) {
   const viewport = useNotesStore((s) => s.viewport)
   const setViewport = useNotesStore((s) => s.setViewport)
@@ -115,6 +120,23 @@ export function CanvasToolbar({
         aria-label="Buscar en canvas"
       >
         <Search size={14} strokeWidth={1.75} />
+      </button>
+
+      {/* Filters */}
+      <button
+        onClick={onToggleFilters}
+        className={`${btnBase} ${activeFilterCount > 0 ? "bg-sand text-foreground" : ""} relative`}
+        title="Filtros"
+        aria-label="Filtros"
+      >
+        <Filter size={14} strokeWidth={1.75} />
+        {activeFilterCount > 0 && (
+          <span style={{
+            position: 'absolute', top: 0, right: 0,
+            width: 8, height: 8, borderRadius: '50%',
+            backgroundColor: '#C4704A', fontSize: 0,
+          }} />
+        )}
       </button>
 
       <div className="mx-0.5 h-4 w-px bg-border" />

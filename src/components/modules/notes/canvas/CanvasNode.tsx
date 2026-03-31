@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { marked } from "marked"
-import { FileText, Type, Link, ExternalLink, Layers, Lock, Image as ImageIcon } from "lucide-react"
+import { FileText, Type, Link, ExternalLink, Layers, Lock, Image as ImageIcon, ChevronDown, ChevronRight } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import * as LucideIcons from "lucide-react"
 import type { CanvasNode as CanvasNodeType, CanvasViewport } from "@/types/notes"
@@ -98,6 +98,7 @@ interface Props {
   onConnectionStart: (nodeId: string, side: string) => void
   onResizeStart: (nodeId: string, handle: string, e: React.MouseEvent) => void
   onContentChange: (id: string, content: string) => void
+  onToggleCollapsed?: (id: string) => void
 }
 
 // ─── Component ────────────────────────────────
@@ -106,6 +107,7 @@ export function CanvasNodeComponent({
   isConnectionTarget = false, searchDimmed = false, allNodes,
   onSelect, onDragStart, onDoubleClick,
   onConnectionStart, onResizeStart, onContentChange,
+  onToggleCollapsed,
 }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [editingLabel, setEditingLabel] = useState(false)
@@ -117,8 +119,8 @@ export function CanvasNodeComponent({
   const screenX = node.pos_x * scale + offsetX
   const screenY = node.pos_y * scale + offsetY
   const screenW = node.width * scale
-  const screenH = node.height * scale
   const isGroup = node.node_type === "group"
+  const screenH = isGroup && node.collapsed ? 36 * scale : node.height * scale
 
   const [imageError, setImageError] = useState(false)
 
@@ -322,6 +324,16 @@ export function CanvasNodeComponent({
           padding: `${6 * scale}px ${10 * scale}px`,
           display: "flex", alignItems: "center", gap: 4 * scale,
         }}>
+          <button
+            onMouseDown={(e) => { e.stopPropagation() }}
+            onClick={(e) => { e.stopPropagation(); onToggleCollapsed?.(node.id) }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', flexShrink: 0 }}
+          >
+            {node.collapsed
+              ? <ChevronRight size={11 * scale} strokeWidth={1.75} style={{ color: 'var(--text-tertiary)' }} />
+              : <ChevronDown size={11 * scale} strokeWidth={1.75} style={{ color: 'var(--text-tertiary)' }} />
+            }
+          </button>
           <Layers size={13 * scale} strokeWidth={1.75} style={{ color: colors.border, flexShrink: 0 }} />
 
           {editingLabel ? (

@@ -18,6 +18,9 @@ import type {
   HistoryEntry,
   EdgeSide,
   EdgeColor,
+  EdgeStyle,
+  NodeType,
+  NoteColor,
   NoteFolder,
 } from '@/types/notes'
 import { CANVAS_BOUNDS } from '@/types/notes'
@@ -112,6 +115,9 @@ interface NotesState {
   // Note multi-select (list view)
   selectedNoteIds: Set<string>
   isSelectionMode: boolean
+
+  // Canvas filters
+  canvasFilters: { types: NodeType[]; colors: NoteColor[] }
 }
 
 interface NotesActions {
@@ -159,7 +165,7 @@ interface NotesActions {
 
   // Canvas edge operations
   addEdge: (fromNodeId: string, toNodeId: string, fromSide?: EdgeSide, toSide?: EdgeSide, color?: EdgeColor, label?: string) => Promise<CanvasEdge | null>
-  editEdge: (id: string, data: Partial<Pick<CanvasEdge, 'label' | 'color'>>) => Promise<void>
+  editEdge: (id: string, data: Partial<Pick<CanvasEdge, 'label' | 'color' | 'style'>>) => Promise<void>
   removeEdge: (id: string) => Promise<void>
 
   // Selection
@@ -231,6 +237,16 @@ interface NotesActions {
   bulkArchive: () => Promise<void>
   bulkDelete: () => Promise<void>
   bulkMove: (folderId: string | null) => Promise<void>
+
+  // Canvas filters
+  setCanvasFilters: (f: { types: NodeType[]; colors: NoteColor[] }) => void
+  clearCanvasFilters: () => void
+
+  // Group collapse
+  toggleGroupCollapsed: (id: string) => Promise<void>
+
+  // Node color
+  updateNodeColor: (id: string, color: NoteColor) => void
 }
 
 type NotesStore = NotesState & NotesActions
@@ -265,6 +281,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
   activeFolderId: null,
   selectedNoteIds: new Set<string>(),
   isSelectionMode: false,
+  canvasFilters: { types: [], colors: [] },
 
   // ── Fetch ───────────────────────────
 
@@ -1378,6 +1395,48 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
       const msg = e instanceof Error ? e.message : 'Error al mover las notas'
       toast(msg, 'error')
     }
+  },
+
+  // ── Canvas Filters ────────────────
+
+  setCanvasFilters: (f) => set({ canvasFilters: f }),
+
+  clearCanvasFilters: () => set({ canvasFilters: { types: [], colors: [] } }),
+
+  // ── Group Collapse ────────────────
+
+  toggleGroupCollapsed: async (id) => {
+    const node = get().canvasNodes.find((n) => n.id === id)
+    if (!node) return
+    const newCollapsed = !node.collapsed
+    set((s) => ({
+      canvasNodes: s.canvasNodes.map((n) => (n.id === id ? { ...n, collapsed: newCollapsed } : n)),
+    }))
+    try {
+      const supabase = notesApi.getClient()
+      await supabase.from('canvas_nodes').update({ collapsed: newCollapsed }).eq('id', id)
+    } catch (e) {
+      set((s) => ({
+        canvasNodes: s.canvasNodes.map((n) => (n.id === id ? { ...n, collapsed: !newCollapsed } : n)),
+      }))
+      const msg = e instanceof Error ? e.message : 'Error al colapsar grupo'
+      toast(msg, 'error')
+    }
+  },
+
+  // ── Node Color ────────────────────
+
+  updateNodeColor: (id, color) => {
+    set((s) => ({
+      canvasNodes: s.canvasNodes.map((n) => (n.id === id ? { ...n, color } : n)),
+    }))
+    const supabase = notesApi.getClient()
+    supabase.from('canvas_nodes').update({ color }).eq('id', id).then(({ error }) => {
+      if (error) {
+        const msg = error.message ?? 'Error al actualizar color'
+        toast(msg, 'error')
+      }
+    })
   },
 }))
 
