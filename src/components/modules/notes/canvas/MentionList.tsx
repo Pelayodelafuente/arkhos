@@ -61,7 +61,6 @@ export const MentionList = forwardRef<MentionListRef, Props>(({ items, command }
   return (
     <div
       style={{
-        position: 'fixed',
         zIndex: 9999,
         background: 'var(--bg-card, #fff)',
         border: '1px solid var(--border-stone, #E2D9CA)',

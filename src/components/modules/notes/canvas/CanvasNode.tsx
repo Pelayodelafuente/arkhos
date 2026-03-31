@@ -327,11 +327,16 @@ export function CanvasNodeComponent({
           <button
             onMouseDown={(e) => { e.stopPropagation() }}
             onClick={(e) => { e.stopPropagation(); onToggleCollapsed?.(node.id) }}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', flexShrink: 0 }}
+            style={{
+              background: 'rgba(0,0,0,0.06)', border: 'none', cursor: 'pointer',
+              padding: `${2 * scale}px`, borderRadius: 3 * scale,
+              display: 'flex', alignItems: 'center', flexShrink: 0,
+            }}
+            title={node.collapsed ? 'Expandir grupo' : 'Colapsar grupo'}
           >
             {node.collapsed
-              ? <ChevronRight size={11 * scale} strokeWidth={1.75} style={{ color: 'var(--text-tertiary)' }} />
-              : <ChevronDown size={11 * scale} strokeWidth={1.75} style={{ color: 'var(--text-tertiary)' }} />
+              ? <ChevronRight size={13 * scale} strokeWidth={2} style={{ color: 'var(--text-secondary)' }} />
+              : <ChevronDown size={13 * scale} strokeWidth={2} style={{ color: 'var(--text-secondary)' }} />
             }
           </button>
           <Layers size={13 * scale} strokeWidth={1.75} style={{ color: colors.border, flexShrink: 0 }} />

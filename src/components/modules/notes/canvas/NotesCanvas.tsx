@@ -866,10 +866,18 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
   const isSearchActive = showSearch && searchMatchingIds !== null
 
   return (
+    <div className="relative w-full" style={{ height: "calc(100vh - 200px)" }}>
+    {/* Node properties panel — outside overflow:hidden canvas */}
+    {selectedNodeIds.size === 1 && (() => {
+      const selectedId = [...selectedNodeIds][0]
+      const selectedNode = nodeMap.get(selectedId)
+      return selectedNode ? <NodePropertiesPanel key={selectedId} node={selectedNode} /> : null
+    })()}
+
     <div
       ref={containerRef}
-      className="relative w-full rounded-xl border border-border overflow-hidden"
-      style={{ height: "calc(100vh - 200px)", cursor, touchAction: "none" }}
+      className="relative w-full h-full rounded-xl border border-border overflow-hidden"
+      style={{ cursor, touchAction: "none" }}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
@@ -1042,15 +1050,6 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
         </div>
       )}
 
-      {/* Node properties panel — single selection */}
-      {selectedNodeIds.size === 1 && (() => {
-        const selectedId = [...selectedNodeIds][0]
-        const selectedNode = nodeMap.get(selectedId)
-        return selectedNode ? (
-          <NodePropertiesPanel key={selectedId} node={selectedNode} />
-        ) : null
-      })()}
-
       {contextMenu && (
         <CanvasContextMenu x={contextMenu.x} y={contextMenu.y} worldX={contextMenu.worldX} worldY={contextMenu.worldY}
           targetNodeId={contextMenu.nodeId} onClose={() => setContextMenu(null)} onNewNote={onNewNote}
@@ -1071,6 +1070,7 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
           }}
           onEdgeDelete={(edgeId) => { removeEdge(edgeId); setContextMenu(null) }} />
       )}
+    </div>
     </div>
   )
 }
