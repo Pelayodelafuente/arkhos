@@ -27,7 +27,7 @@ export function CanvasFilterPanel({ onClose }: Props) {
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     const handleClick = (e: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) onClose()
+      if (panelRef.current && e.target instanceof Node && !panelRef.current.contains(e.target)) onClose()
     }
     document.addEventListener('keydown', handleKey)
     document.addEventListener('pointerdown', handleClick)

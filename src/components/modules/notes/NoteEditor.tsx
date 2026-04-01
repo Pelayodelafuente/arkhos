@@ -281,6 +281,7 @@ export function NoteEditor({
   )
 
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [
       StarterKit.configure({
         codeBlock: false,
@@ -395,7 +396,7 @@ export function NoteEditor({
   useEffect(() => {
     if (!slashMenu.visible) return
     const handler = (e: MouseEvent) => {
-      if (slashMenuRef.current && !slashMenuRef.current.contains(e.target as Node)) {
+      if (slashMenuRef.current && e.target instanceof Node && !slashMenuRef.current.contains(e.target)) {
         slashStartPos.current = null
         slashMenuVisibleRef.current = false
         setSlashMenu((prev) => ({ ...prev, visible: false, query: '' }))

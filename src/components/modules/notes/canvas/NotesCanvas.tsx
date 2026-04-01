@@ -798,7 +798,7 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
   }, [])
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
-    if (e.currentTarget.contains(e.relatedTarget as Node)) return
+    if (e.relatedTarget instanceof Node && e.currentTarget.contains(e.relatedTarget)) return
     setIsDraggingFile(false)
   }, [])
 
