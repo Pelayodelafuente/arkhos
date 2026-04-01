@@ -277,12 +277,14 @@ export function EnrichedTaskItem({
             />
           ) : (
             <span
-              className={`block cursor-text text-sm transition-all duration-300 ${
+              className={`block cursor-pointer text-sm transition-all duration-300 ${
                 liveTask.done
                   ? "text-text-tertiary line-through opacity-60"
                   : "text-foreground"
               }`}
-              onClick={onStartEdit}
+              onClick={() => setIsExpanded(!isExpanded)}
+              onDoubleClick={onStartEdit}
+              title={isExpanded ? "Colapsar detalle" : "Expandir detalle (doble click para editar)"}
             >
               {liveTask.text}
             </span>
@@ -394,8 +396,8 @@ export function EnrichedTaskItem({
           {/* Toggle inline expand */}
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="text-text-tertiary opacity-0 transition-opacity hover:text-accent group-hover:opacity-100"
-            title={isExpanded ? "Colapsar" : "Expandir detalle"}
+            className={`transition-colors hover:text-accent ${isExpanded ? "text-accent" : "text-text-tertiary"}`}
+            title={isExpanded ? "Colapsar detalle" : "Expandir detalle"}
           >
             {isExpanded ? (
               <Minimize2 size={12} strokeWidth={2} />
