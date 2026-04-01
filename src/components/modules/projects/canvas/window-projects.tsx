@@ -3,7 +3,6 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
-import { Tooltip } from '@/components/ui';
 import { useCanvasStore } from '@/stores/canvas-store';
 import { useProjectsStore } from '@/stores/projects-store';
 import type { ProjectListItem } from '@/types/projects';
@@ -112,37 +111,35 @@ function ProjectCard({
       <div style={{ opacity: isActive ? 1 : 0.35 }}>
         <ProjectFolder logoUrl={project.logo_url} isHovered={hovered} color={statusColor} />
       </div>
-      <Tooltip content={project.name} position="bottom">
-        <span
-          className="font-sans font-medium leading-tight"
-          style={{
-            fontSize: 9,
-            color: 'var(--text-secondary)',
-            textAlign: 'center',
-            lineHeight: 1.2,
-            maxWidth: 70,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-            display: 'block',
-          }}
-        >
-          {project.name}
-        </span>
-      </Tooltip>
-      {/* Status dot with tooltip */}
-      <Tooltip content={project.status} position="bottom">
-        <div
-          style={{
-            width: 6,
-            height: 6,
-            borderRadius: '50%',
-            background: statusColor,
-            opacity: 0.85,
-            flexShrink: 0,
-          }}
-        />
-      </Tooltip>
+      <span
+        className="font-sans font-medium leading-tight"
+        title={project.name}
+        style={{
+          fontSize: 10,
+          color: 'var(--text-secondary)',
+          textAlign: 'center',
+          lineHeight: 1.2,
+          maxWidth: 100,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          display: 'block',
+        }}
+      >
+        {project.name}
+      </span>
+      {/* Status dot */}
+      <div
+        title={project.status}
+        style={{
+          width: 6,
+          height: 6,
+          borderRadius: '50%',
+          background: statusColor,
+          opacity: 0.85,
+          flexShrink: 0,
+        }}
+      />
     </button>
   );
 }
@@ -178,7 +175,7 @@ function ProjectsGrid({
         <button
           type="button"
           onClick={() => setShowAll(true)}
-          className="font-sans text-[10px] font-medium text-accent transition-colors hover:underline"
+          className="cursor-pointer font-sans text-[10px] font-medium text-accent transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent"
         >
           Ver todos ({projects.length})
         </button>
@@ -187,7 +184,7 @@ function ProjectsGrid({
         <button
           type="button"
           onClick={() => setShowAll(false)}
-          className="font-sans text-[10px] font-medium text-text-tertiary transition-colors hover:underline"
+          className="cursor-pointer font-sans text-[10px] font-medium text-text-tertiary transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent"
         >
           Mostrar menos
         </button>
@@ -318,13 +315,15 @@ export function WindowProjects({ userId }: WindowProjectsProps) {
   return (
     <div className="flex flex-col gap-[10px]">
       {/* Filter tabs */}
-      <div className="flex gap-[4px]">
+      <div role="tablist" className="flex gap-[4px]">
         {filterTabs.map((tab) => (
           <button
             key={tab.key}
             type="button"
+            role="tab"
+            aria-selected={filterMode === tab.key}
             onClick={() => setFilterMode(tab.key)}
-            className="flex-1 font-sans text-[10px] font-medium transition-colors"
+            className="flex-1 cursor-pointer font-sans text-[10px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent"
             style={{
               padding: '4px 0',
               borderRadius: 5,
@@ -353,9 +352,10 @@ export function WindowProjects({ userId }: WindowProjectsProps) {
         <input
           type="text"
           placeholder="Buscar proyecto..."
+          aria-label="Buscar proyecto"
           value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
-          className="w-full border-none bg-transparent font-sans text-[11px] outline-none placeholder:text-[#b89878]"
+          className="w-full border-none bg-transparent font-sans text-[11px] outline-none placeholder:text-[#b89878] focus-visible:outline-none"
           style={{ color: '#5a3e28' }}
         />
       </div>

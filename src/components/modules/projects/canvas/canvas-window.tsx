@@ -73,7 +73,7 @@ export function CanvasWindow({
         onMouseLeave={() => setTitlebarHovered(false)}
       >
         {/* Traffic light dots */}
-        <div className="flex items-center gap-[5px]">
+        <div aria-hidden="true" className="flex items-center gap-[5px]">
           <span
             className="block h-[10px] w-[10px] rounded-full"
             style={{
@@ -98,12 +98,12 @@ export function CanvasWindow({
         </div>
 
         {/* Title */}
-        <span
+        <h2
           className="select-none text-[11px] font-semibold"
-          style={{ color: 'var(--text-secondary)' }}
+          style={{ color: 'var(--text-secondary)', margin: 0 }}
         >
           {title}
-        </span>
+        </h2>
 
         {/* Badge */}
         {badge && (
@@ -131,7 +131,7 @@ export function CanvasWindow({
         >
           <button
             type="button"
-            className="flex h-[22px] w-[22px] items-center justify-center"
+            className="flex h-[22px] w-[22px] cursor-pointer items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent"
             style={{
               borderRadius: 5,
               border: '0.5px solid var(--border-medium)',

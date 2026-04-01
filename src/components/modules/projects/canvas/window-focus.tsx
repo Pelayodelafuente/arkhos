@@ -148,7 +148,7 @@ export function WindowFocus({ userId }: WindowFocusProps) {
           <button
             type="button"
             onClick={() => setFilterProjectId(null)}
-            className="rounded-[4px] px-[6px] py-[2px] font-sans text-[9px] font-medium transition-colors"
+            className="cursor-pointer rounded-[4px] px-[6px] py-[2px] font-sans text-[9px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent"
             style={{
               background: filterProjectId === null ? 'rgba(196,112,74,0.12)' : 'transparent',
               color: filterProjectId === null ? '#C4704A' : 'var(--text-tertiary)',
@@ -161,8 +161,9 @@ export function WindowFocus({ userId }: WindowFocusProps) {
             <button
               key={id}
               type="button"
+              title={name}
               onClick={() => setFilterProjectId(filterProjectId === id ? null : id)}
-              className="max-w-[90px] truncate rounded-[4px] px-[6px] py-[2px] font-sans text-[9px] font-medium transition-colors"
+              className="max-w-[120px] cursor-pointer truncate rounded-[4px] px-[6px] py-[2px] font-sans text-[9px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent"
               style={{
                 background: filterProjectId === id ? 'rgba(196,112,74,0.12)' : 'transparent',
                 color: filterProjectId === id ? '#C4704A' : 'var(--text-tertiary)',
@@ -187,13 +188,15 @@ export function WindowFocus({ userId }: WindowFocusProps) {
             {/* Checkbox */}
             <button
               type="button"
+              role="checkbox"
+              aria-checked={task.done}
+              aria-label="Marcar tarea como completada"
               onClick={() => toggleDone(task.id)}
-              className="mt-[1px] flex h-[13px] w-[13px] shrink-0 items-center justify-center rounded-[3px] border transition-colors"
+              className="mt-[1px] flex h-[13px] w-[13px] cursor-pointer shrink-0 items-center justify-center rounded-[3px] border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent"
               style={{
                 borderColor: 'rgba(160,120,80,0.35)',
                 background: 'transparent',
               }}
-              title="Marcar como hecho"
             />
 
             {/* Content */}
@@ -208,7 +211,7 @@ export function WindowFocus({ userId }: WindowFocusProps) {
                 <span
                   style={{ fontSize: 8, color: cfg.color, fontWeight: 600, letterSpacing: 0.2 }}
                 >
-                  {cfg.label.toUpperCase()}
+                  {cfg.label}
                 </span>
                 <span style={{ fontSize: 8, color: '#aaa' }}>·</span>
                 <span
@@ -241,7 +244,7 @@ export function WindowFocus({ userId }: WindowFocusProps) {
       <button
         type="button"
         onClick={() => setShowAllTasks(true)}
-        className="font-sans text-[10px] font-medium text-accent transition-colors hover:underline"
+        className="cursor-pointer font-sans text-[10px] font-medium text-accent transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent"
       >
         Ver {filteredTasks.length - MAX_VISIBLE_TASKS} más
       </button>
@@ -250,7 +253,7 @@ export function WindowFocus({ userId }: WindowFocusProps) {
       <button
         type="button"
         onClick={() => setShowAllTasks(false)}
-        className="font-sans text-[10px] font-medium text-text-tertiary transition-colors hover:underline"
+        className="cursor-pointer font-sans text-[10px] font-medium text-text-tertiary transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent"
       >
         Mostrar menos
       </button>

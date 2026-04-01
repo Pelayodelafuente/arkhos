@@ -64,8 +64,11 @@ function TaskRow({ task, onOpen }: { task: PhaseTask; onOpen: (t: PhaseTask) => 
       {/* Checkbox */}
       <button
         type="button"
+        role="checkbox"
+        aria-checked={task.done}
+        aria-label={task.done ? 'Marcar tarea como pendiente' : 'Marcar tarea como completada'}
         onClick={() => editTask(task.id, { done: !task.done, status: !task.done ? 'done' : 'todo' })}
-        className="flex h-[14px] w-[14px] shrink-0 items-center justify-center rounded-[3px] border transition-colors duration-150"
+        className="flex h-[14px] w-[14px] cursor-pointer shrink-0 items-center justify-center rounded-[3px] border transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent"
         style={{
           borderColor: task.done ? '#056b63' : 'rgba(160,120,80,0.35)',
           background: task.done ? '#056b63' : 'transparent',
@@ -147,7 +150,8 @@ function AddTaskInline({ phaseId }: { phaseId: string }) {
         onKeyDown={handleKeyDown}
         onBlur={submit}
         placeholder="Añadir tarea..."
-        className="flex-1 border-none bg-transparent text-[11px] leading-tight text-[#5a3e28] outline-none placeholder:text-[#b89878]"
+        aria-label="Añadir nueva tarea"
+        className="flex-1 border-none bg-transparent text-[11px] leading-tight text-[#5a3e28] outline-none placeholder:text-[#b89878] focus-visible:outline-none"
       />
     </div>
   );
@@ -170,8 +174,11 @@ function PhaseSection({ phase, onOpenTask }: { phase: ProjectPhase; onOpenTask: 
   return (
     <div className="flex flex-col">
       {/* Phase header */}
-      <div
-        className="flex cursor-pointer items-center gap-[6px] rounded-md px-[4px] py-[4px] transition-colors duration-150 hover:bg-[rgba(196,112,74,0.05)]"
+      <button
+        type="button"
+        aria-expanded={expanded}
+        aria-label={`${expanded ? 'Colapsar' : 'Expandir'} fase ${phase.name}`}
+        className="flex w-full cursor-pointer items-center gap-[6px] rounded-md px-[4px] py-[4px] transition-colors duration-150 hover:bg-[rgba(196,112,74,0.05)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent"
         onClick={() => setExpanded(!expanded)}
       >
         <Icon
@@ -180,24 +187,31 @@ function PhaseSection({ phase, onOpenTask }: { phase: ProjectPhase; onOpenTask: 
         />
 
         {/* Status dot (clickable to cycle) */}
-        <button
-          type="button"
+        <span
+          role="button"
+          tabIndex={0}
           onClick={(e) => {
             e.stopPropagation();
             cycleStatus();
           }}
-          className="h-[8px] w-[8px] shrink-0 rounded-full transition-colors duration-150"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.stopPropagation();
+              cycleStatus();
+            }
+          }}
+          className="h-[8px] w-[8px] shrink-0 cursor-pointer rounded-full transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent"
           style={{ background: statusCfg.color }}
           title={statusCfg.label}
         />
 
         {/* Phase name */}
-        <span
+        <h3
           className="flex-1 truncate text-[11px] font-medium leading-tight"
-          style={{ color: '#2a1a10' }}
+          style={{ color: '#2a1a10', margin: 0 }}
         >
           {phase.name}
-        </span>
+        </h3>
 
         {/* Task count */}
         <span
@@ -206,7 +220,7 @@ function PhaseSection({ phase, onOpenTask }: { phase: ProjectPhase; onOpenTask: 
         >
           {doneCount}/{totalCount}
         </span>
-      </div>
+      </button>
 
       {/* Tasks (expanded) */}
       {expanded && (
@@ -258,7 +272,7 @@ function AddPhaseButton({ projectId }: { projectId: string }) {
       <button
         type="button"
         onClick={() => setAdding(true)}
-        className="flex items-center gap-[4px] rounded-md px-[6px] py-[4px] text-[11px] transition-colors duration-150 hover:bg-[rgba(196,112,74,0.05)]"
+        className="flex cursor-pointer items-center gap-[4px] rounded-md px-[6px] py-[4px] text-[11px] transition-colors duration-150 hover:bg-[rgba(196,112,74,0.05)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent"
         style={{ color: '#9a7a5a' }}
       >
         <Plus className="h-[11px] w-[11px]" />
@@ -338,13 +352,15 @@ export function WindowDetail({ userId }: WindowDetailProps) {
       <div className="h-px" style={{ background: 'var(--border-medium)' }} />
 
       {/* Tab switcher */}
-      <div className="flex gap-[4px]">
+      <div role="tablist" className="flex gap-[4px]">
         {(['progress', 'kanban'] as const).map((t) => (
           <button
             key={t}
             type="button"
+            role="tab"
+            aria-selected={tab === t}
             onClick={() => setTab(t)}
-            className="flex-1 font-sans text-[10px] font-medium transition-colors"
+            className="flex-1 cursor-pointer font-sans text-[10px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent"
             style={{
               padding: '4px 0',
               borderRadius: 5,
@@ -360,10 +376,15 @@ export function WindowDetail({ userId }: WindowDetailProps) {
 
       {/* Phases list (progress tab) */}
       {tab === 'progress' && (
-        <div className="flex flex-col gap-[2px]">
+        <div className="flex min-h-0 flex-col gap-[2px]">
           {sortedPhases.map((phase) => (
             <PhaseSection key={phase.id} phase={phase} onOpenTask={setSlideOverTask} />
           ))}
+          {sortedPhases.length === 0 && (
+            <p className="py-3 text-center font-sans text-[10px] text-text-tertiary">
+              Sin fases. Añade una para empezar.
+            </p>
+          )}
           <AddPhaseButton projectId={activeProject.id} />
         </div>
       )}

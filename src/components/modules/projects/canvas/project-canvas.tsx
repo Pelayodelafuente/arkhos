@@ -90,9 +90,9 @@ export function ProjectCanvas({ userId }: ProjectCanvasProps) {
           Arkhos
         </span>
         <div className="h-[15px] w-px" style={{ background: 'var(--border-medium)' }} />
-        <span className="text-[12px] font-medium text-text-tertiary">
+        <h1 className="text-[12px] font-medium text-text-tertiary" style={{ margin: 0 }}>
           Proyectos
-        </span>
+        </h1>
 
         <div className="ml-auto flex items-center gap-2">
           <Button
