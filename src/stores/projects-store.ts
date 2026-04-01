@@ -338,24 +338,11 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
     // Optimistic
     const prevPhases = active.phases;
 
-    // If done/status is being changed, recalculate phase status too
     const updatedPhases = active.phases.map((p) => {
       const updatedTasks = p.tasks.map((t) =>
         t.id === taskId ? { ...t, ...input } : t
       );
-      const taskChanged = p.tasks.some((t) => t.id === taskId);
-      if (!taskChanged || (input.done === undefined && input.status === undefined)) {
-        return { ...p, tasks: updatedTasks };
-      }
-      const total = updatedTasks.length;
-      const doneCount = updatedTasks.filter((t) => t.done).length;
-      let phaseStatus: import('@/types/projects').PhaseStatus = p.status;
-      if (total > 0) {
-        if (doneCount === total) phaseStatus = 'done';
-        else if (doneCount > 0) phaseStatus = 'in-progress';
-        else phaseStatus = 'pending';
-      }
-      return { ...p, tasks: updatedTasks, status: phaseStatus };
+      return { ...p, tasks: updatedTasks };
     });
 
     set({ activeProject: { ...active, phases: updatedPhases } });
@@ -518,31 +505,24 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
   // ── Task status & subtasks (v2) ───
 
   changeTaskStatus: async (taskId, newStatus) => {
+    const validStatuses = ['todo', 'in_progress', 'review', 'done', 'blocked'];
+    if (!validStatuses.includes(newStatus)) {
+      console.error(`[changeTaskStatus] Invalid status: "${newStatus}"`);
+      return;
+    }
+
     const active = get().activeProject;
     if (!active) return;
 
     const prevPhases = active.phases;
     const done = newStatus === 'done';
 
-    // Update task and auto-recalculate phase status
-    const updatedPhases = active.phases.map((p) => {
-      const updatedTasks = p.tasks.map((t) =>
+    const updatedPhases = active.phases.map((p) => ({
+      ...p,
+      tasks: p.tasks.map((t) =>
         t.id === taskId ? { ...t, status: newStatus, done } : t
-      );
-      const taskChanged = updatedTasks.some((t) => t.id === taskId);
-      if (!taskChanged) return p;
-
-      // Recalculate phase status based on tasks
-      const total = updatedTasks.length;
-      const doneCount = updatedTasks.filter((t) => t.done).length;
-      let phaseStatus: import('@/types/projects').PhaseStatus = p.status;
-      if (total > 0) {
-        if (doneCount === total) phaseStatus = 'done';
-        else if (doneCount > 0) phaseStatus = 'in-progress';
-        else phaseStatus = 'pending';
-      }
-      return { ...p, tasks: updatedTasks, status: phaseStatus };
-    });
+      ),
+    }));
 
     set({ activeProject: { ...active, phases: updatedPhases } });
 

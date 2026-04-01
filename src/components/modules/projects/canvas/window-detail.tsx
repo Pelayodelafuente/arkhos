@@ -10,6 +10,7 @@ import { TaskSlideOver } from '../task-slide-over';
 import {
   PHASE_STATUS_CONFIG,
   TASK_PRIORITY_CONFIG,
+  TASK_PRIORITIES,
   PHASE_STATUSES,
   type ProjectPhase,
   type PhaseTask,
@@ -107,14 +108,26 @@ function TaskRow({ task, onOpen }: { task: PhaseTask; onOpen: (t: PhaseTask) => 
         />
       )}
 
-      {/* Priority badge */}
+      {/* Priority badge (clickable to cycle) */}
       {task.priority !== 'none' && (
-        <Badge
-          variant={PRIORITY_BADGE_VARIANT[task.priority]}
-          className="!px-[5px] !py-0 !text-[9px] !leading-[16px]"
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            const currentIndex = TASK_PRIORITIES.indexOf(task.priority ?? 'none');
+            const nextIndex = (currentIndex + 1) % TASK_PRIORITIES.length;
+            editTask(task.id, { priority: TASK_PRIORITIES[nextIndex] });
+          }}
+          className="cursor-pointer focus-visible:outline-none"
+          title="Ciclar prioridad"
         >
-          {priorityCfg.label}
-        </Badge>
+          <Badge
+            variant={PRIORITY_BADGE_VARIANT[task.priority]}
+            className="!px-[5px] !py-0 !text-[9px] !leading-[16px]"
+          >
+            {priorityCfg.label}
+          </Badge>
+        </button>
       )}
     </div>
   );
