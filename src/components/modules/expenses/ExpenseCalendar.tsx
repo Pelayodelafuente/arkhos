@@ -12,7 +12,7 @@ import { ExpenseLegend } from "./ExpenseLegend"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 
-const WEEKDAY_LABELS = ["Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom"]
+const WEEKDAY_LABELS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]
 
 /** Check if a given week row contains today */
 function isCurrentWeekRow(weekDays: ReturnType<typeof getCalendarDays>): boolean {
@@ -111,7 +111,8 @@ export function ExpenseCalendar({ onNewWithDay }: ExpenseCalendarProps) {
           variant="ghost"
           size="sm"
           onClick={prevMonth}
-          className="border border-border hover:border-accent"
+          aria-label="Mes anterior"
+          className="border border-border hover:border-accent cursor-pointer focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent"
         >
           <ChevronLeft size={16} strokeWidth={1.75} />
         </Button>
@@ -129,7 +130,8 @@ export function ExpenseCalendar({ onNewWithDay }: ExpenseCalendarProps) {
           variant="ghost"
           size="sm"
           onClick={nextMonth}
-          className="border border-border hover:border-accent"
+          aria-label="Mes siguiente"
+          className="border border-border hover:border-accent cursor-pointer focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent"
         >
           <ChevronRight size={16} strokeWidth={1.75} />
         </Button>
@@ -208,7 +210,7 @@ export function ExpenseCalendar({ onNewWithDay }: ExpenseCalendarProps) {
                     className="font-mono text-[11px] text-text-tertiary tabular-nums leading-tight text-center px-1"
                     style={{ fontVariantNumeric: 'tabular-nums' }}
                   >
-                    {weekTotal > 0 ? formatCurrency(weekTotal) : '—'}
+                    {weekTotal > 0 ? formatCurrency(weekTotal) : '0 €'}
                   </span>
                 </div>
               </div>

@@ -176,6 +176,7 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
             onChange={(e) => setLocalSearch(e.target.value)}
             onBlur={() => { if (!localSearch) setSearchExpanded(false) }}
             tabIndex={searchExpanded ? 0 : -1}
+            aria-label="Buscar suscripciones"
             className={`min-w-0 bg-transparent text-sm text-foreground placeholder:text-text-tertiary focus:outline-none transition-opacity ${
               searchExpanded ? 'flex-1 opacity-100' : 'w-0 opacity-0 pointer-events-none'
             }`}
@@ -197,7 +198,7 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
           variant="ghost"
           size="sm"
           onClick={() => setSmartAddOpen(true)}
-          className="border border-border"
+          className="border border-border cursor-pointer focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent"
         >
           <Sparkles size={14} strokeWidth={1.75} />
           <span className="hidden sm:inline">Smart Add</span>
@@ -208,10 +209,10 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
           variant="ghost"
           size="sm"
           onClick={() => setCategoryManagerOpen(true)}
-          className="border border-border"
+          className="border border-border cursor-pointer focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent"
         >
           <Settings size={16} strokeWidth={1.75} />
-          <span className="hidden sm:inline">Categorias</span>
+          <span className="hidden sm:inline">Categorías</span>
         </Button>
 
         {/* Alert settings */}
@@ -219,7 +220,7 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
           variant="ghost"
           size="sm"
           onClick={() => setAlertSettingsOpen(true)}
-          className="border border-border"
+          className="border border-border cursor-pointer focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent"
         >
           <Bell size={16} strokeWidth={1.75} />
           <span className="hidden sm:inline">Alertas</span>
@@ -230,7 +231,7 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
           variant="ghost"
           size="sm"
           onClick={handleExportCSV}
-          className="border border-border"
+          className="border border-border cursor-pointer focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent"
           disabled={subscriptions.length === 0}
         >
           <Download size={16} strokeWidth={1.75} />
@@ -244,6 +245,7 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
           </span>
           <motion.button
             role="switch"
+            aria-label="Mostrar precio anual completo"
             aria-checked={notAmortizeYearly}
             onClick={() => setNotAmortizeYearly(!notAmortizeYearly)}
             className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
@@ -262,7 +264,7 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
         {/* CTA */}
         <Button variant="primary" size="sm" onClick={handleNew}>
           <Plus size={16} strokeWidth={1.75} />
-          <span className="hidden sm:inline">Suscripcion</span>
+          <span className="hidden sm:inline">Suscripción</span>
         </Button>
       </div>
 

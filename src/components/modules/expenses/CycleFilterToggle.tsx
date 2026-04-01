@@ -22,7 +22,7 @@ export function CycleFilterToggle() {
           <button
             key={opt.value}
             onClick={() => setCycleFilter(opt.value)}
-            className={`relative rounded-[17px] px-3 py-1.5 text-xs font-medium transition-colors duration-200 ${
+            className={`relative rounded-[17px] px-3 py-1.5 text-xs font-medium transition-colors duration-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent ${
               isActive
                 ? "text-card font-semibold"
                 : "text-text-tertiary hover:text-text-secondary"

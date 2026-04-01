@@ -51,6 +51,7 @@ export function NotesSidebar({ userId }: Props) {
   const [renamingFolderId, setRenamingFolderId] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState("")
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null)
+  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null)
 
   const newFolderInputRef = useRef<HTMLInputElement>(null)
   const renameInputRef = useRef<HTMLInputElement>(null)
@@ -97,11 +98,13 @@ export function NotesSidebar({ userId }: Props) {
 
   const handleDeleteFolder = async (id: string) => {
     setMenuOpenId(null)
+    setMenuPos(null)
     await removeFolder(id)
   }
 
   const startRename = (folder: NoteFolder) => {
     setMenuOpenId(null)
+    setMenuPos(null)
     setRenameValue(folder.name)
     setRenamingFolderId(folder.id)
   }
@@ -301,20 +304,30 @@ export function NotesSidebar({ userId }: Props) {
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
-                          setMenuOpenId(menuOpenId === folder.id ? null : folder.id)
+                          if (menuOpenId === folder.id) {
+                            setMenuOpenId(null)
+                            setMenuPos(null)
+                          } else {
+                            const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+                            setMenuPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right })
+                            setMenuOpenId(folder.id)
+                          }
                         }}
                         className="hidden group-hover:flex h-5 w-5 items-center justify-center rounded-md text-text-tertiary hover:text-text-secondary hover:bg-border/40 transition-colors"
                         title="Opciones"
                       >
                         <MoreHorizontal size={12} strokeWidth={1.75} />
                       </button>
-                      {menuOpenId === folder.id && (
+                      {menuOpenId === folder.id && menuPos && (
                         <>
                           <div
                             className="fixed inset-0 z-40"
-                            onClick={(e) => { e.stopPropagation(); setMenuOpenId(null) }}
+                            onClick={(e) => { e.stopPropagation(); setMenuOpenId(null); setMenuPos(null) }}
                           />
-                          <div className="absolute right-0 top-6 z-50 w-36 rounded-lg border border-border bg-card py-1 shadow-md">
+                          <div
+                            className="fixed z-50 w-36 rounded-lg border border-border bg-card py-1 shadow-md"
+                            style={{ top: menuPos.top, right: menuPos.right }}
+                          >
                             <button
                               onClick={(e) => { e.stopPropagation(); startRename(folder) }}
                               className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-text-secondary hover:bg-sand transition-colors"

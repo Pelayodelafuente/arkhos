@@ -42,7 +42,7 @@ export function SubscriptionList({ onEdit, onNew }: SubscriptionListProps) {
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <div className="h-4 w-0.5 rounded-full bg-accent" />
-          <span className="font-mono text-[10px] tracking-[0.08em] text-accent">
+          <span className="font-mono text-[10px] tracking-[0.08em] text-text-tertiary">
             {activeCategoryName ? 'FILTRADO POR' : 'TODAS LAS SUSCRIPCIONES'}
           </span>
           {activeCategoryName && (
@@ -176,9 +176,15 @@ function CategoryView({
       {groups.map((group) => {
         const key = group.category?.id ?? '__uncategorized__'
         const isCollapsed = collapsedCategories.has(key)
+        // Exclude paused subscriptions from the category total
+        const activeSubs = group.subscriptions.filter((s) => s.status !== 'paused')
+        const activeMonthly = activeSubs.filter((s) => s.cycle === 'monthly').reduce((acc, s) => acc + s.amount, 0)
+        const activeQuarterly = activeSubs.filter((s) => s.cycle === 'quarterly').reduce((acc, s) => acc + s.amount, 0)
+        const activeSemiannual = activeSubs.filter((s) => s.cycle === 'semiannual').reduce((acc, s) => acc + s.amount, 0)
+        const activeAnnual = activeSubs.filter((s) => s.cycle === 'annual').reduce((acc, s) => acc + s.amount, 0)
         const groupTotal = notAmortizeYearly
-          ? group.totalMonthly + group.totalQuarterly + group.totalSemiannual + group.totalAnnual
-          : group.totalMonthly + group.totalQuarterly / 3 + group.totalSemiannual / 6 + group.totalAnnual / 12
+          ? activeMonthly + activeQuarterly + activeSemiannual + activeAnnual
+          : activeMonthly + activeQuarterly / 3 + activeSemiannual / 6 + activeAnnual / 12
 
         return (
           <div key={key}>
@@ -189,7 +195,9 @@ function CategoryView({
               viewport={{ once: true }}
               transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
               onClick={() => toggleCategoryCollapse(key)}
-              className="flex w-full items-center gap-3 px-3 py-2 hover:bg-sand/30 rounded-lg transition-colors select-none"
+              aria-expanded={!isCollapsed}
+              aria-label={isCollapsed ? "Expandir categoría" : "Contraer categoría"}
+              className="flex w-full items-center gap-3 px-3 py-2 hover:bg-sand/30 rounded-lg transition-colors select-none cursor-pointer focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent"
             >
               <ChevronDown
                 size={14}
@@ -394,7 +402,7 @@ function SubscriptionRow({
               {billingToday ? (
                 <span className="text-accent font-medium">Cobro hoy</span>
               ) : (
-                `Proximo cobro: ${formatNextBilling(subscription)}`
+                `Próximo cobro: ${formatNextBilling(subscription)}`
               )}
             </span>
           )}
@@ -484,7 +492,7 @@ function SubscriptionRow({
 
       {/* Billing today dot */}
       {billingToday && !isInactive && (
-        <span className="relative flex h-2 w-2 flex-shrink-0">
+        <span title="Se cobra hoy" className="relative flex h-2 w-2 flex-shrink-0">
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
           <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
         </span>
@@ -494,13 +502,15 @@ function SubscriptionRow({
       <div className="flex items-center gap-1 opacity-0 translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 flex-shrink-0">
         <button
           onClick={(e) => { e.stopPropagation(); onEdit() }}
-          className="flex h-7 w-7 items-center justify-center rounded-md text-text-tertiary hover:bg-sand hover:text-foreground hover:scale-110 transition-all cursor-pointer"
+          aria-label="Editar suscripción"
+          className="flex h-7 w-7 items-center justify-center rounded-md text-text-tertiary hover:bg-sand hover:text-foreground hover:scale-110 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent"
         >
           <Pencil size={13} strokeWidth={1.75} />
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); onToggleActive() }}
-          className="flex h-7 w-7 items-center justify-center rounded-md text-text-tertiary hover:bg-sand hover:text-foreground hover:scale-110 transition-all cursor-pointer"
+          aria-label="Eliminar suscripción"
+          className="flex h-7 w-7 items-center justify-center rounded-md text-text-tertiary hover:bg-sand hover:text-foreground hover:scale-110 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent"
         >
           {isPaused ? <Play size={13} strokeWidth={1.75} /> : <Pause size={13} strokeWidth={1.75} />}
         </button>

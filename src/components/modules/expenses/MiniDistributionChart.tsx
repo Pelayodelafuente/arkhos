@@ -38,7 +38,7 @@ export function MiniDistributionChart() {
     const groups = groupByCategory(active)
     const allData = groups.map((g) => ({
       id: g.category?.id ?? null,
-      name: g.category?.name ?? "Sin categoria",
+      name: g.category?.name ?? "Sin categoría",
       value:
         g.totalMonthly +
         g.totalQuarterly / 3 +
@@ -82,7 +82,7 @@ export function MiniDistributionChart() {
             className="text-text-tertiary/30 mb-2"
           />
           <p className="text-xs text-text-tertiary">
-            Sin datos de distribucion
+            Sin datos de distribución
           </p>
         </div>
       </Card>
@@ -96,7 +96,7 @@ export function MiniDistributionChart() {
         <div className="flex items-center gap-2 px-2 pt-1 pb-0">
           <div className="h-3 w-0.5 rounded-full bg-[var(--module-gastos)]" />
           <span className="font-mono text-[9px] uppercase tracking-[0.08em] text-text-tertiary font-semibold">
-            Distribucion
+            Distribución
           </span>
           {activeCategoryName && (
             <button

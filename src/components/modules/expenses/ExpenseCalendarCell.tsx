@@ -180,7 +180,10 @@ export function ExpenseCalendarCell({
             </div>
           ))}
           {subscriptions.length > 3 && (
-            <span className="flex h-5 w-5 items-center justify-center rounded text-[9px] font-mono text-text-tertiary bg-sand">
+            <span
+              title={subscriptions.slice(3).map((s) => s.name).join(', ')}
+              className="flex h-5 w-5 items-center justify-center rounded text-[9px] font-mono text-text-tertiary bg-sand"
+            >
               +{subscriptions.length - 3}
             </span>
           )}

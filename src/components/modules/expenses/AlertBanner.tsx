@@ -77,7 +77,10 @@ export function AlertBanner() {
     const todaySubs = active.filter((s) => isBillingToday(s))
     if (todaySubs.length > 0) {
       const total = todaySubs.reduce((acc, s) => acc + s.amount, 0)
-      const names = todaySubs.map((s) => s.name).join(' y ')
+      const todayNames = todaySubs.map((s) => s.name)
+      const names = todayNames.length > 2
+        ? todayNames.slice(0, -1).join(', ') + ' y ' + todayNames.at(-1)
+        : todayNames.join(' y ')
       result.push({
         id: `today-${new Date().toISOString().split('T')[0]}`,
         type: 'today',
@@ -94,7 +97,10 @@ export function AlertBanner() {
     })
     if (upcomingSubs.length > 0) {
       const total = upcomingSubs.reduce((acc, s) => acc + s.amount, 0)
-      const names = upcomingSubs.map((s) => s.name).join(' y ')
+      const upcomingNames = upcomingSubs.map((s) => s.name)
+      const names = upcomingNames.length > 2
+        ? upcomingNames.slice(0, -1).join(', ') + ' y ' + upcomingNames.at(-1)
+        : upcomingNames.join(' y ')
       result.push({
         id: `upcoming-${new Date().toISOString().split('T')[0]}`,
         type: 'tomorrow',
@@ -178,7 +184,8 @@ export function AlertBanner() {
             )}
             <button
               onClick={() => handleDismiss(alert.id)}
-              className="text-text-tertiary hover:text-foreground transition-colors flex-shrink-0"
+              aria-label="Cerrar alerta"
+              className="text-text-tertiary hover:text-foreground transition-colors flex-shrink-0 cursor-pointer focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent rounded"
             >
               <X size={14} strokeWidth={1.75} />
             </button>
