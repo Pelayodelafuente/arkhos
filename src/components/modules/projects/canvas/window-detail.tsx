@@ -207,7 +207,7 @@ function PhaseSection({ phase, onOpenTask }: { phase: ProjectPhase; onOpenTask: 
 
         {/* Phase name */}
         <h3
-          className="flex-1 truncate text-[11px] font-medium leading-tight"
+          className="flex-1 truncate text-left text-[11px] font-medium leading-tight"
           style={{ color: '#2a1a10', margin: 0 }}
         >
           {phase.name}
@@ -381,7 +381,7 @@ export function WindowDetail({ userId }: WindowDetailProps) {
             <PhaseSection key={phase.id} phase={phase} onOpenTask={setSlideOverTask} />
           ))}
           {sortedPhases.length === 0 && (
-            <p className="py-3 text-center font-sans text-[10px] text-text-tertiary">
+            <p className="py-3 text-left font-sans text-[10px] text-text-tertiary">
               Sin fases. Añade una para empezar.
             </p>
           )}
