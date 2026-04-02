@@ -360,6 +360,22 @@ export function getNextAnnualRenewal(
   return { subscription: closest, daysUntil: minDays }
 }
 
+/**
+ * Get the next N annual renewals sorted by proximity.
+ */
+export function getNextAnnualRenewals(
+  subscriptions: SubscriptionWithCategory[],
+  count = 3
+): { subscription: SubscriptionWithCategory; daysUntil: number }[] {
+  const annuals = subscriptions.filter((s) => s.status === 'active' && s.cycle === 'annual')
+  if (annuals.length === 0) return []
+
+  return annuals
+    .map((sub) => ({ subscription: sub, daysUntil: getDaysUntilBilling(sub) }))
+    .sort((a, b) => a.daysUntil - b.daysUntil)
+    .slice(0, count)
+}
+
 // ─── Heat map intensity ─────────────
 
 /**

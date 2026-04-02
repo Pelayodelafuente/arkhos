@@ -3,15 +3,24 @@
 import { useState, useMemo } from "react"
 import {
   Plus, Trash2, Pencil, X, Check, Search,
-  Terminal, Code, Code2, Globe, Server, Database, Cloud, Wifi,
-  Smartphone, Laptop, Monitor, HardDrive, Cpu, Lock, Key,
-  Hammer, Settings, Wrench,
-  Banknote, CreditCard, Wallet, TrendingUp, BarChart2, Receipt, Landmark, DollarSign,
+  // Tech & Dev
+  Terminal, Code2, Globe, Server, Database, CloudUpload, Wifi,
+  Smartphone, Laptop, Monitor, HardDrive, Cpu, BrainCircuit, Bot,
+  ShieldCheck, KeyRound, FingerprintIcon,
+  // Productivity & Tools
+  LayoutDashboard, Workflow, GitBranch, Blocks, Wrench, Settings2,
+  // Finance
+  Banknote, CreditCard, Wallet, TrendingUp, BarChart3, Receipt, Landmark, CircleDollarSign,
+  // Transport
   Car, Plane, Train,
-  Music, Tv, MonitorPlay, Play, Gamepad2, Camera, Film,
-  GraduationCap, BookOpen, Book,
-  Heart, Home, Shield, Zap, Sparkles, Coffee, Dumbbell,
-  ShoppingCart, ShoppingBag, Scissors, Users, Star, Layers,
+  // Media & Entertainment
+  Headphones, Tv2, MonitorPlay, Clapperboard, Gamepad, Camera, Radio,
+  // Education
+  GraduationCap, BookOpen, FlaskConical, Lightbulb,
+  // Lifestyle
+  Activity, Home, Heart, Dumbbell, UtensilsCrossed, Coffee, Scissors,
+  // Commerce & Social
+  ShoppingCart, ShoppingBag, Users, MessageSquare, Mail, Star, Layers, Zap,
   type LucideIcon
 } from "lucide-react"
 import { Modal, Button, Input } from "@/components/ui"
@@ -21,64 +30,76 @@ import type { ExpenseCategory } from "@/types/expenses"
 // ─── Icon Library ─────────────────────────────────────────────────────────────
 
 const ICON_LIBRARY: { name: string; label: string; Icon: LucideIcon }[] = [
+  // Streaming & Media
+  { name: "monitor-play",   label: "Streaming",  Icon: MonitorPlay },
+  { name: "tv-2",           label: "TV",         Icon: Tv2 },
+  { name: "clapperboard",   label: "Cine",       Icon: Clapperboard },
+  { name: "headphones",     label: "Música",     Icon: Headphones },
+  { name: "radio",          label: "Radio/Pod",  Icon: Radio },
+  { name: "camera",         label: "Foto",       Icon: Camera },
+  { name: "gamepad",        label: "Gaming",     Icon: Gamepad },
   // Tech & Dev
-  { name: "terminal",      label: "Terminal",   Icon: Terminal },
-  { name: "code",          label: "Código",     Icon: Code },
-  { name: "code-2",        label: "Dev",        Icon: Code2 },
-  { name: "globe",         label: "Web",        Icon: Globe },
-  { name: "server",        label: "Servidor",   Icon: Server },
-  { name: "database",      label: "Database",   Icon: Database },
-  { name: "cloud",         label: "Cloud",      Icon: Cloud },
-  { name: "wifi",          label: "Wifi",       Icon: Wifi },
-  { name: "smartphone",    label: "Móvil",      Icon: Smartphone },
-  { name: "laptop",        label: "Portátil",   Icon: Laptop },
-  { name: "monitor",       label: "Monitor",    Icon: Monitor },
-  { name: "hard-drive",    label: "Disco",      Icon: HardDrive },
-  { name: "cpu",           label: "CPU",        Icon: Cpu },
-  { name: "lock",          label: "Seguridad",  Icon: Lock },
-  { name: "key",           label: "Clave",      Icon: Key },
-  { name: "hammer",        label: "Herramienta",Icon: Hammer },
-  { name: "settings",      label: "Ajustes",    Icon: Settings },
-  { name: "wrench",        label: "Config",     Icon: Wrench },
+  { name: "terminal",       label: "Terminal",   Icon: Terminal },
+  { name: "code-2",         label: "Dev",        Icon: Code2 },
+  { name: "globe",          label: "Web",        Icon: Globe },
+  { name: "server",         label: "Servidor",   Icon: Server },
+  { name: "database",       label: "Database",   Icon: Database },
+  { name: "cloud-upload",   label: "Cloud",      Icon: CloudUpload },
+  { name: "wifi",           label: "Red",        Icon: Wifi },
+  { name: "smartphone",     label: "Móvil",      Icon: Smartphone },
+  { name: "laptop",         label: "Portátil",   Icon: Laptop },
+  { name: "monitor",        label: "Monitor",    Icon: Monitor },
+  { name: "hard-drive",     label: "Almac.",     Icon: HardDrive },
+  { name: "cpu",            label: "CPU",        Icon: Cpu },
+  { name: "git-branch",     label: "Git",        Icon: GitBranch },
+  { name: "blocks",         label: "API",        Icon: Blocks },
+  // AI & Emerging
+  { name: "brain-circuit",  label: "IA",         Icon: BrainCircuit },
+  { name: "bot",            label: "Bot",        Icon: Bot },
+  { name: "zap",            label: "Automatiz.", Icon: Zap },
+  // Security
+  { name: "shield-check",   label: "Seguridad",  Icon: ShieldCheck },
+  { name: "key-round",      label: "Contraseña", Icon: KeyRound },
+  { name: "fingerprint",    label: "Biométrico", Icon: FingerprintIcon },
+  // Productivity
+  { name: "layout-dashboard",label: "Dashboard", Icon: LayoutDashboard },
+  { name: "workflow",       label: "Workflow",   Icon: Workflow },
+  { name: "settings-2",     label: "Ajustes",    Icon: Settings2 },
+  { name: "wrench",         label: "Herramientas",Icon: Wrench },
   // Finance
-  { name: "banknote",      label: "Billete",    Icon: Banknote },
-  { name: "credit-card",   label: "Tarjeta",    Icon: CreditCard },
-  { name: "wallet",        label: "Cartera",    Icon: Wallet },
-  { name: "trending-up",   label: "Inversión",  Icon: TrendingUp },
-  { name: "bar-chart-2",   label: "Gráfico",    Icon: BarChart2 },
-  { name: "receipt",       label: "Factura",    Icon: Receipt },
-  { name: "landmark",      label: "Banco",      Icon: Landmark },
-  { name: "dollar-sign",   label: "Divisa",     Icon: DollarSign },
+  { name: "banknote",       label: "Billete",    Icon: Banknote },
+  { name: "credit-card",    label: "Tarjeta",    Icon: CreditCard },
+  { name: "wallet",         label: "Cartera",    Icon: Wallet },
+  { name: "trending-up",    label: "Inversión",  Icon: TrendingUp },
+  { name: "bar-chart-3",    label: "Finanzas",   Icon: BarChart3 },
+  { name: "receipt",        label: "Factura",    Icon: Receipt },
+  { name: "landmark",       label: "Banco",      Icon: Landmark },
+  { name: "circle-dollar-sign", label: "Divisa", Icon: CircleDollarSign },
   // Transport
-  { name: "car",           label: "Coche",      Icon: Car },
-  { name: "plane",         label: "Avión",      Icon: Plane },
-  { name: "train",         label: "Tren",       Icon: Train },
-  // Media
-  { name: "music",         label: "Música",     Icon: Music },
-  { name: "tv",            label: "TV",         Icon: Tv },
-  { name: "monitor-play",  label: "Streaming",  Icon: MonitorPlay },
-  { name: "play",          label: "Reproducir", Icon: Play },
-  { name: "gamepad-2",     label: "Gaming",     Icon: Gamepad2 },
-  { name: "camera",        label: "Cámara",     Icon: Camera },
-  { name: "film",          label: "Cine",       Icon: Film },
+  { name: "car",            label: "Coche",      Icon: Car },
+  { name: "plane",          label: "Avión",      Icon: Plane },
+  { name: "train",          label: "Tren",       Icon: Train },
   // Education
-  { name: "graduation-cap",label: "Educación",  Icon: GraduationCap },
-  { name: "book-open",     label: "Libro",      Icon: BookOpen },
-  { name: "book",          label: "Manual",     Icon: Book },
-  // Lifestyle
-  { name: "heart",         label: "Salud",      Icon: Heart },
-  { name: "home",          label: "Hogar",      Icon: Home },
-  { name: "shield",        label: "Seguro",     Icon: Shield },
-  { name: "zap",           label: "Energía",    Icon: Zap },
-  { name: "sparkles",      label: "IA",         Icon: Sparkles },
-  { name: "coffee",        label: "Café",       Icon: Coffee },
-  { name: "dumbbell",      label: "Fitness",    Icon: Dumbbell },
-  { name: "shopping-cart", label: "Compras",    Icon: ShoppingCart },
-  { name: "shopping-bag",  label: "Tienda",     Icon: ShoppingBag },
-  { name: "scissors",      label: "Peluquería", Icon: Scissors },
-  { name: "users",         label: "Grupo",      Icon: Users },
-  { name: "star",          label: "Premium",    Icon: Star },
-  { name: "layers",        label: "General",    Icon: Layers },
+  { name: "graduation-cap", label: "Educación",  Icon: GraduationCap },
+  { name: "book-open",      label: "Libro",      Icon: BookOpen },
+  { name: "flask-conical",  label: "Ciencia",    Icon: FlaskConical },
+  { name: "lightbulb",      label: "Ideas",      Icon: Lightbulb },
+  // Lifestyle & Health
+  { name: "activity",       label: "Salud/Fit",  Icon: Activity },
+  { name: "dumbbell",       label: "Gym",        Icon: Dumbbell },
+  { name: "heart",          label: "Bienestar",  Icon: Heart },
+  { name: "home",           label: "Hogar",      Icon: Home },
+  { name: "utensils-crossed",label: "Comida",    Icon: UtensilsCrossed },
+  { name: "coffee",         label: "Café",       Icon: Coffee },
+  { name: "scissors",       label: "Peluquería", Icon: Scissors },
+  // Commerce & Social
+  { name: "shopping-cart",  label: "Compras",    Icon: ShoppingCart },
+  { name: "shopping-bag",   label: "Tienda",     Icon: ShoppingBag },
+  { name: "users",          label: "Comunidad",  Icon: Users },
+  { name: "message-square", label: "Mensajería", Icon: MessageSquare },
+  { name: "mail",           label: "Email",      Icon: Mail },
+  { name: "star",           label: "Premium",    Icon: Star },
+  { name: "layers",         label: "General",    Icon: Layers },
 ]
 
 export const ICON_MAP: Record<string, LucideIcon> = Object.fromEntries(

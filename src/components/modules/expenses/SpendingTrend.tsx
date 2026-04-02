@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { BarChart, Bar, Cell, ResponsiveContainer, XAxis, Tooltip, LineChart, Line, CartesianGrid } from "recharts"
+import { BarChart, Bar, Cell, ResponsiveContainer, XAxis, Tooltip, LineChart, Line, CartesianGrid, ReferenceLine } from "recharts"
 import { Card } from "@/components/ui"
 import { useExpensesStore } from "@/stores/expenses-store"
 import { formatCurrency } from "@/lib/gastos-utils"
@@ -13,44 +13,90 @@ const MONTH_NAMES = [
   "Jul", "Ago", "Sep", "Oct", "Nov", "Dic",
 ]
 
-interface TooltipProps {
-  active?: boolean
-  payload?: Array<{ payload?: { name?: string; total?: number; label?: string } }>
+interface ProjectionEntry {
+  name: string
+  label: string
+  monthly: number
+  annualEvent: number
+  other: number
+  total: number
+  isCurrent: boolean
 }
 
-function ProjectionTooltip({ active, payload }: TooltipProps) {
+interface RichTooltipProps {
+  active?: boolean
+  payload?: Array<{ payload?: ProjectionEntry }>
+}
+
+function ProjectionTooltip({ active, payload }: RichTooltipProps) {
   if (!active || !payload?.[0]?.payload) return null
   const d = payload[0].payload
   return (
-    <div className="rounded-lg bg-card border border-border px-2.5 py-1.5 text-[11px]">
-      <p className="text-text-secondary">{d.label ?? d.name}</p>
-      <p className="font-mono font-medium text-foreground">
-        {formatCurrency(d.total ?? 0)}
-      </p>
+    <div className="rounded-lg bg-card border border-border px-3 py-2 text-[11px] space-y-1" style={{ boxShadow: 'var(--shadow-modal)' }}>
+      <p className="text-text-secondary font-medium">{d.label}</p>
+      <p className="font-mono font-semibold text-foreground">{formatCurrency(d.total)}</p>
+      {d.monthly > 0 && (
+        <div className="flex items-center gap-1.5">
+          <span className="h-1.5 w-1.5 rounded-full flex-shrink-0" style={{ background: 'rgba(74,122,155,0.8)' }} />
+          <span className="text-text-tertiary">Mensual:</span>
+          <span className="font-mono text-foreground ml-auto pl-2">{formatCurrency(d.monthly)}</span>
+        </div>
+      )}
+      {d.annualEvent > 0 && (
+        <div className="flex items-center gap-1.5">
+          <span className="h-1.5 w-1.5 rounded-full flex-shrink-0 bg-[var(--module-gastos)]" />
+          <span className="text-text-tertiary">Anual:</span>
+          <span className="font-mono text-foreground ml-auto pl-2">{formatCurrency(d.annualEvent)}</span>
+        </div>
+      )}
+      {d.other > 0 && (
+        <div className="flex items-center gap-1.5">
+          <span className="h-1.5 w-1.5 rounded-full flex-shrink-0 bg-[var(--module-proyectos)]/60" />
+          <span className="text-text-tertiary">Otro:</span>
+          <span className="font-mono text-foreground ml-auto pl-2">{formatCurrency(d.other)}</span>
+        </div>
+      )}
     </div>
   )
 }
 
-function getProjectedTotal(subs: SubscriptionWithCategory[], month: number): number {
-  return subs.reduce((acc, sub) => {
-    if (sub.cycle === 'monthly') return acc + sub.amount
-    if (sub.cycle === 'annual' && sub.started_at) {
-      // Full amount in the billing month, 0 in other months
+interface HistoryTooltipProps {
+  active?: boolean
+  payload?: Array<{ payload?: { label?: string; total?: number } }>
+}
+
+function HistoryTooltip({ active, payload }: HistoryTooltipProps) {
+  if (!active || !payload?.[0]?.payload) return null
+  const d = payload[0].payload
+  return (
+    <div className="rounded-lg bg-card border border-border px-2.5 py-1.5 text-[11px]" style={{ boxShadow: 'var(--shadow-modal)' }}>
+      <p className="text-text-secondary">{d.label}</p>
+      <p className="font-mono font-medium text-foreground">{formatCurrency(d.total ?? 0)}</p>
+    </div>
+  )
+}
+
+function getProjectedData(subs: SubscriptionWithCategory[], month: number): { monthly: number; annualEvent: number; other: number } {
+  let monthly = 0
+  let annualEvent = 0
+  let other = 0
+  for (const sub of subs) {
+    if (sub.cycle === 'monthly') {
+      monthly += sub.amount
+    } else if (sub.cycle === 'annual' && sub.started_at) {
       const billingMonth = new Date(sub.started_at).getMonth() + 1
-      return acc + (billingMonth === month ? sub.amount : 0)
-    }
-    if (sub.cycle === 'quarterly' && sub.started_at) {
+      if (billingMonth === month) annualEvent += sub.amount
+    } else if (sub.cycle === 'quarterly' && sub.started_at) {
       const startMonth = new Date(sub.started_at).getMonth() + 1
       const diff = ((month - startMonth) % 12 + 12) % 12
-      return acc + (diff % 3 === 0 ? sub.amount : 0)
-    }
-    if (sub.cycle === 'semiannual' && sub.started_at) {
+      if (diff % 3 === 0) other += sub.amount
+    } else if (sub.cycle === 'semiannual' && sub.started_at) {
       const startMonth = new Date(sub.started_at).getMonth() + 1
       const diff = ((month - startMonth) % 12 + 12) % 12
-      return acc + (diff % 6 === 0 ? sub.amount : 0)
+      if (diff % 6 === 0) other += sub.amount
     }
-    return acc
-  }, 0)
+  }
+  return { monthly, annualEvent, other }
 }
 
 export function SpendingTrend() {
@@ -58,9 +104,9 @@ export function SpendingTrend() {
   const monthlySpending = useExpensesStore((s) => s.monthlySpending)
   const [activeTab, setActiveTab] = useState<'projection' | 'history'>('projection')
 
-  const { data, hasData } = useMemo(() => {
+  const { data, hasData, mean } = useMemo(() => {
     const active = subscriptions.filter((s) => s.status === 'active' || s.status === 'trial')
-    if (active.length === 0) return { data: [], hasData: false }
+    if (active.length === 0) return { data: [], hasData: false, mean: 0 }
 
     const now = new Date()
     const months = Array.from({ length: 12 }, (_, i) => {
@@ -73,14 +119,22 @@ export function SpendingTrend() {
       }
     })
 
-    const chartData = months.map(({ year, month, name, isCurrent }) => ({
-      name,
-      label: `${name} ${year}`,
-      total: getProjectedTotal(active, month),
-      isCurrent,
-    }))
+    const chartData: ProjectionEntry[] = months.map(({ year, month, name, isCurrent }) => {
+      const { monthly, annualEvent, other } = getProjectedData(active, month)
+      return {
+        name,
+        label: `${name} ${year}`,
+        monthly,
+        annualEvent,
+        other,
+        total: monthly + annualEvent + other,
+        isCurrent,
+      }
+    })
 
-    return { data: chartData, hasData: true }
+    const meanValue = chartData.reduce((acc, d) => acc + d.total, 0) / chartData.length
+
+    return { data: chartData, hasData: true, mean: meanValue }
   }, [subscriptions])
 
   // Build historical data from monthlySpending (last 6 months)
@@ -141,6 +195,22 @@ export function SpendingTrend() {
 
       {activeTab === 'projection' ? (
         <>
+          {/* Legend */}
+          <div className="flex items-center gap-3 px-2 pb-1">
+            <div className="flex items-center gap-1">
+              <span className="h-1.5 w-3 rounded-sm" style={{ background: 'rgba(74,122,155,0.7)' }} />
+              <span className="text-[9px] text-text-tertiary">Mensual</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="h-1.5 w-3 rounded-sm bg-[var(--module-gastos)]" style={{ opacity: 0.8 }} />
+              <span className="text-[9px] text-text-tertiary">Anual</span>
+            </div>
+            <div className="flex items-center gap-1 ml-auto">
+              <span className="inline-block h-px w-4 border-t border-dashed border-text-tertiary/60" />
+              <span className="text-[9px] text-text-tertiary">Media</span>
+            </div>
+          </div>
+
           {/* Projection Bar Chart */}
           <div style={{ width: "100%", height: 90, minWidth: 100 }}>
             <ResponsiveContainer width="100%" height="100%">
@@ -153,11 +223,27 @@ export function SpendingTrend() {
                   dy={3}
                 />
                 <Tooltip content={<ProjectionTooltip />} cursor={{ fill: 'var(--bg-card-hover)' }} />
-                <Bar dataKey="total" radius={[3, 3, 0, 0]}>
+                <ReferenceLine
+                  y={mean}
+                  stroke="var(--text-tertiary)"
+                  strokeDasharray="4 2"
+                  strokeWidth={1}
+                  opacity={0.6}
+                />
+                <Bar dataKey="monthly" stackId="a" radius={[0, 0, 0, 0]} fill="rgba(74,122,155,0.7)" />
+                <Bar dataKey="annualEvent" stackId="a" radius={[0, 0, 0, 0]}>
                   {data.map((entry, i) => (
                     <Cell
                       key={i}
-                      fill={entry.isCurrent ? '#5f1b29' : entry.total > currentTotal * 1.5 ? 'rgba(196,112,74,0.6)' : 'rgba(95,27,41,0.3)'}
+                      fill={entry.annualEvent > 0 ? 'rgba(196,112,74,0.85)' : 'transparent'}
+                    />
+                  ))}
+                </Bar>
+                <Bar dataKey="other" stackId="a" radius={[3, 3, 0, 0]}>
+                  {data.map((entry, i) => (
+                    <Cell
+                      key={i}
+                      fill={entry.other > 0 ? 'rgba(155,122,74,0.7)' : 'transparent'}
                     />
                   ))}
                 </Bar>
@@ -188,7 +274,7 @@ export function SpendingTrend() {
                     dy={3}
                     tickFormatter={(v: string) => v.split(' ')[0] ?? v}
                   />
-                  <Tooltip content={<ProjectionTooltip />} cursor={{ stroke: 'var(--border-stone)', strokeWidth: 1 }} />
+                  <Tooltip content={<HistoryTooltip />} cursor={{ stroke: 'var(--border-stone)', strokeWidth: 1 }} />
                   <Line
                     type="monotone"
                     dataKey="total"

@@ -4,7 +4,7 @@ import { useMemo, useEffect } from "react"
 import { Wallet, CalendarClock, FolderOpen, RotateCcw } from "lucide-react"
 import { motion, useSpring, useTransform, useMotionValue, useReducedMotion } from "framer-motion"
 import { useExpensesStore, useExpenseSummary, useCycleFilteredSubscriptions } from "@/stores/expenses-store"
-import { formatCurrency, getNextBillingSubscription, getMostExpensiveCategory, getNextAnnualRenewal, getDaysUntilBilling } from "@/lib/gastos-utils"
+import { formatCurrency, getNextBillingSubscription, getMostExpensiveCategory, getNextAnnualRenewals, getDaysUntilBilling } from "@/lib/gastos-utils"
 import { ServiceAvatar } from "./ServiceAvatar"
 
 const MONTH_NAMES = [
@@ -68,7 +68,7 @@ export function KPICards() {
   }, [subscriptions, isCurrentMonth, isAnnualView, viewedYear, viewedMonth])
 
   const topCategory = useMemo(() => getMostExpensiveCategory(subscriptions), [subscriptions])
-  const nextRenewal = useMemo(() => getNextAnnualRenewal(subscriptions), [subscriptions])
+  const nextRenewals = useMemo(() => getNextAnnualRenewals(subscriptions, 3), [subscriptions])
 
   // Annual view: sum all active annual sub amounts (not restricted to billing month)
   const annualViewTotal = useMemo(() => {
@@ -242,30 +242,34 @@ export function KPICards() {
       >
         <div className="flex items-center gap-2 mb-2">
           <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-medium">
-            RENOVACIÓN PRÓXIMA
+            PRÓXIMAS ANUALES
           </span>
         </div>
-        {nextRenewal ? (
-          <>
-            <div className="flex items-center gap-2">
-              <ServiceAvatar
-                name={nextRenewal.subscription.name}
-                icon={nextRenewal.subscription.icon}
-                color={nextRenewal.subscription.color}
-                size="sm"
-                iconUrl={nextRenewal.subscription.icon_url}
-                url={nextRenewal.subscription.url}
-              />
-              <span className="font-heading text-lg text-foreground truncate">
-                {nextRenewal.subscription.name}
-              </span>
-            </div>
-            <p className="text-xs text-text-tertiary mt-1">
-              <AnimatedNumber value={nextRenewal.subscription.amount} format={formatCurrency} /> en {nextRenewal.daysUntil} días
-            </p>
-          </>
+        {nextRenewals.length > 0 ? (
+          <div className="space-y-1.5">
+            {nextRenewals.map(({ subscription: sub, daysUntil }) => (
+              <div key={sub.id} className="flex items-center gap-2">
+                <ServiceAvatar
+                  name={sub.name}
+                  icon={sub.icon}
+                  color={sub.color}
+                  size="sm"
+                  iconUrl={sub.icon_url}
+                  url={sub.url}
+                />
+                <div className="flex-1 min-w-0">
+                  <span className="text-[12px] font-semibold text-foreground truncate block">
+                    {sub.name}
+                  </span>
+                  <span className="font-mono text-[10px] text-text-tertiary">
+                    {formatCurrency(sub.amount)} · {daysUntil === 0 ? 'hoy' : `${daysUntil}d`}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
         ) : (
-          <p className="text-sm text-text-tertiary">Sin suscripciones anuales</p>
+          <p className="text-sm text-text-tertiary">Sin renovaciones anuales</p>
         )}
         <RotateCcw
           size={48}

@@ -147,6 +147,7 @@ export function CustomSelect({
                   <button
                     key={opt.value}
                     type="button"
+                    title={opt.label}
                     onClick={() => { onChange(opt.value); setOpen(false) }}
                     className="flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors duration-100 cursor-pointer"
                     style={{

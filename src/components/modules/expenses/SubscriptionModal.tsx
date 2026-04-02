@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
-import { Play, Pause, Trash2, AlertTriangle, Upload, X } from "lucide-react"
+import { Play, Pause, Trash2, AlertTriangle, Upload, X, ChevronDown } from "lucide-react"
 import { z } from "zod/v4"
 import { Modal, Button, Input, Textarea } from "@/components/ui"
 import { useExpensesStore } from "@/stores/expenses-store"
@@ -72,6 +72,7 @@ export function SubscriptionModal({
   const [saving, setSaving] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [dismissedDuplicates, setDismissedDuplicates] = useState(false)
+  const [notesOpen, setNotesOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   // ── Duplicate detection ───────────
@@ -308,18 +309,21 @@ export function SubscriptionModal({
 
         {/* Color + Logo upload */}
         <div className="flex items-end gap-4">
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-text-secondary">Color</label>
-            <div className="flex items-center gap-2">
-              <input
-                type="color"
-                value={color}
-                onChange={(e) => setColor(e.target.value)}
-                className="h-9 w-9 cursor-pointer rounded-md border border-border bg-card"
-              />
-              <span className="font-mono text-xs text-text-tertiary">{color}</span>
+          {/* Color — hidden when logo is present */}
+          {!iconUrl && (
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-text-secondary">Color</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={color}
+                  onChange={(e) => setColor(e.target.value)}
+                  className="h-9 w-9 cursor-pointer rounded-md border border-border bg-card"
+                />
+                <span className="font-mono text-xs text-text-tertiary">{color}</span>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Logo upload circle */}
           <div className="flex flex-col gap-1">
@@ -403,14 +407,32 @@ export function SubscriptionModal({
           placeholder="https://..."
         />
 
-        {/* Notes */}
-        <Textarea
-          label="Notas"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Notas personales..."
-          rows={2}
-        />
+        {/* Notes — collapsible */}
+        <div>
+          <button
+            type="button"
+            onClick={() => setNotesOpen((o) => !o)}
+            className="flex items-center gap-1.5 text-sm font-medium text-text-secondary hover:text-foreground transition-colors cursor-pointer mb-1"
+          >
+            <ChevronDown
+              size={14}
+              strokeWidth={1.75}
+              className={`transition-transform duration-200 ${notesOpen ? '' : '-rotate-90'}`}
+            />
+            Notas
+            {notes && !notesOpen && (
+              <span className="ml-1 h-1.5 w-1.5 rounded-full bg-accent" />
+            )}
+          </button>
+          {notesOpen && (
+            <Textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Notas personales..."
+              rows={2}
+            />
+          )}
+        </div>
 
         {/* Start date */}
         <Input
