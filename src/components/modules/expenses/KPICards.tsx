@@ -68,7 +68,7 @@ export function KPICards() {
   }, [subscriptions, isCurrentMonth, isAnnualView, viewedYear, viewedMonth])
 
   const topCategory = useMemo(() => getMostExpensiveCategory(subscriptions), [subscriptions])
-  const nextRenewals = useMemo(() => getNextAnnualRenewals(subscriptions, 3), [subscriptions])
+  const nextRenewals = useMemo(() => getNextAnnualRenewals(subscriptions, 1), [subscriptions])
 
   // Annual view: sum all active annual sub amounts (not restricted to billing month)
   const annualViewTotal = useMemo(() => {
@@ -245,10 +245,11 @@ export function KPICards() {
             PRÓXIMAS ANUALES
           </span>
         </div>
-        {nextRenewals.length > 0 ? (
-          <div className="space-y-1.5">
-            {nextRenewals.map(({ subscription: sub, daysUntil }) => (
-              <div key={sub.id} className="flex items-center gap-2">
+        {nextRenewals.length > 0 ? (() => {
+          const { subscription: sub, daysUntil } = nextRenewals[0]!
+          return (
+            <>
+              <div className="flex items-center gap-2">
                 <ServiceAvatar
                   name={sub.name}
                   icon={sub.icon}
@@ -257,18 +258,23 @@ export function KPICards() {
                   iconUrl={sub.icon_url}
                   url={sub.url}
                 />
-                <div className="flex-1 min-w-0">
-                  <span className="text-[12px] font-semibold text-foreground truncate block">
-                    {sub.name}
-                  </span>
-                  <span className="font-mono text-[10px] text-text-tertiary">
-                    {formatCurrency(sub.amount)} · {daysUntil === 0 ? 'hoy' : `${daysUntil}d`}
-                  </span>
-                </div>
+                <span className="font-heading text-lg text-foreground truncate">
+                  {sub.name}
+                </span>
               </div>
-            ))}
-          </div>
-        ) : (
+              <p className="text-xs text-text-tertiary mt-1">
+                <AnimatedNumber value={sub.amount} format={formatCurrency} /> —{' '}
+                {daysUntil === 0 ? (
+                  <span className="text-accent font-semibold">hoy</span>
+                ) : daysUntil === 1 ? (
+                  <span className="text-amber-600 font-medium">mañana</span>
+                ) : (
+                  `en ${daysUntil} días`
+                )}
+              </p>
+            </>
+          )
+        })() : (
           <p className="text-sm text-text-tertiary">Sin renovaciones anuales</p>
         )}
         <RotateCcw

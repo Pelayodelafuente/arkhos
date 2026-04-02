@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo } from "react"
-import { ChevronDown, CreditCard, Pencil, Pause, Play, Plus, X, MonitorPlay, Code2, Music, HardDrive, Zap, Gamepad2, Shield, Heart, BookOpen, TrendingUp, Layers, CalendarRange } from "lucide-react"
+import { ChevronDown, CreditCard, Pencil, Pause, Play, Plus, X, MonitorPlay, Code2, Music, HardDrive, Zap, Gamepad2, Shield, Heart, BookOpen, TrendingUp, Layers } from "lucide-react"
 import { ICON_MAP } from "./CategoryManager"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import { Card, Badge, Button } from "@/components/ui"
@@ -25,7 +25,6 @@ export function SubscriptionList({ onEdit, onNew }: SubscriptionListProps) {
   const toggleCategoryCollapse = useExpensesStore((s) => s.toggleCategoryCollapse)
   const toggleActive = useExpensesStore((s) => s.toggleActive)
   const notAmortizeYearly = useExpensesStore((s) => s.notAmortizeYearly)
-  const setNotAmortizeYearly = useExpensesStore((s) => s.setNotAmortizeYearly)
   const categoryFilter = useExpensesStore((s) => s.categoryFilter)
   const setCategoryFilter = useExpensesStore((s) => s.setCategoryFilter)
   const allSubs = useCycleFilteredSubscriptions()
@@ -57,47 +56,28 @@ export function SubscriptionList({ onEdit, onNew }: SubscriptionListProps) {
           )}
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* Amortization toggle */}
+        {/* View mode toggle */}
+        <div className="flex items-center gap-1 rounded-lg bg-sand p-0.5">
           <button
-            role="switch"
-            aria-checked={notAmortizeYearly}
-            aria-label="Precio anual completo"
-            title={notAmortizeYearly ? 'Mostrando precio anual completo' : 'Mostrando precio mensual amortizado'}
-            onClick={() => setNotAmortizeYearly(!notAmortizeYearly)}
-            className={`flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-medium transition-colors cursor-pointer ${
-              notAmortizeYearly
-                ? 'bg-accent/10 text-accent'
-                : 'text-text-tertiary hover:text-text-secondary hover:bg-sand'
+            onClick={() => setListViewMode('category')}
+            className={`cursor-pointer rounded-md px-2.5 py-1 text-[11px] font-medium transition-all active:scale-[0.97] ${
+              listViewMode === 'category'
+                ? 'bg-card text-foreground shadow-sm'
+                : 'text-text-tertiary hover:text-text-secondary'
             }`}
           >
-            <CalendarRange size={12} strokeWidth={1.75} />
-            <span className="hidden sm:inline">Anual</span>
+            Categoría
           </button>
-
-          {/* View mode toggle */}
-          <div className="flex items-center gap-1 rounded-lg bg-sand p-0.5">
-            <button
-              onClick={() => setListViewMode('category')}
-              className={`cursor-pointer rounded-md px-2.5 py-1 text-[11px] font-medium transition-all active:scale-[0.97] ${
-                listViewMode === 'category'
-                  ? 'bg-card text-foreground shadow-sm'
-                  : 'text-text-tertiary hover:text-text-secondary'
-              }`}
-            >
-              Categoría
-            </button>
-            <button
-              onClick={() => setListViewMode('chronological')}
-              className={`cursor-pointer rounded-md px-2.5 py-1 text-[11px] font-medium transition-all active:scale-[0.97] ${
-                listViewMode === 'chronological'
-                  ? 'bg-card text-foreground shadow-sm'
-                  : 'text-text-tertiary hover:text-text-secondary'
-              }`}
-            >
-              Cronológico
-            </button>
-          </div>
+          <button
+            onClick={() => setListViewMode('chronological')}
+            className={`cursor-pointer rounded-md px-2.5 py-1 text-[11px] font-medium transition-all active:scale-[0.97] ${
+              listViewMode === 'chronological'
+                ? 'bg-card text-foreground shadow-sm'
+                : 'text-text-tertiary hover:text-text-secondary'
+            }`}
+          >
+            Cronológico
+          </button>
         </div>
       </div>
 
