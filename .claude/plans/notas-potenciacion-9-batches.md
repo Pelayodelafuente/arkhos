@@ -101,7 +101,7 @@ Migration 019 (tsvector+GIN) · getNotes sin content + paginación · getNoteCon
 
 ---
 
-### Batch 9 — Capture + Daily Notes
+### Batch 9 — Capture + Daily Notes ✅ COMPLETADO (2026-04-03)
 **Complejidad**: Media | **Riesgo**: Bajo
 **Archivos**: QuickCapture.tsx (nuevo), layout global, notes-store
 

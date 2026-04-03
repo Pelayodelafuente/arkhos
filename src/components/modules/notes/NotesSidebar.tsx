@@ -15,6 +15,7 @@ import {
   Trash2,
   Check,
   X,
+  CalendarDays,
 } from "lucide-react"
 import * as LucideIcons from "lucide-react"
 import { useNotesStore } from "@/stores/notes-store"
@@ -47,6 +48,8 @@ export function NotesSidebar({ userId }: Props) {
   const removeFolder = useNotesStore((s) => s.removeFolder)
   const fetchFolders = useNotesStore((s) => s.fetchFolders)
   const fetchTrashedNotes = useNotesStore((s) => s.fetchTrashedNotes)
+  const addNote = useNotesStore((s) => s.addNote)
+  const setSelectedNoteId = useNotesStore((s) => s.setSelectedNoteId)
 
   const [collapsed, setCollapsed] = useState(false)
   const [creatingFolder, setCreatingFolder] = useState(false)
@@ -99,6 +102,17 @@ export function NotesSidebar({ userId }: Props) {
       await editFolder(folder.id, { name })
     }
     setRenamingFolderId(null)
+  }
+
+  const handleDailyNote = async () => {
+    const today = new Date().toISOString().split('T')[0]
+    const existing = notes.find(n => n.title === today && !n.archived && !n.deleted_at)
+    if (existing) {
+      setSelectedNoteId(existing.id)
+    } else {
+      const note = await addNote(userId, { title: today, content: '', color: 'default', icon: 'CalendarDays', tags: [] })
+      if (note) setSelectedNoteId(note.id)
+    }
   }
 
   const handleDeleteFolder = async (id: string) => {
@@ -182,6 +196,17 @@ export function NotesSidebar({ userId }: Props) {
           title="Colapsar barra lateral"
         >
           <PanelLeftClose size={13} strokeWidth={1.75} />
+        </button>
+      </div>
+
+      {/* Daily note shortcut */}
+      <div className="px-2 mb-2">
+        <button
+          onClick={handleDailyNote}
+          className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-[13px] text-text-secondary hover:bg-sand hover:text-text-secondary transition-colors"
+        >
+          <CalendarDays size={14} strokeWidth={1.75} className="flex-shrink-0 text-[#7a9b76]" />
+          <span className="flex-1 text-left">Nota de hoy</span>
         </button>
       </div>
 

@@ -3,6 +3,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { Topbar } from "@/components/layout/topbar";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { NavigationProgress } from "@/components/layout/NavigationProgress";
+import { QuickCapture } from "@/components/modules/notes/QuickCapture";
 
 export default async function DashboardLayout({
   children,
@@ -14,6 +15,7 @@ export default async function DashboardLayout({
     data: { user },
   } = await supabase.auth.getUser();
 
+  const userId = user?.id ?? "";
   let userName = user?.email || "usuario";
   let initialProjectCount = 0;
   let initialNoteCount = 0;
@@ -62,6 +64,7 @@ export default async function DashboardLayout({
         {/* Mobile bottom nav */}
         <BottomNav />
       </div>
+      <QuickCapture userId={userId} />
     </div>
   );
 }
