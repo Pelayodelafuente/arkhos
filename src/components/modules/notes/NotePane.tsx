@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useMemo } from "react"
-import { X, Trash2, Archive, History, RotateCcw, Link2, ArrowRight, Unlink, ChevronLeft } from "lucide-react"
+import { X, Trash2, Archive, History, RotateCcw, Link2, ArrowRight, Unlink, ChevronLeft, Sparkles, ChevronDown } from "lucide-react"
 import * as LucideIcons from "lucide-react"
 import { Button } from "@/components/ui"
 import { useNotesStore, useAllTags } from "@/stores/notes-store"
@@ -58,6 +58,15 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
   const [showIcons, setShowIcons] = useState(false)
   const [saving, setSaving] = useState(false)
 
+  // IA — resumen
+  const [summaryOpen, setSummaryOpen] = useState(false)
+  const [summaryText, setSummaryText] = useState("")
+  const [summaryLoading, setSummaryLoading] = useState(false)
+
+  // IA — sugerencia de tags
+  const [aiSuggestedTags, setAiSuggestedTags] = useState<string[]>([])
+  const [suggestTagsLoading, setSuggestTagsLoading] = useState(false)
+
   // History panel
   const [historyOpen, setHistoryOpen] = useState(false)
   const [versions, setVersions] = useState<NoteVersion[]>([])
@@ -90,6 +99,9 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
     setHistoryOpen(false)
     setVersions([])
     setSelectedVersion(null)
+    setSummaryOpen(false)
+    setSummaryText("")
+    setAiSuggestedTags([])
     // Auto-snapshot if note is old enough
     const fiveMinutesAgo = Date.now() - 5 * 60 * 1000
     if (new Date(note.updated_at).getTime() < fiveMinutesAgo) {
@@ -186,6 +198,69 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
 
   const SelectedIcon = (LucideIcons as unknown as Record<string, LucideIcons.LucideIcon>)[icon] ?? LucideIcons.FileText
 
+  // IA — Resumen streaming
+  const handleSummarize = async () => {
+    if (summaryLoading) return
+    setSummaryOpen(true)
+    setSummaryText("")
+    setSummaryLoading(true)
+    try {
+      const res = await fetch('/api/notes/summarize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, content }),
+      })
+      if (!res.ok || !res.body) {
+        const err = await res.json() as { error?: string }
+        toast.error(err.error ?? 'Error al generar resumen')
+        setSummaryLoading(false)
+        return
+      }
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let text = ""
+      for (;;) {
+        const { done, value } = await reader.read()
+        if (done) break
+        text += decoder.decode(value, { stream: true })
+        setSummaryText(text)
+      }
+    } catch {
+      toast.error('Error al conectar con la IA')
+    } finally {
+      setSummaryLoading(false)
+    }
+  }
+
+  // IA — Sugerir tags
+  const handleSuggestTags = async () => {
+    if (suggestTagsLoading) return
+    setSuggestTagsLoading(true)
+    setAiSuggestedTags([])
+    try {
+      const res = await fetch('/api/notes/suggest-tags', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, content, existingTags: tags }),
+      })
+      if (!res.ok) {
+        const err = await res.json() as { error?: string }
+        toast.error(err.error ?? 'Error al sugerir tags')
+        return
+      }
+      const data = await res.json() as { tags?: string[] }
+      setAiSuggestedTags(data.tags ?? [])
+    } catch {
+      toast.error('Error al conectar con la IA')
+    } finally {
+      setSuggestTagsLoading(false)
+    }
+  }
+
+  const handleDismissAiTag = (tag: string) => {
+    setAiSuggestedTags((prev) => prev.filter((t) => t !== tag))
+  }
+
   if (!note) return null
 
   const panelContent = (
@@ -216,6 +291,21 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
           placeholder="Título de la nota"
           className="flex-1 font-heading text-lg text-foreground bg-transparent outline-none placeholder:text-text-tertiary min-w-0"
         />
+        <button
+          type="button"
+          onClick={handleSummarize}
+          disabled={summaryLoading}
+          className={`flex h-7 w-7 items-center justify-center rounded-md transition-colors flex-shrink-0 ${
+            summaryOpen ? "bg-sand text-[#7a9b76]" : "text-text-tertiary hover:text-[#7a9b76] hover:bg-sand/60"
+          } disabled:opacity-40`}
+          title="Resumir con IA"
+        >
+          {summaryLoading ? (
+            <span className="h-3 w-3 rounded-full border border-[#7a9b76] border-t-transparent animate-spin" />
+          ) : (
+            <Sparkles size={14} strokeWidth={1.75} />
+          )}
+        </button>
         <button
           type="button"
           onClick={() => setHistoryOpen((v) => !v)}
@@ -298,6 +388,31 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
             placeholder="Escribe aquí... usa / para insertar bloques"
           />
         </div>
+
+        {/* IA — Panel resumen */}
+        {summaryOpen && (
+          <div className="rounded-md border border-border overflow-hidden" style={{ borderColor: 'rgba(122,155,118,0.3)' }}>
+            <button
+              type="button"
+              onClick={() => setSummaryOpen((v) => !v)}
+              className="w-full flex items-center justify-between px-3 py-2 text-[11px] font-semibold uppercase tracking-wide transition-colors hover:bg-sand/40"
+              style={{ color: '#5a7a56', background: 'rgba(122,155,118,0.06)' }}
+            >
+              <span className="flex items-center gap-1.5">
+                <Sparkles size={11} strokeWidth={2} />
+                Resumen IA
+              </span>
+              <ChevronDown size={11} strokeWidth={2} />
+            </button>
+            <div className="px-3 py-2.5 text-sm text-text-secondary leading-relaxed min-h-[40px]">
+              {summaryText ? (
+                <p>{summaryText}</p>
+              ) : summaryLoading ? (
+                <span className="text-text-tertiary">Generando resumen...</span>
+              ) : null}
+            </div>
+          </div>
+        )}
 
         {/* Backlinks */}
         {hasLinks && (
@@ -392,7 +507,15 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
         )}
 
         {/* Tags */}
-        <TagInput tags={tags} onChange={setTags} suggestions={allTags} />
+        <TagInput
+          tags={tags}
+          onChange={setTags}
+          suggestions={allTags}
+          aiSuggestedTags={aiSuggestedTags}
+          suggestLoading={suggestTagsLoading}
+          onSuggestTags={handleSuggestTags}
+          onDismissAiTag={handleDismissAiTag}
+        />
 
         {/* Footer actions */}
         <div className="flex items-center justify-between pt-2 border-t border-border">
