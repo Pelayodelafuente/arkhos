@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, type KeyboardEvent } from 'react';
-import { ChevronRight, ChevronDown, Plus, AlertCircle } from 'lucide-react';
+import { ChevronRight, ChevronDown, Plus, AlertCircle, ExternalLink, Link2 } from 'lucide-react';
 import { useProjectsStore } from '@/stores/projects-store';
 import { useCanvasStore } from '@/stores/canvas-store';
 import { Badge, Progress } from '@/components/ui';
@@ -11,10 +11,8 @@ import {
   PHASE_STATUS_CONFIG,
   TASK_PRIORITY_CONFIG,
   TASK_PRIORITIES,
-  PHASE_STATUSES,
   type ProjectPhase,
   type PhaseTask,
-  type PhaseStatus,
 } from '@/types/projects';
 
 // ─── Constants ──────────────────────
@@ -44,11 +42,6 @@ function computeProgress(phases: ProjectPhase[]): number {
     0
   );
   return Math.round((done / total) * 100);
-}
-
-function nextPhaseStatus(current: PhaseStatus): PhaseStatus {
-  const idx = PHASE_STATUSES.indexOf(current);
-  return PHASE_STATUSES[(idx + 1) % PHASE_STATUSES.length];
 }
 
 // ─── Task Row ───────────────────────
@@ -174,15 +167,10 @@ function AddTaskInline({ phaseId }: { phaseId: string }) {
 
 function PhaseSection({ phase, onOpenTask }: { phase: ProjectPhase; onOpenTask: (t: PhaseTask) => void }) {
   const [expanded, setExpanded] = useState(phase.status === 'in-progress');
-  const editPhase = useProjectsStore((s) => s.editPhase);
   const statusCfg = PHASE_STATUS_CONFIG[phase.status];
   const doneCount = phase.tasks.filter((t) => t.done).length;
   const totalCount = phase.tasks.length;
   const Icon = expanded ? ChevronDown : ChevronRight;
-
-  const cycleStatus = useCallback(() => {
-    editPhase(phase.id, { status: nextPhaseStatus(phase.status) });
-  }, [phase.id, phase.status, editPhase]);
 
   return (
     <div className="flex flex-col">
@@ -199,21 +187,10 @@ function PhaseSection({ phase, onOpenTask }: { phase: ProjectPhase; onOpenTask: 
           style={{ color: '#9a7a5a' }}
         />
 
-        {/* Status dot (clickable to cycle) */}
+        {/* Status dot (auto, not clickable) */}
         <span
-          role="button"
-          tabIndex={0}
-          onClick={(e) => {
-            e.stopPropagation();
-            cycleStatus();
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.stopPropagation();
-              cycleStatus();
-            }
-          }}
-          className="h-[8px] w-[8px] shrink-0 cursor-pointer rounded-full transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent"
+          aria-hidden="true"
+          className="h-[8px] w-[8px] shrink-0 rounded-full"
           style={{ background: statusCfg.color }}
           title={statusCfg.label}
         />
@@ -360,6 +337,32 @@ export function WindowDetail({ userId }: WindowDetailProps) {
         {/* Progress bar */}
         <Progress value={progress} showLabel className="[&_div:first-child]:!h-[3px]" />
       </div>
+
+      {/* Quick links */}
+      {activeProject.links && activeProject.links.length > 0 && (
+        <div className="flex flex-wrap gap-[4px]">
+          {activeProject.links.map((link) => (
+            <a
+              key={link.id}
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={link.label || link.url}
+              className="inline-flex items-center gap-[3px] rounded-[4px] px-[6px] py-[2px] font-sans text-[9px] font-medium transition-colors hover:bg-[rgba(196,112,74,0.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              style={{
+                background: 'rgba(0,0,0,0.04)',
+                color: 'var(--text-tertiary)',
+                border: '0.5px solid var(--border-stone)',
+                maxWidth: 100,
+              }}
+            >
+              <Link2 size={8} strokeWidth={2} className="shrink-0" />
+              <span className="truncate">{link.label || 'Enlace'}</span>
+              <ExternalLink size={7} strokeWidth={2} className="shrink-0 opacity-50" />
+            </a>
+          ))}
+        </div>
+      )}
 
       {/* Divider */}
       <div className="h-px" style={{ background: 'var(--border-medium)' }} />

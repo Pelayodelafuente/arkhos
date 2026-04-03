@@ -51,6 +51,13 @@ export async function getRecentActivity(
   return (result.data ?? []) as ActivityEntry[];
 }
 
+export async function deleteActivity(
+  client: Client,
+  id: string
+): Promise<void> {
+  await client.from('activity_log').delete().eq('id', id);
+}
+
 export async function getProjectActivity(
   client: Client,
   userId: string,

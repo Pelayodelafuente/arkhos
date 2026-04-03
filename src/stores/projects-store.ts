@@ -335,6 +335,7 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
             await updatePhaseApi(client, phase.id, { status: phase.status });
           }
         }
+        logActivity(client, active.user_id, 'proyectos', 'task_created', task.text, `project:${active.id}`);
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Error al crear tarea';
@@ -493,7 +494,14 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
         const orig = prevPhases.find((p) => p.id === phase.id);
         if (orig && orig.status !== phase.status) {
           await updatePhaseApi(client, phase.id, { status: phase.status });
+          if (phase.status === 'done') {
+            logActivity(client, active.user_id, 'proyectos', 'phase_completed', phase.name, `project:${active.id}`);
+          }
         }
+      }
+      if (newStatus === 'done') {
+        const taskName = prevPhases.flatMap((p) => p.tasks).find((t) => t.id === taskId)?.text;
+        logActivity(client, active.user_id, 'proyectos', 'task_completed', taskName, `project:${active.id}`);
       }
     } catch (e) {
       set({ activeProject: { ...active, phases: prevPhases } });

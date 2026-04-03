@@ -11,10 +11,11 @@ import {
   RefreshCw,
   Clock,
   Loader2,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui";
 import { createClient } from "@/lib/supabase/client";
-import { getProjectActivity, type ActivityEntry } from "@/lib/supabase/activity";
+import { getProjectActivity, logActivity, deleteActivity, type ActivityEntry } from "@/lib/supabase/activity";
 
 // ─── Props ────────────────────────────
 
@@ -87,6 +88,12 @@ const ACTION_MAP: Record<string, ActionConfig> = {
     dotColor: "bg-blue-500",
     label: () => "Tiempo registrado",
   },
+  manual_note: {
+    icon: Edit3,
+    color: "text-text-secondary",
+    dotColor: "bg-text-tertiary",
+    label: (name) => name ?? "Nota manual",
+  },
 };
 
 const DEFAULT_ACTION: ActionConfig = {
@@ -149,6 +156,8 @@ export default function ActivityView({ projectId, userId }: ActivityViewProps) {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
+  const [noteText, setNoteText] = useState('');
+  const [savingNote, setSavingNote] = useState(false);
 
   const fetchEntries = useCallback(
     async (offset = 0, append = false) => {
@@ -181,6 +190,26 @@ export default function ActivityView({ projectId, userId }: ActivityViewProps) {
     fetchEntries(entries.length, true);
   };
 
+  async function handleAddNote() {
+    const trimmed = noteText.trim();
+    if (!trimmed) return;
+    setSavingNote(true);
+    try {
+      const client = createClient();
+      await logActivity(client, userId, 'proyectos', 'manual_note', trimmed, `project:${projectId}`);
+      setNoteText('');
+      await fetchEntries();
+    } finally {
+      setSavingNote(false);
+    }
+  }
+
+  async function handleDeleteNote(id: string) {
+    const client = createClient();
+    setEntries((prev) => prev.filter((e) => e.id !== id));
+    await deleteActivity(client, id);
+  }
+
   // ── Loading state ──
   if (loading) {
     return (
@@ -207,6 +236,27 @@ export default function ActivityView({ projectId, userId }: ActivityViewProps) {
     <div className="rounded-xl border border-border bg-card p-5">
       <h3 className="mb-4 text-sm font-semibold text-foreground">Actividad del proyecto</h3>
 
+      {/* Manual note input */}
+      <div className="mb-5 flex gap-2">
+        <input
+          type="text"
+          value={noteText}
+          onChange={(e) => setNoteText(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') handleAddNote(); }}
+          placeholder="Añadir nota manual..."
+          className="flex-1 rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground placeholder:text-text-tertiary focus:border-accent focus:outline-none"
+        />
+        <Button
+          variant="secondary"
+          size="sm"
+          loading={savingNote}
+          onClick={handleAddNote}
+          disabled={!noteText.trim()}
+        >
+          Añadir
+        </Button>
+      </div>
+
       <div className="space-y-6">
         {groups.map((group) => (
           <div key={group.key}>
@@ -225,7 +275,7 @@ export default function ActivityView({ projectId, userId }: ActivityViewProps) {
                 return (
                   <div
                     key={entry.id}
-                    className={`relative flex items-start gap-3 ${isLast ? "" : "mb-4 pb-4"}`}
+                    className={`group relative flex items-start gap-3 ${isLast ? "" : "mb-4 pb-4"}`}
                   >
                     {/* Dot on the timeline line */}
                     <div
@@ -246,6 +296,17 @@ export default function ActivityView({ projectId, userId }: ActivityViewProps) {
                         {formatTime(entry.created_at)}
                       </p>
                     </div>
+
+                    {/* Delete button — only for manual notes */}
+                    {entry.action === 'manual_note' && (
+                      <button
+                        onClick={() => handleDeleteNote(entry.id)}
+                        className="flex-shrink-0 rounded p-0.5 text-text-tertiary opacity-0 transition-opacity hover:text-red-500 group-hover:opacity-100"
+                        aria-label="Eliminar nota"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    )}
                   </div>
                 );
               })}

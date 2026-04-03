@@ -99,7 +99,6 @@ interface EnrichedTaskItemProps {
   onDelete: () => void;
   debouncedEditTask: (taskId: string, content: string) => void;
   onMoveTask: (direction: -1 | 1) => void;
-  onOpenSlideOver: () => void;
 }
 
 export function EnrichedTaskItem({

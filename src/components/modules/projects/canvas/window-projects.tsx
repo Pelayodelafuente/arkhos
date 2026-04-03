@@ -3,6 +3,24 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
+
+function relativeTime(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const days = Math.floor(diff / 86400000);
+  if (days === 0) return 'hoy';
+  if (days === 1) return 'ayer';
+  if (days < 7) return `hace ${days}d`;
+  if (days < 30) return `hace ${Math.floor(days / 7)}sem`;
+  return `hace ${Math.floor(days / 30)}m`;
+}
+
+function healthColor(done: number, total: number): string {
+  if (total === 0) return '#9a7a5a';
+  const pct = done / total;
+  if (pct >= 0.7) return '#056b63';
+  if (pct >= 0.3) return '#9a6a28';
+  return '#9a7a5a';
+}
 import { useCanvasStore } from '@/stores/canvas-store';
 import { useProjectsStore } from '@/stores/projects-store';
 import type { ProjectListItem } from '@/types/projects';
@@ -84,50 +102,84 @@ function ProjectCard({
   const [hovered, setHovered] = useState(false);
   const statusColor = getStatusColor(project.status);
 
+  const progress = project.task_count > 0
+    ? Math.round((project.done_task_count / project.task_count) * 100)
+    : 0;
+  const pending = project.task_count - project.done_task_count;
+  const hColor = healthColor(project.done_task_count, project.task_count);
+
   return (
     <button
       type="button"
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="flex cursor-pointer flex-col items-center gap-[5px]"
+      className="flex cursor-pointer flex-col items-start gap-[5px] text-left"
       style={{
         borderRadius: 9,
-        padding: '9px 6px',
+        padding: '8px 8px',
         border: isActive
           ? '1px solid rgba(196,112,74,0.38)'
           : hovered
             ? '1px solid rgba(196,112,74,0.22)'
-            : '1px solid transparent',
+            : '1px solid var(--border-stone)',
         background: isActive
-          ? 'rgba(196,112,74,0.10)'
+          ? 'rgba(196,112,74,0.08)'
           : hovered
-            ? 'rgba(196,112,74,0.06)'
-            : 'transparent',
+            ? 'rgba(196,112,74,0.04)'
+            : 'var(--bg-card)',
         transition: 'all 0.18s ease',
-        transform: hovered && !isActive ? 'translateY(-2px)' : undefined,
+        transform: hovered && !isActive ? 'translateY(-1px)' : undefined,
+        width: '100%',
       }}
     >
-      <div style={{ opacity: isActive ? 1 : 0.35 }}>
-        <ProjectFolder logoUrl={project.logo_url} isHovered={hovered} color={statusColor} />
+      {/* Top row: folder + name */}
+      <div className="flex items-center gap-[6px] w-full min-w-0">
+        <div style={{ opacity: isActive ? 1 : 0.6, flexShrink: 0 }}>
+          <ProjectFolder logoUrl={project.logo_url} isHovered={hovered} color={statusColor} />
+        </div>
+        <div className="flex flex-col min-w-0 flex-1">
+          <span
+            className="font-sans font-medium leading-tight truncate"
+            title={project.name}
+            style={{ fontSize: 10, color: 'var(--text-secondary)', display: 'block' }}
+          >
+            {project.name}
+          </span>
+          <span
+            className="font-sans leading-tight truncate"
+            style={{ fontSize: 8, color: 'var(--text-tertiary)' }}
+          >
+            {project.status}
+          </span>
+        </div>
+        {/* Health indicator */}
+        <span
+          className="shrink-0 rounded-full"
+          style={{ width: 6, height: 6, background: hColor, opacity: 0.85 }}
+          title={`${progress}% completado`}
+        />
       </div>
-      <span
-        className="font-sans font-medium leading-tight"
-        title={project.name}
-        style={{
-          fontSize: 10,
-          color: 'var(--text-secondary)',
-          textAlign: 'center',
-          lineHeight: 1.2,
-          maxWidth: 100,
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-          display: 'block',
-        }}
-      >
-        {project.name}
-      </span>
+
+      {/* Progress bar */}
+      {project.task_count > 0 && (
+        <div className="w-full">
+          <div className="h-[3px] rounded-full overflow-hidden" style={{ background: 'var(--bg-sand)' }}>
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{ width: `${progress}%`, background: hColor }}
+            />
+          </div>
+          <div className="flex items-center justify-between mt-[2px]">
+            <span style={{ fontSize: 8, color: 'var(--text-tertiary)', fontFamily: 'monospace' }}>
+              {pending > 0 ? `${pending} pendiente${pending !== 1 ? 's' : ''}` : '✓ todo listo'}
+            </span>
+            <span style={{ fontSize: 8, color: 'var(--text-tertiary)' }}>
+              {relativeTime(project.updated_at)}
+            </span>
+          </div>
+        </div>
+      )}
     </button>
   );
 }
@@ -149,7 +201,7 @@ function ProjectsGrid({
 
   return (
     <div className="flex flex-col gap-[6px]">
-      <div className="grid grid-cols-2 gap-[6px]">
+      <div className="flex flex-col gap-[4px]">
         {visible.map((project) => (
           <ProjectCard
             key={project.id}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { CheckCircle2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useToast } from '@/stores/ui-store';
 import { TASK_PRIORITY_CONFIG, type TaskPriority } from '@/types/projects';
@@ -28,10 +29,13 @@ function isOverdue(date: string): boolean {
   return new Date(date) < new Date(new Date().toDateString());
 }
 
+type PriorityFilter = 'all' | 'high' | 'medium' | 'low';
+
 export function WindowFocus({ userId }: WindowFocusProps) {
   const [tasks, setTasks] = useState<FocusTask[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterProjectId, setFilterProjectId] = useState<string | null>(null);
+  const [filterPriority, setFilterPriority] = useState<PriorityFilter>('all');
   const [showAllTasks, setShowAllTasks] = useState(false);
   const toast = useToast();
 
@@ -123,25 +127,61 @@ export function WindowFocus({ userId }: WindowFocusProps) {
     );
   }
 
+  const MAX_VISIBLE_TASKS = 6;
+
+  const filteredTasks = tasks.filter((t) => {
+    if (filterProjectId && t.project_id !== filterProjectId) return false;
+    if (filterPriority === 'high') return t.priority === 'high' || t.priority === 'urgent';
+    if (filterPriority === 'medium') return t.priority === 'medium';
+    if (filterPriority === 'low') return t.priority === 'low';
+    return true;
+  });
+
   if (tasks.length === 0) {
     return (
-      <div className="flex items-center justify-center py-6">
-        <p className="font-sans text-[10px] text-text-tertiary">Sin tareas pendientes</p>
+      <div className="flex flex-col items-center justify-center gap-2 py-8">
+        <CheckCircle2 size={20} style={{ color: '#056b63', opacity: 0.7 }} />
+        <p className="font-sans text-[11px] font-medium" style={{ color: '#056b63' }}>¡Todo al día!</p>
+        <p className="font-sans text-[10px] text-text-tertiary">No hay tareas pendientes</p>
       </div>
     );
   }
 
-  const MAX_VISIBLE_TASKS = 6;
-
-  const filteredTasks = filterProjectId
-    ? tasks.filter((t) => t.project_id === filterProjectId)
-    : tasks;
-
   const visibleTasks = showAllTasks ? filteredTasks : filteredTasks.slice(0, MAX_VISIBLE_TASKS);
   const hasMoreTasks = filteredTasks.length > MAX_VISIBLE_TASKS;
 
+  const PRIORITY_FILTERS: { key: PriorityFilter; label: string }[] = [
+    { key: 'all', label: `Todas (${tasks.length})` },
+    { key: 'high', label: 'Alta' },
+    { key: 'medium', label: 'Media' },
+    { key: 'low', label: 'Baja' },
+  ];
+
+  function pillStyle(active: boolean) {
+    return {
+      background: active ? 'rgba(196,112,74,0.12)' : 'transparent',
+      color: active ? '#C4704A' : 'var(--text-tertiary)',
+      border: active ? '0.5px solid rgba(196,112,74,0.35)' : '0.5px solid var(--border-stone)',
+    };
+  }
+
   return (
     <div className="flex flex-col gap-[6px]">
+      {/* Priority filter pills */}
+      <div className="flex flex-wrap gap-[4px]">
+        {PRIORITY_FILTERS.map(({ key, label }) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => setFilterPriority(key)}
+            className="cursor-pointer rounded-[4px] px-[6px] py-[2px] font-sans text-[9px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent"
+            style={pillStyle(filterPriority === key)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
       {/* Project filter pills */}
       {projectOptions.length > 1 && (
         <div className="flex flex-wrap gap-[4px]">
@@ -149,11 +189,7 @@ export function WindowFocus({ userId }: WindowFocusProps) {
             type="button"
             onClick={() => setFilterProjectId(null)}
             className="cursor-pointer rounded-[4px] px-[6px] py-[2px] font-sans text-[9px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent"
-            style={{
-              background: filterProjectId === null ? 'rgba(196,112,74,0.12)' : 'transparent',
-              color: filterProjectId === null ? '#C4704A' : 'var(--text-tertiary)',
-              border: filterProjectId === null ? '0.5px solid rgba(196,112,74,0.35)' : '0.5px solid var(--border-stone)',
-            }}
+            style={pillStyle(filterProjectId === null)}
           >
             Todos
           </button>
@@ -164,16 +200,17 @@ export function WindowFocus({ userId }: WindowFocusProps) {
               title={name}
               onClick={() => setFilterProjectId(filterProjectId === id ? null : id)}
               className="max-w-[120px] cursor-pointer truncate rounded-[4px] px-[6px] py-[2px] font-sans text-[9px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent"
-              style={{
-                background: filterProjectId === id ? 'rgba(196,112,74,0.12)' : 'transparent',
-                color: filterProjectId === id ? '#C4704A' : 'var(--text-tertiary)',
-                border: filterProjectId === id ? '0.5px solid rgba(196,112,74,0.35)' : '0.5px solid var(--border-stone)',
-              }}
+              style={pillStyle(filterProjectId === id)}
             >
               {name}
             </button>
           ))}
         </div>
+      )}
+
+      {/* Empty filtered state */}
+      {filteredTasks.length === 0 && (
+        <p className="py-4 text-center font-sans text-[10px] text-text-tertiary">Sin tareas con este filtro</p>
       )}
 
     <div className="flex flex-col gap-[3px]">

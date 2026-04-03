@@ -407,8 +407,10 @@ export function ProjectModal({
                     >
                       <div className="flex items-start justify-between gap-1">
                         <p className="text-xs font-medium text-foreground">{t.name}</p>
-                        {t.is_system && (
+                        {t.is_system ? (
                           <Badge variant="gray">Sistema</Badge>
+                        ) : (
+                          <Badge variant="blue">Personal</Badge>
                         )}
                       </div>
                       {t.description && (

@@ -70,6 +70,7 @@ import KanbanView from "./kanban-view";
 import DashboardView from "./dashboard-view";
 import { TaskSlideOver } from "./task-slide-over";
 import TableView from "./table-view";
+import ActivityView from "./activity-view";
 import type { PhaseTask } from "@/types/projects";
 
 // ─── Framer Motion variants ──────────
@@ -205,7 +206,7 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
   const [expandedPhases, setExpandedPhases] = useState<Set<string>>(new Set());
   const [newTaskText, setNewTaskText] = useState<Record<string, string>>({});
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [viewTab, setViewTab] = useState<"progress" | "kanban" | "dashboard" | "table">("progress");
+  const [viewTab, setViewTab] = useState<"progress" | "kanban" | "dashboard" | "table" | "activity">("progress");
   const [slideOverTask, setSlideOverTask] = useState<PhaseTask | null>(null);
   const [projectTypes, setProjectTypes] = useState<ProjectTypeRecord[]>([]);
   const [projectStatuses, setProjectStatuses] = useState<ProjectStatusRecord[]>([]);
@@ -659,6 +660,7 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
           { key: "kanban", label: "Kanban" },
           { key: "dashboard", label: "Dashboard" },
           { key: "table", label: "Tabla" },
+          { key: "activity", label: "Actividad" },
         ] as const).map((tab) => (
           <button
             key={tab.key}
@@ -752,7 +754,6 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
                   debouncedEditTask={debouncedEditTask}
                   onMovePhase={(dir) => movePhase(idx, dir)}
                   onMoveTask={(taskIdx, dir) => moveTask(phase.id, taskIdx, dir)}
-                  onOpenSlideOver={(task) => setSlideOverTask(task)}
                 />
                 </motion.div>
               ))}
@@ -819,6 +820,11 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
           userId={userId}
           onOpenTask={setSlideOverTask}
         />
+      )}
+
+      {/* Activity view */}
+      {viewTab === "activity" && (
+        <ActivityView projectId={projectId} userId={userId} />
       )}
 
       {/* Delete project confirmation */}
@@ -970,7 +976,6 @@ interface SortablePhaseItemProps {
   debouncedEditTask: (taskId: string, content: string) => void;
   onMovePhase: (direction: -1 | 1) => void;
   onMoveTask: (taskIdx: number, direction: -1 | 1) => void;
-  onOpenSlideOver: (task: PhaseTask) => void;
 }
 
 function SortablePhaseItem({
@@ -1007,7 +1012,6 @@ function SortablePhaseItem({
   debouncedEditTask,
   onMovePhase,
   onMoveTask,
-  onOpenSlideOver,
 }: SortablePhaseItemProps) {
   const {
     attributes,
@@ -1211,7 +1215,6 @@ function SortablePhaseItem({
                     onDelete={() => onDeleteTask(task.id, task.text)}
                     debouncedEditTask={debouncedEditTask}
                     onMoveTask={(dir) => onMoveTask(taskIdx, dir)}
-                    onOpenSlideOver={() => onOpenSlideOver(task)}
                   />
                   </motion.div>
                 ))}
