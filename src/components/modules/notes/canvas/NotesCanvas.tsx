@@ -171,6 +171,7 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
   const { matchingIds: searchMatchingIds } = useCanvasSearchResults()
 
   const containerRef = useRef<HTMLDivElement>(null)
+  const [isExporting, setIsExporting] = useState(false)
   const [isPanning, setIsPanning] = useState(false)
   const [isDraggingNode, setIsDraggingNode] = useState(false)
   const [dragNodeId, setDragNodeId] = useState<string | null>(null)
@@ -210,6 +211,36 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
     const noteIds = new Set(nodes.filter(n => n.note_id).map(n => n.note_id!))
     return Object.keys(noteBacklinks).some(k => noteIds.has(k) && noteBacklinks[k].length > 0)
   }, [nodes, noteBacklinks])
+
+  const exportPng = useCallback(async () => {
+    if (!containerRef.current || isExporting) return
+    setIsExporting(true)
+    try {
+      const hideEls = containerRef.current.querySelectorAll('[data-export-hide]')
+      hideEls.forEach(el => ((el as HTMLElement).style.visibility = 'hidden'))
+
+      const html2canvas = (await import('html2canvas')).default
+      const canvas = await html2canvas(containerRef.current, {
+        backgroundColor: '#FAF7F2',
+        useCORS: true,
+        scale: 2,
+        logging: false,
+      })
+
+      hideEls.forEach(el => ((el as HTMLElement).style.visibility = ''))
+
+      const link = document.createElement('a')
+      const date = new Date().toISOString().split('T')[0]
+      link.download = `notas-canvas-${date}.png`
+      link.href = canvas.toDataURL('image/png')
+      link.click()
+    } catch {
+      containerRef.current?.querySelectorAll('[data-export-hide]')
+        .forEach(el => ((el as HTMLElement).style.visibility = ''))
+    } finally {
+      setIsExporting(false)
+    }
+  }, [isExporting])
 
   // Collapsed group IDs
   const collapsedGroupIds = useMemo(() => {
@@ -1007,20 +1038,26 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
       )}
 
       {nodes.length > 0 && containerSize.w > 0 && (
-        <CanvasMinimap nodes={nodes} viewport={viewport} containerWidth={containerSize.w}
-          containerHeight={containerSize.h} onViewportChange={setViewport} />
+        <div data-export-hide>
+          <CanvasMinimap nodes={nodes} viewport={viewport} containerWidth={containerSize.w}
+            containerHeight={containerSize.h} onViewportChange={setViewport} />
+        </div>
       )}
 
-      <CanvasToolbar onNewNote={handleNewNote} onAddTextNode={handleAddTextNode} onAddUrlNode={handleAddUrlNode}
-        onAddImageNode={() => handleAddImageNode()} onAddGroupNode={handleAddGroupNode} onFitAll={fitAllNodes}
-        snapEnabled={snapEnabled} onToggleSnap={toggleSnap} onUndo={undo} onRedo={redo}
-        onDuplicate={duplicateSelectedNodes} canUndo={historyIndex > 0} canRedo={historyIndex < history.length - 1}
-        hasSelection={selectedNodeIds.size > 0} onAutoLayout={handleAutoLayout} onGroupSelection={handleGroupSelected}
-        onToggleSearch={() => setShowSearch(s => !s)} selectionCount={selectedNodeIds.size}
-        onToggleFilters={() => setShowFilters(v => !v)}
-        activeFilterCount={canvasFilters.types.length + canvasFilters.colors.length}
-        onSyncBacklinks={generateBacklinkEdges}
-        hasSyncableBacklinks={hasSyncableBacklinks} />
+      <div data-export-hide>
+        <CanvasToolbar onNewNote={handleNewNote} onAddTextNode={handleAddTextNode} onAddUrlNode={handleAddUrlNode}
+          onAddImageNode={() => handleAddImageNode()} onAddGroupNode={handleAddGroupNode} onFitAll={fitAllNodes}
+          snapEnabled={snapEnabled} onToggleSnap={toggleSnap} onUndo={undo} onRedo={redo}
+          onDuplicate={duplicateSelectedNodes} canUndo={historyIndex > 0} canRedo={historyIndex < history.length - 1}
+          hasSelection={selectedNodeIds.size > 0} onAutoLayout={handleAutoLayout} onGroupSelection={handleGroupSelected}
+          onToggleSearch={() => setShowSearch(s => !s)} selectionCount={selectedNodeIds.size}
+          onToggleFilters={() => setShowFilters(v => !v)}
+          activeFilterCount={canvasFilters.types.length + canvasFilters.colors.length}
+          onSyncBacklinks={generateBacklinkEdges}
+          hasSyncableBacklinks={hasSyncableBacklinks}
+          onExportPng={exportPng}
+          isExporting={isExporting} />
+      </div>
       {showFilters && <CanvasFilterPanel onClose={() => setShowFilters(false)} />}
 
       {selectedNodeIds.size > 1 && !showSearch && (

@@ -18,6 +18,8 @@ import {
   Layers,
   Filter,
   Share2,
+  Download,
+  Loader2,
 } from "lucide-react"
 import { useNotesStore } from "@/stores/notes-store"
 
@@ -44,6 +46,8 @@ interface Props {
   activeFilterCount: number
   onSyncBacklinks: () => void
   hasSyncableBacklinks: boolean
+  onExportPng?: () => void
+  isExporting?: boolean
 }
 
 export function CanvasToolbar({
@@ -69,6 +73,8 @@ export function CanvasToolbar({
   activeFilterCount,
   onSyncBacklinks,
   hasSyncableBacklinks,
+  onExportPng,
+  isExporting = false,
 }: Props) {
   const viewport = useNotesStore((s) => s.viewport)
   const setViewport = useNotesStore((s) => s.setViewport)
@@ -238,6 +244,22 @@ export function CanvasToolbar({
         aria-label="Sincronizar backlinks al canvas"
       >
         <Share2 size={14} strokeWidth={1.75} />
+      </button>
+
+      <div className="mx-0.5 h-4 w-px bg-border" />
+
+      {/* Export PNG */}
+      <button
+        onClick={onExportPng}
+        disabled={!onExportPng || isExporting}
+        className={`${btnBase} ${!onExportPng || isExporting ? 'opacity-40 cursor-not-allowed' : ''}`}
+        title="Exportar canvas como PNG"
+        aria-label="Exportar canvas como PNG"
+      >
+        {isExporting
+          ? <Loader2 size={14} strokeWidth={1.75} className="animate-spin" />
+          : <Download size={14} strokeWidth={1.75} />
+        }
       </button>
     </div>
   )
