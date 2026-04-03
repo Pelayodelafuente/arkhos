@@ -38,6 +38,7 @@ export interface Note {
   archived?: boolean
   favorited?: boolean
   backlink_count?: number
+  deleted_at?: string | null
   created_at: string
   updated_at: string
 }

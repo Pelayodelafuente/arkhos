@@ -26,6 +26,7 @@ const SORT_OPTIONS: { value: NoteSortMode; label: string }[] = [
 ]
 
 interface Props {
+  userId: string
   onEdit: (note: Note) => void
   onNew: () => void
 }
@@ -35,12 +36,14 @@ interface Props {
 interface SortableNoteCardProps {
   note: Note
   index: number
+  userId: string
   isManual: boolean
   onEdit: (note: Note) => void
   onDelete: (id: string) => void
   onTogglePin: (id: string) => void
   onToggleFavorite: (id: string) => void
   onAddToCanvas: (id: string) => void
+  onDuplicate: (id: string) => void
   onToggleSelect: (id: string) => void
   searchQuery: string
   isSelected: boolean
@@ -50,12 +53,14 @@ interface SortableNoteCardProps {
 function SortableNoteCard({
   note,
   index,
+  userId,
   isManual,
   onEdit,
   onDelete,
   onTogglePin,
   onToggleFavorite,
   onAddToCanvas,
+  onDuplicate,
   onToggleSelect,
   searchQuery,
   isSelected,
@@ -97,11 +102,13 @@ function SortableNoteCard({
         <div className={isManual && !isSelectionMode ? "ml-5" : ""}>
           <NoteCard
             note={note}
+            userId={userId}
             onEdit={onEdit}
             onDelete={onDelete}
             onTogglePin={onTogglePin}
             onToggleFavorite={onToggleFavorite}
             onAddToCanvas={onAddToCanvas}
+            onDuplicate={onDuplicate}
             searchQuery={searchQuery}
             isSelected={isSelected}
             isSelectionMode={isSelectionMode}
@@ -115,9 +122,12 @@ function SortableNoteCard({
 
 // ─── NotesList ────────────────────────
 
-export function NotesList({ onEdit, onNew }: Props) {
+export function NotesList({ userId, onEdit, onNew }: Props) {
   const notes = useFilteredNotes()
+  const activeFolderId = useNotesStore((s) => s.activeFolderId)
   const removeNote = useNotesStore((s) => s.removeNote)
+  const duplicateNote = useNotesStore((s) => s.duplicateNote)
+  const emptyTrash = useNotesStore((s) => s.emptyTrash)
   const togglePin = useNotesStore((s) => s.togglePin)
   const toggleFavorite = useNotesStore((s) => s.toggleFavorite)
   const addNoteToCanvas = useNotesStore((s) => s.addNoteToCanvas)
@@ -125,6 +135,7 @@ export function NotesList({ onEdit, onNew }: Props) {
   const sortMode = useNotesStore((s) => s.sortMode)
   const setSortMode = useNotesStore((s) => s.setSortMode)
   const setNotes = useNotesStore((s) => s.setNotes)
+  const isTrashView = activeFolderId === 'trash'
 
   const isSelectionMode = useNotesStore((s) => s.isSelectionMode)
   const setSelectionMode = useNotesStore((s) => s.setSelectionMode)
@@ -137,6 +148,10 @@ export function NotesList({ onEdit, onNew }: Props) {
 
   const handleAddToCanvas = async (noteId: string) => {
     await addNoteToCanvas(noteId, { x: 100, y: 100 })
+  }
+
+  const handleDuplicate = async (noteId: string) => {
+    await duplicateNote(noteId, userId)
   }
 
   const isManual = sortMode === "manual"
@@ -178,14 +193,16 @@ export function NotesList({ onEdit, onNew }: Props) {
           className="text-text-tertiary/30 mb-4"
         />
         <h3 className="font-heading text-xl text-foreground mb-2">
-          {hasSearch ? "Sin resultados" : "Aún no tienes notas"}
+          {isTrashView ? "Papelera vacía" : hasSearch ? "Sin resultados" : "Aún no tienes notas"}
         </h3>
         <p className="text-sm text-text-tertiary mb-6 max-w-sm">
-          {hasSearch
+          {isTrashView
+            ? "Las notas eliminadas aparecerán aquí"
+            : hasSearch
             ? "Prueba con otros términos de búsqueda"
             : "Crea tu primera nota para empezar a organizar tus ideas"}
         </p>
-        {!hasSearch && (
+        {!hasSearch && !isTrashView && (
           <Button variant="primary" onClick={onNew}>
             <Plus size={16} strokeWidth={1.75} />
             Crear primera nota
@@ -204,13 +221,15 @@ export function NotesList({ onEdit, onNew }: Props) {
         <SortableNoteCard
           key={note.id}
           note={note}
+          userId={userId}
           index={indexOffset + i}
-          isManual={isManual}
+          isManual={isManual && !isTrashView}
           onEdit={onEdit}
           onDelete={removeNote}
           onTogglePin={togglePin}
           onToggleFavorite={toggleFavorite}
-          onAddToCanvas={handleAddToCanvas}
+          onAddToCanvas={!isTrashView ? handleAddToCanvas : () => {}}
+          onDuplicate={!isTrashView ? handleDuplicate : () => {}}
           onToggleSelect={toggleNoteSelection}
           searchQuery={searchQuery}
           isSelected={selectedNoteIds.has(note.id)}
@@ -260,6 +279,15 @@ export function NotesList({ onEdit, onNew }: Props) {
           <Badge variant="gray">
             {notes.length} {notes.length === 1 ? "nota" : "notas"}
           </Badge>
+          {isTrashView && notes.length > 0 && (
+            <button
+              onClick={emptyTrash}
+              className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50 transition-colors"
+            >
+              <Trash2 size={13} strokeWidth={1.75} />
+              Vaciar papelera
+            </button>
+          )}
           {isSelectionMode && selectedNoteIds.size > 0 && (
             <span className="text-[12px] text-text-tertiary">
               {selectedNoteIds.size} seleccionada{selectedNoteIds.size !== 1 ? "s" : ""}

@@ -31,6 +31,7 @@ const NAV_ITEMS = [
   { id: "favorites" as string | null, label: "Favoritas", icon: Star },
   { id: "no-folder" as string | null, label: "Sin carpeta", icon: Inbox },
   { id: "archived" as string | null, label: "Archivo", icon: Archive },
+  { id: "trash" as string | null, label: "Papelera", icon: Trash2 },
 ]
 
 // ─── Component ────────────────────────
@@ -38,12 +39,14 @@ const NAV_ITEMS = [
 export function NotesSidebar({ userId }: Props) {
   const folders = useNotesStore((s) => s.folders)
   const notes = useNotesStore((s) => s.notes)
+  const trashedNotes = useNotesStore((s) => s.trashedNotes)
   const activeFolderId = useNotesStore((s) => s.activeFolderId)
   const setActiveFolderId = useNotesStore((s) => s.setActiveFolderId)
   const addFolder = useNotesStore((s) => s.addFolder)
   const editFolder = useNotesStore((s) => s.editFolder)
   const removeFolder = useNotesStore((s) => s.removeFolder)
   const fetchFolders = useNotesStore((s) => s.fetchFolders)
+  const fetchTrashedNotes = useNotesStore((s) => s.fetchTrashedNotes)
 
   const [collapsed, setCollapsed] = useState(false)
   const [creatingFolder, setCreatingFolder] = useState(false)
@@ -56,10 +59,11 @@ export function NotesSidebar({ userId }: Props) {
   const newFolderInputRef = useRef<HTMLInputElement>(null)
   const renameInputRef = useRef<HTMLInputElement>(null)
 
-  // Fetch folders on mount
+  // Fetch folders + trashed notes on mount
   useEffect(() => {
     fetchFolders(userId)
-  }, [userId, fetchFolders])
+    fetchTrashedNotes(userId)
+  }, [userId, fetchFolders, fetchTrashedNotes])
 
   // Focus new folder input
   useEffect(() => {
@@ -77,6 +81,7 @@ export function NotesSidebar({ userId }: Props) {
     if (folderId === "favorites") return notes.filter((n) => n.favorited && !n.archived).length
     if (folderId === "no-folder") return notes.filter((n) => !n.folder_id && !n.archived).length
     if (folderId === "archived") return notes.filter((n) => n.archived).length
+    if (folderId === "trash") return trashedNotes.length
     return notes.filter((n) => n.folder_id === folderId && !n.archived).length
   }
 

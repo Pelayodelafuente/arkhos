@@ -66,6 +66,7 @@ function getNodesInGroup(groupNode: CanvasNode, allNodes: CanvasNode[]): CanvasN
 interface NotesState {
   // List view
   notes: Note[]
+  trashedNotes: Note[]
   isLoading: boolean
   searchQuery: string
   activeTag: string | null
@@ -137,6 +138,11 @@ interface NotesActions {
   addNote: (userId: string, data: NoteFormData) => Promise<Note | null>
   editNote: (id: string, data: Partial<NoteFormData>) => Promise<void>
   removeNote: (id: string) => Promise<void>
+  restoreFromTrash: (id: string) => Promise<void>
+  permanentlyDelete: (id: string) => Promise<void>
+  emptyTrash: () => Promise<void>
+  fetchTrashedNotes: (userId: string) => Promise<void>
+  duplicateNote: (noteId: string, userId: string) => Promise<void>
   togglePin: (id: string) => Promise<void>
 
   // Hydration (server → store)
@@ -265,6 +271,7 @@ type NotesStore = NotesState & NotesActions
 export const useNotesStore = create<NotesStore>((set, get) => ({
   // State
   notes: [],
+  trashedNotes: [],
   isLoading: false,
   searchQuery: '',
   activeTag: null,
@@ -443,13 +450,17 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
   },
 
   removeNote: async (id) => {
+    // Soft-delete: move to trash
+    const note = get().notes.find((n) => n.id === id)
+    if (!note) return
     const prev = get().notes
     const prevNodes = get().canvasNodes
     const prevEdges = get().canvasEdges
-    // Find canvas node for this note to also remove its edges
     const nodeToRemove = prevNodes.find((cn) => cn.note_id === id)
+    const trashedNote = { ...note, deleted_at: new Date().toISOString() }
     set((s) => ({
       notes: s.notes.filter((n) => n.id !== id),
+      trashedNotes: [trashedNote, ...s.trashedNotes],
       canvasNodes: s.canvasNodes.filter((cn) => cn.note_id !== id),
       canvasEdges: nodeToRemove
         ? s.canvasEdges.filter(
@@ -457,13 +468,85 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
           )
         : s.canvasEdges,
     }))
-
     try {
       await notesApi.deleteNote(id)
-      toast('Nota eliminada', 'success')
+      toast('Nota movida a la papelera', 'info')
     } catch (e) {
-      set({ notes: prev, canvasNodes: prevNodes, canvasEdges: prevEdges })
+      set({ notes: prev, trashedNotes: get().trashedNotes.filter((n) => n.id !== id), canvasNodes: prevNodes, canvasEdges: prevEdges })
+      const msg = e instanceof Error ? e.message : 'Error al mover la nota a la papelera'
+      toast(msg, 'error')
+    }
+  },
+
+  restoreFromTrash: async (id) => {
+    const note = get().trashedNotes.find((n) => n.id === id)
+    if (!note) return
+    const restored = { ...note, deleted_at: null }
+    set((s) => ({
+      trashedNotes: s.trashedNotes.filter((n) => n.id !== id),
+      notes: [restored, ...s.notes],
+    }))
+    try {
+      await notesApi.restoreNote(id)
+      toast('Nota restaurada', 'success')
+    } catch (e) {
+      set((s) => ({
+        trashedNotes: [note, ...s.trashedNotes],
+        notes: s.notes.filter((n) => n.id !== id),
+      }))
+      const msg = e instanceof Error ? e.message : 'Error al restaurar la nota'
+      toast(msg, 'error')
+    }
+  },
+
+  permanentlyDelete: async (id) => {
+    const prev = get().trashedNotes
+    set((s) => ({ trashedNotes: s.trashedNotes.filter((n) => n.id !== id) }))
+    try {
+      await notesApi.hardDeleteNote(id)
+      toast('Nota eliminada permanentemente', 'success')
+    } catch (e) {
+      set({ trashedNotes: prev })
       const msg = e instanceof Error ? e.message : 'Error al eliminar la nota'
+      toast(msg, 'error')
+    }
+  },
+
+  emptyTrash: async () => {
+    const prev = get().trashedNotes
+    if (prev.length === 0) return
+    const userId = prev[0]?.user_id
+    if (!userId) return
+    set({ trashedNotes: [] })
+    try {
+      await notesApi.emptyTrash(userId)
+      toast('Papelera vaciada', 'success')
+    } catch (e) {
+      set({ trashedNotes: prev })
+      const msg = e instanceof Error ? e.message : 'Error al vaciar la papelera'
+      toast(msg, 'error')
+    }
+  },
+
+  fetchTrashedNotes: async (userId) => {
+    try {
+      const trashedNotes = await notesApi.getTrashedNotes(userId)
+      set({ trashedNotes })
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Error al cargar la papelera'
+      toast(msg, 'error')
+    }
+  },
+
+  duplicateNote: async (noteId, userId) => {
+    const note = get().notes.find((n) => n.id === noteId)
+    if (!note) return
+    try {
+      const newNote = await notesApi.duplicateNote(userId, note)
+      set((s) => ({ notes: [newNote, ...s.notes] }))
+      toast('Nota duplicada', 'success')
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Error al duplicar la nota'
       toast(msg, 'error')
     }
   },
@@ -1364,14 +1447,18 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
   },
 
   bulkDelete: async () => {
-    const { selectedNoteIds } = get()
+    // Soft-delete bulk: move to trash
+    const { selectedNoteIds, notes } = get()
     if (selectedNoteIds.size === 0) return
     const ids = Array.from(selectedNoteIds)
     const prev = get().notes
     const prevNodes = get().canvasNodes
     const prevEdges = get().canvasEdges
+    const now = new Date().toISOString()
+    const trashing = notes.filter((n) => ids.includes(n.id)).map((n) => ({ ...n, deleted_at: now }))
     set((s) => ({
       notes: s.notes.filter((n) => !ids.includes(n.id)),
+      trashedNotes: [...trashing, ...s.trashedNotes],
       canvasNodes: s.canvasNodes.filter((cn) => !cn.note_id || !ids.includes(cn.note_id)),
       canvasEdges: s.canvasEdges.filter((e) => {
         const removedNodeIds = new Set(
@@ -1384,10 +1471,10 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
     }))
     try {
       await Promise.all(ids.map((id) => notesApi.deleteNote(id)))
-      toast(`${ids.length} nota${ids.length !== 1 ? 's' : ''} eliminada${ids.length !== 1 ? 's' : ''}`, 'success')
+      toast(`${ids.length} nota${ids.length !== 1 ? 's' : ''} movida${ids.length !== 1 ? 's' : ''} a la papelera`, 'info')
     } catch (e) {
-      set({ notes: prev, canvasNodes: prevNodes, canvasEdges: prevEdges })
-      const msg = e instanceof Error ? e.message : 'Error al eliminar las notas'
+      set({ notes: prev, trashedNotes: get().trashedNotes.filter((n) => !ids.includes(n.id)), canvasNodes: prevNodes, canvasEdges: prevEdges })
+      const msg = e instanceof Error ? e.message : 'Error al mover las notas a la papelera'
       toast(msg, 'error')
     }
   },
@@ -1516,6 +1603,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
  */
 export function useFilteredNotes(): Note[] {
   const notes = useNotesStore((s) => s.notes)
+  const trashedNotes = useNotesStore((s) => s.trashedNotes)
   const searchQuery = useNotesStore((s) => s.searchQuery)
   const activeTag = useNotesStore((s) => s.activeTag)
   const sortMode = useNotesStore((s) => s.sortMode)
@@ -1524,7 +1612,9 @@ export function useFilteredNotes(): Note[] {
   let result: Note[]
 
   // Filter by folder/view
-  if (activeFolderId === 'archived') {
+  if (activeFolderId === 'trash') {
+    result = trashedNotes
+  } else if (activeFolderId === 'archived') {
     result = notes.filter((n) => n.archived)
   } else if (activeFolderId === 'favorites') {
     result = notes.filter((n) => n.favorited && !n.archived)

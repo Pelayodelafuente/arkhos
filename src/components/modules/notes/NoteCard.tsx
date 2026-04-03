@@ -1,41 +1,71 @@
 "use client"
 
 import { useState, type ReactNode } from "react"
-import { Pin, Star, MoreHorizontal, Pencil, Trash2, Layout, Square, CheckSquare } from "lucide-react"
+import { Pin, Star, MoreHorizontal, Pencil, Trash2, Layout, Square, CheckSquare, Copy, FolderInput, Folder, Inbox, RotateCcw } from "lucide-react"
 import * as LucideIcons from "lucide-react"
 import type { Note } from "@/types/notes"
 import { NOTE_COLORS } from "./NoteColorPicker"
+import { useNotesStore } from "@/stores/notes-store"
 
 interface Props {
   note: Note
+  userId: string
   onEdit: (note: Note) => void
   onDelete: (id: string) => void
   onTogglePin: (id: string) => void
   onToggleFavorite?: (id: string) => void
   onAddToCanvas?: (id: string) => void
+  onDuplicate?: (id: string) => void
   searchQuery?: string
   isSelected?: boolean
   isSelectionMode?: boolean
   onToggleSelect?: (id: string) => void
 }
 
-export function NoteCard({ note, onEdit, onDelete, onTogglePin, onToggleFavorite, onAddToCanvas, searchQuery, isSelected, isSelectionMode, onToggleSelect }: Props) {
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [confirmDelete, setConfirmDelete] = useState(false)
-  const colorConfig = NOTE_COLORS.find((c) => c.value === note.color) ?? NOTE_COLORS[0]
+// ─── Helpers ──────────────────────────
 
-  // Get lucide icon component
-  const IconComponent = (LucideIcons as unknown as Record<string, LucideIcons.LucideIcon>)[note.icon] ?? LucideIcons.FileText
-
-  // Content preview: strip HTML tags + decode entities
-  const preview = note.content
+function stripHtml(html: string): string {
+  return html
     .replace(/<[^>]*>/g, ' ')
     .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
     .replace(/\s+/g, ' ')
     .trim()
+}
 
-  // Relative time
-  const timeAgo = getRelativeTime(note.updated_at)
+function extractFirstImage(html: string): string | null {
+  const match = html.match(/<img[^>]+src=["']([^"']+)["']/)
+  return match ? match[1] : null
+}
+
+function getChecklistProgress(html: string): { total: number; checked: number } | null {
+  const totalMatches = html.match(/<li[^>]*data-type="taskItem"[^>]*>/g)
+  if (!totalMatches || totalMatches.length === 0) return null
+  const checkedMatches = html.match(/<li[^>]*data-checked="true"[^>]*>/g)
+  return { total: totalMatches.length, checked: checkedMatches?.length ?? 0 }
+}
+
+// ─── Component ────────────────────────
+
+export function NoteCard({ note, userId, onEdit, onDelete, onTogglePin, onToggleFavorite, onAddToCanvas, onDuplicate, searchQuery, isSelected, isSelectionMode, onToggleSelect }: Props) {
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [folderMenuOpen, setFolderMenuOpen] = useState(false)
+  const colorConfig = NOTE_COLORS.find((c) => c.value === note.color) ?? NOTE_COLORS[0]
+  const folders = useNotesStore((s) => s.folders)
+  const moveNoteToFolder = useNotesStore((s) => s.moveNoteToFolder)
+  const restoreFromTrash = useNotesStore((s) => s.restoreFromTrash)
+  const permanentlyDelete = useNotesStore((s) => s.permanentlyDelete)
+
+  const isInTrash = Boolean(note.deleted_at)
+
+  const IconComponent = (LucideIcons as unknown as Record<string, LucideIcons.LucideIcon>)[note.icon] ?? LucideIcons.FileText
+
+  const preview = stripHtml(note.content)
+  const firstImage = extractFirstImage(note.content)
+  const checklistProgress = getChecklistProgress(note.content)
+  const timeAgo = getRelativeTime(isInTrash && note.deleted_at ? note.deleted_at : note.updated_at)
+
+  const handleMenuClose = () => { setMenuOpen(false); setConfirmDelete(false); setFolderMenuOpen(false) }
 
   return (
     <div
@@ -44,8 +74,19 @@ export function NoteCard({ note, onEdit, onDelete, onTogglePin, onToggleFavorite
         backgroundColor: colorConfig.bg,
         borderColor: colorConfig.border + '40',
       }}
-      onClick={() => isSelectionMode ? onToggleSelect?.(note.id) : onEdit(note)}
+      onClick={() => isSelectionMode ? onToggleSelect?.(note.id) : (!isInTrash && onEdit(note))}
     >
+      {/* Image preview */}
+      {firstImage && (
+        <div className="w-full h-28 rounded-t-xl overflow-hidden">
+          <img
+            src={firstImage}
+            alt=""
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
+
       <div className="p-4">
         {/* Header */}
         <div className="flex items-start gap-2 mb-2">
@@ -65,65 +106,120 @@ export function NoteCard({ note, onEdit, onDelete, onTogglePin, onToggleFavorite
           <h3 className="flex-1 font-heading text-[15px] text-foreground leading-snug line-clamp-2">
             {searchQuery ? highlightText(note.title, searchQuery) : note.title}
           </h3>
-          {/* Favorite toggle */}
-          {onToggleFavorite && (
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); onToggleFavorite(note.id) }}
-              className={`flex-shrink-0 mt-0.5 rounded transition-colors ${
-                note.favorited
-                  ? "text-amber-400"
-                  : "text-text-tertiary/40 opacity-0 group-hover:opacity-100 hover:text-amber-400"
-              }`}
-              title={note.favorited ? "Quitar de favoritas" : "Añadir a favoritas"}
-            >
-              <Star size={12} strokeWidth={2} className={note.favorited ? "fill-amber-400" : ""} />
-            </button>
+          {!isInTrash && (
+            <>
+              {/* Favorite toggle */}
+              {onToggleFavorite && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); onToggleFavorite(note.id) }}
+                  className={`flex-shrink-0 mt-0.5 rounded transition-colors ${
+                    note.favorited
+                      ? "text-amber-400"
+                      : "text-text-tertiary/40 opacity-0 group-hover:opacity-100 hover:text-amber-400"
+                  }`}
+                  title={note.favorited ? "Quitar de favoritas" : "Añadir a favoritas"}
+                >
+                  <Star size={12} strokeWidth={2} className={note.favorited ? "fill-amber-400" : ""} />
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onTogglePin(note.id) }}
+                className={`flex-shrink-0 mt-0.5 rounded transition-colors ${
+                  note.is_pinned
+                    ? "text-accent"
+                    : "text-text-tertiary/40 opacity-0 group-hover:opacity-100 hover:text-text-tertiary"
+                }`}
+                title={note.is_pinned ? "Desfijar" : "Fijar"}
+              >
+                <Pin size={12} strokeWidth={2} className={note.is_pinned ? "fill-accent" : ""} />
+              </button>
+            </>
           )}
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); onTogglePin(note.id) }}
-            className={`flex-shrink-0 mt-0.5 rounded transition-colors ${
-              note.is_pinned
-                ? "text-accent"
-                : "text-text-tertiary/40 opacity-0 group-hover:opacity-100 hover:text-text-tertiary"
-            }`}
-            title={note.is_pinned ? "Desfijar" : "Fijar"}
-          >
-            <Pin size={12} strokeWidth={2} className={note.is_pinned ? "fill-accent" : ""} />
-          </button>
           {/* Menu button */}
           <div className="relative flex-shrink-0">
             <button
-              onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen); if (menuOpen) setConfirmDelete(false) }}
+              onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen); if (menuOpen) { setConfirmDelete(false); setFolderMenuOpen(false) } }}
               className="opacity-0 group-hover:opacity-100 flex h-6 w-6 items-center justify-center rounded-md text-text-tertiary hover:bg-sand hover:text-foreground transition-all"
             >
               <MoreHorizontal size={14} strokeWidth={1.75} />
             </button>
             {menuOpen && (
               <>
-                <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setMenuOpen(false); setConfirmDelete(false) }} />
+                <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); handleMenuClose() }} />
                 <div className="absolute right-0 top-7 z-50 w-44 rounded-lg border border-border bg-card py-1 shadow-md">
-                  <MenuButton icon={<Pencil size={13} />} label="Editar" onClick={() => { setMenuOpen(false); onEdit(note) }} />
-                  <MenuButton icon={<Pin size={13} />} label={note.is_pinned ? "Desfijar" : "Fijar"} onClick={() => { setMenuOpen(false); onTogglePin(note.id) }} />
-                  {onAddToCanvas && (
-                    <MenuButton icon={<Layout size={13} />} label="Añadir al canvas" onClick={() => { setMenuOpen(false); onAddToCanvas(note.id) }} />
+                  {isInTrash ? (
+                    // Trash view actions
+                    <>
+                      <MenuButton icon={<RotateCcw size={13} />} label="Restaurar" onClick={() => { handleMenuClose(); restoreFromTrash(note.id) }} />
+                      <div className="my-1 border-t border-border" />
+                      <MenuButton
+                        icon={<Trash2 size={13} />}
+                        label={confirmDelete ? "¿Confirmar?" : "Eliminar definitivo"}
+                        onClick={() => {
+                          if (!confirmDelete) { setConfirmDelete(true) }
+                          else { handleMenuClose(); permanentlyDelete(note.id) }
+                        }}
+                        danger
+                      />
+                    </>
+                  ) : (
+                    // Normal actions
+                    <>
+                      <MenuButton icon={<Pencil size={13} />} label="Editar" onClick={() => { handleMenuClose(); onEdit(note) }} />
+                      <MenuButton icon={<Pin size={13} />} label={note.is_pinned ? "Desfijar" : "Fijar"} onClick={() => { handleMenuClose(); onTogglePin(note.id) }} />
+                      {onDuplicate && (
+                        <MenuButton icon={<Copy size={13} />} label="Duplicar" onClick={() => { handleMenuClose(); onDuplicate(note.id) }} />
+                      )}
+                      {/* Move to folder submenu */}
+                      <div className="relative">
+                        <MenuButton
+                          icon={<FolderInput size={13} />}
+                          label="Mover a..."
+                          onClick={(e) => { e?.stopPropagation(); setFolderMenuOpen((v) => !v) }}
+                        />
+                        {folderMenuOpen && (
+                          <>
+                            <div
+                              className="fixed inset-0 z-[45]"
+                              onClick={(e) => { e.stopPropagation(); setFolderMenuOpen(false) }}
+                            />
+                            <div className="absolute left-full top-0 ml-1 z-[50] w-40 rounded-lg border border-border bg-card py-1 shadow-md">
+                              <MenuButton
+                                icon={<Inbox size={13} />}
+                                label="Sin carpeta"
+                                onClick={() => { handleMenuClose(); moveNoteToFolder(note.id, null) }}
+                                active={!note.folder_id}
+                              />
+                              {folders.map((f) => (
+                                <MenuButton
+                                  key={f.id}
+                                  icon={<Folder size={13} />}
+                                  label={f.name}
+                                  onClick={() => { handleMenuClose(); moveNoteToFolder(note.id, f.id) }}
+                                  active={note.folder_id === f.id}
+                                />
+                              ))}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                      {onAddToCanvas && (
+                        <MenuButton icon={<Layout size={13} />} label="Añadir al canvas" onClick={() => { handleMenuClose(); onAddToCanvas(note.id) }} />
+                      )}
+                      <div className="my-1 border-t border-border" />
+                      <MenuButton
+                        icon={<Trash2 size={13} />}
+                        label={confirmDelete ? "¿Confirmar?" : "Mover a papelera"}
+                        onClick={() => {
+                          if (!confirmDelete) { setConfirmDelete(true) }
+                          else { handleMenuClose(); onDelete(note.id) }
+                        }}
+                        danger
+                      />
+                    </>
                   )}
-                  <div className="my-1 border-t border-border" />
-                  <MenuButton
-                    icon={<Trash2 size={13} />}
-                    label={confirmDelete ? "¿Confirmar?" : "Eliminar"}
-                    onClick={() => {
-                      if (!confirmDelete) {
-                        setConfirmDelete(true)
-                      } else {
-                        setMenuOpen(false)
-                        setConfirmDelete(false)
-                        onDelete(note.id)
-                      }
-                    }}
-                    danger
-                  />
                 </div>
               </>
             )}
@@ -135,6 +231,21 @@ export function NoteCard({ note, onEdit, onDelete, onTogglePin, onToggleFavorite
           <p className="text-xs text-text-secondary leading-relaxed line-clamp-3 mb-3">
             {searchQuery ? highlightText(preview, searchQuery) : preview}
           </p>
+        )}
+
+        {/* Checklist progress */}
+        {checklistProgress && (
+          <div className="flex items-center gap-2 mb-2">
+            <div className="flex-1 h-1 rounded-full bg-foreground/8 overflow-hidden">
+              <div
+                className="h-full rounded-full bg-[#7a9b76] transition-all"
+                style={{ width: checklistProgress.total > 0 ? `${(checklistProgress.checked / checklistProgress.total) * 100}%` : '0%' }}
+              />
+            </div>
+            <span className="text-[10px] font-mono text-text-tertiary flex-shrink-0">
+              {checklistProgress.checked}/{checklistProgress.total}
+            </span>
+          </div>
         )}
 
         {/* Tags + time */}
@@ -152,7 +263,7 @@ export function NoteCard({ note, onEdit, onDelete, onTogglePin, onToggleFavorite
             </div>
           )}
           <span className="text-[10px] font-mono text-text-tertiary whitespace-nowrap ml-auto">
-            {timeAgo}
+            {isInTrash ? `Eliminada ${timeAgo}` : timeAgo}
           </span>
         </div>
       </div>
@@ -160,12 +271,16 @@ export function NoteCard({ note, onEdit, onDelete, onTogglePin, onToggleFavorite
   )
 }
 
-function MenuButton({ icon, label, onClick, danger }: { icon: ReactNode; label: string; onClick: () => void; danger?: boolean }) {
+function MenuButton({ icon, label, onClick, danger, active }: { icon: ReactNode; label: string; onClick: (e?: React.MouseEvent) => void; danger?: boolean; active?: boolean }) {
   return (
     <button
-      onClick={(e) => { e.stopPropagation(); onClick() }}
+      onClick={(e) => { e.stopPropagation(); onClick(e) }}
       className={`flex w-full items-center gap-2 px-3 py-1.5 text-xs transition-colors ${
-        danger ? 'text-red-600 hover:bg-red-50' : 'text-text-secondary hover:bg-sand'
+        danger
+          ? 'text-red-600 hover:bg-red-50'
+          : active
+          ? 'text-[#7a9b76] bg-[#7a9b76]/8 hover:bg-[#7a9b76]/12'
+          : 'text-text-secondary hover:bg-sand'
       }`}
     >
       {icon}

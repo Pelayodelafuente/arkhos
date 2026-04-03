@@ -48,10 +48,24 @@ export async function getNotes(userId: string): Promise<Note[]> {
     .from('notes')
     .select('*')
     .eq('user_id', userId)
+    .is('deleted_at', null)
     .order('is_pinned', { ascending: false })
     .order('updated_at', { ascending: false })
 
   if (error) throw new NotesError('Error fetching notes', error.message)
+  return (data ?? []) as Note[]
+}
+
+export async function getTrashedNotes(userId: string): Promise<Note[]> {
+  const client = createClient()
+  const { data, error } = await client
+    .from('notes')
+    .select('*')
+    .eq('user_id', userId)
+    .not('deleted_at', 'is', null)
+    .order('deleted_at', { ascending: false })
+
+  if (error) throw new NotesError('Error fetching trashed notes', error.message)
   return (data ?? []) as Note[]
 }
 
@@ -111,12 +125,65 @@ export async function updateNote(
 }
 
 export async function deleteNote(id: string): Promise<void> {
+  // Soft-delete: move to trash
+  const client = createClient()
+  const { data: { session } } = await client.auth.getSession()
+  const query = client.from('notes').update({ deleted_at: new Date().toISOString() }).eq('id', id)
+  if (session?.user?.id) query.eq('user_id', session.user.id)
+  const { error } = await query
+  if (error) throw new NotesError('Error moving note to trash', error.message)
+}
+
+export async function restoreNote(id: string): Promise<void> {
+  const client = createClient()
+  const { data: { session } } = await client.auth.getSession()
+  const query = client.from('notes').update({ deleted_at: null }).eq('id', id)
+  if (session?.user?.id) query.eq('user_id', session.user.id)
+  const { error } = await query
+  if (error) throw new NotesError('Error restoring note', error.message)
+}
+
+export async function hardDeleteNote(id: string): Promise<void> {
   const client = createClient()
   const { data: { session } } = await client.auth.getSession()
   const query = client.from('notes').delete().eq('id', id)
   if (session?.user?.id) query.eq('user_id', session.user.id)
   const { error } = await query
-  if (error) throw new NotesError('Error deleting note', error.message)
+  if (error) throw new NotesError('Error permanently deleting note', error.message)
+}
+
+export async function emptyTrash(userId: string): Promise<void> {
+  const client = createClient()
+  const { error } = await client
+    .from('notes')
+    .delete()
+    .eq('user_id', userId)
+    .not('deleted_at', 'is', null)
+  if (error) throw new NotesError('Error emptying trash', error.message)
+}
+
+export async function duplicateNote(userId: string, note: Note): Promise<Note> {
+  const client = createClient()
+  const plainText = note.content.replace(/<[^>]*>/g, ' ')
+  const wordCount = plainText.trim().split(/\s+/).filter(Boolean).length
+  const { data, error } = await client
+    .from('notes')
+    .insert({
+      user_id: userId,
+      title: `${note.title} (copia)`,
+      content: note.content,
+      color: note.color,
+      icon: note.icon,
+      tags: note.tags,
+      folder_id: note.folder_id,
+      word_count: wordCount,
+    })
+    .select()
+    .single()
+
+  if (error) throw new NotesError('Error duplicating note', error.message)
+  if (!data) throw new NotesError('Error duplicating note: no data returned')
+  return data as Note
 }
 
 export async function togglePinNote(id: string, isPinned: boolean): Promise<void> {

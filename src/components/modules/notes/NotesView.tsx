@@ -167,7 +167,7 @@ export function NotesView({ initialNotes, initialCanvas, userId }: Props) {
       {/* Content */}
       {viewMode === "list" ? (
         <div className="animate-fade-in-up" style={{ animationDelay: "100ms" }}>
-          <NotesList onEdit={handleEdit} onNew={handleNew} />
+          <NotesList userId={userId} onEdit={handleEdit} onNew={handleNew} />
         </div>
       ) : (
         <div className="animate-fade-in-up" style={{ animationDelay: "100ms" }}>
