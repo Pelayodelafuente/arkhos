@@ -193,7 +193,7 @@ export function NotesView({ initialNotes, initialCanvas, userId }: Props) {
           {/* Toolbar (list only) */}
           {viewMode === "list" && (
             <div className="mb-4 animate-fade-in-up" style={{ animationDelay: "50ms" }}>
-              <NotesToolbar />
+              <NotesToolbar userId={userId} />
             </div>
           )}
         </div>
