@@ -126,16 +126,19 @@ ArkhosLogo    size: sm|md|lg
 
 ## Módulo Proyectos — puntos clave
 
-- **Data layer**: `src/lib/supabase/projects.ts` — 27 funciones tipadas
-- **Store**: `src/stores/projects-store.ts` — optimistic updates + rollback + Toast
+- **Data layer**: `src/lib/supabase/projects.ts` — 27 funciones tipadas; `activity.ts` — logActivity/getProjectActivity/deleteActivity
+- **Store**: `src/stores/projects-store.ts` — optimistic updates + rollback + Toast + computePhaseStatus() + logActivity integrado
 - **Canvas store**: `src/stores/canvas-store.ts` — posiciones ventanas, zoom, selección, localStorage
 - **Selectores**: `useFilteredProjects()`, `useProjectsByStatus(statuses[])`
-- **Tipos/estados**: dinámicos por usuario (`project_types`, `project_statuses`)
+- **Tipos/estados**: dinámicos por usuario (`project_types`, `project_statuses`). Sin estado `'blocked'` en tareas
 - **Drag & drop**: `reorderPhasesAction`, `reorderTasksAction` en store
 - **Logo**: Supabase Storage bucket `project-logos` — `{userId}/{projectId}.{ext}`
 - **Búsqueda**: debounce 300ms, filtro name/stack/tags, highlight `<mark>`
 - **Canvas**: `/proyectos` renderiza `ProjectCanvas` — 5 ventanas arrastrables con Framer Motion
 - **API Routes IA**: `/api/projects/analyze` + `/api/projects/chat` — streaming Anthropic SDK
+- **Componentes clave**: `task-detail-fields.tsx` (shared, markdown preview via `marked`), `task-slide-over.tsx` (modal centrado), `activity-view.tsx` (notas manuales CRUD)
+- **Vistas en `/proyectos/[id]`**: Progreso · Kanban · Dashboard · Tabla · Actividad
+- **Fase status**: `computePhaseStatus()` auto-recalcula y persiste en addTask/editTask/removeTask/changeTaskStatus
 - **Docs**: `docs/modules/PROJECTS.md` — schema, data layer, store, componentes
 
 ---
