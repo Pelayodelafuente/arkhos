@@ -29,6 +29,7 @@ interface Props {
   userId: string
   onEdit: (note: Note) => void
   onNew: () => void
+  selectedNoteId?: string | null
 }
 
 // ─── Sortable wrapper ─────────────────
@@ -48,6 +49,7 @@ interface SortableNoteCardProps {
   searchQuery: string
   isSelected: boolean
   isSelectionMode: boolean
+  isPaneActive: boolean
 }
 
 function SortableNoteCard({
@@ -65,6 +67,7 @@ function SortableNoteCard({
   searchQuery,
   isSelected,
   isSelectionMode,
+  isPaneActive,
 }: SortableNoteCardProps) {
   const {
     attributes,
@@ -113,6 +116,7 @@ function SortableNoteCard({
             isSelected={isSelected}
             isSelectionMode={isSelectionMode}
             onToggleSelect={onToggleSelect}
+            isPaneActive={isPaneActive}
           />
         </div>
       </div>
@@ -122,7 +126,7 @@ function SortableNoteCard({
 
 // ─── NotesList ────────────────────────
 
-export function NotesList({ userId, onEdit, onNew }: Props) {
+export function NotesList({ userId, onEdit, onNew, selectedNoteId }: Props) {
   const notes = useFilteredNotes()
   const activeFolderId = useNotesStore((s) => s.activeFolderId)
   const removeNote = useNotesStore((s) => s.removeNote)
@@ -216,7 +220,7 @@ export function NotesList({ userId, onEdit, onNew }: Props) {
   const regularNotes = notes.filter((n) => !n.is_pinned)
 
   const renderGrid = (list: Note[], indexOffset = 0) => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className={`grid gap-3 ${selectedNoteId ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"}`}>
       {list.map((note, i) => (
         <SortableNoteCard
           key={note.id}
@@ -234,6 +238,7 @@ export function NotesList({ userId, onEdit, onNew }: Props) {
           searchQuery={searchQuery}
           isSelected={selectedNoteIds.has(note.id)}
           isSelectionMode={isSelectionMode}
+          isPaneActive={note.id === selectedNoteId}
         />
       ))}
     </div>

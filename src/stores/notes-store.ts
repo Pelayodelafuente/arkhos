@@ -123,6 +123,9 @@ interface NotesState {
   // Backlinks
   noteReferences: Record<string, Note[]>  // noteId → notas que menciona
   noteBacklinks: Record<string, Note[]>   // noteId → notas que la mencionan
+
+  // Split-pane selected note
+  selectedNoteId: string | null
 }
 
 interface NotesActions {
@@ -262,6 +265,9 @@ interface NotesActions {
   loadNoteLinks: (noteId: string) => Promise<void>
   syncBacklinksOnSave: (noteId: string, content: string) => Promise<void>
   generateBacklinkEdges: () => Promise<void>
+
+  // Split-pane
+  setSelectedNoteId: (id: string | null) => void
 }
 
 type NotesStore = NotesState & NotesActions
@@ -300,6 +306,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
   canvasFilters: { types: [], colors: [] },
   noteReferences: {},
   noteBacklinks: {},
+  selectedNoteId: null,
 
   // ── Fetch ───────────────────────────
 
@@ -582,6 +589,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
   setActiveTag: (tag) => set({ activeTag: tag }),
   setViewMode: (mode) => set({ viewMode: mode }),
   setSortMode: (mode) => set({ sortMode: mode }),
+  setSelectedNoteId: (id) => set({ selectedNoteId: id }),
 
   // ── Canvas Node Operations ─────────
 

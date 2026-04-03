@@ -21,6 +21,7 @@ interface Props {
   isSelected?: boolean
   isSelectionMode?: boolean
   onToggleSelect?: (id: string) => void
+  isPaneActive?: boolean
 }
 
 // ─── Helpers ──────────────────────────
@@ -47,7 +48,7 @@ function getChecklistProgress(html: string): { total: number; checked: number } 
 
 // ─── Component ────────────────────────
 
-export function NoteCard({ note, userId, onEdit, onDelete, onTogglePin, onToggleFavorite, onAddToCanvas, onDuplicate, searchQuery, isSelected, isSelectionMode, onToggleSelect }: Props) {
+export function NoteCard({ note, userId, onEdit, onDelete, onTogglePin, onToggleFavorite, onAddToCanvas, onDuplicate, searchQuery, isSelected, isSelectionMode, onToggleSelect, isPaneActive }: Props) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [folderMenuOpen, setFolderMenuOpen] = useState(false)
@@ -73,7 +74,8 @@ export function NoteCard({ note, userId, onEdit, onDelete, onTogglePin, onToggle
       className="group relative rounded-xl border transition-all duration-200 cursor-pointer hover:-translate-y-0.5 hover:shadow-[0_4px_16px_rgba(26,23,20,0.06)]"
       style={{
         backgroundColor: colorConfig.bg,
-        borderColor: colorConfig.border + '40',
+        borderColor: isPaneActive ? 'var(--module-notas)' : colorConfig.border + '40',
+        boxShadow: isPaneActive ? '0 0 0 2px rgba(122,155,118,0.2)' : undefined,
       }}
       onClick={() => isSelectionMode ? onToggleSelect?.(note.id) : (!isInTrash && onEdit(note))}
     >
