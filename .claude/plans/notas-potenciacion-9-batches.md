@@ -1,6 +1,6 @@
 # Plan: Notas — Potenciación completa (9 batches)
 
-**Estado actual**: Batches 1, 2, 3, 4 y 5 completados (2026-04-03)
+**Estado actual**: Batches 1, 2, 3, 4, 5 y 6 completados (2026-04-03)
 
 ---
 
@@ -77,12 +77,12 @@ Reutiliza patrón de `/api/projects/analyze` y `/api/projects/chat`.
 
 ---
 
-### Batch 6 — Integraciones cross-módulo
+### Batch 6 — Integraciones cross-módulo ✅ COMPLETADO (2026-04-03) — commit 8959264
 **Complejidad**: Media | **Riesgo**: Bajo
-**Archivos**: migration, NotePane, project-detail.tsx
+**Archivos**: migration 018, NotePane, project-detail.tsx, notes-view.tsx, SubscriptionList.tsx, NotesView.tsx
 
-1. **B10 — Notas ↔ Proyectos**: Migration añade `project_id UUID REFERENCES projects(id) ON DELETE SET NULL`. NotePane: selector "Vincular a proyecto". project-detail.tsx: nueva tab "Notas".
-2. **B11 — Notas ↔ Gastos**: Migration añade `subscription_id UUID REFERENCES subscriptions(id) ON DELETE SET NULL`. NotePane: selector "Vincular a suscripción". Modal suscripción: badge "Ver notas".
+1. **B10 — Notas ↔ Proyectos**: Migration 018 añade `project_id UUID REFERENCES projects(id) ON DELETE SET NULL`. NotePane: sección acordeón "Vincular" con selects. project-detail.tsx: nueva tab "Notas" con NotesView (lista vacía → empty state).
+2. **B11 — Notas ↔ Gastos**: Migration 018 añade `subscription_id UUID REFERENCES subscriptions(id) ON DELETE SET NULL`. NotePane: selector "Vincular a suscripción". SubscriptionList: badge "Ver notas" con Link a `/notas?subscription=id`.
 
 ---
 
