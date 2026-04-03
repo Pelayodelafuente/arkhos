@@ -95,6 +95,7 @@ export async function createNote(userId: string, formData: NoteFormData): Promis
       icon: formData.icon,
       tags: formData.tags,
       word_count: wordCount,
+      status: formData.status ?? 'none',
     })
     .select()
     .single()

@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
-import { Trash2, Maximize2, Minimize2, Archive, History, X, RotateCcw, Link2, ArrowRight } from "lucide-react"
+import { useState, useEffect, useRef, useMemo } from "react"
+import { Trash2, Maximize2, Minimize2, Archive, History, X, RotateCcw, Link2, ArrowRight, Unlink } from "lucide-react"
 import * as LucideIcons from "lucide-react"
 import { Modal, Button } from "@/components/ui"
 import { useNotesStore, useAllTags } from "@/stores/notes-store"
@@ -9,8 +9,16 @@ import { useToast } from "@/stores/ui-store"
 import { NoteColorPicker } from "./NoteColorPicker"
 import { TagInput } from "./TagInput"
 import { NoteEditor } from "./NoteEditor"
-import type { Note, NoteColor, NoteVersion } from "@/types/notes"
+import type { Note, NoteColor, NoteStatus, NoteVersion } from "@/types/notes"
+import { NOTE_STATUS_CONFIG } from "@/types/notes"
 import * as notesApi from "@/lib/supabase/notes"
+
+const STATUS_OPTIONS: { value: NoteStatus; label: string }[] = [
+  { value: 'none',        label: '—' },
+  { value: 'idea',        label: 'Idea' },
+  { value: 'in_progress', label: 'En progreso' },
+  { value: 'done',        label: 'Hecho' },
+]
 
 // Common icons for notes
 const NOTE_ICONS = [
@@ -56,8 +64,10 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
   const [loadingVersions, setLoadingVersions] = useState(false)
   const [selectedVersion, setSelectedVersion] = useState<NoteVersion | null>(null)
 
+  const [status, setStatus] = useState<NoteStatus>('none')
+
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const snapshotRef = useRef<{ title: string; content: string; color: NoteColor; icon: string; tags: string[] } | null>(null)
+  const snapshotRef = useRef<{ title: string; content: string; color: NoteColor; icon: string; tags: string[]; status: NoteStatus } | null>(null)
 
   // Backlinks
   useEffect(() => {
@@ -78,7 +88,8 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
       setColor(note.color)
       setIcon(note.icon)
       setTags([...note.tags])
-      snapshotRef.current = { title: note.title, content: note.content, color: note.color, icon: note.icon, tags: [...note.tags] }
+      setStatus(note.status ?? 'none')
+      snapshotRef.current = { title: note.title, content: note.content, color: note.color, icon: note.icon, tags: [...note.tags], status: note.status ?? 'none' }
       // Auto-snapshot: save version if note was last edited >5 minutes ago
       const fiveMinutesAgo = Date.now() - 5 * 60 * 1000
       if (new Date(note.updated_at).getTime() < fiveMinutesAgo) {
@@ -90,6 +101,7 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
       setColor("default")
       setIcon("FileText")
       setTags([])
+      setStatus('none')
       snapshotRef.current = null
     }
     setConfirmDelete(false)
@@ -120,15 +132,16 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
       content !== snap.content ||
       color !== snap.color ||
       icon !== snap.icon ||
+      status !== snap.status ||
       JSON.stringify(tags) !== JSON.stringify(snap.tags)
     )
     if (!isDirty) return
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current)
     autoSaveTimer.current = setTimeout(() => {
-      editNote(note.id, { title: title || 'Sin título', content, color, icon, tags })
+      editNote(note.id, { title: title || 'Sin título', content, color, icon, tags, status })
     }, 800)
     return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current) }
-  }, [title, content, color, icon, tags, isEdit, note, open, editNote])
+  }, [title, content, color, icon, tags, status, isEdit, note, open, editNote])
 
   const handleSave = async () => {
     if (isEdit && note) {
@@ -138,6 +151,7 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
         content !== snap.content ||
         color !== snap.color ||
         icon !== snap.icon ||
+        status !== snap.status ||
         JSON.stringify(tags) !== JSON.stringify(snap.tags)
       )
       if (!isDirty) {
@@ -155,9 +169,9 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
     setSaving(true)
     try {
       if (isEdit && note) {
-        await editNote(note.id, { title: title || 'Sin título', content, color, icon, tags })
+        await editNote(note.id, { title: title || 'Sin título', content, color, icon, tags, status })
       } else {
-        await addNote(userId, { title: title || 'Sin título', content, color, icon, tags })
+        await addNote(userId, { title: title || 'Sin título', content, color, icon, tags, status })
       }
       onClose()
     } finally {
@@ -188,6 +202,29 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
   }
 
   const wordCount = content.replace(/<[^>]*>/g, ' ').trim().split(/\s+/).filter(Boolean).length
+
+  // B4 — Related notes: share ≥1 tag (client-side, no extra DB call)
+  const allNotes = useNotesStore((s) => s.notes)
+  const relatedNotes = useMemo(() => {
+    if (!note || tags.length === 0) return []
+    return allNotes.filter((n) =>
+      n.id !== note.id &&
+      !n.deleted_at &&
+      n.tags.some((t) => tags.includes(t))
+    ).slice(0, 6)
+  }, [allNotes, note, tags])
+
+  // A9 — Unlinked mentions: notes whose content contains our title as text but not as [[title]]
+  const unlinkedMentions = useMemo(() => {
+    if (!note || !title.trim()) return []
+    const t = title.trim().toLowerCase()
+    const linked = `[[${title.trim().toLowerCase()}]]`
+    return allNotes.filter((n) => {
+      if (n.id === note.id || n.deleted_at) return false
+      const text = n.content.replace(/<[^>]*>/g, ' ').toLowerCase()
+      return text.includes(t) && !text.includes(linked)
+    }).slice(0, 6)
+  }, [allNotes, note, title])
 
   const SelectedIcon = (LucideIcons as unknown as Record<string, LucideIcons.LucideIcon>)[icon] ?? LucideIcons.FileText
 
@@ -262,6 +299,35 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
 
         {/* Color picker */}
         <NoteColorPicker value={color} onChange={setColor} />
+
+        {/* Status selector */}
+        <div className="flex items-center gap-1.5">
+          {STATUS_OPTIONS.map((opt) => {
+            const cfg = NOTE_STATUS_CONFIG[opt.value]
+            const isActive = status === opt.value
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setStatus(opt.value)}
+                style={isActive && opt.value !== 'none' ? {
+                  background: cfg.bg,
+                  color: cfg.color,
+                  borderColor: cfg.color,
+                } : {}}
+                className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium border transition-colors ${
+                  isActive
+                    ? opt.value === 'none'
+                      ? 'bg-sand border-border text-text-secondary'
+                      : 'border'
+                    : 'border-transparent text-text-tertiary hover:text-text-secondary hover:bg-sand/60'
+                }`}
+              >
+                {opt.label}
+              </button>
+            )
+          })}
+        </div>
 
         {/* Tiptap editor */}
         <div className={`rounded-md border border-border bg-card px-3 py-2.5 ${isFullscreen ? 'flex-1 overflow-y-auto' : ''}`}>
@@ -338,6 +404,63 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* B4 — Related notes */}
+        {isEdit && relatedNotes.length > 0 && (
+          <div style={{ borderTop: '1px solid var(--border-stone)', paddingTop: 10 }}>
+            <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-tertiary)', marginBottom: 6 }}>
+              Notas relacionadas ({relatedNotes.length})
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+              {relatedNotes.map((n) => (
+                <button
+                  key={n.id}
+                  type="button"
+                  onClick={() => onOpenNote?.(n)}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 4,
+                    padding: '2px 8px', borderRadius: 6,
+                    background: 'var(--bg-sand)',
+                    border: '1px solid var(--border-stone)',
+                    color: 'var(--text-secondary)',
+                    fontSize: 11, fontWeight: 500, cursor: 'pointer',
+                  }}
+                >
+                  {n.title || 'Sin título'}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* A9 — Unlinked mentions */}
+        {isEdit && unlinkedMentions.length > 0 && (
+          <div style={{ borderTop: '1px solid var(--border-stone)', paddingTop: 10 }}>
+            <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-tertiary)', marginBottom: 6 }}>
+              Menciones no enlazadas ({unlinkedMentions.length})
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+              {unlinkedMentions.map((n) => (
+                <button
+                  key={n.id}
+                  type="button"
+                  onClick={() => onOpenNote?.(n)}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 4,
+                    padding: '2px 8px', borderRadius: 6,
+                    background: 'rgba(155,122,74,0.06)',
+                    border: '1px solid rgba(155,122,74,0.2)',
+                    color: 'var(--text-secondary)',
+                    fontSize: 11, fontWeight: 500, cursor: 'pointer',
+                  }}
+                >
+                  <Unlink size={10} strokeWidth={2} />
+                  {n.title || 'Sin título'}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 

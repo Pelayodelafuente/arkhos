@@ -6,6 +6,14 @@
 // ─── Color & Type Enums ─────────────
 
 export type NoteColor = 'default' | 'sage' | 'terracotta' | 'stone' | 'blue' | 'gold'
+export type NoteStatus = 'none' | 'idea' | 'in_progress' | 'done'
+
+export const NOTE_STATUS_CONFIG: Record<NoteStatus, { label: string; color: string; bg: string }> = {
+  none:        { label: '',           color: '',         bg: '' },
+  idea:        { label: 'Idea',       color: '#9B7A4A',  bg: 'rgba(155,122,74,0.12)' },
+  in_progress: { label: 'En progreso', color: '#4A7A9B', bg: 'rgba(74,122,155,0.12)' },
+  done:        { label: 'Hecho',      color: '#5B8C6A',  bg: 'rgba(91,140,106,0.12)' },
+}
 export type NodeType = 'note' | 'text' | 'url' | 'group' | 'image'
 export type EdgeColor = 'default' | 'sage' | 'terracotta' | 'stone' | 'blue'
 export type EdgeStyle = 'arrow' | 'line' | 'bidirectional'
@@ -34,6 +42,7 @@ export interface Note {
   word_count: number
   tags: string[]
   sort_order: number
+  status?: NoteStatus
   folder_id?: string | null
   archived?: boolean
   favorited?: boolean
@@ -83,6 +92,7 @@ export interface NoteFormData {
   color: NoteColor
   icon: string
   tags: string[]
+  status?: NoteStatus
 }
 
 // ─── Note Canvases ──────────────────

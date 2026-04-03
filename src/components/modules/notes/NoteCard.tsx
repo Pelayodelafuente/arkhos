@@ -4,6 +4,7 @@ import { useState, type ReactNode } from "react"
 import { Pin, Star, MoreHorizontal, Pencil, Trash2, Layout, Square, CheckSquare, Copy, FolderInput, Folder, Inbox, RotateCcw } from "lucide-react"
 import * as LucideIcons from "lucide-react"
 import type { Note } from "@/types/notes"
+import { NOTE_STATUS_CONFIG } from "@/types/notes"
 import { NOTE_COLORS } from "./NoteColorPicker"
 import { useNotesStore } from "@/stores/notes-store"
 
@@ -248,20 +249,29 @@ export function NoteCard({ note, userId, onEdit, onDelete, onTogglePin, onToggle
           </div>
         )}
 
-        {/* Tags + time */}
+        {/* Status badge + tags + time */}
         <div className="flex items-end justify-between gap-2">
-          {note.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {note.tags.slice(0, 3).map((tag) => (
-                <span key={tag} className="rounded-md px-1.5 py-0.5 text-[10px] font-medium bg-foreground/5 text-text-tertiary">
-                  {tag}
+          <div className="flex flex-wrap gap-1 items-center">
+            {note.status && note.status !== 'none' && (() => {
+              const cfg = NOTE_STATUS_CONFIG[note.status]
+              return (
+                <span
+                  style={{ background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.color}40` }}
+                  className="rounded-full px-2 py-0.5 text-[10px] font-medium"
+                >
+                  {cfg.label}
                 </span>
-              ))}
-              {note.tags.length > 3 && (
-                <span className="text-[10px] text-text-tertiary">+{note.tags.length - 3}</span>
-              )}
-            </div>
-          )}
+              )
+            })()}
+            {note.tags.slice(0, 3).map((tag) => (
+              <span key={tag} className="rounded-md px-1.5 py-0.5 text-[10px] font-medium bg-foreground/5 text-text-tertiary">
+                {tag}
+              </span>
+            ))}
+            {note.tags.length > 3 && (
+              <span className="text-[10px] text-text-tertiary">+{note.tags.length - 3}</span>
+            )}
+          </div>
           <span className="text-[10px] font-mono text-text-tertiary whitespace-nowrap ml-auto">
             {isInTrash ? `Eliminada ${timeAgo}` : timeAgo}
           </span>
