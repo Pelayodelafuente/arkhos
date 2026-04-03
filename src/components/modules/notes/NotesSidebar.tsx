@@ -105,7 +105,7 @@ export function NotesSidebar({ userId }: Props) {
   }
 
   const handleDailyNote = async () => {
-    const today = new Date().toISOString().split('T')[0]
+    const today = new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
     const existing = notes.find(n => n.title === today && !n.archived && !n.deleted_at)
     if (existing) {
       setSelectedNoteId(existing.id)

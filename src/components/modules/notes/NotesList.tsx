@@ -204,6 +204,41 @@ export function NotesList({ userId, onEdit, onNew, selectedNoteId }: Props) {
   if (notes.length === 0) {
     const hasSearch =
       useNotesStore.getState().searchQuery || useNotesStore.getState().activeTag
+    const isFavoritesView = activeFolderId === 'favorites'
+    const isNoFolderView = activeFolderId === 'no-folder'
+    const isArchivedView = activeFolderId === 'archived'
+    const isSpecificFolder = activeFolderId && !['favorites', 'no-folder', 'archived', 'trash'].includes(activeFolderId)
+
+    let heading = "Aún no tienes notas"
+    let subtext = "Crea tu primera nota para empezar a organizar tus ideas"
+    let showCreateBtn = true
+
+    if (isTrashView) {
+      heading = "Papelera vacía"
+      subtext = "Las notas eliminadas aparecerán aquí"
+      showCreateBtn = false
+    } else if (hasSearch) {
+      heading = "Sin resultados"
+      subtext = "Prueba con otros términos de búsqueda"
+      showCreateBtn = false
+    } else if (isFavoritesView) {
+      heading = "No tienes notas favoritas"
+      subtext = "Marca notas con ★ para acceder rápidamente a tus favoritas"
+      showCreateBtn = false
+    } else if (isNoFolderView) {
+      heading = "Todas tus notas están en carpetas"
+      subtext = "Las notas sin carpeta aparecerán aquí"
+      showCreateBtn = false
+    } else if (isArchivedView) {
+      heading = "No hay notas archivadas"
+      subtext = "Las notas que archives aparecerán aquí"
+      showCreateBtn = false
+    } else if (isSpecificFolder) {
+      heading = "Esta carpeta está vacía"
+      subtext = "Mueve notas aquí o crea una nueva en esta carpeta"
+      showCreateBtn = true
+    }
+
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <BookOpen
@@ -211,20 +246,12 @@ export function NotesList({ userId, onEdit, onNew, selectedNoteId }: Props) {
           strokeWidth={0.75}
           className="text-text-tertiary/30 mb-4"
         />
-        <h3 className="font-heading text-xl text-foreground mb-2">
-          {isTrashView ? "Papelera vacía" : hasSearch ? "Sin resultados" : "Aún no tienes notas"}
-        </h3>
-        <p className="text-sm text-text-tertiary mb-6 max-w-sm">
-          {isTrashView
-            ? "Las notas eliminadas aparecerán aquí"
-            : hasSearch
-            ? "Prueba con otros términos de búsqueda"
-            : "Crea tu primera nota para empezar a organizar tus ideas"}
-        </p>
-        {!hasSearch && !isTrashView && (
+        <h3 className="font-heading text-xl text-foreground mb-2">{heading}</h3>
+        <p className="text-sm text-text-tertiary mb-6 max-w-sm">{subtext}</p>
+        {showCreateBtn && (
           <Button variant="primary" onClick={onNew}>
             <Plus size={16} strokeWidth={1.75} />
-            Crear primera nota
+            {isSpecificFolder ? "Crear nota aquí" : "Crear primera nota"}
           </Button>
         )}
       </div>

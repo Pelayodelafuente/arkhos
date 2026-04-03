@@ -50,6 +50,7 @@ function getChecklistProgress(html: string): { total: number; checked: number } 
 
 export function NoteCard({ note, userId, onEdit, onDelete, onTogglePin, onToggleFavorite, onAddToCanvas, onDuplicate, searchQuery, isSelected, isSelectionMode, onToggleSelect, isPaneActive }: Props) {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [folderMenuOpen, setFolderMenuOpen] = useState(false)
   const colorConfig = NOTE_COLORS.find((c) => c.value === note.color) ?? NOTE_COLORS[0]
@@ -67,7 +68,7 @@ export function NoteCard({ note, userId, onEdit, onDelete, onTogglePin, onToggle
   const checklistProgress = getChecklistProgress(note.content)
   const timeAgo = getRelativeTime(isInTrash && note.deleted_at ? note.deleted_at : note.updated_at)
 
-  const handleMenuClose = () => { setMenuOpen(false); setConfirmDelete(false); setFolderMenuOpen(false) }
+  const handleMenuClose = () => { setMenuOpen(false); setMenuPos(null); setConfirmDelete(false); setFolderMenuOpen(false) }
 
   return (
     <div
@@ -106,8 +107,12 @@ export function NoteCard({ note, userId, onEdit, onDelete, onTogglePin, onToggle
             </button>
           )}
           <IconComponent size={16} strokeWidth={1.75} className="text-text-secondary mt-0.5 flex-shrink-0" />
-          <h3 className="flex-1 font-heading text-[15px] text-foreground leading-snug line-clamp-2">
-            {searchQuery ? highlightText(note.title, searchQuery) : note.title}
+          <h3 className={`flex-1 font-heading text-[15px] leading-snug line-clamp-2 ${note.title ? 'text-foreground' : 'text-text-tertiary italic'}`}>
+            {note.title
+              ? (searchQuery ? highlightText(note.title, searchQuery) : note.title)
+              : preview
+                ? preview.slice(0, 60) + (preview.length > 60 ? '…' : '')
+                : 'Nota vacía'}
           </h3>
           {!isInTrash && (
             <>
@@ -143,15 +148,27 @@ export function NoteCard({ note, userId, onEdit, onDelete, onTogglePin, onToggle
           {/* Menu button */}
           <div className="relative flex-shrink-0">
             <button
-              onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen); if (menuOpen) { setConfirmDelete(false); setFolderMenuOpen(false) } }}
+              onClick={(e) => {
+                e.stopPropagation()
+                if (menuOpen) {
+                  setMenuOpen(false)
+                  setMenuPos(null)
+                  setConfirmDelete(false)
+                  setFolderMenuOpen(false)
+                } else {
+                  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+                  setMenuPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right })
+                  setMenuOpen(true)
+                }
+              }}
               className="opacity-0 group-hover:opacity-100 flex h-6 w-6 items-center justify-center rounded-md text-text-tertiary hover:bg-sand hover:text-foreground transition-all"
             >
               <MoreHorizontal size={14} strokeWidth={1.75} />
             </button>
-            {menuOpen && (
+            {menuOpen && menuPos && (
               <>
                 <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); handleMenuClose() }} />
-                <div className="absolute right-0 top-7 z-50 w-44 rounded-lg border border-border bg-card py-1 shadow-md">
+                <div className="fixed z-50 w-44 rounded-lg border border-border bg-card py-1 shadow-md" style={{ top: menuPos.top, right: menuPos.right }}>
                   {isInTrash ? (
                     // Trash view actions
                     <>
@@ -182,13 +199,13 @@ export function NoteCard({ note, userId, onEdit, onDelete, onTogglePin, onToggle
                           label="Mover a..."
                           onClick={(e) => { e?.stopPropagation(); setFolderMenuOpen((v) => !v) }}
                         />
-                        {folderMenuOpen && (
+                        {folderMenuOpen && menuPos && (
                           <>
                             <div
                               className="fixed inset-0 z-[45]"
                               onClick={(e) => { e.stopPropagation(); setFolderMenuOpen(false) }}
                             />
-                            <div className="absolute left-full top-0 ml-1 z-[50] w-40 rounded-lg border border-border bg-card py-1 shadow-md">
+                            <div className="fixed z-[50] w-40 rounded-lg border border-border bg-card py-1 shadow-md" style={{ top: menuPos.top, right: menuPos.right + 180 }}>
                               <MenuButton
                                 icon={<Inbox size={13} />}
                                 label="Sin carpeta"

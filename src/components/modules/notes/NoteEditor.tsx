@@ -286,6 +286,8 @@ export function NoteEditor({
       StarterKit.configure({
         codeBlock: false,
         horizontalRule: false,
+        link: false,
+        underline: false,
       }),
       Underline,
       Link.configure({ openOnClick: false, autolink: true }),
@@ -382,6 +384,13 @@ export function NoteEditor({
         const cmd = filteredCommands[slashMenu.selectedIndex]
         if (cmd) executeSlashCommand(cmd, editor)
       } else if (e.key === 'Escape') {
+        e.stopImmediatePropagation()
+        // Delete the "/" trigger character from the editor content
+        const pos = slashStartPos.current
+        if (pos !== null && editor) {
+          const currentPos = editor.state.selection.from
+          editor.chain().focus().deleteRange({ from: pos, to: currentPos }).run()
+        }
         slashStartPos.current = null
         slashMenuVisibleRef.current = false
         setSlashMenu((prev) => ({ ...prev, visible: false, query: '' }))
@@ -392,11 +401,16 @@ export function NoteEditor({
     return () => window.removeEventListener('keydown', handleKey, true)
   }, [slashMenu.visible, slashMenu.selectedIndex, filteredCommands, editor, executeSlashCommand])
 
-  // Close slash menu on click outside
+  // Close slash menu on click outside — also remove the "/" trigger
   useEffect(() => {
     if (!slashMenu.visible) return
     const handler = (e: MouseEvent) => {
       if (slashMenuRef.current && e.target instanceof Node && !slashMenuRef.current.contains(e.target)) {
+        const pos = slashStartPos.current
+        if (pos !== null && editor) {
+          const currentPos = editor.state.selection.from
+          editor.chain().focus().deleteRange({ from: pos, to: currentPos }).run()
+        }
         slashStartPos.current = null
         slashMenuVisibleRef.current = false
         setSlashMenu((prev) => ({ ...prev, visible: false, query: '' }))
@@ -404,7 +418,7 @@ export function NoteEditor({
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
-  }, [slashMenu.visible])
+  }, [slashMenu.visible, editor])
 
   // Focus link input when shown
   useEffect(() => {

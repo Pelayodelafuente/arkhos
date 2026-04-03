@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useMemo } from "react"
-import { X, Trash2, Archive, History, RotateCcw, Link2, ArrowRight, Unlink, ChevronLeft, Sparkles, ChevronDown, FolderKanban, CreditCard } from "lucide-react"
+import { X, Trash2, Archive, ArchiveRestore, History, RotateCcw, Link2, ArrowRight, Unlink, ChevronLeft, Sparkles, ChevronDown, FolderKanban, CreditCard, Star } from "lucide-react"
 import * as LucideIcons from "lucide-react"
 import { Button } from "@/components/ui"
 import { useNotesStore, useAllTags } from "@/stores/notes-store"
@@ -41,6 +41,8 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
   const editNote = useNotesStore((s) => s.editNote)
   const removeNote = useNotesStore((s) => s.removeNote)
   const archiveNote = useNotesStore((s) => s.archiveNote)
+  const unarchiveNote = useNotesStore((s) => s.unarchiveNote)
+  const toggleFavorite = useNotesStore((s) => s.toggleFavorite)
   const loadNoteLinks = useNotesStore((s) => s.loadNoteLinks)
   const loadNoteContent = useNotesStore((s) => s.loadNoteContent)
   const noteReferences = useNotesStore((s) => s.noteReferences)
@@ -63,6 +65,7 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [showIcons, setShowIcons] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
 
   // Cross-module links
   const [linkSectionOpen, setLinkSectionOpen] = useState(false)
@@ -143,13 +146,6 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
     setSummaryOpen(false)
     setSummaryText("")
     setAiSuggestedTags([])
-    // Auto-snapshot if note is old enough (solo si el content ya fue cargado)
-    if (note.contentLoaded) {
-      const fiveMinutesAgo = Date.now() - 5 * 60 * 1000
-      if (new Date(note.updated_at).getTime() < fiveMinutesAgo) {
-        notesApi.saveNoteVersion(note.id, userId, note.title, note.content).catch(() => {})
-      }
-    }
   }, [noteId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Cuando el content se carga de forma lazy, actualizar el editor
@@ -191,11 +187,24 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
       JSON.stringify(tags) !== JSON.stringify(snap.tags)
     )
     if (!isDirty) return
+    setSaveStatus('saving')
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current)
     autoSaveTimer.current = setTimeout(() => {
       editNote(note.id, { title: title || 'Sin título', content, color, icon, tags, status })
+        .then(() => {
+          setSaveStatus('saved')
+          setTimeout(() => setSaveStatus('idle'), 2000)
+        })
+        .catch(() => setSaveStatus('idle'))
     }, 800)
-    return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current) }
+    // NAV-02: flush save immediately on cleanup (navigation / unmount)
+    return () => {
+      if (autoSaveTimer.current) {
+        clearTimeout(autoSaveTimer.current)
+        editNote(note.id, { title: title || 'Sin título', content, color, icon, tags, status }).catch(() => {})
+        autoSaveTimer.current = null
+      }
+    }
   }, [title, content, color, icon, tags, status, note, editNote])
 
   // Escape to close
@@ -218,8 +227,12 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
 
   const handleArchive = async () => {
     if (!note) return
-    await archiveNote(note.id)
-    onClose()
+    if (note.archived) {
+      await unarchiveNote(note.id)
+    } else {
+      await archiveNote(note.id)
+      onClose()
+    }
   }
 
   const handleRestoreVersion = (version: NoteVersion) => {
@@ -232,8 +245,6 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
   const references = noteId ? (noteReferences[noteId] ?? []) : []
   const backlinks = noteId ? (noteBacklinks[noteId] ?? []) : []
   const hasLinks = references.length > 0 || backlinks.length > 0
-
-  const wordCount = content.replace(/<[^>]*>/g, ' ').trim().split(/\s+/).filter(Boolean).length
 
   const relatedNotes = useMemo(() => {
     if (!note || tags.length === 0) return []
@@ -341,13 +352,33 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
         >
           <SelectedIcon size={16} strokeWidth={1.75} className="text-text-secondary" />
         </button>
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Título de la nota"
-          className="flex-1 font-heading text-lg text-foreground bg-transparent outline-none placeholder:text-text-tertiary min-w-0"
-        />
+        <div className="flex-1 flex items-center gap-2 min-w-0">
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Título de la nota"
+            maxLength={200}
+            className="flex-1 font-heading text-lg text-foreground bg-transparent outline-none placeholder:text-text-tertiary min-w-0"
+          />
+          {saveStatus !== 'idle' && (
+            <span className={`text-[10px] font-mono flex-shrink-0 transition-opacity duration-500 ${saveStatus === 'saved' ? 'text-[#7a9b76]' : 'text-text-tertiary'}`}>
+              {saveStatus === 'saving' ? 'Guardando…' : 'Guardado ✓'}
+            </span>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={() => note && toggleFavorite(note.id)}
+          className={`flex h-7 w-7 items-center justify-center rounded-md transition-colors flex-shrink-0 ${
+            note?.favorited
+              ? "text-amber-400"
+              : "text-text-tertiary hover:text-amber-400 hover:bg-sand/60"
+          }`}
+          title={note?.favorited ? "Quitar de favoritas" : "Añadir a favoritas"}
+        >
+          <Star size={14} strokeWidth={1.75} className={note?.favorited ? "fill-amber-400" : ""} />
+        </button>
         <button
           type="button"
           onClick={handleSummarize}
@@ -411,6 +442,9 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
 
         {/* Color picker */}
         <NoteColorPicker value={color} onChange={setColor} />
+
+        {/* Separator */}
+        <div className="h-px bg-border" />
 
         {/* Status */}
         <div className="flex items-center gap-1">
@@ -682,20 +716,17 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
         />
 
         {/* Footer actions */}
-        <div className="flex items-center justify-between pt-2 border-t border-border">
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-[10px] text-text-tertiary">
-              {wordCount} palabra{wordCount !== 1 ? 's' : ''}
-            </span>
-            <Button variant="ghost" size="sm" onClick={handleArchive}>
-              <Archive size={12} strokeWidth={1.75} />
-              Archivar
-            </Button>
-            <Button variant="danger" size="sm" onClick={handleDelete} loading={saving && confirmDelete}>
-              <Trash2 size={12} strokeWidth={1.75} />
-              {confirmDelete ? 'Confirmar' : 'Eliminar'}
-            </Button>
-          </div>
+        <div className="flex items-center gap-2 pt-2 border-t border-border">
+          <Button variant="ghost" size="sm" onClick={handleArchive}>
+            {note.archived
+              ? <ArchiveRestore size={12} strokeWidth={1.75} />
+              : <Archive size={12} strokeWidth={1.75} />}
+            {note.archived ? 'Desarchivar' : 'Archivar'}
+          </Button>
+          <Button variant="danger" size="sm" onClick={handleDelete} loading={saving && confirmDelete}>
+            <Trash2 size={12} strokeWidth={1.75} />
+            {confirmDelete ? 'Confirmar' : 'Eliminar'}
+          </Button>
         </div>
       </div>
 
@@ -718,7 +749,7 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
               <div className="p-4 text-center text-sm text-text-tertiary">Sin versiones guardadas</div>
             ) : (
               <div className="divide-y divide-border">
-                {versions.map((version) => (
+                {versions.filter((v, i, arr) => arr.findIndex(x => x.id === v.id) === i).map((version) => (
                   <button
                     key={version.id}
                     onClick={() => setSelectedVersion(selectedVersion?.id === version.id ? null : version)}

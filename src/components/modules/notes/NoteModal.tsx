@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useMemo } from "react"
-import { Trash2, Maximize2, Minimize2, Archive, History, X, RotateCcw, Link2, ArrowRight, Unlink } from "lucide-react"
+import { Trash2, Maximize2, Minimize2, Archive, ArchiveRestore, History, X, RotateCcw, Link2, ArrowRight, Unlink } from "lucide-react"
 import * as LucideIcons from "lucide-react"
 import { Modal, Button } from "@/components/ui"
 import { useNotesStore, useAllTags } from "@/stores/notes-store"
@@ -40,6 +40,7 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
   const editNote = useNotesStore((s) => s.editNote)
   const removeNote = useNotesStore((s) => s.removeNote)
   const archiveNote = useNotesStore((s) => s.archiveNote)
+  const unarchiveNote = useNotesStore((s) => s.unarchiveNote)
   const loadNoteLinks = useNotesStore((s) => s.loadNoteLinks)
   const loadNoteContent = useNotesStore((s) => s.loadNoteContent)
   const noteReferences = useNotesStore((s) => s.noteReferences)
@@ -200,8 +201,12 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
 
   const handleArchive = async () => {
     if (!note) return
-    await archiveNote(note.id)
-    onClose()
+    if (note.archived) {
+      await unarchiveNote(note.id)
+    } else {
+      await archiveNote(note.id)
+      onClose()
+    }
   }
 
   const handleRestoreVersion = (version: NoteVersion) => {
@@ -252,13 +257,19 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
           >
             <SelectedIcon size={18} strokeWidth={1.75} className="text-text-secondary" />
           </button>
-          <input
-            type="text"
+          <textarea
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              setTitle(e.target.value)
+              e.target.style.height = 'auto'
+              e.target.style.height = `${Math.min(e.target.scrollHeight, 96)}px`
+            }}
             placeholder="Título de la nota"
-            className="flex-1 font-heading text-xl text-foreground bg-transparent outline-none placeholder:text-text-tertiary"
+            maxLength={200}
+            rows={1}
             autoFocus={!isEdit}
+            className="flex-1 font-heading text-xl text-foreground bg-transparent outline-none placeholder:text-text-tertiary resize-none overflow-hidden leading-tight"
+            style={{ height: '32px' }}
           />
           {/* History button — edit mode only */}
           {isEdit && (
@@ -309,6 +320,9 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
 
         {/* Color picker */}
         <NoteColorPicker value={color} onChange={setColor} />
+
+        {/* Separator between color and status */}
+        <div className="h-px bg-border" />
 
         {/* Status selector */}
         <div className="flex items-center gap-1.5">
@@ -486,8 +500,10 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
             {isEdit && (
               <>
                 <Button variant="ghost" size="sm" onClick={handleArchive}>
-                  <Archive size={13} strokeWidth={1.75} />
-                  Archivar
+                  {note?.archived
+                    ? <ArchiveRestore size={13} strokeWidth={1.75} />
+                    : <Archive size={13} strokeWidth={1.75} />}
+                  {note?.archived ? 'Desarchivar' : 'Archivar'}
                 </Button>
                 <Button variant="danger" size="sm" onClick={handleDelete} loading={saving && confirmDelete}>
                   <Trash2 size={13} strokeWidth={1.75} />
@@ -498,7 +514,12 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
           </div>
           <div className="flex items-center gap-3">
             <Button variant="ghost" onClick={onClose}>Cancelar</Button>
-            <Button variant="primary" onClick={handleSave} loading={saving && !confirmDelete}>
+            <Button
+              variant="primary"
+              onClick={handleSave}
+              loading={saving && !confirmDelete}
+              disabled={!isEdit && !title.trim() && !content.trim()}
+            >
               {isEdit ? 'Guardar' : 'Crear'}
             </Button>
           </div>
@@ -525,7 +546,7 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
                 </div>
               ) : (
                 <div className="divide-y divide-border">
-                  {versions.map((version) => (
+                  {versions.filter((v, i, arr) => arr.findIndex(x => x.id === v.id) === i).map((version) => (
                     <button
                       key={version.id}
                       onClick={() => setSelectedVersion(selectedVersion?.id === version.id ? null : version)}
