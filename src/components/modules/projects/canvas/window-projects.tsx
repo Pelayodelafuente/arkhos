@@ -128,18 +128,6 @@ function ProjectCard({
       >
         {project.name}
       </span>
-      {/* Status dot */}
-      <div
-        title={project.status}
-        style={{
-          width: 6,
-          height: 6,
-          borderRadius: '50%',
-          background: statusColor,
-          opacity: 0.85,
-          flexShrink: 0,
-        }}
-      />
     </button>
   );
 }

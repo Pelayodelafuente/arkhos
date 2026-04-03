@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import {
-  X, Check, Calendar, Clock, AlertCircle, Play, Square,
+  X, Check, Calendar, AlertCircle,
   Plus, Trash2, ChevronRight, ExternalLink,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -36,14 +36,6 @@ const PRIORITY_COLORS: Record<TaskPriority, string> = {
   urgent: '#dc2626',
 };
 
-function formatDuration(seconds: number): string {
-  if (seconds < 60) return `${seconds}s`;
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  if (h > 0) return `${h}h ${m}m`;
-  return `${m}m`;
-}
-
 function isOverdue(date: string): boolean {
   return new Date(date) < new Date(new Date().toDateString());
 }
@@ -53,9 +45,6 @@ export function TaskSlideOver({ task, projectId, userId, onClose }: TaskSlideOve
   const removeTask = useProjectsStore((s) => s.removeTask);
   const changeTaskStatus = useProjectsStore((s) => s.changeTaskStatus);
   const updateSubtasks = useProjectsStore((s) => s.updateSubtasks);
-  const startTimer = useProjectsStore((s) => s.startTimer);
-  const stopTimer = useProjectsStore((s) => s.stopTimer);
-  const activeTimeEntry = useProjectsStore((s) => s.activeTimeEntry);
   const projectTags = useProjectsStore((s) => s.projectTags);
   const toast = useToast();
 
@@ -75,11 +64,7 @@ export function TaskSlideOver({ task, projectId, userId, onClose }: TaskSlideOve
   const [newSubtaskText, setNewSubtaskText] = useState('');
   const [newLabel, setNewLabel] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [elapsed, setElapsed] = useState(0);
-
   const descTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-
-  const isTimerRunning = activeTimeEntry?.taskId === task?.id;
 
   // Sync local state when task changes
   useEffect(() => {
@@ -88,18 +73,6 @@ export function TaskSlideOver({ task, projectId, userId, onClose }: TaskSlideOve
       setConfirmDelete(false);
     }
   }, [liveTask?.id]);
-
-  // Timer interval
-  useEffect(() => {
-    if (!isTimerRunning || !activeTimeEntry) {
-      setElapsed(0);
-      return;
-    }
-    const interval = setInterval(() => {
-      setElapsed(Math.round((Date.now() - activeTimeEntry.startedAt.getTime()) / 1000));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [isTimerRunning, activeTimeEntry]);
 
   // Escape key to close
   useEffect(() => {
@@ -399,41 +372,6 @@ export function TaskSlideOver({ task, projectId, userId, onClose }: TaskSlideOve
                   <TagSelector taskId={liveTask.id} selectedTags={liveTask.tags ?? []} />
                 </div>
               )}
-
-              {/* Timer */}
-              <div>
-                <p className="mb-1.5 text-[10px] font-medium uppercase tracking-wide text-text-tertiary">Tiempo</p>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => {
-                      if (isTimerRunning) stopTimer(projectId, userId);
-                      else startTimer(liveTask.id);
-                    }}
-                    className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-                      isTimerRunning
-                        ? 'bg-red-50 text-red-600 hover:bg-red-100'
-                        : 'bg-sand text-text-secondary hover:bg-border'
-                    }`}
-                  >
-                    {isTimerRunning ? (
-                      <><Square size={12} strokeWidth={2} />Detener</>
-                    ) : (
-                      <><Play size={12} strokeWidth={2} />Iniciar</>
-                    )}
-                  </button>
-                  {isTimerRunning && (
-                    <span className="font-mono text-sm text-red-500">
-                      {Math.floor(elapsed / 60).toString().padStart(2, '0')}:{(elapsed % 60).toString().padStart(2, '0')}
-                    </span>
-                  )}
-                  {liveTask.tracked_seconds > 0 && (
-                    <span className="inline-flex items-center gap-1 font-mono text-xs text-text-tertiary">
-                      <Clock size={12} strokeWidth={1.75} />
-                      {formatDuration(liveTask.tracked_seconds)}
-                    </span>
-                  )}
-                </div>
-              </div>
 
               {/* Task links */}
               {liveTask.links.length > 0 && (

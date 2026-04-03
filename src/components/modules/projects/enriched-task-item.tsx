@@ -147,7 +147,6 @@ export function EnrichedTaskItem({
     return task;
   });
 
-  const activeTimeEntry = useProjectsStore((s) => s.activeTimeEntry);
   const editTask = useProjectsStore((s) => s.editTask);
   const changeTaskStatus = useProjectsStore((s) => s.changeTaskStatus);
   const updateSubtasks = useProjectsStore((s) => s.updateSubtasks);
@@ -163,7 +162,6 @@ export function EnrichedTaskItem({
   const [newCommentText, setNewCommentText] = useState("");
   const descTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  const isTimerRunning = activeTimeEntry?.taskId === task.id;
   const subtasksDone = liveTask.subtasks.filter((s) => s.completed).length;
   const hasSubtasks = liveTask.subtasks.length > 0;
 
@@ -360,10 +358,6 @@ export function EnrichedTaskItem({
             </span>
           )}
 
-          {/* Timer indicator */}
-          {isTimerRunning && (
-            <span className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
-          )}
 
           {/* Priority dot (clickable cycle) */}
           <button

@@ -54,7 +54,6 @@ const COLUMNS: ColumnDef[] = [
   { status: 'in_progress', label: 'En progreso', bg: 'bg-[#fdf5ee]' },
   { status: 'review', label: 'En revisión', bg: 'bg-[#f0e8d8]' },
   { status: 'done', label: 'Completada', bg: 'bg-[#eef5f4]' },
-  { status: 'blocked', label: 'Bloqueada', bg: 'bg-[#f8f0f1]' },
 ];
 
 // ─── Enriched task (with phase info) ────
@@ -269,7 +268,6 @@ export default function KanbanView({
     in_progress: [],
     review: [],
     done: [],
-    blocked: [],
   });
 
   const sensors = useSensors(
@@ -305,7 +303,6 @@ export default function KanbanView({
       in_progress: [],
       review: [],
       done: [],
-      blocked: [],
     };
     for (const task of filteredTasks) {
       result[task.status].push(task);
@@ -340,7 +337,6 @@ export default function KanbanView({
       in_progress: [],
       review: [],
       done: [],
-      blocked: [],
     };
     for (const col of COLUMNS) {
       const order = localOrder[col.status];

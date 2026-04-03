@@ -62,7 +62,7 @@ type SortColumn = 'text' | 'phaseName' | 'priority' | 'status' | 'start_date' | 
 type SortDir = 'asc' | 'desc';
 
 const PRIORITY_ORDER: Record<TaskPriority, number> = { none: 0, low: 1, medium: 2, high: 3, urgent: 4 };
-const STATUS_ORDER: Record<TaskStatus, number> = { todo: 0, in_progress: 1, review: 2, blocked: 3, done: 4 };
+const STATUS_ORDER: Record<TaskStatus, number> = { todo: 0, in_progress: 1, review: 2, done: 3 };
 
 // ─── Sort icon ───────────────────────
 

@@ -15,7 +15,6 @@ import {
   deleteTask as deleteTaskApi,
   reorderPhases as reorderPhasesApi,
   reorderTasks as reorderTasksApi,
-  createTimeEntry as createTimeEntryApi,
   createProjectLink as createProjectLinkApi,
   updateProjectLink as updateProjectLinkApi,
   deleteProjectLink as deleteProjectLinkApi,
@@ -42,12 +41,14 @@ import type {
   ViewMode,
   ProjectFilters,
   TaskStatus,
+  PhaseStatus,
   Subtask,
   CreateProjectLinkInput,
   UpdateProjectLinkInput,
   ProjectLink,
   Tag,
   TaskComment,
+  ProjectPhase,
 } from '@/types/projects';
 import { useUIStore } from './ui-store';
 
@@ -60,7 +61,6 @@ interface ProjectsState {
   error: string | null;
   viewMode: ViewMode;
   filters: ProjectFilters;
-  activeTimeEntry: { taskId: string; startedAt: Date } | null;
   projectTags: Tag[];
   taskComments: Record<string, TaskComment[]>;
 }
@@ -83,11 +83,7 @@ interface ProjectsActions {
   reorderPhasesAction: (orderedIds: string[]) => Promise<void>;
   reorderTasksAction: (phaseId: string, orderedIds: string[]) => Promise<void>;
 
-  // v2: Time tracking
-  startTimer: (taskId: string) => void;
-  stopTimer: (projectId: string, userId: string) => Promise<void>;
-
-  // v2: Task status & subtasks
+  // Task status & subtasks
   changeTaskStatus: (taskId: string, newStatus: TaskStatus) => Promise<void>;
   updateSubtasks: (taskId: string, subtasks: Subtask[]) => Promise<void>;
 
@@ -120,6 +116,17 @@ interface ProjectsActions {
 
 type ProjectsStore = ProjectsState & ProjectsActions;
 
+// ─── Phase status helper ──────────────
+
+function computePhaseStatus(phase: ProjectPhase): PhaseStatus {
+  const tasks = phase.tasks;
+  if (tasks.length === 0) return 'pending';
+  const allDone = tasks.every((t) => t.status === 'done');
+  if (allDone) return 'done';
+  const anyProgress = tasks.some((t) => t.status === 'in_progress' || t.status === 'review' || t.status === 'done');
+  return anyProgress ? 'in-progress' : 'pending';
+}
+
 // ─── Toast helper ─────────────────────
 
 function toast(message: string, variant: 'success' | 'error') {
@@ -136,7 +143,6 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
   error: null,
   viewMode: 'list',
   filters: { status: 'all', search: '', sortBy: 'recent' as const },
-  activeTimeEntry: null,
   projectTags: [],
   taskComments: {},
 
@@ -314,16 +320,21 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
       const task = await createTaskApi(client, input);
       const active = get().activeProject;
       if (active) {
-        set({
-          activeProject: {
-            ...active,
-            phases: active.phases.map((p) =>
-              p.id === input.phase_id
-                ? { ...p, tasks: [...p.tasks, task] }
-                : p
-            ),
-          },
+        const updatedPhases = active.phases.map((p) => {
+          if (p.id !== input.phase_id) return p;
+          const newTasks = [...p.tasks, task];
+          const updatedPhase = { ...p, tasks: newTasks };
+          const newStatus = computePhaseStatus(updatedPhase);
+          return newStatus !== p.status ? { ...updatedPhase, status: newStatus } : updatedPhase;
         });
+        set({ activeProject: { ...active, phases: updatedPhases } });
+        // Persist phase status changes
+        for (const phase of updatedPhases) {
+          const orig = active.phases.find((p) => p.id === phase.id);
+          if (orig && orig.status !== phase.status) {
+            await updatePhaseApi(client, phase.id, { status: phase.status });
+          }
+        }
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Error al crear tarea';
@@ -335,14 +346,15 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
     const active = get().activeProject;
     if (!active) return;
 
-    // Optimistic
     const prevPhases = active.phases;
 
     const updatedPhases = active.phases.map((p) => {
       const updatedTasks = p.tasks.map((t) =>
         t.id === taskId ? { ...t, ...input } : t
       );
-      return { ...p, tasks: updatedTasks };
+      const updatedPhase = { ...p, tasks: updatedTasks };
+      const newStatus = computePhaseStatus(updatedPhase);
+      return newStatus !== p.status ? { ...updatedPhase, status: newStatus } : updatedPhase;
     });
 
     set({ activeProject: { ...active, phases: updatedPhases } });
@@ -350,6 +362,13 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
     try {
       const client = createClient();
       await updateTaskApi(client, taskId, input);
+      // Persist phase status changes
+      for (const phase of updatedPhases) {
+        const orig = prevPhases.find((p) => p.id === phase.id);
+        if (orig && orig.status !== phase.status) {
+          await updatePhaseApi(client, phase.id, { status: phase.status });
+        }
+      }
     } catch (e) {
       set({ activeProject: { ...active, phases: prevPhases } });
       const msg = e instanceof Error ? e.message : 'Error al actualizar tarea';
@@ -362,19 +381,22 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
     if (!active) return;
 
     const prevPhases = active.phases;
-    set({
-      activeProject: {
-        ...active,
-        phases: active.phases.map((p) => ({
-          ...p,
-          tasks: p.tasks.filter((t) => t.id !== taskId),
-        })),
-      },
+    const updatedPhases = active.phases.map((p) => {
+      const updatedPhase = { ...p, tasks: p.tasks.filter((t) => t.id !== taskId) };
+      const newStatus = computePhaseStatus(updatedPhase);
+      return newStatus !== p.status ? { ...updatedPhase, status: newStatus } : updatedPhase;
     });
+    set({ activeProject: { ...active, phases: updatedPhases } });
 
     try {
       const client = createClient();
       await deleteTaskApi(client, taskId);
+      for (const phase of updatedPhases) {
+        const orig = prevPhases.find((p) => p.id === phase.id);
+        if (orig && orig.status !== phase.status) {
+          await updatePhaseApi(client, phase.id, { status: phase.status });
+        }
+      }
     } catch (e) {
       set({ activeProject: { ...active, phases: prevPhases } });
       const msg = e instanceof Error ? e.message : 'Error al eliminar tarea';
@@ -438,74 +460,10 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
     }
   },
 
-  // ── Time tracking (v2) ─────────────
-
-  startTimer: (taskId) => {
-    set({ activeTimeEntry: { taskId, startedAt: new Date() } });
-  },
-
-  stopTimer: async (projectId, userId) => {
-    const entry = get().activeTimeEntry;
-    if (!entry) return;
-
-    const now = new Date();
-    const duration = Math.round((now.getTime() - entry.startedAt.getTime()) / 1000);
-    set({ activeTimeEntry: null });
-
-    // Optimistic: add duration to task
-    const active = get().activeProject;
-    if (active) {
-      set({
-        activeProject: {
-          ...active,
-          phases: active.phases.map((p) => ({
-            ...p,
-            tasks: p.tasks.map((t) =>
-              t.id === entry.taskId
-                ? { ...t, tracked_seconds: t.tracked_seconds + duration }
-                : t
-            ),
-          })),
-        },
-      });
-    }
-
-    try {
-      const client = createClient();
-      await createTimeEntryApi(client, userId, {
-        task_id: entry.taskId,
-        project_id: projectId,
-        started_at: entry.startedAt.toISOString(),
-        ended_at: now.toISOString(),
-        duration,
-      });
-      toast('Tiempo registrado', 'success');
-    } catch (e) {
-      // Rollback tracked_seconds
-      if (active) {
-        set({
-          activeProject: {
-            ...active,
-            phases: active.phases.map((p) => ({
-              ...p,
-              tasks: p.tasks.map((t) =>
-                t.id === entry.taskId
-                  ? { ...t, tracked_seconds: t.tracked_seconds }
-                  : t
-              ),
-            })),
-          },
-        });
-      }
-      const msg = e instanceof Error ? e.message : 'Error al registrar tiempo';
-      toast(msg, 'error');
-    }
-  },
-
-  // ── Task status & subtasks (v2) ───
+  // ── Task status & subtasks ───────────
 
   changeTaskStatus: async (taskId, newStatus) => {
-    const validStatuses = ['todo', 'in_progress', 'review', 'done', 'blocked'];
+    const validStatuses: TaskStatus[] = ['todo', 'in_progress', 'review', 'done'];
     if (!validStatuses.includes(newStatus)) {
       console.error(`[changeTaskStatus] Invalid status: "${newStatus}"`);
       return;
@@ -517,18 +475,26 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
     const prevPhases = active.phases;
     const done = newStatus === 'done';
 
-    const updatedPhases = active.phases.map((p) => ({
-      ...p,
-      tasks: p.tasks.map((t) =>
+    const updatedPhases = active.phases.map((p) => {
+      const updatedTasks = p.tasks.map((t) =>
         t.id === taskId ? { ...t, status: newStatus, done } : t
-      ),
-    }));
+      );
+      const updatedPhase = { ...p, tasks: updatedTasks };
+      const newPhaseStatus = computePhaseStatus(updatedPhase);
+      return newPhaseStatus !== p.status ? { ...updatedPhase, status: newPhaseStatus } : updatedPhase;
+    });
 
     set({ activeProject: { ...active, phases: updatedPhases } });
 
     try {
       const client = createClient();
       await updateTaskApi(client, taskId, { status: newStatus, done });
+      for (const phase of updatedPhases) {
+        const orig = prevPhases.find((p) => p.id === phase.id);
+        if (orig && orig.status !== phase.status) {
+          await updatePhaseApi(client, phase.id, { status: phase.status });
+        }
+      }
     } catch (e) {
       set({ activeProject: { ...active, phases: prevPhases } });
       const msg = e instanceof Error ? e.message : 'Error al cambiar estado';

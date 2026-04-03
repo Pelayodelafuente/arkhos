@@ -10,7 +10,7 @@ export type PhaseStatus = (typeof PHASE_STATUSES)[number];
 export const TASK_PRIORITIES = ['none', 'low', 'medium', 'high', 'urgent'] as const;
 export type TaskPriority = (typeof TASK_PRIORITIES)[number];
 
-export const TASK_STATUSES = ['todo', 'in_progress', 'review', 'done', 'blocked'] as const;
+export const TASK_STATUSES = ['todo', 'in_progress', 'review', 'done'] as const;
 export type TaskStatus = (typeof TASK_STATUSES)[number];
 
 // ─── Phase/Task status display config ─
@@ -34,7 +34,6 @@ export const TASK_STATUS_CONFIG: Record<TaskStatus, { label: string; color: stri
   in_progress: { label: 'En progreso', color: '#c4704a' },
   review: { label: 'En revisión', color: '#9a6a28' },
   done: { label: 'Completada', color: '#056b63' },
-  blocked: { label: 'Bloqueada', color: '#5f1b29' },
 };
 
 // ─── Dynamic project type / status ────
