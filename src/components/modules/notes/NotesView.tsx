@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback, useRef } from "react"
-import { Plus, BookOpen, Layout } from "lucide-react"
+import { Plus, BookOpen, Layout, Network } from "lucide-react"
 import { Button } from "@/components/ui"
 import { useNotesStore } from "@/stores/notes-store"
 import { NotesToolbar } from "./NotesToolbar"
@@ -10,6 +10,7 @@ import { NoteModal } from "./NoteModal"
 import { NotePane } from "./NotePane"
 import { NotesSidebar } from "./NotesSidebar"
 import { NotesCanvas } from "./canvas/NotesCanvas"
+import { NotesGraph } from "./NotesGraph"
 import type { Note, NoteCanvas } from "@/types/notes"
 
 interface Props {
@@ -93,6 +94,18 @@ export function NotesView({ initialNotes, initialCanvas, userId }: Props) {
     initCanvas(userId)
   }, [setViewMode, initCanvas, userId])
 
+  // Switch to graph view
+  const handleSwitchToGraph = useCallback(() => {
+    setViewMode("graph")
+    setSelectedNoteId(null)
+  }, [setViewMode, setSelectedNoteId])
+
+  // Graph: click on node → open in split-pane
+  const handleGraphNodeClick = useCallback((noteId: string) => {
+    setViewMode("list")
+    setSelectedNoteId(noteId)
+  }, [setViewMode, setSelectedNoteId])
+
   // Keyboard shortcut: Ctrl+N = new note
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -141,6 +154,15 @@ export function NotesView({ initialNotes, initialCanvas, userId }: Props) {
                   <Layout size={13} strokeWidth={1.75} />
                   Canvas
                 </button>
+                <button
+                  onClick={handleSwitchToGraph}
+                  className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                    viewMode === "graph" ? "bg-foreground text-card shadow-sm" : "text-text-tertiary hover:text-text-secondary"
+                  }`}
+                >
+                  <Network size={13} strokeWidth={1.75} />
+                  Grafo
+                </button>
               </div>
               <Button variant="primary" size="sm" onClick={handleNew}>
                 <Plus size={16} strokeWidth={1.75} />
@@ -158,7 +180,7 @@ export function NotesView({ initialNotes, initialCanvas, userId }: Props) {
         </div>
 
         {/* Content */}
-        {viewMode === "list" ? (
+        {viewMode === "list" && (
           <div className="flex flex-1 min-h-0 overflow-hidden animate-fade-in-up" style={{ animationDelay: "100ms" }}>
             {/* Note list */}
             <div className={`flex flex-col overflow-y-auto px-6 transition-all duration-200 ${
@@ -184,13 +206,21 @@ export function NotesView({ initialNotes, initialCanvas, userId }: Props) {
               </div>
             )}
           </div>
-        ) : (
+        )}
+
+        {viewMode === "canvas" && (
           <div className="flex-1 min-h-0 animate-fade-in-up" style={{ animationDelay: "100ms" }}>
             <NotesCanvas
               userId={userId}
               onEditNote={handleCanvasEditNote}
               onNewNote={handleCanvasNewNote}
             />
+          </div>
+        )}
+
+        {viewMode === "graph" && (
+          <div className="flex-1 min-h-0 animate-fade-in-up" style={{ animationDelay: "100ms" }}>
+            <NotesGraph onNodeClick={handleGraphNodeClick} />
           </div>
         )}
 

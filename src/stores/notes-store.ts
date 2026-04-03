@@ -70,7 +70,7 @@ interface NotesState {
   isLoading: boolean
   searchQuery: string
   activeTag: string | null
-  viewMode: 'list' | 'canvas'
+  viewMode: 'list' | 'canvas' | 'graph'
   sortMode: NoteSortMode
 
   // Canvas
@@ -124,6 +124,9 @@ interface NotesState {
   noteReferences: Record<string, Note[]>  // noteId → notas que menciona
   noteBacklinks: Record<string, Note[]>   // noteId → notas que la mencionan
 
+  // Graph view
+  graphBacklinks: Array<{ source_note_id: string; target_note_id: string }>
+
   // Split-pane selected note
   selectedNoteId: string | null
 }
@@ -155,7 +158,8 @@ interface NotesActions {
   // List filters
   setSearchQuery: (q: string) => void
   setActiveTag: (tag: string | null) => void
-  setViewMode: (mode: 'list' | 'canvas') => void
+  setViewMode: (mode: 'list' | 'canvas' | 'graph') => void
+  loadGraphData: () => Promise<void>
   setSortMode: (mode: NoteSortMode) => void
 
   // Canvas node operations (optimistic)
@@ -306,6 +310,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
   canvasFilters: { types: [], colors: [] },
   noteReferences: {},
   noteBacklinks: {},
+  graphBacklinks: [],
   selectedNoteId: null,
 
   // ── Fetch ───────────────────────────
@@ -588,6 +593,14 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
   setSearchQuery: (q) => set({ searchQuery: q }),
   setActiveTag: (tag) => set({ activeTag: tag }),
   setViewMode: (mode) => set({ viewMode: mode }),
+  loadGraphData: async () => {
+    try {
+      const backlinks = await notesApi.getAllBacklinksForGraph()
+      set({ graphBacklinks: backlinks })
+    } catch {
+      // Silent — graph renders with 0 edges if unavailable
+    }
+  },
   setSortMode: (mode) => set({ sortMode: mode }),
   setSelectedNoteId: (id) => set({ selectedNoteId: id }),
 

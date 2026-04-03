@@ -860,6 +860,18 @@ export async function getNoteBacklinks(noteId: string): Promise<Note[]> {
   return data.map((r: Record<string, unknown>) => r.notes as Note).filter(Boolean)
 }
 
+/** Todos los backlinks del usuario — para construir el grafo de conocimiento */
+export async function getAllBacklinksForGraph(): Promise<Array<{ source_note_id: string; target_note_id: string }>> {
+  const supabase = createClient()
+  const { data } = await supabase
+    .from('note_backlinks')
+    .select('source_note_id, target_note_id')
+  return (data ?? []).map((r: Record<string, string>) => ({
+    source_note_id: r.source_note_id,
+    target_note_id: r.target_note_id,
+  }))
+}
+
 /** Context builder para IA */
 export async function buildNoteContext(
   noteId: string
