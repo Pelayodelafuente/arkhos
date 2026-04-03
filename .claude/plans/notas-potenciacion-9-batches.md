@@ -1,6 +1,6 @@
 # Plan: Notas — Potenciación completa (9 batches)
 
-**Estado actual**: Batches 1, 2, 3 y 4 completados (2026-04-03)
+**Estado actual**: Batches 1, 2, 3, 4 y 5 completados (2026-04-03)
 
 ---
 
@@ -62,8 +62,12 @@ Nueva vista en toolbar: [Lista] [Canvas] [Grafo]
 
 ---
 
-### Batch 5 — IA (B12 + B13)
-**Complejidad**: Media | **Riesgo**: Bajo
+### Batch 5 — IA (B12 + B13) ✅ COMPLETADO (2026-04-03)
+Commit: a5349bf
+- /api/notes/summarize (streaming haiku) + /api/notes/suggest-tags (JSON)
+- NotePane: botón ✨ + panel resumen colapsable con streaming
+- TagInput: botón ✨ + aiSuggestedTags con aceptar/descartar
+
 **Archivos**: nueva `/api/notes/ai` route, NotePane
 
 Reutiliza patrón de `/api/projects/analyze` y `/api/projects/chat`.
