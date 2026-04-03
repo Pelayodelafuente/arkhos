@@ -72,13 +72,18 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
 
   // Populate form + capture snapshot (must set ref before auto-save effect can fire)
   useEffect(() => {
-    if (note) {
+    if (note && open) {
       setTitle(note.title)
       setContent(note.content)
       setColor(note.color)
       setIcon(note.icon)
       setTags([...note.tags])
       snapshotRef.current = { title: note.title, content: note.content, color: note.color, icon: note.icon, tags: [...note.tags] }
+      // Auto-snapshot: save version if note was last edited >5 minutes ago
+      const fiveMinutesAgo = Date.now() - 5 * 60 * 1000
+      if (new Date(note.updated_at).getTime() < fiveMinutesAgo) {
+        notesApi.saveNoteVersion(note.id, userId, note.title, note.content).catch(() => {})
+      }
     } else {
       setTitle("")
       setContent("")
@@ -92,7 +97,7 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
     setHistoryOpen(false)
     setVersions([])
     setSelectedVersion(null)
-  }, [note, open])
+  }, [note, open]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load versions when history panel opens
   useEffect(() => {

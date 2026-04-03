@@ -69,7 +69,8 @@ export async function getNoteById(id: string): Promise<Note | null> {
 
 export async function createNote(userId: string, formData: NoteFormData): Promise<Note> {
   const client = createClient()
-  const wordCount = formData.content.trim().split(/\s+/).filter(Boolean).length
+  const plainText = formData.content.replace(/<[^>]*>/g, ' ')
+  const wordCount = plainText.trim().split(/\s+/).filter(Boolean).length
   const { data, error } = await client
     .from('notes')
     .insert({
@@ -94,16 +95,15 @@ export async function updateNote(
   data: Partial<NoteFormData & { is_pinned?: boolean; sort_order?: number }>
 ): Promise<Note> {
   const client = createClient()
+  const { data: { session } } = await client.auth.getSession()
   const update: Record<string, unknown> = { ...data }
   if (data.content !== undefined) {
-    update.word_count = data.content.trim().split(/\s+/).filter(Boolean).length
+    const plainText = data.content.replace(/<[^>]*>/g, ' ')
+    update.word_count = plainText.trim().split(/\s+/).filter(Boolean).length
   }
-  const { data: row, error } = await client
-    .from('notes')
-    .update(update)
-    .eq('id', id)
-    .select()
-    .single()
+  const query = client.from('notes').update(update).eq('id', id)
+  if (session?.user?.id) query.eq('user_id', session.user.id)
+  const { data: row, error } = await query.select().single()
 
   if (error) throw new NotesError('Error updating note', error.message)
   if (!row) throw new NotesError('Error updating note: no data returned')
@@ -112,16 +112,19 @@ export async function updateNote(
 
 export async function deleteNote(id: string): Promise<void> {
   const client = createClient()
-  const { error } = await client.from('notes').delete().eq('id', id)
+  const { data: { session } } = await client.auth.getSession()
+  const query = client.from('notes').delete().eq('id', id)
+  if (session?.user?.id) query.eq('user_id', session.user.id)
+  const { error } = await query
   if (error) throw new NotesError('Error deleting note', error.message)
 }
 
 export async function togglePinNote(id: string, isPinned: boolean): Promise<void> {
   const client = createClient()
-  const { error } = await client
-    .from('notes')
-    .update({ is_pinned: isPinned })
-    .eq('id', id)
+  const { data: { session } } = await client.auth.getSession()
+  const query = client.from('notes').update({ is_pinned: isPinned }).eq('id', id)
+  if (session?.user?.id) query.eq('user_id', session.user.id)
+  const { error } = await query
   if (error) throw new NotesError('Error toggling note pin', error.message)
 }
 
@@ -667,28 +670,28 @@ export async function deleteFolder(id: string): Promise<void> {
 
 export async function moveNoteToFolder(noteId: string, folderId: string | null): Promise<void> {
   const supabase = createClient()
-  const { error } = await supabase
-    .from('notes')
-    .update({ folder_id: folderId })
-    .eq('id', noteId)
+  const { data: { session } } = await supabase.auth.getSession()
+  const query = supabase.from('notes').update({ folder_id: folderId }).eq('id', noteId)
+  if (session?.user?.id) query.eq('user_id', session.user.id)
+  const { error } = await query
   if (error) throw new NotesError('Error moving note to folder', error.message)
 }
 
 export async function archiveNote(noteId: string, archived: boolean): Promise<void> {
   const supabase = createClient()
-  const { error } = await supabase
-    .from('notes')
-    .update({ archived })
-    .eq('id', noteId)
+  const { data: { session } } = await supabase.auth.getSession()
+  const query = supabase.from('notes').update({ archived }).eq('id', noteId)
+  if (session?.user?.id) query.eq('user_id', session.user.id)
+  const { error } = await query
   if (error) throw new NotesError('Error archiving note', error.message)
 }
 
 export async function toggleFavorite(noteId: string, favorited: boolean): Promise<void> {
   const supabase = createClient()
-  const { error } = await supabase
-    .from('notes')
-    .update({ favorited })
-    .eq('id', noteId)
+  const { data: { session } } = await supabase.auth.getSession()
+  const query = supabase.from('notes').update({ favorited }).eq('id', noteId)
+  if (session?.user?.id) query.eq('user_id', session.user.id)
+  const { error } = await query
   if (error) throw new NotesError('Error toggling favorite', error.message)
 }
 

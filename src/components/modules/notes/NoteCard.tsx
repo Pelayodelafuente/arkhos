@@ -21,18 +21,17 @@ interface Props {
 
 export function NoteCard({ note, onEdit, onDelete, onTogglePin, onToggleFavorite, onAddToCanvas, searchQuery, isSelected, isSelectionMode, onToggleSelect }: Props) {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const colorConfig = NOTE_COLORS.find((c) => c.value === note.color) ?? NOTE_COLORS[0]
 
   // Get lucide icon component
   const IconComponent = (LucideIcons as unknown as Record<string, LucideIcons.LucideIcon>)[note.icon] ?? LucideIcons.FileText
 
-  // Content preview: strip markdown, truncate
+  // Content preview: strip HTML tags + decode entities
   const preview = note.content
-    .replace(/#{1,6}\s/g, '')
-    .replace(/\*\*/g, '')
-    .replace(/\*/g, '')
-    .replace(/`/g, '')
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+    .replace(/\s+/g, ' ')
     .trim()
 
   // Relative time
@@ -96,22 +95,35 @@ export function NoteCard({ note, onEdit, onDelete, onTogglePin, onToggleFavorite
           {/* Menu button */}
           <div className="relative flex-shrink-0">
             <button
-              onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen) }}
+              onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen); if (menuOpen) setConfirmDelete(false) }}
               className="opacity-0 group-hover:opacity-100 flex h-6 w-6 items-center justify-center rounded-md text-text-tertiary hover:bg-sand hover:text-foreground transition-all"
             >
               <MoreHorizontal size={14} strokeWidth={1.75} />
             </button>
             {menuOpen && (
               <>
-                <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setMenuOpen(false) }} />
-                <div className="absolute right-0 top-7 z-50 w-40 rounded-lg border border-border bg-card py-1 shadow-md">
+                <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setMenuOpen(false); setConfirmDelete(false) }} />
+                <div className="absolute right-0 top-7 z-50 w-44 rounded-lg border border-border bg-card py-1 shadow-md">
                   <MenuButton icon={<Pencil size={13} />} label="Editar" onClick={() => { setMenuOpen(false); onEdit(note) }} />
                   <MenuButton icon={<Pin size={13} />} label={note.is_pinned ? "Desfijar" : "Fijar"} onClick={() => { setMenuOpen(false); onTogglePin(note.id) }} />
                   {onAddToCanvas && (
                     <MenuButton icon={<Layout size={13} />} label="Añadir al canvas" onClick={() => { setMenuOpen(false); onAddToCanvas(note.id) }} />
                   )}
                   <div className="my-1 border-t border-border" />
-                  <MenuButton icon={<Trash2 size={13} />} label="Eliminar" onClick={() => { setMenuOpen(false); onDelete(note.id) }} danger />
+                  <MenuButton
+                    icon={<Trash2 size={13} />}
+                    label={confirmDelete ? "¿Confirmar?" : "Eliminar"}
+                    onClick={() => {
+                      if (!confirmDelete) {
+                        setConfirmDelete(true)
+                      } else {
+                        setMenuOpen(false)
+                        setConfirmDelete(false)
+                        onDelete(note.id)
+                      }
+                    }}
+                    danger
+                  />
                 </div>
               </>
             )}
