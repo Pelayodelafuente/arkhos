@@ -224,8 +224,8 @@ export function TaskSlideOver({ task, projectId, userId, onClose }: TaskSlideOve
                 </div>
               </div>
 
-              {/* Dates + Estimation */}
-              <div className="grid grid-cols-3 gap-3">
+              {/* Dates */}
+              <div className="grid grid-cols-2 gap-3">
                 <label className="flex flex-col gap-1">
                   <span className="text-[10px] font-medium uppercase tracking-wide text-text-tertiary">Inicio</span>
                   <input
@@ -238,7 +238,7 @@ export function TaskSlideOver({ task, projectId, userId, onClose }: TaskSlideOve
                 <label className="flex flex-col gap-1">
                   <span className={`text-[10px] font-medium uppercase tracking-wide ${
                     liveTask.due_date && isOverdue(liveTask.due_date) && !liveTask.done ? 'text-red-500' : 'text-text-tertiary'
-                  }`}>Limite</span>
+                  }`}>Límite</span>
                   <input
                     type="date"
                     value={liveTask.due_date || ''}
@@ -249,21 +249,6 @@ export function TaskSlideOver({ task, projectId, userId, onClose }: TaskSlideOve
                         : 'border-border text-foreground'
                     }`}
                   />
-                </label>
-                <label className="flex flex-col gap-1">
-                  <span className="text-[10px] font-medium uppercase tracking-wide text-text-tertiary">Estimado</span>
-                  <div className="flex items-center gap-1">
-                    <input
-                      type="number"
-                      min={0}
-                      step={0.5}
-                      value={liveTask.estimated_hours || ''}
-                      onChange={(e) => editTask(liveTask.id, { estimated_hours: parseFloat(e.target.value) || 0 })}
-                      placeholder="0"
-                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs text-foreground focus:border-accent focus:outline-none"
-                    />
-                    <span className="text-[10px] text-text-tertiary shrink-0">h</span>
-                  </div>
                 </label>
               </div>
 

@@ -30,7 +30,7 @@ function isOverdue(date: string): boolean {
 }
 
 function downloadCSV(rows: FlatTask[]) {
-  const headers = ['Nombre','Fase','Prioridad','Estado','Inicio','Límite','Estimado (h)','Subtareas'];
+  const headers = ['Nombre','Fase','Prioridad','Estado','Inicio','Límite','Subtareas'];
   const lines = rows.map((r) => [
     `"${r.text.replace(/"/g, '""')}"`,
     `"${r.phaseName}"`,
@@ -38,7 +38,6 @@ function downloadCSV(rows: FlatTask[]) {
     TASK_STATUS_CONFIG[r.status].label,
     r.start_date ?? '',
     r.due_date ?? '',
-    r.estimated_hours || 0,
     `${r.subtasks.filter((s) => s.completed).length}/${r.subtasks.length}`,
   ].join(','));
   const csv = [headers.join(','), ...lines].join('\n');
@@ -58,7 +57,7 @@ interface FlatTask extends PhaseTask {
   phaseId: string;
 }
 
-type SortColumn = 'text' | 'phaseName' | 'priority' | 'status' | 'start_date' | 'due_date' | 'estimated_hours' | 'subtasks';
+type SortColumn = 'text' | 'phaseName' | 'priority' | 'status' | 'start_date' | 'due_date' | 'subtasks';
 type SortDir = 'asc' | 'desc';
 
 const PRIORITY_ORDER: Record<TaskPriority, number> = { none: 0, low: 1, medium: 2, high: 3, urgent: 4 };
@@ -133,7 +132,6 @@ export default function TableView({ phases, projectId: _projectId, userId: _user
         case 'status': cmp = STATUS_ORDER[a.status] - STATUS_ORDER[b.status]; break;
         case 'start_date': cmp = (a.start_date ?? '').localeCompare(b.start_date ?? ''); break;
         case 'due_date': cmp = (a.due_date ?? '').localeCompare(b.due_date ?? ''); break;
-        case 'estimated_hours': cmp = (a.estimated_hours ?? 0) - (b.estimated_hours ?? 0); break;
         case 'subtasks': cmp = a.subtasks.length - b.subtasks.length; break;
       }
       return sortDir === 'asc' ? cmp : -cmp;
@@ -309,7 +307,6 @@ export default function TableView({ phases, projectId: _projectId, userId: _user
                 {th('status', 'Estado')}
                 {th('start_date', 'Inicio')}
                 {th('due_date', 'Límite')}
-                {th('estimated_hours', 'Estimado')}
                 {th('subtasks', 'Subtareas')}
                 <th className="w-8 px-3 py-2" />
               </tr>
@@ -393,13 +390,6 @@ export default function TableView({ phases, projectId: _projectId, userId: _user
                         <span className={`font-mono text-[10px] ${overdue ? 'font-medium text-red-500' : 'text-text-tertiary'}`}>
                           {formatDate(task.due_date)}
                         </span>
-                      )}
-                    </td>
-
-                    {/* Estimated */}
-                    <td className="px-3 py-2.5">
-                      {task.estimated_hours > 0 && (
-                        <span className="font-mono text-[10px] text-text-tertiary">{task.estimated_hours}h</span>
                       )}
                     </td>
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { CheckCircle2, AlertTriangle, Clock, Layers, Calendar } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, Layers, Calendar, Activity } from 'lucide-react';
 import { TASK_PRIORITY_CONFIG, type ProjectPhase } from '@/types/projects';
 
 // ─── Helpers ────────────────────────────
@@ -81,12 +81,13 @@ export default function DashboardView({ phases }: DashboardViewProps) {
   const tasks = getAllTasks(phases);
   const totalTasks = tasks.length;
   const doneTasks = tasks.filter((t) => t.done).length;
-  const urgentTasks = tasks.filter((t) => t.priority === 'urgent').length;
+  const highPriorityTasks = tasks.filter((t) => t.priority === 'high' || t.priority === 'urgent').length;
 
-  const estimatedHours = tasks.reduce((sum, t) => sum + (t.estimated_hours || 0), 0);
-  const trackedHours = parseFloat(
-    (tasks.reduce((sum, t) => sum + (t.tracked_seconds || 0), 0) / 3600).toFixed(1)
-  );
+  // Última actividad: max updated_at de todas las tareas
+  const lastActivity = tasks.reduce<string | null>((max, t) => {
+    if (!max) return t.updated_at;
+    return t.updated_at > max ? t.updated_at : max;
+  }, null);
 
   const totalPhases = phases.length;
   const donePhases = phases.filter((p) => p.status === 'done').length;
@@ -139,35 +140,33 @@ export default function DashboardView({ phases }: DashboardViewProps) {
           </p>
         </div>
 
-        {/* Urgentes */}
+        {/* Alta prioridad */}
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="flex items-center gap-2 mb-2">
             <AlertTriangle
               size={18}
-              className={urgentTasks > 0 ? 'text-[var(--error)]' : 'text-text-tertiary'}
+              className={highPriorityTasks > 0 ? 'text-[var(--error)]' : 'text-text-tertiary'}
             />
-            <span className="text-xs text-text-tertiary">Tareas urgentes</span>
+            <span className="text-xs text-text-tertiary">Alta prioridad</span>
           </div>
           <p
             className="font-mono text-2xl"
-            style={{ color: urgentTasks > 0 ? 'var(--error)' : undefined }}
+            style={{ color: highPriorityTasks > 0 ? 'var(--error)' : undefined }}
           >
-            {urgentTasks}
+            {highPriorityTasks}
           </p>
         </div>
 
-        {/* Tiempo */}
+        {/* Última actividad */}
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="flex items-center gap-2 mb-2">
-            <Clock size={18} className="text-text-tertiary" />
-            <span className="text-xs text-text-tertiary">Tiempo</span>
+            <Activity size={18} className="text-text-tertiary" />
+            <span className="text-xs text-text-tertiary">Última actividad</span>
           </div>
-          <p className="font-mono text-2xl text-foreground">
-            {estimatedHours}h{' '}
-            <span className="text-sm text-text-tertiary">est</span>
-            {' / '}
-            {trackedHours}h{' '}
-            <span className="text-sm text-text-tertiary">real</span>
+          <p className="font-mono text-sm text-foreground">
+            {lastActivity
+              ? formatRelativeDate(lastActivity.split('T')[0]).text
+              : '—'}
           </p>
         </div>
 

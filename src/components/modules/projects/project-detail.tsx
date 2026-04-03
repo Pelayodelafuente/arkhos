@@ -70,7 +70,6 @@ import KanbanView from "./kanban-view";
 import DashboardView from "./dashboard-view";
 import { TaskSlideOver } from "./task-slide-over";
 import TableView from "./table-view";
-import TimelineView from "./timeline-view";
 import type { PhaseTask } from "@/types/projects";
 
 // ─── Framer Motion variants ──────────
@@ -206,7 +205,7 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
   const [expandedPhases, setExpandedPhases] = useState<Set<string>>(new Set());
   const [newTaskText, setNewTaskText] = useState<Record<string, string>>({});
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [viewTab, setViewTab] = useState<"progress" | "kanban" | "dashboard" | "table" | "timeline">("progress");
+  const [viewTab, setViewTab] = useState<"progress" | "kanban" | "dashboard" | "table">("progress");
   const [slideOverTask, setSlideOverTask] = useState<PhaseTask | null>(null);
   const [projectTypes, setProjectTypes] = useState<ProjectTypeRecord[]>([]);
   const [projectStatuses, setProjectStatuses] = useState<ProjectStatusRecord[]>([]);
@@ -660,7 +659,6 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
           { key: "kanban", label: "Kanban" },
           { key: "dashboard", label: "Dashboard" },
           { key: "table", label: "Tabla" },
-          { key: "timeline", label: "Timeline" },
         ] as const).map((tab) => (
           <button
             key={tab.key}
@@ -821,11 +819,6 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
           userId={userId}
           onOpenTask={setSlideOverTask}
         />
-      )}
-
-      {/* Timeline view */}
-      {viewTab === "timeline" && (
-        <TimelineView phases={project.phases} />
       )}
 
       {/* Delete project confirmation */}
