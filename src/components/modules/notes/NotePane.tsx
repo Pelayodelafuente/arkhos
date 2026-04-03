@@ -114,6 +114,8 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
 
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const snapshotRef = useRef<{ title: string; content: string; color: NoteColor; icon: string; tags: string[]; status: NoteStatus } | null>(null)
+  // Ref with latest pending-save data for the unmount flush (NAV-02)
+  const pendingSaveRef = useRef<{ noteId: string; title: string; content: string; color: NoteColor; icon: string; tags: string[]; status: NoteStatus } | null>(null)
 
   // Lazy load content if not yet loaded
   useEffect(() => {
@@ -188,24 +190,38 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
     )
     if (!isDirty) return
     setSaveStatus('saving')
+    // Track latest dirty data for flush on unmount
+    pendingSaveRef.current = { noteId: note.id, title, content, color, icon, tags, status }
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current)
     autoSaveTimer.current = setTimeout(() => {
       editNote(note.id, { title: title || 'Sin título', content, color, icon, tags, status })
         .then(() => {
           setSaveStatus('saved')
+          pendingSaveRef.current = null
           setTimeout(() => setSaveStatus('idle'), 2000)
         })
         .catch(() => setSaveStatus('idle'))
     }, 800)
-    // NAV-02: flush save immediately on cleanup (navigation / unmount)
+    return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current) }
+  }, [title, content, color, icon, tags, status, note, editNote])
+
+  // NAV-02: flush pending save immediately on unmount (separate effect, empty deps)
+  useEffect(() => {
     return () => {
-      if (autoSaveTimer.current) {
+      const pending = pendingSaveRef.current
+      if (pending && autoSaveTimer.current) {
         clearTimeout(autoSaveTimer.current)
-        editNote(note.id, { title: title || 'Sin título', content, color, icon, tags, status }).catch(() => {})
-        autoSaveTimer.current = null
+        useNotesStore.getState().editNote(pending.noteId, {
+          title: pending.title || 'Sin título',
+          content: pending.content,
+          color: pending.color,
+          icon: pending.icon,
+          tags: pending.tags,
+          status: pending.status,
+        }).catch(() => {})
       }
     }
-  }, [title, content, color, icon, tags, status, note, editNote])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Escape to close
   useEffect(() => {

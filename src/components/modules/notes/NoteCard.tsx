@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, type ReactNode } from "react"
+import { createPortal } from "react-dom"
 import { Pin, Star, MoreHorizontal, Pencil, Trash2, Layout, Square, CheckSquare, Copy, FolderInput, Folder, Inbox, RotateCcw } from "lucide-react"
 import * as LucideIcons from "lucide-react"
 import type { Note } from "@/types/notes"
@@ -145,16 +146,13 @@ export function NoteCard({ note, userId, onEdit, onDelete, onTogglePin, onToggle
               </button>
             </>
           )}
-          {/* Menu button */}
+          {/* Menu button — portal renders outside card to avoid transform containing-block */}
           <div className="relative flex-shrink-0">
             <button
               onClick={(e) => {
                 e.stopPropagation()
                 if (menuOpen) {
-                  setMenuOpen(false)
-                  setMenuPos(null)
-                  setConfirmDelete(false)
-                  setFolderMenuOpen(false)
+                  handleMenuClose()
                 } else {
                   const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
                   setMenuPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right })
@@ -165,12 +163,11 @@ export function NoteCard({ note, userId, onEdit, onDelete, onTogglePin, onToggle
             >
               <MoreHorizontal size={14} strokeWidth={1.75} />
             </button>
-            {menuOpen && menuPos && (
+            {menuOpen && menuPos && createPortal(
               <>
-                <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); handleMenuClose() }} />
-                <div className="fixed z-50 w-44 rounded-lg border border-border bg-card py-1 shadow-md" style={{ top: menuPos.top, right: menuPos.right }}>
+                <div className="fixed inset-0 z-[100]" onClick={(e) => { e.stopPropagation(); handleMenuClose() }} />
+                <div className="fixed z-[101] w-44 rounded-lg border border-border bg-card py-1 shadow-md" style={{ top: menuPos.top, right: menuPos.right }}>
                   {isInTrash ? (
-                    // Trash view actions
                     <>
                       <MenuButton icon={<RotateCcw size={13} />} label="Restaurar" onClick={() => { handleMenuClose(); restoreFromTrash(note.id) }} />
                       <div className="my-1 border-t border-border" />
@@ -185,44 +182,36 @@ export function NoteCard({ note, userId, onEdit, onDelete, onTogglePin, onToggle
                       />
                     </>
                   ) : (
-                    // Normal actions
                     <>
                       <MenuButton icon={<Pencil size={13} />} label="Editar" onClick={() => { handleMenuClose(); onEdit(note) }} />
                       <MenuButton icon={<Pin size={13} />} label={note.is_pinned ? "Desfijar" : "Fijar"} onClick={() => { handleMenuClose(); onTogglePin(note.id) }} />
                       {onDuplicate && (
                         <MenuButton icon={<Copy size={13} />} label="Duplicar" onClick={() => { handleMenuClose(); onDuplicate(note.id) }} />
                       )}
-                      {/* Move to folder submenu */}
                       <div className="relative">
                         <MenuButton
                           icon={<FolderInput size={13} />}
                           label="Mover a..."
                           onClick={(e) => { e?.stopPropagation(); setFolderMenuOpen((v) => !v) }}
                         />
-                        {folderMenuOpen && menuPos && (
-                          <>
-                            <div
-                              className="fixed inset-0 z-[45]"
-                              onClick={(e) => { e.stopPropagation(); setFolderMenuOpen(false) }}
+                        {folderMenuOpen && (
+                          <div className="fixed z-[102] w-40 rounded-lg border border-border bg-card py-1 shadow-md" style={{ top: menuPos.top, right: menuPos.right + 180 }}>
+                            <MenuButton
+                              icon={<Inbox size={13} />}
+                              label="Sin carpeta"
+                              onClick={() => { handleMenuClose(); moveNoteToFolder(note.id, null) }}
+                              active={!note.folder_id}
                             />
-                            <div className="fixed z-[50] w-40 rounded-lg border border-border bg-card py-1 shadow-md" style={{ top: menuPos.top, right: menuPos.right + 180 }}>
+                            {folders.map((f) => (
                               <MenuButton
-                                icon={<Inbox size={13} />}
-                                label="Sin carpeta"
-                                onClick={() => { handleMenuClose(); moveNoteToFolder(note.id, null) }}
-                                active={!note.folder_id}
+                                key={f.id}
+                                icon={<Folder size={13} />}
+                                label={f.name}
+                                onClick={() => { handleMenuClose(); moveNoteToFolder(note.id, f.id) }}
+                                active={note.folder_id === f.id}
                               />
-                              {folders.map((f) => (
-                                <MenuButton
-                                  key={f.id}
-                                  icon={<Folder size={13} />}
-                                  label={f.name}
-                                  onClick={() => { handleMenuClose(); moveNoteToFolder(note.id, f.id) }}
-                                  active={note.folder_id === f.id}
-                                />
-                              ))}
-                            </div>
-                          </>
+                            ))}
+                          </div>
                         )}
                       </div>
                       {onAddToCanvas && (
@@ -241,7 +230,8 @@ export function NoteCard({ note, userId, onEdit, onDelete, onTogglePin, onToggle
                     </>
                   )}
                 </div>
-              </>
+              </>,
+              document.body
             )}
           </div>
         </div>
