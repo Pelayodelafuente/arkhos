@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useMemo } from "react"
-import { X, Trash2, Archive, History, RotateCcw, Link2, ArrowRight, Unlink, ChevronLeft, Sparkles, ChevronDown } from "lucide-react"
+import { X, Trash2, Archive, History, RotateCcw, Link2, ArrowRight, Unlink, ChevronLeft, Sparkles, ChevronDown, FolderKanban, CreditCard } from "lucide-react"
 import * as LucideIcons from "lucide-react"
 import { Button } from "@/components/ui"
 import { useNotesStore, useAllTags } from "@/stores/notes-store"
@@ -12,6 +12,9 @@ import { NoteEditor } from "./NoteEditor"
 import type { Note, NoteColor, NoteStatus, NoteVersion } from "@/types/notes"
 import { NOTE_STATUS_CONFIG } from "@/types/notes"
 import * as notesApi from "@/lib/supabase/notes"
+import { getProjectsForSelect, type ProjectSelectItem } from "@/lib/supabase/projects"
+import { getSubscriptionsForSelect, type SubscriptionSelectItem } from "@/lib/supabase/expenses"
+import { createClient } from "@/lib/supabase/client"
 import { useIsMobile } from "@/hooks/useIsMobile"
 
 const STATUS_OPTIONS: { value: NoteStatus; label: string }[] = [
@@ -42,6 +45,8 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
   const noteReferences = useNotesStore((s) => s.noteReferences)
   const noteBacklinks = useNotesStore((s) => s.noteBacklinks)
   const allNotes = useNotesStore((s) => s.notes)
+  const linkNoteToProject = useNotesStore((s) => s.linkNoteToProject)
+  const linkNoteToSubscription = useNotesStore((s) => s.linkNoteToSubscription)
   const allTags = useAllTags()
   const toast = useToast()
   const isMobile = useIsMobile()
@@ -57,6 +62,36 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [showIcons, setShowIcons] = useState(false)
   const [saving, setSaving] = useState(false)
+
+  // Cross-module links
+  const [linkSectionOpen, setLinkSectionOpen] = useState(false)
+  const [projects, setProjects] = useState<ProjectSelectItem[]>([])
+  const [subscriptions, setSubscriptions] = useState<SubscriptionSelectItem[]>([])
+  const [loadingLinks, setLoadingLinks] = useState(false)
+
+  // Load projects + subscriptions when link section opens
+  useEffect(() => {
+    if (!linkSectionOpen || projects.length > 0 || subscriptions.length > 0) return
+    setLoadingLinks(true)
+    const client = createClient()
+    Promise.all([
+      getProjectsForSelect(client, userId),
+      getSubscriptionsForSelect(userId),
+    ])
+      .then(([p, s]) => { setProjects(p); setSubscriptions(s) })
+      .catch(() => toast.error('Error al cargar proyectos/suscripciones'))
+      .finally(() => setLoadingLinks(false))
+  }, [linkSectionOpen, userId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleLinkProject = async (projectId: string | null) => {
+    if (!note) return
+    await linkNoteToProject(note.id, projectId)
+  }
+
+  const handleLinkSubscription = async (subscriptionId: string | null) => {
+    if (!note) return
+    await linkNoteToSubscription(note.id, subscriptionId)
+  }
 
   // IA — resumen
   const [summaryOpen, setSummaryOpen] = useState(false)
@@ -505,6 +540,104 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
             </div>
           </div>
         )}
+
+        {/* Vincular — proyectos y suscripciones */}
+        <div className="border-t border-border pt-3">
+          <button
+            type="button"
+            onClick={() => setLinkSectionOpen((v) => !v)}
+            className="w-full flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-text-tertiary hover:text-text-secondary transition-colors"
+          >
+            <span className="flex items-center gap-1.5">
+              <Link2 size={11} strokeWidth={2} />
+              Vincular
+              {(note?.project_id || note?.subscription_id) && (
+                <span className="rounded-full bg-sand border border-border px-1.5 py-px text-[9px] font-medium text-text-secondary">
+                  {[note?.project_id, note?.subscription_id].filter(Boolean).length}
+                </span>
+              )}
+            </span>
+            <ChevronDown
+              size={11}
+              strokeWidth={2}
+              className={`transition-transform duration-200 ${linkSectionOpen ? '' : '-rotate-90'}`}
+            />
+          </button>
+
+          {linkSectionOpen && (
+            <div className="mt-2 space-y-2">
+              {loadingLinks ? (
+                <div className="text-xs text-text-tertiary py-1">Cargando...</div>
+              ) : (
+                <>
+                  {/* Proyecto */}
+                  <div className="flex items-center gap-2">
+                    <FolderKanban size={13} strokeWidth={1.75} className="text-[#C4704A] flex-shrink-0" />
+                    <span className="text-[11px] text-text-tertiary w-20 flex-shrink-0">Proyecto</span>
+                    {note?.project_id ? (
+                      <div className="flex items-center gap-1 flex-1 min-w-0">
+                        <span className="text-[11px] font-medium text-foreground truncate flex-1">
+                          {projects.find((p) => p.id === note.project_id)?.name ?? '—'}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleLinkProject(null)}
+                          className="flex h-5 w-5 items-center justify-center rounded-md text-text-tertiary hover:text-foreground hover:bg-sand transition-colors flex-shrink-0"
+                          title="Desvincular proyecto"
+                        >
+                          <X size={10} strokeWidth={2} />
+                        </button>
+                      </div>
+                    ) : (
+                      <select
+                        value=""
+                        onChange={(e) => { if (e.target.value) handleLinkProject(e.target.value) }}
+                        className="flex-1 min-w-0 rounded-md border border-border bg-card px-2 py-1 text-[11px] text-text-secondary focus:outline-none focus:ring-1 focus:ring-[#C4704A]/40"
+                      >
+                        <option value="">Sin proyecto</option>
+                        {projects.map((p) => (
+                          <option key={p.id} value={p.id}>{p.name}</option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+
+                  {/* Suscripción */}
+                  <div className="flex items-center gap-2">
+                    <CreditCard size={13} strokeWidth={1.75} className="text-[#4A7A9B] flex-shrink-0" />
+                    <span className="text-[11px] text-text-tertiary w-20 flex-shrink-0">Suscripción</span>
+                    {note?.subscription_id ? (
+                      <div className="flex items-center gap-1 flex-1 min-w-0">
+                        <span className="text-[11px] font-medium text-foreground truncate flex-1">
+                          {subscriptions.find((s) => s.id === note.subscription_id)?.name ?? '—'}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleLinkSubscription(null)}
+                          className="flex h-5 w-5 items-center justify-center rounded-md text-text-tertiary hover:text-foreground hover:bg-sand transition-colors flex-shrink-0"
+                          title="Desvincular suscripción"
+                        >
+                          <X size={10} strokeWidth={2} />
+                        </button>
+                      </div>
+                    ) : (
+                      <select
+                        value=""
+                        onChange={(e) => { if (e.target.value) handleLinkSubscription(e.target.value) }}
+                        className="flex-1 min-w-0 rounded-md border border-border bg-card px-2 py-1 text-[11px] text-text-secondary focus:outline-none focus:ring-1 focus:ring-[#4A7A9B]/40"
+                      >
+                        <option value="">Sin suscripción</option>
+                        {subscriptions.map((s) => (
+                          <option key={s.id} value={s.id}>{s.name}</option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Tags */}
         <TagInput

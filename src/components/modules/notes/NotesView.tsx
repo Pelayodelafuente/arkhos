@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback, useRef } from "react"
+import { useSearchParams } from "next/navigation"
 import { Plus, BookOpen, Layout, Network } from "lucide-react"
 import { Button } from "@/components/ui"
 import { useNotesStore } from "@/stores/notes-store"
@@ -35,6 +36,24 @@ export function NotesView({ initialNotes, initialCanvas, userId }: Props) {
   const [editingNote, setEditingNote] = useState<Note | null>(null)
   const [pendingCanvasPos, setPendingCanvasPos] = useState<{ x: number; y: number } | null>(null)
   const prevNoteCount = useRef(notes.length)
+
+  // Query param handling — ?note=id opens NotePane; ?subscription=id filters by subscription
+  const searchParams = useSearchParams()
+  useEffect(() => {
+    const noteId = searchParams.get('note')
+    const subscriptionId = searchParams.get('subscription')
+    if (noteId && notes.length > 0) {
+      const found = notes.find((n) => n.id === noteId)
+      if (found) setSelectedNoteId(noteId)
+    }
+    if (subscriptionId && notes.length > 0) {
+      // Filter notes to show only those linked to this subscription
+      // We do this by setting activeTag — but subscriptions use a different mechanism
+      // So we open the first linked note directly if found
+      const linked = notes.find((n) => n.subscription_id === subscriptionId && !n.deleted_at)
+      if (linked) setSelectedNoteId(linked.id)
+    }
+  }, [notes, searchParams]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Hydrate store with server data
   useEffect(() => {

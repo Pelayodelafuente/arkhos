@@ -1,11 +1,13 @@
 "use client"
 
 import { useMemo } from "react"
-import { ChevronDown, CreditCard, Pencil, Pause, Play, Plus, X, MonitorPlay, Code2, Music, HardDrive, Zap, Gamepad2, Shield, Heart, BookOpen, TrendingUp, Layers } from "lucide-react"
+import Link from "next/link"
+import { ChevronDown, CreditCard, Pencil, Pause, Play, Plus, X, MonitorPlay, Code2, Music, HardDrive, Zap, Gamepad2, Shield, Heart, BookOpen, TrendingUp, Layers, StickyNote } from "lucide-react"
 import { ICON_MAP } from "./CategoryManager"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import { Card, Badge, Button } from "@/components/ui"
 import { useExpensesStore, useFilteredSubscriptions, useCycleFilteredSubscriptions } from "@/stores/expenses-store"
+import { useNotesStore } from "@/stores/notes-store"
 import { ServiceAvatar } from "./ServiceAvatar"
 import { HighlightText } from "./HighlightText"
 import { formatCurrency, formatNextBilling, isBillingToday, groupByCategory, getCycleShortLabel, getDaysUntilBilling, getNextBillingDate } from "@/lib/gastos-utils"
@@ -28,6 +30,18 @@ export function SubscriptionList({ onEdit, onNew }: SubscriptionListProps) {
   const categoryFilter = useExpensesStore((s) => s.categoryFilter)
   const setCategoryFilter = useExpensesStore((s) => s.setCategoryFilter)
   const allSubs = useCycleFilteredSubscriptions()
+  const allNotes = useNotesStore((s) => s.notes)
+
+  // Build a map of subscription_id → note count
+  const noteCountMap = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const note of allNotes) {
+      if (note.subscription_id) {
+        map.set(note.subscription_id, (map.get(note.subscription_id) ?? 0) + 1)
+      }
+    }
+    return map
+  }, [allNotes])
   const activeCategoryName = categoryFilter
     ? allSubs.find((s) => s.category_id === categoryFilter)?.category?.name ?? 'Categoría'
     : null
@@ -99,6 +113,7 @@ export function SubscriptionList({ onEdit, onNew }: SubscriptionListProps) {
                 onEdit={onEdit}
                 toggleActive={toggleActive}
                 notAmortizeYearly={notAmortizeYearly}
+                noteCountMap={noteCountMap}
               />
             </motion.div>
           ) : (
@@ -115,6 +130,7 @@ export function SubscriptionList({ onEdit, onNew }: SubscriptionListProps) {
                 onEdit={onEdit}
                 toggleActive={toggleActive}
                 notAmortizeYearly={notAmortizeYearly}
+                noteCountMap={noteCountMap}
               />
             </motion.div>
           )}
@@ -153,6 +169,7 @@ interface ViewProps {
   onEdit: (sub: SubscriptionWithCategory) => void
   toggleActive: (id: string) => Promise<void>
   notAmortizeYearly: boolean
+  noteCountMap: Map<string, number>
 }
 
 interface CategoryViewProps extends ViewProps {
@@ -168,6 +185,7 @@ function CategoryView({
   onEdit,
   toggleActive,
   notAmortizeYearly,
+  noteCountMap,
 }: CategoryViewProps) {
   const groups = useMemo(() => groupByCategory(subscriptions), [subscriptions])
 
@@ -243,6 +261,7 @@ function CategoryView({
                       onEdit={() => onEdit(sub)}
                       onToggleActive={() => toggleActive(sub.id)}
                       notAmortizeYearly={notAmortizeYearly}
+                      noteCount={noteCountMap.get(sub.id) ?? 0}
                     />
                   ))}
                 </motion.div>
@@ -263,6 +282,7 @@ function ChronologicalView({
   onEdit,
   toggleActive,
   notAmortizeYearly,
+  noteCountMap,
 }: ViewProps) {
   // Sort by next billing date (closest first) — uses full date to correctly handle annual/quarterly
   const sorted = useMemo(() => {
@@ -282,6 +302,7 @@ function ChronologicalView({
           onEdit={() => onEdit(sub)}
           onToggleActive={() => toggleActive(sub.id)}
           notAmortizeYearly={notAmortizeYearly}
+          noteCount={noteCountMap.get(sub.id) ?? 0}
         />
       ))}
     </div>
@@ -297,6 +318,7 @@ function SubscriptionRow({
   onEdit,
   onToggleActive,
   notAmortizeYearly,
+  noteCount = 0,
 }: {
   index?: number
   subscription: SubscriptionWithCategory
@@ -304,6 +326,7 @@ function SubscriptionRow({
   onEdit: () => void
   onToggleActive: () => void
   notAmortizeYearly: boolean
+  noteCount?: number
 }) {
   const prefersReducedMotion = useReducedMotion()
   const isPaused = subscription.status === 'paused'
@@ -494,6 +517,19 @@ function SubscriptionRow({
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
           <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
         </span>
+      )}
+
+      {/* Notas badge — visible when subscription has linked notes */}
+      {noteCount > 0 && (
+        <Link
+          href={`/notas?subscription=${subscription.id}`}
+          onClick={(e) => e.stopPropagation()}
+          className="flex items-center gap-1 rounded-full border border-border bg-sand px-2 py-0.5 text-[10px] font-medium text-text-secondary hover:bg-sand/80 hover:text-foreground transition-colors flex-shrink-0"
+          title="Ver notas vinculadas"
+        >
+          <StickyNote size={10} strokeWidth={1.75} />
+          {noteCount}
+        </Link>
       )}
 
       {/* Hover actions */}

@@ -464,6 +464,27 @@ export async function autoGeneratePayments(
 }
 
 // ══════════════════════════════════════
+// SELECT HELPERS (cross-module)
+// ══════════════════════════════════════
+
+export interface SubscriptionSelectItem {
+  id: string
+  name: string
+}
+
+/** Lista mínima de suscripciones del usuario para selects (notas, etc.) */
+export async function getSubscriptionsForSelect(userId: string): Promise<SubscriptionSelectItem[]> {
+  const client = createClient()
+  const { data, error } = await client
+    .from('subscriptions')
+    .select('id, name')
+    .eq('user_id', userId)
+    .order('name', { ascending: true })
+  if (error) throw new ExpensesError('Error fetching subscriptions for select', error.message)
+  return (data ?? []) as SubscriptionSelectItem[]
+}
+
+// ══════════════════════════════════════
 // CALCULATIONS
 // ══════════════════════════════════════
 

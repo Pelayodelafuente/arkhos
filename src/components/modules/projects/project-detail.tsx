@@ -71,6 +71,7 @@ import DashboardView from "./dashboard-view";
 import { TaskSlideOver } from "./task-slide-over";
 import TableView from "./table-view";
 import ActivityView from "./activity-view";
+import NotesView from "./notes-view";
 import type { PhaseTask } from "@/types/projects";
 
 // ─── Framer Motion variants ──────────
@@ -206,7 +207,7 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
   const [expandedPhases, setExpandedPhases] = useState<Set<string>>(new Set());
   const [newTaskText, setNewTaskText] = useState<Record<string, string>>({});
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [viewTab, setViewTab] = useState<"progress" | "kanban" | "dashboard" | "table" | "activity">("progress");
+  const [viewTab, setViewTab] = useState<"progress" | "kanban" | "dashboard" | "table" | "activity" | "notes">("progress");
   const [slideOverTask, setSlideOverTask] = useState<PhaseTask | null>(null);
   const [projectTypes, setProjectTypes] = useState<ProjectTypeRecord[]>([]);
   const [projectStatuses, setProjectStatuses] = useState<ProjectStatusRecord[]>([]);
@@ -661,6 +662,7 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
           { key: "dashboard", label: "Dashboard" },
           { key: "table", label: "Tabla" },
           { key: "activity", label: "Actividad" },
+          { key: "notes", label: "Notas" },
         ] as const).map((tab) => (
           <button
             key={tab.key}
@@ -825,6 +827,11 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
       {/* Activity view */}
       {viewTab === "activity" && (
         <ActivityView projectId={projectId} userId={userId} />
+      )}
+
+      {/* Notes view */}
+      {viewTab === "notes" && (
+        <NotesView projectId={projectId} userId={userId} />
       )}
 
       {/* Delete project confirmation */}

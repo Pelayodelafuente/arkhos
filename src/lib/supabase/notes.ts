@@ -872,6 +872,62 @@ export async function getAllBacklinksForGraph(): Promise<Array<{ source_note_id:
   }))
 }
 
+// ══════════════════════════════════════
+// CROSS-MODULE LINKS — Proyectos + Gastos
+// ══════════════════════════════════════
+
+/** Notas vinculadas a un proyecto específico */
+export async function getNotesByProject(userId: string, projectId: string): Promise<Note[]> {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from('notes')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('project_id', projectId)
+    .is('deleted_at', null)
+    .order('updated_at', { ascending: false })
+  if (error) throw new NotesError('Error fetching notes by project', error.message)
+  return (data ?? []) as Note[]
+}
+
+/** Notas vinculadas a una suscripción específica */
+export async function getNotesBySubscription(userId: string, subscriptionId: string): Promise<Note[]> {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from('notes')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('subscription_id', subscriptionId)
+    .is('deleted_at', null)
+    .order('updated_at', { ascending: false })
+  if (error) throw new NotesError('Error fetching notes by subscription', error.message)
+  return (data ?? []) as Note[]
+}
+
+/** Vincula o desvincula una nota de un proyecto */
+export async function updateNoteProjectLink(noteId: string, projectId: string | null): Promise<Note> {
+  const supabase = createClient()
+  const { data: { session } } = await supabase.auth.getSession()
+  const query = supabase.from('notes').update({ project_id: projectId }).eq('id', noteId)
+  if (session?.user?.id) query.eq('user_id', session.user.id)
+  const { data, error } = await query.select().single()
+  if (error) throw new NotesError('Error updating note project link', error.message)
+  if (!data) throw new NotesError('Error updating note project link: no data returned')
+  return data as Note
+}
+
+/** Vincula o desvincula una nota de una suscripción */
+export async function updateNoteSubscriptionLink(noteId: string, subscriptionId: string | null): Promise<Note> {
+  const supabase = createClient()
+  const { data: { session } } = await supabase.auth.getSession()
+  const query = supabase.from('notes').update({ subscription_id: subscriptionId }).eq('id', noteId)
+  if (session?.user?.id) query.eq('user_id', session.user.id)
+  const { data, error } = await query.select().single()
+  if (error) throw new NotesError('Error updating note subscription link', error.message)
+  if (!data) throw new NotesError('Error updating note subscription link: no data returned')
+  return data as Note
+}
+
 /** Context builder para IA */
 export async function buildNoteContext(
   noteId: string

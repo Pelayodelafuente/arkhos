@@ -48,6 +48,8 @@ export interface Note {
   favorited?: boolean
   backlink_count?: number
   deleted_at?: string | null
+  project_id?: string | null
+  subscription_id?: string | null
   created_at: string
   updated_at: string
 }

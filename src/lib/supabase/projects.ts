@@ -1051,6 +1051,27 @@ export async function getWeeklySummary(
 }
 
 // ══════════════════════════════════════
+// SELECT HELPERS (cross-module)
+// ══════════════════════════════════════
+
+export interface ProjectSelectItem {
+  id: string
+  name: string
+}
+
+/** Lista mínima de proyectos del usuario para selects (notas, etc.) */
+export async function getProjectsForSelect(client: Client, userId: string): Promise<ProjectSelectItem[]> {
+  const result = await client
+    .from('projects')
+    .select('id, name')
+    .eq('user_id', userId)
+    .order('name', { ascending: true })
+
+  const rows = assertData<Array<{ id: string; name: string }>>(result, 'Error fetching projects for select')
+  return rows
+}
+
+// ══════════════════════════════════════
 // TASK COMMENTS
 // ══════════════════════════════════════
 

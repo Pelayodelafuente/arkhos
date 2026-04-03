@@ -272,6 +272,10 @@ interface NotesActions {
 
   // Split-pane
   setSelectedNoteId: (id: string | null) => void
+
+  // Cross-module links
+  linkNoteToProject: (noteId: string, projectId: string | null) => Promise<void>
+  linkNoteToSubscription: (noteId: string, subscriptionId: string | null) => Promise<void>
 }
 
 type NotesStore = NotesState & NotesActions
@@ -1610,6 +1614,36 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
           await addEdge(sourceNodeId, targetNodeId, 'right', 'left', 'sage', '')
         }
       }
+    }
+  },
+
+  // ── Cross-module links ─────────────
+
+  linkNoteToProject: async (noteId, projectId) => {
+    const prev = get().notes
+    set((s) => ({
+      notes: s.notes.map((n) => (n.id === noteId ? { ...n, project_id: projectId } : n)),
+    }))
+    try {
+      await notesApi.updateNoteProjectLink(noteId, projectId)
+    } catch (e) {
+      set({ notes: prev })
+      const msg = e instanceof Error ? e.message : 'Error al vincular nota al proyecto'
+      toast(msg, 'error')
+    }
+  },
+
+  linkNoteToSubscription: async (noteId, subscriptionId) => {
+    const prev = get().notes
+    set((s) => ({
+      notes: s.notes.map((n) => (n.id === noteId ? { ...n, subscription_id: subscriptionId } : n)),
+    }))
+    try {
+      await notesApi.updateNoteSubscriptionLink(noteId, subscriptionId)
+    } catch (e) {
+      set({ notes: prev })
+      const msg = e instanceof Error ? e.message : 'Error al vincular nota a la suscripción'
+      toast(msg, 'error')
     }
   },
 }))
