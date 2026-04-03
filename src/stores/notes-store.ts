@@ -129,11 +129,23 @@ interface NotesState {
 
   // Split-pane selected note
   selectedNoteId: string | null
+
+  // Paginación lazy
+  notesOffset: number
+  hasMoreNotes: boolean
+  isLoadingMore: boolean
+
+  // Búsqueda server-side
+  isSearching: boolean
+  searchResults: Note[]  // resultados del servidor cuando hay searchQuery activo
 }
 
 interface NotesActions {
   // Data fetching
   fetchNotes: (userId: string) => Promise<void>
+  loadMoreNotes: (userId: string) => Promise<void>
+  loadNoteContent: (noteId: string) => Promise<void>
+  performSearch: (userId: string, query: string) => Promise<void>
   fetchCanvas: (canvasId: string) => Promise<void>
   initCanvas: (userId: string) => Promise<void>
 
@@ -316,17 +328,82 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
   noteBacklinks: {},
   graphBacklinks: [],
   selectedNoteId: null,
+  notesOffset: 0,
+  hasMoreNotes: true,
+  isLoadingMore: false,
+  isSearching: false,
+  searchResults: [],
 
   // ── Fetch ───────────────────────────
 
   fetchNotes: async (userId) => {
-    set({ isLoading: true })
+    set({ isLoading: true, notes: [], notesOffset: 0, hasMoreNotes: true, searchResults: [], searchQuery: '' })
     try {
-      const notes = await notesApi.getNotes(userId)
-      set({ notes, isLoading: false })
+      const notes = await notesApi.getNotes(userId, 0)
+      set({
+        notes,
+        isLoading: false,
+        notesOffset: notes.length,
+        hasMoreNotes: notes.length === notesApi.NOTES_PAGE_SIZE,
+      })
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Error al cargar las notas'
       set({ isLoading: false })
+      toast(msg, 'error')
+    }
+  },
+
+  loadMoreNotes: async (userId) => {
+    const { hasMoreNotes, isLoadingMore, notesOffset, searchQuery } = get()
+    if (!hasMoreNotes || isLoadingMore || searchQuery) return
+    set({ isLoadingMore: true })
+    try {
+      const more = await notesApi.getNotes(userId, notesOffset)
+      set((s) => ({
+        notes: [...s.notes, ...more],
+        notesOffset: notesOffset + more.length,
+        hasMoreNotes: more.length === notesApi.NOTES_PAGE_SIZE,
+        isLoadingMore: false,
+      }))
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Error al cargar más notas'
+      set({ isLoadingMore: false })
+      toast(msg, 'error')
+    }
+  },
+
+  loadNoteContent: async (noteId) => {
+    const note = get().notes.find((n) => n.id === noteId)
+    if (!note || note.contentLoaded) return
+    try {
+      const content = await notesApi.getNoteContent(noteId)
+      set((s) => ({
+        notes: s.notes.map((n) =>
+          n.id === noteId ? { ...n, content, contentLoaded: true } : n
+        ),
+        searchResults: s.searchResults.map((n) =>
+          n.id === noteId ? { ...n, content, contentLoaded: true } : n
+        ),
+      }))
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Error al cargar el contenido'
+      toast(msg, 'error')
+    }
+  },
+
+  performSearch: async (userId, query) => {
+    set({ searchQuery: query })
+    if (!query.trim()) {
+      set({ searchResults: [], isSearching: false })
+      return
+    }
+    set({ isSearching: true })
+    try {
+      const results = await notesApi.searchNotes(userId, query)
+      set({ searchResults: results, isSearching: false })
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Error al buscar notas'
+      set({ isSearching: false })
       toast(msg, 'error')
     }
   },
@@ -589,7 +666,11 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
 
   // ── Hydration ─────────────────────
 
-  setNotes: (notes) => set({ notes }),
+  setNotes: (notes) => set({
+    notes,
+    notesOffset: notes.length,
+    hasMoreNotes: notes.length === notesApi.NOTES_PAGE_SIZE,
+  }),
   setCanvas: (canvas) => set({ canvas }),
 
   // ── Filters ────────────────────────
@@ -1654,77 +1735,81 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
 
 /**
  * Notas filtradas por searchQuery + activeTag.
+ * Cuando hay searchQuery, usa los resultados del servidor (FTS).
  * Pinned primero, luego por el modo de orden seleccionado.
  */
 export function useFilteredNotes(): Note[] {
   const notes = useNotesStore((s) => s.notes)
   const trashedNotes = useNotesStore((s) => s.trashedNotes)
   const searchQuery = useNotesStore((s) => s.searchQuery)
+  const searchResults = useNotesStore((s) => s.searchResults)
   const activeTag = useNotesStore((s) => s.activeTag)
   const sortMode = useNotesStore((s) => s.sortMode)
   const activeFolderId = useNotesStore((s) => s.activeFolderId)
 
-  let result: Note[]
+  return useMemo(() => {
+    let result: Note[]
 
-  // Filter by folder/view
-  if (activeFolderId === 'trash') {
-    result = trashedNotes
-  } else if (activeFolderId === 'archived') {
-    result = notes.filter((n) => n.archived)
-  } else if (activeFolderId === 'favorites') {
-    result = notes.filter((n) => n.favorited && !n.archived)
-  } else if (activeFolderId === 'no-folder') {
-    result = notes.filter((n) => !n.folder_id && !n.archived)
-  } else if (activeFolderId) {
-    result = notes.filter((n) => n.folder_id === activeFolderId && !n.archived)
-  } else {
-    // null = all non-archived
-    result = notes.filter((n) => !n.archived)
-  }
-
-  if (searchQuery) {
-    const q = searchQuery.toLowerCase()
-    result = result.filter(
-      (n) =>
-        n.title.toLowerCase().includes(q) ||
-        n.content.toLowerCase().includes(q) ||
-        n.tags.some((t) => t.toLowerCase().includes(q))
-    )
-  }
-
-  if (activeTag) {
-    result = result.filter((n) => n.tags.includes(activeTag))
-  }
-
-  result.sort((a, b) => {
-    // Pinned notes always first
-    if (a.is_pinned !== b.is_pinned) return a.is_pinned ? -1 : 1
-
-    switch (sortMode) {
-      case 'oldest':
-        return new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime()
-      case 'az':
-        return a.title.localeCompare(b.title, 'es')
-      case 'za':
-        return b.title.localeCompare(a.title, 'es')
-      case 'color':
-        return (a.color || 'default').localeCompare(b.color || 'default')
-      case 'tag': {
-        const aTag = a.tags.length > 0 ? a.tags[0] : '\uffff'
-        const bTag = b.tags.length > 0 ? b.tags[0] : '\uffff'
-        return aTag.localeCompare(bTag, 'es')
+    // Cuando hay búsqueda activa, usar resultados del servidor
+    if (searchQuery.trim() && activeFolderId !== 'trash') {
+      result = searchResults
+      if (activeTag) {
+        result = result.filter((n) => n.tags.includes(activeTag))
       }
-      case 'manual':
-        // sort_order ASC, fallback to updated_at DESC for notes without sort_order
-        if (a.sort_order !== b.sort_order) return a.sort_order - b.sort_order
-        return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-      case 'recent':
-      default:
-        return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+      return result
     }
-  })
 
-  return result
+    // Filter by folder/view
+    if (activeFolderId === 'trash') {
+      result = trashedNotes
+    } else if (activeFolderId === 'archived') {
+      result = notes.filter((n) => n.archived)
+    } else if (activeFolderId === 'favorites') {
+      result = notes.filter((n) => n.favorited && !n.archived)
+    } else if (activeFolderId === 'no-folder') {
+      result = notes.filter((n) => !n.folder_id && !n.archived)
+    } else if (activeFolderId) {
+      result = notes.filter((n) => n.folder_id === activeFolderId && !n.archived)
+    } else {
+      // null = all non-archived
+      result = notes.filter((n) => !n.archived)
+    }
+
+    if (activeTag) {
+      result = result.filter((n) => n.tags.includes(activeTag))
+    }
+
+    const sorted = [...result].sort((a, b) => {
+      // Pinned notes always first
+      if (a.is_pinned !== b.is_pinned) return a.is_pinned ? -1 : 1
+
+      switch (sortMode) {
+        case 'oldest':
+          return new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime()
+        case 'az':
+          return a.title.localeCompare(b.title, 'es')
+        case 'za':
+          return b.title.localeCompare(a.title, 'es')
+        case 'color':
+          return (a.color || 'default').localeCompare(b.color || 'default')
+        case 'tag': {
+          const aTag = a.tags.length > 0 ? a.tags[0] : '\uffff'
+          const bTag = b.tags.length > 0 ? b.tags[0] : '\uffff'
+          return aTag.localeCompare(bTag, 'es')
+        }
+        case 'manual':
+          // sort_order ASC, fallback to updated_at DESC for notes without sort_order
+          if (a.sort_order !== b.sort_order) return a.sort_order - b.sort_order
+          return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+        case 'recent':
+        default:
+          return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+      }
+    })
+
+    return sorted
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [notes, trashedNotes, searchQuery, searchResults, activeTag, sortMode, activeFolderId])
 }
 
 /**

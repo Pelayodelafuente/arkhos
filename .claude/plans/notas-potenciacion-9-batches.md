@@ -1,6 +1,6 @@
 # Plan: Notas — Potenciación completa (9 batches)
 
-**Estado actual**: Batches 1, 2, 3, 4, 5 y 6 completados (2026-04-03)
+**Estado actual**: Batches 1, 2, 3, 4, 5, 6 y 7 completados (2026-04-03)
 
 ---
 
@@ -86,12 +86,8 @@ Reutiliza patrón de `/api/projects/analyze` y `/api/projects/chat`.
 
 ---
 
-### Batch 7 — Search + Performance
-**Complejidad**: Alta | **Riesgo**: Medio
-**Archivos**: migration, notes.ts, notes-store.ts, NotesToolbar
-
-1. **A5 — Full-text search PostgreSQL**: Migration añade `content_tsvector TSVECTOR` con trigger + índice GIN. `searchNotes()` usa `.textSearch('content_tsvector', query)`.
-2. **A19/A20 — Paginación lazy**: `fetchNotes()` SELECT sin `content` (campo pesado). Carga content al seleccionar. `fetchMoreNotes()` con cursor. Scroll al final → `loadMoreNotes()`.
+### Batch 7 — Search + Performance ✅ COMPLETADO (2026-04-03)
+Migration 019 (tsvector+GIN) · getNotes sin content + paginación · getNoteContent lazy · searchNotes FTS · loadMoreNotes · loadNoteContent · performSearch · useFilteredNotes useMemo · NotesToolbar userId+performSearch · NotesList IntersectionObserver · NotePane/NoteModal lazy content
 
 ---
 

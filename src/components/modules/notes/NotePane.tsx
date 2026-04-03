@@ -42,6 +42,7 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
   const removeNote = useNotesStore((s) => s.removeNote)
   const archiveNote = useNotesStore((s) => s.archiveNote)
   const loadNoteLinks = useNotesStore((s) => s.loadNoteLinks)
+  const loadNoteContent = useNotesStore((s) => s.loadNoteContent)
   const noteReferences = useNotesStore((s) => s.noteReferences)
   const noteBacklinks = useNotesStore((s) => s.noteBacklinks)
   const allNotes = useNotesStore((s) => s.notes)
@@ -111,6 +112,11 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const snapshotRef = useRef<{ title: string; content: string; color: NoteColor; icon: string; tags: string[]; status: NoteStatus } | null>(null)
 
+  // Lazy load content if not yet loaded
+  useEffect(() => {
+    if (noteId) loadNoteContent(noteId)
+  }, [noteId]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // Load backlinks when note changes
   useEffect(() => {
     if (noteId) loadNoteLinks(noteId)
@@ -137,12 +143,28 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
     setSummaryOpen(false)
     setSummaryText("")
     setAiSuggestedTags([])
-    // Auto-snapshot if note is old enough
+    // Auto-snapshot if note is old enough (solo si el content ya fue cargado)
+    if (note.contentLoaded) {
+      const fiveMinutesAgo = Date.now() - 5 * 60 * 1000
+      if (new Date(note.updated_at).getTime() < fiveMinutesAgo) {
+        notesApi.saveNoteVersion(note.id, userId, note.title, note.content).catch(() => {})
+      }
+    }
+  }, [noteId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Cuando el content se carga de forma lazy, actualizar el editor
+  useEffect(() => {
+    if (!note?.contentLoaded) return
+    setContent(note.content)
+    if (snapshotRef.current) {
+      snapshotRef.current = { ...snapshotRef.current, content: note.content }
+    }
+    // Auto-snapshot ahora que tenemos el content
     const fiveMinutesAgo = Date.now() - 5 * 60 * 1000
     if (new Date(note.updated_at).getTime() < fiveMinutesAgo) {
       notesApi.saveNoteVersion(note.id, userId, note.title, note.content).catch(() => {})
     }
-  }, [noteId]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [note?.contentLoaded]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load versions when history panel opens
   useEffect(() => {
@@ -417,11 +439,20 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
 
         {/* Editor */}
         <div className="rounded-md border border-border bg-card px-3 py-2.5 min-h-[200px]">
-          <NoteEditor
-            content={content}
-            onChange={setContent}
-            placeholder="Escribe aquí... usa / para insertar bloques"
-          />
+          {note && !note.contentLoaded ? (
+            <div className="space-y-2 py-1 animate-pulse">
+              <div className="h-3 bg-border rounded-md w-3/4" />
+              <div className="h-3 bg-border rounded-md w-full" />
+              <div className="h-3 bg-border rounded-md w-5/6" />
+              <div className="h-3 bg-border rounded-md w-2/3 mt-2" />
+            </div>
+          ) : (
+            <NoteEditor
+              content={content}
+              onChange={setContent}
+              placeholder="Escribe aquí... usa / para insertar bloques"
+            />
+          )}
         </div>
 
         {/* IA — Panel resumen */}

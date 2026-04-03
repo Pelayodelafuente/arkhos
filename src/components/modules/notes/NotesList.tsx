@@ -1,8 +1,8 @@
 "use client"
 
-import { useCallback } from "react"
+import { useCallback, useEffect, useRef } from "react"
 import { BookOpen, Plus, ArrowUpDown, GripVertical, Pin, CheckSquare, Archive, Trash2, X } from "lucide-react"
-import { Button, Badge } from "@/components/ui"
+import { Button, Badge, Skeleton } from "@/components/ui"
 import { useFilteredNotes, useNotesStore } from "@/stores/notes-store"
 import type { NoteSortMode } from "@/stores/notes-store"
 import { NoteCard } from "./NoteCard"
@@ -128,6 +128,10 @@ function SortableNoteCard({
 
 export function NotesList({ userId, onEdit, onNew, selectedNoteId }: Props) {
   const notes = useFilteredNotes()
+  const hasMoreNotes = useNotesStore((s) => s.hasMoreNotes)
+  const isLoadingMore = useNotesStore((s) => s.isLoadingMore)
+  const searchQuery = useNotesStore((s) => s.searchQuery)
+  const loadMoreNotes = useNotesStore((s) => s.loadMoreNotes)
   const activeFolderId = useNotesStore((s) => s.activeFolderId)
   const removeNote = useNotesStore((s) => s.removeNote)
   const duplicateNote = useNotesStore((s) => s.duplicateNote)
@@ -135,7 +139,6 @@ export function NotesList({ userId, onEdit, onNew, selectedNoteId }: Props) {
   const togglePin = useNotesStore((s) => s.togglePin)
   const toggleFavorite = useNotesStore((s) => s.toggleFavorite)
   const addNoteToCanvas = useNotesStore((s) => s.addNoteToCanvas)
-  const searchQuery = useNotesStore((s) => s.searchQuery)
   const sortMode = useNotesStore((s) => s.sortMode)
   const setSortMode = useNotesStore((s) => s.setSortMode)
   const setNotes = useNotesStore((s) => s.setNotes)
@@ -149,6 +152,18 @@ export function NotesList({ userId, onEdit, onNew, selectedNoteId }: Props) {
   const clearSelection = useNotesStore((s) => s.clearSelection)
   const bulkArchive = useNotesStore((s) => s.bulkArchive)
   const bulkDelete = useNotesStore((s) => s.bulkDelete)
+
+  // Infinite scroll sentinel
+  const bottomRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!bottomRef.current || searchQuery || activeFolderId === 'trash') return
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) loadMoreNotes(userId) },
+      { threshold: 0.1 }
+    )
+    obs.observe(bottomRef.current)
+    return () => obs.disconnect()
+  }, [loadMoreNotes, userId, searchQuery, activeFolderId])
 
   const handleAddToCanvas = async (noteId: string) => {
     await addNoteToCanvas(noteId, { x: 100, y: 100 })
@@ -348,6 +363,22 @@ export function NotesList({ userId, onEdit, onNew, selectedNoteId }: Props) {
         </DndContext>
       ) : (
         content
+      )}
+
+      {/* Infinite scroll: sentinel + loading skeletons */}
+      {!searchQuery && !isTrashView && (
+        <>
+          {isLoadingMore && (
+            <div className={`grid gap-3 ${selectedNoteId ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"}`}>
+              {[0, 1, 2].map((i) => (
+                <Skeleton key={i} className="h-28 rounded-xl" />
+              ))}
+            </div>
+          )}
+          {hasMoreNotes && !isLoadingMore && (
+            <div ref={bottomRef} className="h-4" aria-hidden />
+          )}
+        </>
       )}
 
       {/* Floating bulk action bar */}

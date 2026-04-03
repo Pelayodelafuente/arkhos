@@ -4,10 +4,16 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { Search, Tag, X, ChevronLeft, ChevronRight } from "lucide-react"
 import { useNotesStore, useAllTags } from "@/stores/notes-store"
 
-export function NotesToolbar() {
+interface Props {
+  userId: string
+}
+
+export function NotesToolbar({ userId }: Props) {
+  const performSearch = useNotesStore((s) => s.performSearch)
   const setSearchQuery = useNotesStore((s) => s.setSearchQuery)
   const activeTag = useNotesStore((s) => s.activeTag)
   const setActiveTag = useNotesStore((s) => s.setActiveTag)
+  const isSearching = useNotesStore((s) => s.isSearching)
   const allTags = useAllTags()
 
   const [localSearch, setLocalSearch] = useState("")
@@ -18,11 +24,11 @@ export function NotesToolbar() {
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(false)
 
-  // Debounced search
+  // Debounced search — llama a performSearch (FTS server-side)
   useEffect(() => {
-    const t = setTimeout(() => setSearchQuery(localSearch), 150)
+    const t = setTimeout(() => performSearch(userId, localSearch), 300)
     return () => clearTimeout(t)
-  }, [localSearch, setSearchQuery])
+  }, [localSearch, userId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const checkScroll = useCallback(() => {
     const el = tagsScrollRef.current
@@ -60,6 +66,9 @@ export function NotesToolbar() {
           onChange={(e) => setLocalSearch(e.target.value)}
           className="w-full rounded-md border border-border bg-card py-2 pl-9 pr-8 text-sm text-foreground placeholder:text-text-tertiary focus:border-[#7a9b76] focus:outline-none"
         />
+        {isSearching && !localSearch && (
+          <div className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 animate-spin rounded-full border-2 border-border border-t-[#7a9b76]" />
+        )}
         {localSearch && (
           <button onClick={() => { setLocalSearch(""); setSearchQuery("") }} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-foreground">
             <X size={14} strokeWidth={1.75} />

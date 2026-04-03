@@ -6,6 +6,7 @@
 import { createBrowserClient } from '@supabase/ssr'
 import type {
   Note,
+  NoteListItem,
   NoteFormData,
   NoteCanvas,
   CanvasNode,
@@ -15,6 +16,18 @@ import type {
   NoteFolder,
   NoteVersion,
 } from '@/types/notes'
+
+// ─── Constantes ──────────────────────
+
+export const NOTES_PAGE_SIZE = 30
+
+/** Campos seleccionados en las queries de lista (sin content) */
+const NOTE_LIST_FIELDS = [
+  'id', 'user_id', 'title', 'color', 'icon', 'is_pinned',
+  'word_count', 'tags', 'sort_order', 'folder_id', 'archived',
+  'favorited', 'deleted_at', 'status', 'project_id', 'subscription_id',
+  'created_at', 'updated_at',
+].join(', ')
 
 // ─── Client factory ───────────────────
 
@@ -42,31 +55,51 @@ class NotesError extends Error {
 // NOTES
 // ══════════════════════════════════════
 
-export async function getNotes(userId: string): Promise<Note[]> {
+/**
+ * Carga la primera página (o la página `offset`) de notas sin el campo `content`.
+ * Paginación: 30 notas por página. Usa `contentLoaded: false` para indicar
+ * que el content aún no ha sido cargado.
+ */
+export async function getNotes(userId: string, offset = 0): Promise<Note[]> {
   const client = createClient()
   const { data, error } = await client
     .from('notes')
-    .select('*')
+    .select(NOTE_LIST_FIELDS)
     .eq('user_id', userId)
     .is('deleted_at', null)
     .order('is_pinned', { ascending: false })
     .order('updated_at', { ascending: false })
+    .range(offset, offset + NOTES_PAGE_SIZE - 1)
 
   if (error) throw new NotesError('Error fetching notes', error.message)
-  return (data ?? []) as Note[]
+  return ((data ?? []) as unknown as NoteListItem[]).map((n) => ({ ...n, content: '', contentLoaded: false }))
+}
+
+/**
+ * Carga el content de una nota específica (lazy load al abrir la nota).
+ */
+export async function getNoteContent(noteId: string): Promise<string> {
+  const client = createClient()
+  const { data, error } = await client
+    .from('notes')
+    .select('content')
+    .eq('id', noteId)
+    .single()
+  if (error) throw new NotesError('Error fetching note content', error.message)
+  return data?.content ?? ''
 }
 
 export async function getTrashedNotes(userId: string): Promise<Note[]> {
   const client = createClient()
   const { data, error } = await client
     .from('notes')
-    .select('*')
+    .select(NOTE_LIST_FIELDS)
     .eq('user_id', userId)
     .not('deleted_at', 'is', null)
     .order('deleted_at', { ascending: false })
 
   if (error) throw new NotesError('Error fetching trashed notes', error.message)
-  return (data ?? []) as Note[]
+  return ((data ?? []) as unknown as NoteListItem[]).map((n) => ({ ...n, content: '', contentLoaded: false }))
 }
 
 export async function getNoteById(id: string): Promise<Note | null> {
@@ -196,17 +229,23 @@ export async function togglePinNote(id: string, isPinned: boolean): Promise<void
   if (error) throw new NotesError('Error toggling note pin', error.message)
 }
 
+/**
+ * Búsqueda full-text usando PostgreSQL tsvector (GIN index).
+ * Devuelve notas sin `content` (lazy mode) — máx 50 resultados.
+ * Requiere migration 019_notes_fts.sql aplicada.
+ */
 export async function searchNotes(userId: string, query: string): Promise<Note[]> {
   const client = createClient()
   const { data, error } = await client
     .from('notes')
-    .select('*')
+    .select(NOTE_LIST_FIELDS)
     .eq('user_id', userId)
-    .or(`title.ilike.%${query}%,content.ilike.%${query}%`)
-    .order('updated_at', { ascending: false })
+    .is('deleted_at', null)
+    .textSearch('content_tsvector', query, { type: 'websearch', config: 'spanish' })
+    .limit(50)
 
   if (error) throw new NotesError('Error searching notes', error.message)
-  return (data ?? []) as Note[]
+  return ((data ?? []) as unknown as NoteListItem[]).map((n) => ({ ...n, content: '', contentLoaded: false }))
 }
 
 export async function getNotesByTag(userId: string, tag: string): Promise<Note[]> {

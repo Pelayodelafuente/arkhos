@@ -35,7 +35,7 @@ export interface Note {
   id: string
   user_id: string
   title: string
-  content: string
+  content: string   // puede ser '' cuando aún no se ha cargado en lazy mode
   color: NoteColor
   icon: string
   is_pinned: boolean
@@ -50,9 +50,13 @@ export interface Note {
   deleted_at?: string | null
   project_id?: string | null
   subscription_id?: string | null
+  contentLoaded?: boolean  // true cuando el content ha sido cargado del servidor
   created_at: string
   updated_at: string
 }
+
+/** Nota sin content — usada en la lista paginada */
+export type NoteListItem = Omit<Note, 'content' | 'contentLoaded'>
 
 // ─── Backlinks ────────────────────────
 

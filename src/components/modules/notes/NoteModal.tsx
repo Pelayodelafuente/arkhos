@@ -41,6 +41,7 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
   const removeNote = useNotesStore((s) => s.removeNote)
   const archiveNote = useNotesStore((s) => s.archiveNote)
   const loadNoteLinks = useNotesStore((s) => s.loadNoteLinks)
+  const loadNoteContent = useNotesStore((s) => s.loadNoteContent)
   const noteReferences = useNotesStore((s) => s.noteReferences)
   const noteBacklinks = useNotesStore((s) => s.noteBacklinks)
   const allTags = useAllTags()
@@ -69,6 +70,13 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const snapshotRef = useRef<{ title: string; content: string; color: NoteColor; icon: string; tags: string[]; status: NoteStatus } | null>(null)
 
+  // Lazy load content al abrir
+  useEffect(() => {
+    if (note?.id && open) {
+      loadNoteContent(note.id)
+    }
+  }, [note?.id, open]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // Backlinks
   useEffect(() => {
     if (note?.id && open) {
@@ -90,10 +98,12 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
       setTags([...note.tags])
       setStatus(note.status ?? 'none')
       snapshotRef.current = { title: note.title, content: note.content, color: note.color, icon: note.icon, tags: [...note.tags], status: note.status ?? 'none' }
-      // Auto-snapshot: save version if note was last edited >5 minutes ago
-      const fiveMinutesAgo = Date.now() - 5 * 60 * 1000
-      if (new Date(note.updated_at).getTime() < fiveMinutesAgo) {
-        notesApi.saveNoteVersion(note.id, userId, note.title, note.content).catch(() => {})
+      // Auto-snapshot: save version if note was last edited >5 minutes ago (solo si content cargado)
+      if (note.contentLoaded) {
+        const fiveMinutesAgo = Date.now() - 5 * 60 * 1000
+        if (new Date(note.updated_at).getTime() < fiveMinutesAgo) {
+          notesApi.saveNoteVersion(note.id, userId, note.title, note.content).catch(() => {})
+        }
       }
     } else {
       setTitle("")
