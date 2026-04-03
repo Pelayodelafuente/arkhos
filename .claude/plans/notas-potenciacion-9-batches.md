@@ -1,6 +1,6 @@
 # Plan: Notas — Potenciación completa (9 batches)
 
-**Estado actual**: Batches 1, 2 y 3 completados (2026-04-03)
+**Estado actual**: Batches 1, 2, 3 y 4 completados (2026-04-03)
 
 ---
 
@@ -40,8 +40,15 @@ Commit: 7ed79f4
 
 ---
 
-### Batch 4 — Grafo de conocimiento (A8)
-**Complejidad**: Alta | **Riesgo**: Medio
+### Batch 4 — Grafo de conocimiento (A8) ✅ COMPLETADO (2026-04-03)
+Commit: 69333a8
+- NotesGraph.tsx: force-graph 2D con react-force-graph-2d, nodos coloreados por carpeta/color
+- Toolbar extendido: [Lista] [Canvas] [Grafo]
+- Panel de filtros: carpeta, color, tag
+- Click en nodo → split-pane list view
+- notes-store: viewMode 'graph', graphBacklinks[], loadGraphData()
+- notes.ts: getAllBacklinksForGraph()
+
 **Archivos**: nueva NotesGraph.tsx, instalar react-force-graph
 
 Nueva vista en toolbar: [Lista] [Canvas] [Grafo]
@@ -106,7 +113,7 @@ Reutiliza patrón de `/api/projects/analyze` y `/api/projects/chat`.
 ## Dependencias entre batches
 
 ```
-Batch 1 ✅ → Batch 2 ✅ → Batch 3 ✅ → Batch 4 (grafo)
+Batch 1 ✅ → Batch 2 ✅ → Batch 3 ✅ → Batch 4 ✅ (grafo)
                                       → Batch 5 (IA)
 Batch 6 (integraciones) — independiente
 Batch 7 (search) — independiente
@@ -115,7 +122,7 @@ Batch 9 (capture) — independiente
 ```
 
 ## Nuevas dependencias npm pendientes
-- `react-force-graph` (Batch 4)
+- `react-force-graph-2d` ✅ instalado (Batch 4)
 - `html2canvas` o `dom-to-image-more` (Batch 8)
 
 ## Verificación por batch
