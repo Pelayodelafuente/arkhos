@@ -18,6 +18,7 @@ import {
   ArrowRight,
   Minus,
   ArrowLeftRight,
+  SquareDashedMousePointer,
 } from "lucide-react"
 import type { EdgeColor, EdgeStyle } from "@/types/notes"
 
@@ -55,6 +56,9 @@ interface Props {
   onEdgeStyleChange: (edgeId: string, style: EdgeStyle) => void
   onEdgeEditLabel: (edgeId: string) => void
   onEdgeDelete: (edgeId: string) => void
+  isGroupNode?: boolean
+  onRemoveGroupKeepNodes?: (id: string) => void
+  onRemoveGroupWithContent?: (id: string) => void
 }
 
 interface MenuItem {
@@ -89,6 +93,9 @@ export function CanvasContextMenu({
   onEdgeStyleChange,
   onEdgeEditLabel,
   onEdgeDelete,
+  isGroupNode,
+  onRemoveGroupKeepNodes,
+  onRemoveGroupWithContent,
 }: Props) {
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -258,7 +265,7 @@ export function CanvasContextMenu({
   }
 
   // ─── Node context menu ────────────────
-  const nodeItems: MenuItem[] = targetNodeId
+  const baseNodeItems: MenuItem[] = targetNodeId
     ? [
         {
           label: "Editar",
@@ -306,6 +313,36 @@ export function CanvasContextMenu({
           danger: true,
         },
       ]
+    : []
+
+  // Add group-specific actions when right-clicking a group node
+  const groupItems: MenuItem[] = (targetNodeId && isGroupNode)
+    ? [
+        {
+          label: "Eliminar grupo (mantener nodos)",
+          icon: <SquareDashedMousePointer size={14} strokeWidth={1.75} />,
+          onClick: () => {
+            onRemoveGroupKeepNodes?.(targetNodeId)
+            onClose()
+          },
+        },
+        {
+          label: "Eliminar grupo y contenido",
+          icon: <Trash2 size={14} strokeWidth={1.75} />,
+          onClick: () => {
+            onRemoveGroupWithContent?.(targetNodeId)
+            onClose()
+          },
+          danger: true,
+        },
+      ]
+    : []
+
+  // For group nodes: replace the generic "Eliminar" with the two group-specific options
+  const nodeItems: MenuItem[] = targetNodeId
+    ? (isGroupNode && groupItems.length > 0
+        ? [...baseNodeItems.slice(0, -1), ...groupItems]
+        : baseNodeItems)
     : []
 
   const items = targetNodeId ? nodeItems : canvasItems

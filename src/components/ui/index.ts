@@ -27,3 +27,5 @@ export { ArkhosLogo } from "./arkhos-logo";
 
 export { DropdownMenu } from "./dropdown-menu";
 export type { DropdownMenuItem } from "./dropdown-menu";
+
+export { SelectCustom } from "./select-custom";

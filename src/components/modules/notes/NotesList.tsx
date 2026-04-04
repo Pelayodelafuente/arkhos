@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef } from "react"
 import { BookOpen, Plus, ArrowUpDown, GripVertical, Pin, CheckSquare, Archive, Trash2, X } from "lucide-react"
-import { Button, Badge, Skeleton } from "@/components/ui"
+import { Button, Badge, Skeleton, SelectCustom } from "@/components/ui"
 import { useFilteredNotes, useNotesStore } from "@/stores/notes-store"
 import type { NoteSortMode } from "@/stores/notes-store"
 import { NoteCard } from "./NoteCard"
@@ -362,17 +362,12 @@ export function NotesList({ userId, onEdit, onNew, selectedNoteId }: Props) {
           {!isSelectionMode && (
             <>
               <ArrowUpDown size={14} strokeWidth={1.5} className="text-text-tertiary" />
-              <select
+              <SelectCustom
                 value={sortMode}
-                onChange={(e) => setSortMode(e.target.value as NoteSortMode)}
-                className="text-sm bg-background border border-border rounded-md px-2 py-1 text-text-secondary cursor-pointer focus:outline-none focus:ring-1 focus:ring-accent min-w-[130px]"
-              >
-                {SORT_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+                onChange={(v) => setSortMode(v as NoteSortMode)}
+                options={SORT_OPTIONS}
+                className="min-w-[130px]"
+              />
             </>
           )}
           {isSelectionMode && (

@@ -187,6 +187,9 @@ interface NotesActions {
   toggleNodeLocked: (id: string) => Promise<void>
   removeNode: (id: string) => Promise<void>
   removeSelectedNodes: () => Promise<void>
+  removeGroupKeepNodes: (groupId: string) => Promise<void>
+  removeGroupWithContent: (groupId: string) => Promise<void>
+  assignNodeToGroup: (nodeId: string, groupId: string | null) => Promise<void>
 
   // Multi-select group drag
   moveSelectedNodes: (deltaX: number, deltaY: number) => void
@@ -939,6 +942,100 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
     } catch (e) {
       set({ canvasNodes: prevNodes, canvasEdges: prevEdges })
       const msg = e instanceof Error ? e.message : 'Error al eliminar nodos'
+      toast(msg, 'error')
+    }
+  },
+
+  // ── Group-specific removal ─────────
+
+  removeGroupKeepNodes: async (groupId) => {
+    get().pushHistory()
+    const prevNodes = get().canvasNodes
+    // Remove group node but keep its children (clear their group_id)
+    set((s) => ({
+      canvasNodes: s.canvasNodes
+        .filter((n) => n.id !== groupId)
+        .map((n) => n.group_id === groupId ? { ...n, group_id: null } : n),
+      canvasEdges: s.canvasEdges.filter(
+        (e) => e.from_node_id !== groupId && e.to_node_id !== groupId
+      ),
+      selectedNodeIds: (() => {
+        const next = new Set(s.selectedNodeIds)
+        next.delete(groupId)
+        return next
+      })(),
+    }))
+    try {
+      const supabase = notesApi.getClient()
+      // Clear group_id for children
+      const childIds = prevNodes
+        .filter((n) => n.group_id === groupId)
+        .map((n) => n.id)
+      if (childIds.length > 0) {
+        await supabase.from('canvas_nodes').update({ group_id: null }).in('id', childIds)
+      }
+      await notesApi.removeNodeFromCanvas(groupId)
+    } catch (e) {
+      set({ canvasNodes: prevNodes })
+      const msg = e instanceof Error ? e.message : 'Error al eliminar grupo'
+      toast(msg, 'error')
+    }
+  },
+
+  removeGroupWithContent: async (groupId) => {
+    get().pushHistory()
+    const prevNodes = get().canvasNodes
+    const prevEdges = get().canvasEdges
+    const groupNode = prevNodes.find((n) => n.id === groupId)
+    if (!groupNode) return
+
+    // Collect all children: group_id-based + spatial containment
+    const childIds = new Set<string>()
+    for (const n of prevNodes) {
+      if (n.id === groupId) continue
+      if (n.group_id === groupId) { childIds.add(n.id); continue }
+      if (n.node_type === 'group') continue
+      const cx = n.pos_x + n.width / 2
+      const cy = n.pos_y + n.height / 2
+      if (cx >= groupNode.pos_x && cx <= groupNode.pos_x + groupNode.width &&
+          cy >= groupNode.pos_y && cy <= groupNode.pos_y + groupNode.height) {
+        childIds.add(n.id)
+      }
+    }
+    const allIds = new Set([groupId, ...childIds])
+
+    set((s) => ({
+      canvasNodes: s.canvasNodes.filter((n) => !allIds.has(n.id)),
+      canvasEdges: s.canvasEdges.filter(
+        (e) => !allIds.has(e.from_node_id) && !allIds.has(e.to_node_id)
+      ),
+      selectedNodeIds: new Set<string>(),
+    }))
+    try {
+      await notesApi.batchRemoveNodes(Array.from(allIds))
+    } catch (e) {
+      set({ canvasNodes: prevNodes, canvasEdges: prevEdges })
+      const msg = e instanceof Error ? e.message : 'Error al eliminar grupo con contenido'
+      toast(msg, 'error')
+    }
+  },
+
+  assignNodeToGroup: async (nodeId, groupId) => {
+    set((s) => ({
+      canvasNodes: s.canvasNodes.map((n) =>
+        n.id === nodeId ? { ...n, group_id: groupId } : n
+      ),
+    }))
+    try {
+      const supabase = notesApi.getClient()
+      await supabase.from('canvas_nodes').update({ group_id: groupId }).eq('id', nodeId)
+    } catch (e) {
+      set((s) => ({
+        canvasNodes: s.canvasNodes.map((n) =>
+          n.id === nodeId ? { ...n, group_id: null } : n
+        ),
+      }))
+      const msg = e instanceof Error ? e.message : 'Error al asignar nodo al grupo'
       toast(msg, 'error')
     }
   },

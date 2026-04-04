@@ -167,6 +167,9 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
   const toggleGroupCollapsed = useNotesStore((s) => s.toggleGroupCollapsed)
   const generateBacklinkEdges = useNotesStore((s) => s.generateBacklinkEdges)
   const noteBacklinks = useNotesStore((s) => s.noteBacklinks)
+  const removeGroupKeepNodes = useNotesStore((s) => s.removeGroupKeepNodes)
+  const removeGroupWithContent = useNotesStore((s) => s.removeGroupWithContent)
+  const assignNodeToGroup = useNotesStore((s) => s.assignNodeToGroup)
 
   const { matchingIds: searchMatchingIds } = useCanvasSearchResults()
 
@@ -503,11 +506,30 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
   const handleNodeDragEnd = useCallback(() => {
     if (dragNodeId) {
       pushHistory()
-      if (isMultiDrag) { persistSelectedNodePositions() }
-      else { const node = nodeMap.get(dragNodeId); if (node) persistNodePos(dragNodeId, { x: node.pos_x, y: node.pos_y }) }
+      const node = nodeMap.get(dragNodeId)
+      if (isMultiDrag) {
+        persistSelectedNodePositions()
+      } else if (node) {
+        persistNodePos(dragNodeId, { x: node.pos_x, y: node.pos_y })
+        // Assign group_id when a non-group node is dropped inside a group
+        if (node.node_type !== 'group') {
+          const cx = node.pos_x + node.width / 2
+          const cy = node.pos_y + node.height / 2
+          const containerGroup = nodes.find((n) =>
+            n.node_type === 'group' &&
+            n.id !== dragNodeId &&
+            cx >= n.pos_x && cx <= n.pos_x + n.width &&
+            cy >= n.pos_y && cy <= n.pos_y + n.height
+          )
+          const newGroupId = containerGroup?.id ?? null
+          if (newGroupId !== node.group_id) {
+            assignNodeToGroup(dragNodeId, newGroupId)
+          }
+        }
+      }
     }
     setIsDraggingNode(false); setDragNodeId(null); setIsMultiDrag(false); setSnapGuides([])
-  }, [dragNodeId, isMultiDrag, nodeMap, persistNodePos, persistSelectedNodePositions, setSnapGuides, pushHistory])
+  }, [dragNodeId, isMultiDrag, nodeMap, nodes, persistNodePos, persistSelectedNodePositions, setSnapGuides, pushHistory, assignNodeToGroup])
 
   const handleResizeStart = useCallback((nodeId: string, handle: string, e: React.MouseEvent) => {
     e.stopPropagation()
@@ -1105,7 +1127,10 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
             if (lbl !== null) editEdge(edgeId, { label: lbl })
             setContextMenu(null)
           }}
-          onEdgeDelete={(edgeId) => { removeEdge(edgeId); setContextMenu(null) }} />
+          onEdgeDelete={(edgeId) => { removeEdge(edgeId); setContextMenu(null) }}
+          isGroupNode={contextMenu.nodeId ? (nodeMap.get(contextMenu.nodeId)?.node_type === 'group') : false}
+          onRemoveGroupKeepNodes={(id) => { removeGroupKeepNodes(id); setContextMenu(null) }}
+          onRemoveGroupWithContent={(id) => { removeGroupWithContent(id); setContextMenu(null) }} />
       )}
     </div>
     </div>

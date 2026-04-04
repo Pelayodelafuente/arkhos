@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from "react"
 import { X, Trash2, Archive, ArchiveRestore, History, RotateCcw, Link2, ArrowRight, Unlink, ChevronLeft, Sparkles, ChevronDown, FolderKanban, CreditCard, Star } from "lucide-react"
 import * as LucideIcons from "lucide-react"
-import { Button } from "@/components/ui"
+import { Button, SelectCustom } from "@/components/ui"
 import { useNotesStore, useAllTags } from "@/stores/notes-store"
 import { useToast } from "@/stores/ui-store"
 import { NoteColorPicker } from "./NoteColorPicker"
@@ -670,16 +670,13 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
                         </button>
                       </div>
                     ) : (
-                      <select
+                      <SelectCustom
                         value=""
-                        onChange={(e) => { if (e.target.value) handleLinkProject(e.target.value) }}
-                        className="flex-1 min-w-0 rounded-md border border-border bg-card px-2 py-1 text-[11px] text-text-secondary focus:outline-none focus:ring-1 focus:ring-[#C4704A]/40"
-                      >
-                        <option value="">Sin proyecto</option>
-                        {projects.map((p) => (
-                          <option key={p.id} value={p.id}>{p.name}</option>
-                        ))}
-                      </select>
+                        onChange={(v) => { if (v) handleLinkProject(v) }}
+                        options={[{ value: "", label: "Sin proyecto" }, ...projects.map((p) => ({ value: p.id, label: p.name }))]}
+                        placeholder="Sin proyecto"
+                        className="flex-1 min-w-0"
+                      />
                     )}
                   </div>
 
@@ -702,16 +699,13 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
                         </button>
                       </div>
                     ) : (
-                      <select
+                      <SelectCustom
                         value=""
-                        onChange={(e) => { if (e.target.value) handleLinkSubscription(e.target.value) }}
-                        className="flex-1 min-w-0 rounded-md border border-border bg-card px-2 py-1 text-[11px] text-text-secondary focus:outline-none focus:ring-1 focus:ring-[#4A7A9B]/40"
-                      >
-                        <option value="">Sin suscripción</option>
-                        {subscriptions.map((s) => (
-                          <option key={s.id} value={s.id}>{s.name}</option>
-                        ))}
-                      </select>
+                        onChange={(v) => { if (v) handleLinkSubscription(v) }}
+                        options={[{ value: "", label: "Sin suscripción" }, ...subscriptions.map((s) => ({ value: s.id, label: s.name }))]}
+                        placeholder="Sin suscripción"
+                        className="flex-1 min-w-0"
+                      />
                     )}
                   </div>
                 </>
