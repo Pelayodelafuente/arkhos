@@ -681,7 +681,34 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
   loadGraphData: async () => {
     try {
       const backlinks = await notesApi.getAllBacklinksForGraph()
-      set({ graphBacklinks: backlinks })
+
+      // Also include canvas edges between note-type nodes
+      const { canvasNodes, canvasEdges } = get()
+      const nodeNoteMap = new Map<string, string>()
+      for (const n of canvasNodes) {
+        if (n.note_id) nodeNoteMap.set(n.id, n.note_id)
+      }
+      const canvasLinks: Array<{ source_note_id: string; target_note_id: string }> = []
+      for (const edge of canvasEdges) {
+        const srcNote = nodeNoteMap.get(edge.from_node_id)
+        const tgtNote = nodeNoteMap.get(edge.to_node_id)
+        if (srcNote && tgtNote && srcNote !== tgtNote) {
+          canvasLinks.push({ source_note_id: srcNote, target_note_id: tgtNote })
+        }
+      }
+
+      // Merge and deduplicate
+      const seen = new Set<string>()
+      const merged: Array<{ source_note_id: string; target_note_id: string }> = []
+      for (const bl of [...backlinks, ...canvasLinks]) {
+        const key = `${bl.source_note_id}→${bl.target_note_id}`
+        if (!seen.has(key)) {
+          seen.add(key)
+          merged.push(bl)
+        }
+      }
+
+      set({ graphBacklinks: merged })
     } catch {
       // Silent — graph renders with 0 edges if unavailable
     }
@@ -1440,7 +1467,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
     }
   },
 
-  setActiveFolderId: (id) => set({ activeFolderId: id }),
+  setActiveFolderId: (id) => set({ activeFolderId: id, selectedNoteId: null }),
 
   // ── Archive ───────────────────────
 

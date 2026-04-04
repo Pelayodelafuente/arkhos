@@ -254,6 +254,11 @@ export function NotesList({ userId, onEdit, onNew, selectedNoteId }: Props) {
             {isSpecificFolder ? "Crear nota aquí" : "Crear primera nota"}
           </Button>
         )}
+        {isFavoritesView && (
+          <Button variant="secondary" size="sm" onClick={() => useNotesStore.getState().setActiveFolderId(null)}>
+            Ir a todas las notas
+          </Button>
+        )}
       </div>
     )
   }
@@ -319,17 +324,17 @@ export function NotesList({ userId, onEdit, onNew, selectedNoteId }: Props) {
   )
 
   return (
-    <div className="space-y-4 pb-24">
+    <div className="space-y-4 pb-6">
       {/* Sort bar */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Badge variant="gray">
             {notes.length} {notes.length === 1 ? "nota" : "notas"}
           </Badge>
           {isTrashView && notes.length > 0 && (
             <button
               onClick={emptyTrash}
-              className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50 transition-colors"
+              className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50 transition-colors whitespace-nowrap"
             >
               <Trash2 size={13} strokeWidth={1.75} />
               Vaciar papelera
@@ -360,7 +365,7 @@ export function NotesList({ userId, onEdit, onNew, selectedNoteId }: Props) {
               <select
                 value={sortMode}
                 onChange={(e) => setSortMode(e.target.value as NoteSortMode)}
-                className="text-sm bg-background border border-border rounded-md px-2 py-1 text-text-secondary cursor-pointer focus:outline-none focus:ring-1 focus:ring-accent"
+                className="text-sm bg-background border border-border rounded-md px-2 py-1 text-text-secondary cursor-pointer focus:outline-none focus:ring-1 focus:ring-accent min-w-[130px]"
               >
                 {SORT_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>

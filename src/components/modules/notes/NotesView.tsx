@@ -202,7 +202,7 @@ export function NotesView({ initialNotes, initialCanvas, userId }: Props) {
         {viewMode === "list" && (
           <div className="flex flex-1 min-h-0 overflow-hidden animate-fade-in-up" style={{ animationDelay: "100ms" }}>
             {/* Note list */}
-            <div className={`flex flex-col overflow-y-auto px-6 transition-all duration-200 ${
+            <div className={`flex flex-col overflow-y-auto overflow-x-hidden px-6 transition-all duration-200 ${
               selectedNoteId ? "w-[360px] flex-shrink-0" : "flex-1"
             }`}>
               <NotesList

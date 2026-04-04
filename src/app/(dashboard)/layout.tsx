@@ -27,11 +27,14 @@ export default async function DashboardLayout({
         supabase
           .from("projects")
           .select("id", { count: "exact", head: true })
-          .eq("user_id", user.id),
+          .eq("user_id", user.id)
+          .neq("status", "archived"),
         supabase
           .from("notes")
           .select("id", { count: "exact", head: true })
-          .eq("user_id", user.id),
+          .eq("user_id", user.id)
+          .eq("archived", false)
+          .is("deleted_at", null),
       ]);
 
     if (profile?.full_name) userName = profile.full_name;

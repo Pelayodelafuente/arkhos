@@ -245,6 +245,8 @@ export function NoteEditor({
   })
   const [linkInput, setLinkInput] = useState('')
   const [showLinkInput, setShowLinkInput] = useState(false)
+  // Word count state — initialized once editor is ready (onCreate)
+  const [editorText, setEditorText] = useState('')
   const slashMenuRef = useRef<HTMLDivElement>(null)
   const linkInputRef = useRef<HTMLInputElement>(null)
   const slashStartPos = useRef<number | null>(null)
@@ -307,7 +309,11 @@ export function NoteEditor({
     ],
     content: markdownToHtml(content),
     autofocus: autoFocus ? 'end' : false,
+    onCreate: ({ editor: ed }) => {
+      setEditorText(ed.getText())
+    },
     onUpdate: ({ editor: ed }) => {
+      setEditorText(ed.getText())
       onChange(ed.getHTML())
 
       // Slash command detection via text pattern
@@ -357,6 +363,8 @@ export function NoteEditor({
       const incoming = markdownToHtml(content)
       if (currentHtml !== incoming) {
         editor.commands.setContent(incoming)
+        // Update word count after content sync
+        setEditorText(editor.getText())
       }
     }
   }, [content, editor])
@@ -448,8 +456,9 @@ export function NoteEditor({
     setShowLinkInput((prev) => !prev)
   }
 
-  // Word / char count from plain text
-  const plainText = editor ? editor.getText() : content.replace(/<[^>]*>/g, ' ')
+  // Word / char count — uses editorText state (set on onCreate + onUpdate)
+  // Falls back to stripping HTML from content prop before editor is ready
+  const plainText = editorText || content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
   const wordCount = plainText.trim().split(/\s+/).filter(Boolean).length
   const charCount = plainText.replace(/\s/g, '').length
   const readingMin = Math.max(1, Math.round(wordCount / 200))
