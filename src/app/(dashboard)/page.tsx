@@ -1,38 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
-import { FolderKanban, TrendingUp, Wallet, CreditCard } from "lucide-react";
+import { FolderKanban, TrendingUp, Wallet, CreditCard, StickyNote } from "lucide-react";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
-
-const moduleCards = [
-  {
-    name: "Proyectos",
-    href: "/proyectos",
-    icon: FolderKanban,
-    color: "#C4704A",
-    preview: "0 proyectos activos",
-  },
-  {
-    name: "Mercados",
-    href: "/mercados",
-    icon: TrendingUp,
-    color: "#9a6a28",
-    preview: "BTC $—",
-  },
-  {
-    name: "Patrimonio",
-    href: "/patrimonio",
-    icon: Wallet,
-    color: "#056b63",
-    preview: "€— total",
-  },
-  {
-    name: "Gastos",
-    href: "/gastos",
-    icon: CreditCard,
-    color: "#5f1b29",
-    preview: "€— este mes",
-  },
-] as const;
 
 function getGreeting() {
   const hour = new Date().getHours();
@@ -48,16 +17,71 @@ export default async function DashboardPage() {
   } = await supabase.auth.getUser();
 
   let displayName = "";
+  let projectCount = 0;
+  let noteCount = 0;
 
   if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("full_name")
-      .eq("id", user.id)
-      .single();
+    const [
+      { data: profile },
+      { count: pc },
+      { count: nc },
+    ] = await Promise.all([
+      supabase.from("profiles").select("full_name").eq("id", user.id).single(),
+      supabase
+        .from("projects")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .neq("status", "archived"),
+      supabase
+        .from("notes")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("archived", false)
+        .is("deleted_at", null),
+    ]);
 
     displayName = profile?.full_name || user.email || "";
+    projectCount = pc ?? 0;
+    noteCount = nc ?? 0;
   }
+
+  const moduleCards = [
+    {
+      name: "Proyectos",
+      href: "/proyectos",
+      icon: FolderKanban,
+      color: "#C4704A",
+      preview: `${projectCount} ${projectCount === 1 ? "proyecto activo" : "proyectos activos"}`,
+    },
+    {
+      name: "Notas",
+      href: "/notas",
+      icon: StickyNote,
+      color: "#7a9b76",
+      preview: `${noteCount} ${noteCount === 1 ? "nota" : "notas"}`,
+    },
+    {
+      name: "Mercados",
+      href: "/mercados",
+      icon: TrendingUp,
+      color: "#9a6a28",
+      preview: "BTC $—",
+    },
+    {
+      name: "Patrimonio",
+      href: "/patrimonio",
+      icon: Wallet,
+      color: "#056b63",
+      preview: "€— total",
+    },
+    {
+      name: "Gastos",
+      href: "/gastos",
+      icon: CreditCard,
+      color: "#5f1b29",
+      preview: "€— este mes",
+    },
+  ];
 
   const greeting = getGreeting();
   const firstName = displayName.split(" ")[0] || displayName;

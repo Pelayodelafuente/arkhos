@@ -186,6 +186,7 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
   } | null>(null)
   const connectingSideRef = useRef<EdgeSide>("right")
   const [connectionTargetId, setConnectionTargetId] = useState<string | null>(null)
+  const [dragOverGroupId, setDragOverGroupId] = useState<string | null>(null)
   const [contextMenu, setContextMenu] = useState<{
     x: number; y: number; worldX: number; worldY: number; nodeId: string | null; edgeId?: string | null
   } | null>(null)
@@ -501,7 +502,20 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
       newX = snappedX; newY = snappedY; setSnapGuides(guides)
     }
     updateNodePos(dragNodeId, { x: newX, y: newY })
-  }, [isDraggingNode, dragNodeId, isMultiDrag, dragOffset, viewport, nodeMap, snapEnabled, calculateSnapGuides, updateNodePos, moveSelectedNodes, setSnapGuides])
+    // Visual feedback: highlight the group the dragged node is hovering over
+    if (node.node_type !== 'group') {
+      const cx = newX + node.width / 2
+      const cy = newY + node.height / 2
+      const hoverGroup = nodes.find((n) =>
+        n.node_type === 'group' && n.id !== dragNodeId &&
+        cx >= n.pos_x && cx <= n.pos_x + n.width &&
+        cy >= n.pos_y && cy <= n.pos_y + n.height
+      )
+      setDragOverGroupId(hoverGroup?.id ?? null)
+    } else {
+      setDragOverGroupId(null)
+    }
+  }, [isDraggingNode, dragNodeId, isMultiDrag, dragOffset, viewport, nodeMap, nodes, snapEnabled, calculateSnapGuides, updateNodePos, moveSelectedNodes, setSnapGuides])
 
   const handleNodeDragEnd = useCallback(() => {
     if (dragNodeId) {
@@ -528,7 +542,7 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
         }
       }
     }
-    setIsDraggingNode(false); setDragNodeId(null); setIsMultiDrag(false); setSnapGuides([])
+    setIsDraggingNode(false); setDragNodeId(null); setIsMultiDrag(false); setSnapGuides([]); setDragOverGroupId(null)
   }, [dragNodeId, isMultiDrag, nodeMap, nodes, persistNodePos, persistSelectedNodePositions, setSnapGuides, pushHistory, assignNodeToGroup])
 
   const handleResizeStart = useCallback((nodeId: string, handle: string, e: React.MouseEvent) => {
@@ -1043,7 +1057,8 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
                 isEditing={editingNodeId === node.id} onSelect={handleNodeSelect} onDragStart={handleNodeDragStart}
                 onDoubleClick={handleNodeDoubleClick} onConnectionStart={handleConnectionStart}
                 onResizeStart={handleResizeStart} onContentChange={handleContentChange}
-                isConnectionTarget={isConnTarget} searchDimmed={isDimmed}
+                isConnectionTarget={isConnTarget} isDragOverGroup={dragOverGroupId === node.id}
+                searchDimmed={isDimmed} allNodes={nodes}
                 onToggleCollapsed={toggleGroupCollapsed} />
             </div>
           )

@@ -69,6 +69,8 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
 
   // Cross-module links
   const [linkSectionOpen, setLinkSectionOpen] = useState(false)
+  const [showRelatedNotes, setShowRelatedNotes] = useState(false)
+  const [showUnlinkedMentions, setShowUnlinkedMentions] = useState(false)
   const [projects, setProjects] = useState<ProjectSelectItem[]>([])
   const [subscriptions, setSubscriptions] = useState<SubscriptionSelectItem[]>([])
   const [loadingLinks, setLoadingLinks] = useState(false)
@@ -578,47 +580,69 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
           </div>
         )}
 
-        {/* Related notes */}
+        {/* Related notes — collapsible */}
         {relatedNotes.length > 0 && (
           <div className="border-t border-border pt-3">
-            <div className="text-[10px] font-semibold uppercase tracking-wider text-text-tertiary mb-1.5">
-              Notas relacionadas ({relatedNotes.length})
-            </div>
-            <div className="flex flex-wrap gap-1">
-              {relatedNotes.map((n) => (
-                <button
-                  key={n.id}
-                  type="button"
-                  onClick={() => onOpenNote?.(n)}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-sand border border-border text-text-secondary hover:bg-sand/80 transition-colors"
-                >
-                  {n.title || 'Sin título'}
-                </button>
-              ))}
-            </div>
+            <button
+              type="button"
+              onClick={() => setShowRelatedNotes((v) => !v)}
+              className="w-full flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-text-tertiary hover:text-text-secondary transition-colors mb-1.5"
+            >
+              <span>Notas relacionadas ({relatedNotes.length})</span>
+              <ChevronDown
+                size={11}
+                strokeWidth={2}
+                className={`transition-transform duration-200 ${showRelatedNotes ? '' : '-rotate-90'}`}
+              />
+            </button>
+            {showRelatedNotes && (
+              <div className="flex flex-wrap gap-1 max-h-[160px] overflow-y-auto">
+                {relatedNotes.map((n) => (
+                  <button
+                    key={n.id}
+                    type="button"
+                    onClick={() => onOpenNote?.(n)}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-sand border border-border text-text-secondary hover:bg-sand/80 transition-colors"
+                  >
+                    {n.title || 'Sin título'}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
-        {/* Unlinked mentions */}
+        {/* Unlinked mentions — collapsible */}
         {unlinkedMentions.length > 0 && (
           <div className="border-t border-border pt-3">
-            <div className="text-[10px] font-semibold uppercase tracking-wider text-text-tertiary mb-1.5">
-              Menciones no enlazadas ({unlinkedMentions.length})
-            </div>
-            <div className="flex flex-wrap gap-1">
-              {unlinkedMentions.map((n) => (
-                <button
-                  key={n.id}
-                  type="button"
-                  onClick={() => onOpenNote?.(n)}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium"
-                  style={{ background: 'rgba(155,122,74,0.06)', border: '1px solid rgba(155,122,74,0.2)', color: 'var(--text-secondary)' }}
-                >
-                  <Unlink size={10} strokeWidth={2} />
-                  {n.title || 'Sin título'}
-                </button>
-              ))}
-            </div>
+            <button
+              type="button"
+              onClick={() => setShowUnlinkedMentions((v) => !v)}
+              className="w-full flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-text-tertiary hover:text-text-secondary transition-colors mb-1.5"
+            >
+              <span>Menciones no enlazadas ({unlinkedMentions.length})</span>
+              <ChevronDown
+                size={11}
+                strokeWidth={2}
+                className={`transition-transform duration-200 ${showUnlinkedMentions ? '' : '-rotate-90'}`}
+              />
+            </button>
+            {showUnlinkedMentions && (
+              <div className="flex flex-wrap gap-1 max-h-[160px] overflow-y-auto">
+                {unlinkedMentions.map((n) => (
+                  <button
+                    key={n.id}
+                    type="button"
+                    onClick={() => onOpenNote?.(n)}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium"
+                    style={{ background: 'rgba(155,122,74,0.06)', border: '1px solid rgba(155,122,74,0.2)', color: 'var(--text-secondary)' }}
+                  >
+                    <Unlink size={10} strokeWidth={2} />
+                    {n.title || 'Sin título'}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

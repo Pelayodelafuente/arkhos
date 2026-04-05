@@ -90,6 +90,7 @@ interface Props {
   isSelected: boolean
   isEditing: boolean
   isConnectionTarget?: boolean
+  isDragOverGroup?: boolean
   searchDimmed?: boolean
   allNodes?: CanvasNodeType[]
   onSelect: (id: string, additive: boolean) => void
@@ -104,7 +105,7 @@ interface Props {
 // ─── Component ────────────────────────────────
 export function CanvasNodeComponent({
   node, viewport, isSelected, isEditing,
-  isConnectionTarget = false, searchDimmed = false, allNodes,
+  isConnectionTarget = false, isDragOverGroup = false, searchDimmed = false, allNodes,
   onSelect, onDragStart, onDoubleClick,
   onConnectionStart, onResizeStart, onContentChange,
   onToggleCollapsed,
@@ -299,9 +300,9 @@ export function CanvasNodeComponent({
         style={{
           position: "absolute", left: screenX, top: screenY,
           width: screenW, height: screenH,
-          backgroundColor: groupBg,
-          borderColor: isConnectionTarget ? "#7a9b76" : isSelected ? "#C4704A" : colors.border,
-          borderWidth: isSelected || isConnectionTarget ? 2 : 1.5,
+          backgroundColor: isDragOverGroup ? "rgba(196, 112, 74, 0.10)" : groupBg,
+          borderColor: isDragOverGroup ? "#C4704A" : isConnectionTarget ? "#7a9b76" : isSelected ? "#C4704A" : colors.border,
+          borderWidth: isSelected || isConnectionTarget || isDragOverGroup ? 2 : 1.5,
           borderStyle: "dashed", borderRadius: 12,
           zIndex: node.z_index,
           cursor: editingLabel ? "text" : "grab",
