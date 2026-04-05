@@ -15,7 +15,7 @@ const ForceGraph2D = dynamic(
 // ─── Color map ────────────────────────
 const NOTE_COLOR_HEX: Record<NoteColor, string> = {
   default:    '#C8BFAF',
-  sage:       '#7a9b76',
+  sage:       '#B07A3A',
   terracotta: '#C4704A',
   stone:      '#888780',
   blue:       '#4A7A9B',
@@ -24,7 +24,7 @@ const NOTE_COLOR_HEX: Record<NoteColor, string> = {
 
 // Colores asignados a carpetas (por índice)
 const FOLDER_PALETTE = [
-  '#C4704A', '#4A7A9B', '#7a9b76', '#9B7A4A',
+  '#C4704A', '#4A7A9B', '#B07A3A', '#9B7A4A',
   '#888780', '#5B8C6A', '#7A4A9B', '#9B4A5B',
 ]
 

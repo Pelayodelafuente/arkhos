@@ -116,7 +116,7 @@ export function KPICards() {
         }}
       >
         <div className="flex items-center gap-2 mb-2">
-          <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-medium">
+          <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--text-tertiary)] font-medium">
             {totalLabel}
           </span>
         </div>
@@ -149,7 +149,7 @@ export function KPICards() {
         }}
       >
         <div className="flex items-center gap-2 mb-2">
-          <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-medium">
+          <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--text-tertiary)] font-medium">
             {isCurrentMonth ? 'PRÓXIMO COBRO' : `PRIMER COBRO · ${MONTH_NAMES[viewedMonth - 1]?.toUpperCase()}`}
           </span>
         </div>
@@ -203,7 +203,7 @@ export function KPICards() {
         }}
       >
         <div className="flex items-center gap-2 mb-2">
-          <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-medium">
+          <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--text-tertiary)] font-medium">
             MAYOR GASTO
           </span>
         </div>
@@ -241,7 +241,7 @@ export function KPICards() {
         }}
       >
         <div className="flex items-center gap-2 mb-2">
-          <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-medium">
+          <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--text-tertiary)] font-medium">
             PRÓXIMAS ANUALES
           </span>
         </div>

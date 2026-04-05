@@ -23,13 +23,14 @@ import { useUIStore } from "@/stores/ui-store";
 import { useToast } from "@/stores/ui-store";
 import { useProjectsStore } from "@/stores/projects-store";
 import { useNotesStore } from "@/stores/notes-store";
+import { MODULE_COLORS } from "@/lib/constants/colors";
 
 const moduleItems = [
   {
     label: "Proyectos",
     href: "/proyectos",
     icon: FolderKanban,
-    dot: "#C4704A",
+    dot: MODULE_COLORS.proyectos,
     dotGlow: "0 0 6px rgba(196,112,74,0.55)",
     countKey: "proyectos" as const,
   },
@@ -37,32 +38,32 @@ const moduleItems = [
     label: "Notas",
     href: "/notas",
     icon: StickyNote,
-    dot: "var(--module-notas)",
-    dotGlow: "0 0 6px rgba(122,155,118,0.50)",
+    dot: MODULE_COLORS.notas,
+    dotGlow: "0 0 6px rgba(176,122,58,0.50)",
     countKey: "notas" as const,
   },
   {
     label: "Mercados",
     href: "/mercados",
     icon: TrendingUp,
-    dot: "#9a6a28",
-    dotGlow: "0 0 6px rgba(154,106,40,0.50)",
+    dot: MODULE_COLORS.mercados,
+    dotGlow: "0 0 6px rgba(114,96,196,0.50)",
     countKey: "mercados" as const,
   },
   {
     label: "Patrimonio",
     href: "/patrimonio",
     icon: Wallet,
-    dot: "#056b63",
-    dotGlow: "0 0 6px rgba(5,107,99,0.50)",
+    dot: MODULE_COLORS.patrimonio,
+    dotGlow: "0 0 6px rgba(46,125,107,0.50)",
     countKey: "patrimonio" as const,
   },
   {
     label: "Gastos",
     href: "/gastos",
     icon: CreditCard,
-    dot: "#5f1b29",
-    dotGlow: "0 0 6px rgba(95,27,41,0.50)",
+    dot: MODULE_COLORS.gastos,
+    dotGlow: "0 0 6px rgba(59,120,176,0.50)",
     countKey: "gastos" as const,
   },
 ] as const;
@@ -419,7 +420,7 @@ export function Sidebar({ userName, initialProjectCount = 0, initialNoteCount = 
                 style={{
                   width: 5, height: 5, borderRadius: "50%", flexShrink: 0,
                   background: "var(--module-patrimonio)",
-                  boxShadow: "0 0 4px rgba(5,107,99,0.6)",
+                  boxShadow: "0 0 4px rgba(46,125,107,0.6)",
                 }}
               />
             </>

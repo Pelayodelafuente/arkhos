@@ -160,7 +160,7 @@ export function ExpenseCalendarCell({
             <div
               key={sub.id}
               className={`group/badge relative rounded-full ring-[1.5px] ${
-                sub.cycle === 'annual' ? 'ring-[#9a6a28]' : 'ring-[#5f1b29]'
+                sub.cycle === 'annual' ? 'ring-[#B07A3A]' : 'ring-[#3B78B0]'
               }`}
             >
               <ServiceAvatar

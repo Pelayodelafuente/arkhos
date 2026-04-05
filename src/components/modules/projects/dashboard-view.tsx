@@ -55,9 +55,9 @@ function computeHealthScore(phases: ProjectPhase[]): number {
 }
 
 function getHealthColor(score: number): string {
-  if (score >= 80) return '#056b63';
-  if (score >= 50) return '#9a6a28';
-  return '#5f1b29';
+  if (score >= 80) return '#22C55E';
+  if (score >= 50) return '#F59E0B';
+  return '#EF4444';
 }
 
 // ─── Component ──────────────────────────
@@ -132,7 +132,7 @@ export default function DashboardView({ phases }: DashboardViewProps) {
         {/* Total / Completadas */}
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="flex items-center gap-2 mb-2">
-            <CheckCircle2 size={18} className="text-[#056b63]" />
+            <CheckCircle2 size={18} className="text-[#22C55E]" />
             <span className="text-xs text-text-tertiary">Tareas completadas</span>
           </div>
           <p className="font-mono text-2xl text-foreground">
@@ -193,7 +193,7 @@ export default function DashboardView({ phases }: DashboardViewProps) {
               cy={100}
               r={radius}
               fill="none"
-              stroke="var(--border-medium)"
+              stroke="var(--border-stone)"
               strokeWidth={20}
             />
             {/* Progress arc */}
@@ -286,7 +286,7 @@ export default function DashboardView({ phases }: DashboardViewProps) {
                     )}
                     <span
                       className="text-xs font-mono shrink-0"
-                      style={{ color: rel.isPast ? '#5f1b29' : '#9a7a5a' }}
+                      style={{ color: rel.isPast ? '#EF4444' : '#888780' }}
                     >
                       {rel.text}
                     </span>

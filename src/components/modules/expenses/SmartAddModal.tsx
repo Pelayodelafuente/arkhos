@@ -47,7 +47,7 @@ export function SmartAddModal({ open, onClose, userId }: SmartAddModalProps) {
         user_id: userId,
         name: matchedService?.name ?? parsed.name,
         icon: matchedService?.id ?? parsed.name.toLowerCase().replace(/\s+/g, '-'),
-        color: matchedService?.color ?? '#5f1b29',
+        color: matchedService?.color ?? '#3B78B0',
         amount: parsed.amount,
         cycle: parsed.cycle ?? 'monthly',
         billing_day: parsed.billingDay ?? 1,
@@ -133,7 +133,7 @@ export function SmartAddModal({ open, onClose, userId }: SmartAddModalProps) {
               <ServiceAvatar
                 name={matchedService?.name ?? parsed.name}
                 icon={matchedService?.id ?? ''}
-                color={matchedService?.color ?? '#5f1b29'}
+                color={matchedService?.color ?? '#3B78B0'}
                 size="md"
               />
               <div className="flex-1 min-w-0">

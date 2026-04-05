@@ -26,11 +26,11 @@ function formatMonthYear(date: Date): string {
 const PHASE_COLOR = '#C4704A';
 
 const STATUS_COLORS: Record<string, string> = {
-  todo: '#9a7a5a',
-  in_progress: '#c4704a',
-  review: '#9a6a28',
-  done: '#056b63',
-  blocked: '#5f1b29',
+  todo: '#888780',
+  in_progress: '#C4704A',
+  review: '#F59E0B',
+  done: '#22C55E',
+  blocked: '#EF4444',
 };
 
 // ─── Types ───────────────────────────
@@ -258,7 +258,7 @@ export default function TimelineView({ phases }: TimelineViewProps) {
                               left: pos.left,
                               width: pos.width,
                               height: '16px',
-                              backgroundColor: overdue ? '#5f1b29' : taskColor,
+                              backgroundColor: overdue ? '#EF4444' : taskColor,
                               opacity: task.done ? 0.45 : 0.85,
                             }}
                             title={`${task.text}${task.start_date ? ` · Inicio: ${task.start_date}` : ''}${task.due_date ? ` · Límite: ${task.due_date}` : ''}`}

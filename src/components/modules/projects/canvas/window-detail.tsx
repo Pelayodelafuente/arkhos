@@ -64,8 +64,8 @@ function TaskRow({ task, onOpen }: { task: PhaseTask; onOpen: (t: PhaseTask) => 
         onClick={() => editTask(task.id, { done: !task.done, status: !task.done ? 'done' : 'todo' })}
         className="flex h-[14px] w-[14px] cursor-pointer shrink-0 items-center justify-center rounded-[3px] border transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent"
         style={{
-          borderColor: task.done ? '#056b63' : 'rgba(160,120,80,0.35)',
-          background: task.done ? '#056b63' : 'transparent',
+          borderColor: task.done ? '#22C55E' : 'rgba(160,120,80,0.35)',
+          background: task.done ? '#22C55E' : 'transparent',
         }}
       >
         {task.done && (
@@ -97,7 +97,7 @@ function TaskRow({ task, onOpen }: { task: PhaseTask; onOpen: (t: PhaseTask) => 
       {stale && (
         <AlertCircle
           className="h-[11px] w-[11px] shrink-0"
-          style={{ color: '#9a6a28' }}
+          style={{ color: '#F59E0B' }}
         />
       )}
 
@@ -214,7 +214,7 @@ function PhaseSection({ phase, onOpenTask }: { phase: ProjectPhase; onOpenTask: 
 
       {/* Tasks (expanded) */}
       {expanded && (
-        <div className="ml-[14px] flex flex-col gap-[1px] border-l border-[var(--border-medium)] pl-[6px]">
+        <div className="ml-[14px] flex flex-col gap-[1px] border-l border-[var(--border-stone)] pl-[6px]">
           {phase.tasks
             .slice()
             .sort((a, b) => a.sort_order - b.sort_order)
@@ -365,7 +365,7 @@ export function WindowDetail({ userId }: WindowDetailProps) {
       )}
 
       {/* Divider */}
-      <div className="h-px" style={{ background: 'var(--border-medium)' }} />
+      <div className="h-px" style={{ background: 'var(--border-stone)' }} />
 
       {/* Tab switcher */}
       <div role="tablist" className="flex gap-[4px]">
@@ -380,7 +380,7 @@ export function WindowDetail({ userId }: WindowDetailProps) {
             style={{
               padding: '4px 0',
               borderRadius: 5,
-              border: tab === t ? '0.5px solid rgba(196,112,74,0.4)' : '0.5px solid var(--border-medium)',
+              border: tab === t ? '0.5px solid rgba(196,112,74,0.4)' : '0.5px solid var(--border-stone)',
               background: tab === t ? 'rgba(196,112,74,0.10)' : 'transparent',
               color: tab === t ? '#C4704A' : 'var(--text-tertiary)',
             }}

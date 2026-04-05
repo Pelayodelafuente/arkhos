@@ -38,7 +38,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
                 : "focus:border-accent"
             } ${className}`}
             style={{
-              borderColor: error ? "var(--error)" : "var(--border-medium)",
+              borderColor: error ? "var(--error)" : "var(--border-stone)",
               color: "var(--text-primary)",
             }}
             onFocus={(e) => {

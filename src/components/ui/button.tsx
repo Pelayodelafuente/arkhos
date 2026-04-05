@@ -1,7 +1,7 @@
 import { type ButtonHTMLAttributes, forwardRef } from "react";
 import type React from "react";
 
-export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "crimson";
+export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 export type ButtonSize = "sm" | "md" | "lg";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -18,9 +18,7 @@ const variantClasses: Record<ButtonVariant, string> = {
   ghost:
     "text-text-secondary hover:bg-sand hover:text-foreground disabled:opacity-50",
   danger:
-    "bg-crimson text-white hover:bg-[var(--crimson-soft)] disabled:opacity-50",
-  crimson:
-    "bg-crimson text-[var(--amber)] hover:bg-[var(--crimson-soft)] disabled:opacity-50",
+    "border text-[var(--error-text)] disabled:opacity-50",
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
@@ -30,8 +28,13 @@ const sizeClasses: Record<ButtonSize, string> = {
 };
 
 const variantStyles: Partial<Record<ButtonVariant, React.CSSProperties>> = {
-  secondary: { borderColor: "var(--border-medium)" },
+  secondary: { borderColor: "var(--border-stone)" },
   ghost: { borderColor: "transparent" },
+  danger: {
+    backgroundColor: "var(--error-bg)",
+    borderColor: "var(--error-border)",
+    color: "var(--error-text)",
+  },
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(

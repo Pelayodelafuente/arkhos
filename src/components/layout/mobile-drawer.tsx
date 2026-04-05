@@ -7,14 +7,15 @@ import { X, Home, FolderKanban, StickyNote, TrendingUp, Wallet, CreditCard, Shie
 import { ArkhosLogo } from "@/components/ui/arkhos-logo";
 import { Button } from "@/components/ui/button";
 import { logout } from "@/app/(auth)/actions";
+import { MODULE_COLORS } from "@/lib/constants/colors";
 
 const navItems = [
   { label: "Inicio", href: "/", icon: Home, dot: null },
-  { label: "Proyectos", href: "/proyectos", icon: FolderKanban, dot: "#C4704A" },
-  { label: "Notas", href: "/notas", icon: StickyNote, dot: "#7a9b76" },
-  { label: "Mercados", href: "/mercados", icon: TrendingUp, dot: "#9a6a28" },
-  { label: "Patrimonio", href: "/patrimonio", icon: Wallet, dot: "#056b63" },
-  { label: "Gastos", href: "/gastos", icon: CreditCard, dot: "#5f1b29" },
+  { label: "Proyectos", href: "/proyectos", icon: FolderKanban, dot: MODULE_COLORS.proyectos },
+  { label: "Notas", href: "/notas", icon: StickyNote, dot: MODULE_COLORS.notas },
+  { label: "Mercados", href: "/mercados", icon: TrendingUp, dot: MODULE_COLORS.mercados },
+  { label: "Patrimonio", href: "/patrimonio", icon: Wallet, dot: MODULE_COLORS.patrimonio },
+  { label: "Gastos", href: "/gastos", icon: CreditCard, dot: MODULE_COLORS.gastos },
 ] as const;
 
 interface MobileDrawerProps {
@@ -52,7 +53,7 @@ export function MobileDrawer({ open, onClose, userName }: MobileDrawerProps) {
       <div
         className="fixed inset-0 z-40 lg:hidden"
         style={{
-          backgroundColor: "rgba(26, 23, 20, 0.2)",
+          backgroundColor: "var(--overlay-drawer)",
           backdropFilter: "blur(4px)",
           WebkitBackdropFilter: "blur(4px)",
           animation: closing

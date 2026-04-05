@@ -308,7 +308,7 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
                   type="button"
                   onClick={() => { setIcon(iconName); setShowIcons(false) }}
                   className={`flex h-8 w-8 items-center justify-center rounded-md transition-colors ${
-                    icon === iconName ? 'bg-[#7a9b76] text-white' : 'hover:bg-sand text-text-secondary'
+                    icon === iconName ? 'bg-[#B07A3A] text-white' : 'hover:bg-sand text-text-secondary'
                   }`}
                 >
                   <IC size={16} strokeWidth={1.75} />

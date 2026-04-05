@@ -33,7 +33,7 @@ const EDGE_COLORS: { value: EdgeColor; color: string; label: string }[] = [
   { value: "sage", color: "var(--module-notas)", label: "Sage" },
   { value: "terracotta", color: "#C4704A", label: "Terracotta" },
   { value: "stone", color: "#8A7A6A", label: "Stone" },
-  { value: "blue", color: "#6B8CC4", label: "Blue" },
+  { value: "blue", color: "#3B78B0", label: "Blue" },
 ]
 
 interface Props {

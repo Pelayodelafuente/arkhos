@@ -25,10 +25,10 @@ import { motion, AnimatePresence } from "framer-motion";
 const initialState: AuthState = { error: null, success: null };
 
 const MODULE_OPTIONS = [
-  { id: "gastos", label: "Gastos", icon: Wallet, color: "#5f1b29" },
-  { id: "finanzas", label: "Finanzas", icon: TrendingUp, color: "#056b63" },
-  { id: "notas", label: "Notas", icon: StickyNote, color: "#7a9b76" },
-  { id: "todo", label: "Todo", icon: LayoutGrid, color: "#9a6a28" },
+  { id: "gastos", label: "Gastos", icon: Wallet, color: "#3B78B0" },
+  { id: "finanzas", label: "Finanzas", icon: TrendingUp, color: "#2E7D6B" },
+  { id: "notas", label: "Notas", icon: StickyNote, color: "#B07A3A" },
+  { id: "todo", label: "Todo", icon: LayoutGrid, color: "#7260C4" },
 ];
 
 const stepVariants = {

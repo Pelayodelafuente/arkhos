@@ -117,7 +117,7 @@ export default function FlowView({ phases }: FlowViewProps) {
         <defs>
           {/* Grid pattern */}
           <pattern id="flow-grid" width="20" height="20" patternUnits="userSpaceOnUse">
-            <circle cx="10" cy="10" r="0.5" fill="var(--border-medium)" opacity="0.5" />
+            <circle cx="10" cy="10" r="0.5" fill="var(--border-stone)" opacity="0.5" />
           </pattern>
 
           {/* Glow filter for active phase */}
@@ -141,7 +141,7 @@ export default function FlowView({ phases }: FlowViewProps) {
             markerHeight="6"
             orient="auto-start-reverse"
           >
-            <path d="M 0 0 L 10 4 L 0 8 Z" fill="#056b63" />
+            <path d="M 0 0 L 10 4 L 0 8 Z" fill="#22C55E" />
           </marker>
 
           {/* Arrow marker — pending */}
@@ -154,7 +154,7 @@ export default function FlowView({ phases }: FlowViewProps) {
             markerHeight="6"
             orient="auto-start-reverse"
           >
-            <path d="M 0 0 L 10 4 L 0 8 Z" fill="var(--border-medium)" />
+            <path d="M 0 0 L 10 4 L 0 8 Z" fill="var(--border-stone)" />
           </marker>
 
           {/* Arrow marker — active */}
@@ -188,7 +188,7 @@ export default function FlowView({ phases }: FlowViewProps) {
 
             const isDone = phase.status === 'done';
             const isActive = phase.status === 'in-progress' || nextPhase.status === 'in-progress';
-            const strokeColor = isDone ? '#056b63' : isActive ? '#C4704A' : 'rgba(160,120,80,0.35)';
+            const strokeColor = isDone ? '#22C55E' : isActive ? '#C4704A' : 'rgba(160,120,80,0.35)';
             const markerId = isDone ? 'arrow-done' : isActive ? 'arrow-active' : 'arrow-pending';
 
             return (
@@ -229,7 +229,7 @@ export default function FlowView({ phases }: FlowViewProps) {
 
             const borderColor =
               phase.status === 'done'
-                ? '#056b63'
+                ? '#22C55E'
                 : phase.status === 'in-progress'
                   ? '#C4704A'
                   : 'rgba(160,120,80,0.35)';
@@ -294,7 +294,7 @@ export default function FlowView({ phases }: FlowViewProps) {
                   width={NODE_WIDTH - 24}
                   height={4}
                   rx={2}
-                  fill="var(--border-medium)"
+                  fill="var(--border-stone)"
                 />
 
                 {/* Progress bar fill */}

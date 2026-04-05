@@ -17,8 +17,8 @@ function relativeTime(dateStr: string): string {
 function healthColor(done: number, total: number): string {
   if (total === 0) return '#9a7a5a';
   const pct = done / total;
-  if (pct >= 0.7) return '#056b63';
-  if (pct >= 0.3) return '#9a6a28';
+  if (pct >= 0.7) return '#22C55E';
+  if (pct >= 0.3) return '#F59E0B';
   return '#9a7a5a';
 }
 import { useCanvasStore } from '@/stores/canvas-store';
@@ -33,10 +33,10 @@ interface WindowProjectsProps {
 
 function getStatusColor(status: string): string {
   const map: Record<string, string> = {
-    'Activo': '#056b63',
+    'Activo': '#22C55E',
     'Archivado': '#9a7a5a',
     'Idea': '#c4a07a',
-    'Pausado': '#9a6a28',
+    'Pausado': '#F59E0B',
     'Completado': '#c4704a',
   };
   return map[status] ?? '#9a7a5a';
@@ -367,7 +367,7 @@ export function WindowProjects({ userId }: WindowProjectsProps) {
             style={{
               padding: '4px 0',
               borderRadius: 5,
-              border: filterMode === tab.key ? '0.5px solid rgba(196,112,74,0.4)' : '0.5px solid var(--border-medium)',
+              border: filterMode === tab.key ? '0.5px solid rgba(196,112,74,0.4)' : '0.5px solid var(--border-stone)',
               background: filterMode === tab.key ? 'rgba(196,112,74,0.10)' : 'transparent',
               color: filterMode === tab.key ? '#C4704A' : 'var(--text-tertiary)',
             }}
@@ -382,7 +382,7 @@ export function WindowProjects({ userId }: WindowProjectsProps) {
         className="flex items-center gap-[6px]"
         style={{
           background: '#F5F0EA',
-          border: '0.5px solid var(--border-medium)',
+          border: '0.5px solid var(--border-stone)',
           borderRadius: 7,
           padding: '6px 9px',
           fontSize: 11,
@@ -422,7 +422,7 @@ export function WindowProjects({ userId }: WindowProjectsProps) {
           style={{
             padding: 6,
             borderRadius: 6,
-            border: confirmingArchive ? '0.5px solid #c4704a' : '0.5px solid var(--border-medium)',
+            border: confirmingArchive ? '0.5px solid #c4704a' : '0.5px solid var(--border-stone)',
             background: confirmingArchive ? 'rgba(196,112,74,0.08)' : 'transparent',
             color: confirmingArchive ? '#c4704a' : 'var(--text-secondary)',
             transition: 'all 0.13s ease',

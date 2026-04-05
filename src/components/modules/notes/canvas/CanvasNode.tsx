@@ -261,7 +261,7 @@ export function CanvasNodeComponent({
           style={{
             position: "absolute", ...CONNECTION_POS[side],
             width: handleSize, height: handleSize, borderRadius: "50%",
-            backgroundColor: "#7a9b76", border: "2px solid white",
+            backgroundColor: "#B07A3A", border: "2px solid white",
             cursor: "crosshair", zIndex: 103,
             transition: "opacity 150ms, transform 150ms",
           }}
@@ -310,7 +310,7 @@ export function CanvasNodeComponent({
           position: "absolute", left: screenX, top: screenY,
           width: screenW, height: screenH,
           backgroundColor: isDragOverGroup ? "rgba(196, 112, 74, 0.10)" : groupBg,
-          borderColor: isDragOverGroup ? "#C4704A" : isConnectionTarget ? "#7a9b76" : isSelected ? "#C4704A" : colors.border,
+          borderColor: isDragOverGroup ? "#C4704A" : isConnectionTarget ? "#B07A3A" : isSelected ? "#C4704A" : colors.border,
           borderWidth: isSelected || isConnectionTarget || isDragOverGroup ? 2 : 1.5,
           borderStyle: "dashed", borderRadius: 12,
           zIndex: node.z_index,
@@ -413,7 +413,7 @@ export function CanvasNodeComponent({
         position: "absolute", left: screenX, top: screenY,
         width: screenW, height: screenH,
         backgroundColor: node.node_type === "url" ? colors.bg : colors.bg,
-        borderColor: isConnectionTarget ? "#7a9b76" : isSelected ? "#C4704A" : colors.border,
+        borderColor: isConnectionTarget ? "#B07A3A" : isSelected ? "#C4704A" : colors.border,
         borderWidth: isSelected || isConnectionTarget ? 2 : 1,
         borderStyle: "solid", borderRadius: 12,
         zIndex: isSelected ? 100 : node.z_index,
@@ -457,7 +457,7 @@ export function CanvasNodeComponent({
                 }}
               />
               <Link size={14 * scale} strokeWidth={1.75} style={{
-                color: "#7a9b76", flexShrink: 0,
+                color: "#B07A3A", flexShrink: 0,
               }} />
             </>
           ) : (
@@ -479,7 +479,7 @@ export function CanvasNodeComponent({
             style={{
               flex: 1, display: "flex", flexDirection: "column",
               justifyContent: "center", gap: 2 * scale,
-              borderLeft: `${2 * scale}px solid #7a9b76`,
+              borderLeft: `${2 * scale}px solid #B07A3A`,
               paddingLeft: 6 * scale,
               overflow: "hidden",
               cursor: "pointer",
@@ -513,7 +513,7 @@ export function CanvasNodeComponent({
             <button
               style={{
                 display: "inline-flex", alignItems: "center", gap: 3 * scale,
-                fontSize: 9 * scale, color: "#7a9b76",
+                fontSize: 9 * scale, color: "#B07A3A",
                 background: "none", border: "none", cursor: "pointer",
                 padding: 0, marginTop: 2 * scale,
               }}

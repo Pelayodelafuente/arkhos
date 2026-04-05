@@ -140,8 +140,8 @@ export function WindowFocus({ userId }: WindowFocusProps) {
   if (tasks.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-2 py-8">
-        <CheckCircle2 size={20} style={{ color: '#056b63', opacity: 0.7 }} />
-        <p className="font-sans text-[11px] font-medium" style={{ color: '#056b63' }}>¡Todo al día!</p>
+        <CheckCircle2 size={20} style={{ color: '#22C55E', opacity: 0.7 }} />
+        <p className="font-sans text-[11px] font-medium" style={{ color: '#22C55E' }}>¡Todo al día!</p>
         <p className="font-sans text-[10px] text-text-tertiary">No hay tareas pendientes</p>
       </div>
     );

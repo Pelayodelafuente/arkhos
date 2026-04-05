@@ -26,6 +26,7 @@ import {
 import { Modal, Button, Input } from "@/components/ui"
 import { useExpensesStore } from "@/stores/expenses-store"
 import type { ExpenseCategory } from "@/types/expenses"
+import { COLOR_PRESETS as COLOR_PRESETS_CONFIG } from "@/lib/constants/colors"
 
 // ─── Icon Library ─────────────────────────────────────────────────────────────
 
@@ -119,11 +120,7 @@ export function renderIconByName(
 
 // ─── Color Presets ────────────────────────────────────────────────────────────
 
-const COLOR_PRESETS = [
-  "#c4704a", "#5f1b29", "#8a3040", "#056b63", "#9a6a28",
-  "#6E40C9", "#1DB954", "#F24E1E", "#7a9b76", "#2a1a10",
-  "#007AFF", "#E50914",
-]
+const COLOR_PRESETS = COLOR_PRESETS_CONFIG.map((p) => p.value)
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -144,7 +141,7 @@ export function CategoryManager({ open, onClose, userId }: CategoryManagerProps)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [name, setName] = useState("")
   const [icon, setIcon] = useState("zap")
-  const [color, setColor] = useState("#5f1b29")
+  const [color, setColor] = useState("#3B78B0")
   const [iconSearch, setIconSearch] = useState("")
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 

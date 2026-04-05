@@ -148,7 +148,7 @@ export function NotesSidebar({ userId }: Props) {
                 onClick={() => setActiveFolderId(item.id)}
                 className={`flex h-7 w-7 items-center justify-center rounded-md transition-colors ${
                   isActive
-                    ? "bg-[#7a9b76]/10 text-[#7a9b76]"
+                    ? "bg-[#B07A3A]/10 text-[#B07A3A]"
                     : "text-text-tertiary hover:text-text-secondary hover:bg-sand"
                 }`}
                 title={item.label}
@@ -169,7 +169,7 @@ export function NotesSidebar({ userId }: Props) {
                 onClick={() => setActiveFolderId(folder.id)}
                 className={`flex h-7 w-7 items-center justify-center rounded-md transition-colors ${
                   isActive
-                    ? "bg-[#7a9b76]/10 text-[#7a9b76]"
+                    ? "bg-[#B07A3A]/10 text-[#B07A3A]"
                     : "text-text-tertiary hover:text-text-secondary hover:bg-sand"
                 }`}
                 title={folder.name}
@@ -205,7 +205,7 @@ export function NotesSidebar({ userId }: Props) {
           onClick={handleDailyNote}
           className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-[13px] text-text-secondary hover:bg-sand hover:text-text-secondary transition-colors"
         >
-          <CalendarDays size={14} strokeWidth={1.75} className="flex-shrink-0 text-[#7a9b76]" />
+          <CalendarDays size={14} strokeWidth={1.75} className="flex-shrink-0 text-[#B07A3A]" />
           <span className="flex-1 text-left">Nota de hoy</span>
         </button>
       </div>
@@ -222,7 +222,7 @@ export function NotesSidebar({ userId }: Props) {
               onClick={() => setActiveFolderId(item.id)}
               className={`flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-[13px] transition-colors ${
                 isActive
-                  ? "bg-[#7a9b76]/10 text-[#7a9b76] font-medium"
+                  ? "bg-[#B07A3A]/10 text-[#B07A3A] font-medium"
                   : "text-text-secondary hover:bg-sand hover:text-text-secondary"
               }`}
             >
@@ -264,11 +264,11 @@ export function NotesSidebar({ userId }: Props) {
                 if (e.key === "Escape") setCreatingFolder(false)
               }}
               placeholder="Nombre de carpeta"
-              className="flex-1 text-[13px] bg-card border border-border rounded-md px-2 py-1 text-foreground outline-none focus:ring-1 focus:ring-[#7a9b76]"
+              className="flex-1 text-[13px] bg-card border border-border rounded-md px-2 py-1 text-foreground outline-none focus:ring-1 focus:ring-[#B07A3A]"
             />
             <button
               onClick={handleCreateFolder}
-              className="flex h-6 w-6 items-center justify-center rounded-md text-[#7a9b76] hover:bg-[#7a9b76]/10 transition-colors"
+              className="flex h-6 w-6 items-center justify-center rounded-md text-[#B07A3A] hover:bg-[#B07A3A]/10 transition-colors"
             >
               <Check size={12} strokeWidth={2} />
             </button>
@@ -300,7 +300,7 @@ export function NotesSidebar({ userId }: Props) {
                 key={folder.id}
                 className={`group relative flex items-center gap-2 rounded-md px-3 py-1.5 text-[13px] transition-colors cursor-pointer ${
                   isActive
-                    ? "bg-[#7a9b76]/10 text-[#7a9b76] font-medium"
+                    ? "bg-[#B07A3A]/10 text-[#B07A3A] font-medium"
                     : "text-text-secondary hover:bg-sand"
                 }`}
                 onClick={() => !isRenaming && setActiveFolderId(folder.id)}
@@ -318,7 +318,7 @@ export function NotesSidebar({ userId }: Props) {
                     }}
                     onBlur={() => handleRename(folder)}
                     onClick={(e) => e.stopPropagation()}
-                    className="flex-1 text-[13px] bg-card border border-border rounded-md px-1.5 py-0.5 text-foreground outline-none focus:ring-1 focus:ring-[#7a9b76]"
+                    className="flex-1 text-[13px] bg-card border border-border rounded-md px-1.5 py-0.5 text-foreground outline-none focus:ring-1 focus:ring-[#B07A3A]"
                   />
                 ) : (
                   <span className="flex-1 truncate">{folder.name}</span>

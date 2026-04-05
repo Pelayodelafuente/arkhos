@@ -254,7 +254,7 @@ export function NoteCard({ note, userId, onEdit, onDelete, onTogglePin, onToggle
           <div className="flex items-center gap-2 mb-2">
             <div className="flex-1 h-1 rounded-full bg-foreground/8 overflow-hidden">
               <div
-                className="h-full rounded-full bg-[#7a9b76] transition-all"
+                className="h-full rounded-full bg-[#B07A3A] transition-all"
                 style={{ width: checklistProgress.total > 0 ? `${(checklistProgress.checked / checklistProgress.total) * 100}%` : '0%' }}
               />
             </div>
@@ -304,7 +304,7 @@ function MenuButton({ icon, label, onClick, danger, active }: { icon: ReactNode;
         danger
           ? 'text-red-600 hover:bg-red-50'
           : active
-          ? 'text-[#7a9b76] bg-[#7a9b76]/8 hover:bg-[#7a9b76]/12'
+          ? 'text-[#B07A3A] bg-[#B07A3A]/8 hover:bg-[#B07A3A]/12'
           : 'text-text-secondary hover:bg-sand'
       }`}
     >

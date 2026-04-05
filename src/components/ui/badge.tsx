@@ -1,45 +1,77 @@
-import { type HTMLAttributes } from "react";
+import React from 'react'
 
-export type BadgeVariant =
-  | "terracotta"
-  | "green"
-  | "blue"
-  | "gold"
-  | "gray"
-  | "notas";
-
-interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
-  variant?: BadgeVariant;
+const BADGE_STYLES: Record<string, React.CSSProperties> = {
+  success:    { background: 'var(--success-bg)',    color: 'var(--success-text)',    borderColor: 'var(--success-border)' },
+  error:      { background: 'var(--error-bg)',      color: 'var(--error-text)',      borderColor: 'var(--error-border)' },
+  warning:    { background: 'var(--warning-bg)',    color: 'var(--warning-text)',    borderColor: 'var(--warning-border)' },
+  neutral:    { background: 'var(--neutral-bg)',    color: 'var(--neutral-text)',    borderColor: 'var(--neutral-border)' },
+  proyectos:  { background: 'rgba(196,112,74,0.10)',  color: '#8C4020', borderColor: 'rgba(196,112,74,0.30)' },
+  mercados:   { background: 'rgba(114,96,196,0.10)',  color: '#4A38A0', borderColor: 'rgba(114,96,196,0.30)' },
+  patrimonio: { background: 'rgba(46,125,107,0.10)',  color: '#1A5E50', borderColor: 'rgba(46,125,107,0.30)' },
+  gastos:     { background: 'rgba(59,120,176,0.10)',  color: '#1E4F80', borderColor: 'rgba(59,120,176,0.30)' },
+  notas:      { background: 'rgba(176,122,58,0.10)',  color: '#7A4E10', borderColor: 'rgba(176,122,58,0.30)' },
+  // Legacy aliases
+  terracotta: { background: 'rgba(196,112,74,0.10)',  color: '#8C4020', borderColor: 'rgba(196,112,74,0.30)' },
+  green:      { background: 'var(--success-bg)',    color: 'var(--success-text)',    borderColor: 'var(--success-border)' },
+  blue:       { background: 'rgba(59,120,176,0.10)', color: '#1E4F80', borderColor: 'rgba(59,120,176,0.30)' },
+  gold:       { background: 'var(--warning-bg)',    color: 'var(--warning-text)',    borderColor: 'var(--warning-border)' },
+  gray:       { background: 'var(--neutral-bg)',    color: 'var(--neutral-text)',    borderColor: 'var(--neutral-border)' },
 }
 
-const variantStyles: Record<BadgeVariant, { bg: string; text: string; border?: string }> = {
-  terracotta: { bg: "var(--accent-glow)",  text: "var(--accent-text)",  border: "rgba(196,112,74,0.25)" },
-  green:      { bg: "var(--success-bg)",   text: "var(--success)",      border: "var(--success-border)" },
-  blue:       { bg: "var(--error-bg)",     text: "var(--error)",        border: "rgba(138,48,64,0.22)" },
-  gold:       { bg: "var(--warning-bg)",   text: "var(--warning)",      border: "rgba(154,106,40,0.22)" },
-  gray:       { bg: "var(--bg-sand)",      text: "var(--text-muted)",   border: "var(--border-subtle)" },
-  notas:      { bg: "rgba(122,155,118,0.10)", text: "var(--module-notas)", border: "rgba(122,155,118,0.22)" },
-};
+const DOT_COLORS: Record<string, string> = {
+  success:    'var(--success)',
+  error:      'var(--error)',
+  warning:    'var(--warning)',
+  neutral:    'var(--neutral)',
+  proyectos:  '#C4704A',
+  mercados:   '#7260C4',
+  patrimonio: '#2E7D6B',
+  gastos:     '#3B78B0',
+  notas:      '#B07A3A',
+}
 
-export function Badge({
-  variant = "gray",
-  className = "",
-  children,
-  ...props
-}: BadgeProps) {
-  const { bg, text, border } = variantStyles[variant];
+const SEMANTIC_VARIANTS = new Set(['success', 'error', 'warning', 'neutral'])
+
+export type BadgeVariant =
+  | 'success'
+  | 'error'
+  | 'warning'
+  | 'neutral'
+  | 'proyectos'
+  | 'mercados'
+  | 'patrimonio'
+  | 'gastos'
+  | 'notas'
+  | 'terracotta'
+  | 'green'
+  | 'blue'
+  | 'gold'
+  | 'gray'
+
+interface BadgeProps {
+  variant?: BadgeVariant
+  showDot?: boolean
+  className?: string
+  children: React.ReactNode
+}
+
+export function Badge({ variant = 'neutral', showDot, className = '', children }: BadgeProps) {
+  const style = BADGE_STYLES[variant] ?? BADGE_STYLES.neutral
+  const dotColor = DOT_COLORS[variant]
+  const shouldShowDot = showDot ?? SEMANTIC_VARIANTS.has(variant)
 
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium font-mono ${className}`}
-      style={{
-        backgroundColor: bg,
-        color: text,
-        ...(border ? { border: `1px solid ${border}` } : {}),
-      }}
-      {...props}
+      className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-md border ${className}`}
+      style={style}
     >
+      {shouldShowDot && dotColor && (
+        <span
+          className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+          style={{ background: dotColor }}
+        />
+      )}
       {children}
     </span>
-  );
+  )
 }

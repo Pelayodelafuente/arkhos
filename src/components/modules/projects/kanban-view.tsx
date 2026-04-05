@@ -104,7 +104,7 @@ function KanbanColumn({
             className="h-full rounded-full transition-all duration-500"
             style={{
               width: `${progressPercent}%`,
-              background: column.status === 'done' ? '#056b63' : '#C4704A',
+              background: column.status === 'done' ? '#22C55E' : '#C4704A',
             }}
           />
         </div>

@@ -9,7 +9,7 @@ export default function PatrimonioPage() {
       <div className="animate-fade-in-up mb-8 flex items-center gap-3">
         <div
           className="flex h-10 w-10 items-center justify-center rounded-md"
-          style={{ backgroundColor: "#056b63" }}
+          style={{ backgroundColor: "#2E7D6B" }}
         >
           <Wallet size={20} strokeWidth={1.75} className="text-white" />
         </div>

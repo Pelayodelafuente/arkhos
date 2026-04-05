@@ -59,7 +59,7 @@ export function SubscriptionModal({
 
   const [name, setName] = useState("")
   const [icon, setIcon] = useState("")
-  const [color, setColor] = useState("#5f1b29")
+  const [color, setColor] = useState("#3B78B0")
   const [amount, setAmount] = useState("")
   const [cycle, setCycle] = useState<BillingCycle>("monthly")
   const [billingDay, setBillingDay] = useState("1")

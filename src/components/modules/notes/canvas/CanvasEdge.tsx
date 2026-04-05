@@ -9,7 +9,7 @@ const EDGE_COLORS: Record<string, string> = {
   sage: 'var(--module-notas)',
   terracotta: '#C4704A',
   stone: '#8A7A6A',
-  blue: '#6B8CC4', /* TODO: revisar #6B8CC4 — color funcional de tipo "blue" */
+  blue: '#3B78B0',
   gold: '#C4AA4A',
 }
 

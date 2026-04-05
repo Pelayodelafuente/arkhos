@@ -92,10 +92,10 @@ export function TagInput({
             onClick={(e) => { e.stopPropagation(); onSuggestTags() }}
             disabled={suggestLoading}
             title="Sugerir tags con IA"
-            className="flex h-5 w-5 items-center justify-center rounded text-text-tertiary hover:text-[#7a9b76] transition-colors disabled:opacity-40 flex-shrink-0"
+            className="flex h-5 w-5 items-center justify-center rounded text-text-tertiary hover:text-[#B07A3A] transition-colors disabled:opacity-40 flex-shrink-0"
           >
             {suggestLoading ? (
-              <span className="h-3 w-3 rounded-full border border-[#7a9b76] border-t-transparent animate-spin" />
+              <span className="h-3 w-3 rounded-full border border-[#B07A3A] border-t-transparent animate-spin" />
             ) : (
               <Sparkles size={12} strokeWidth={1.75} />
             )}

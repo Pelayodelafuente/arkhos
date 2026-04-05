@@ -1021,7 +1021,7 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
                 {by + bh < containerSize.h && <rect x={0} y={by + bh} width="100%" height={containerSize.h - (by + bh)} fill="rgba(0,0,0,0.03)" />}
                 <rect x={0} y={Math.max(0, by)} width={Math.max(0, bx)} height={bh} fill="rgba(0,0,0,0.03)" />
                 {bx + bw < containerSize.w && <rect x={bx + bw} y={Math.max(0, by)} width={containerSize.w - (bx + bw)} height={bh} fill="rgba(0,0,0,0.03)" />}
-                <rect x={bx} y={by} width={bw} height={bh} fill="none" stroke="var(--border-medium)"
+                <rect x={bx} y={by} width={bw} height={bh} fill="none" stroke="var(--border-stone)"
                   strokeWidth={1 / viewport.scale} strokeDasharray={`${8 / viewport.scale} ${4 / viewport.scale}`} opacity={0.5} rx={4} />
               </>
             )
@@ -1032,12 +1032,11 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
       {snapGuides.length > 0 && (
         <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 5 }}>
           {snapGuides.map((g, i) => g.orientation === "vertical" ? (
-            /* TODO: revisar #6B8CC4 — indicador snap guide funcional */
             <line key={i} x1={g.position * viewport.scale + viewport.offsetX} y1={0}
-              x2={g.position * viewport.scale + viewport.offsetX} y2="100%" stroke="#6B8CC4" strokeWidth={1} strokeDasharray="4 4" opacity={0.6} />
+              x2={g.position * viewport.scale + viewport.offsetX} y2="100%" stroke="#3B78B0" strokeWidth={1} strokeDasharray="4 4" opacity={0.6} />
           ) : (
             <line key={i} x1={0} y1={g.position * viewport.scale + viewport.offsetY}
-              x2="100%" y2={g.position * viewport.scale + viewport.offsetY} stroke="#6B8CC4" strokeWidth={1} strokeDasharray="4 4" opacity={0.6} />
+              x2="100%" y2={g.position * viewport.scale + viewport.offsetY} stroke="#3B78B0" strokeWidth={1} strokeDasharray="4 4" opacity={0.6} />
           ))}
         </svg>
       )}
@@ -1063,11 +1062,11 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
         {connectingLine && (
           <>
             <path d={calculateBezierPreview(connectingLine.fromX, connectingLine.fromY, connectingLine.toX, connectingLine.toY, connectingSideRef.current)}
-              stroke="#7a9b76" strokeWidth={6} fill="none" opacity={0.15} strokeLinecap="round" />
+              stroke="#B07A3A" strokeWidth={6} fill="none" opacity={0.15} strokeLinecap="round" />
             <path d={calculateBezierPreview(connectingLine.fromX, connectingLine.fromY, connectingLine.toX, connectingLine.toY, connectingSideRef.current)}
-              stroke="#7a9b76" strokeWidth={2 / viewport.scale} fill="none"
+              stroke="#B07A3A" strokeWidth={2 / viewport.scale} fill="none"
               strokeDasharray={`${6 / viewport.scale} ${4 / viewport.scale}`} opacity={0.7} />
-            <circle cx={connectingLine.toX} cy={connectingLine.toY} r={4} fill="#7a9b76" opacity={0.85} />
+            <circle cx={connectingLine.toX} cy={connectingLine.toY} r={4} fill="#B07A3A" opacity={0.85} />
           </>
         )}
       </svg>

@@ -16,9 +16,9 @@ export type TaskStatus = (typeof TASK_STATUSES)[number];
 // ─── Phase/Task status display config ─
 
 export const PHASE_STATUS_CONFIG: Record<PhaseStatus, { label: string; color: string }> = {
-  pending: { label: 'Pendiente', color: '#9a7a5a' },
+  pending: { label: 'Pendiente', color: '#888780' },
   'in-progress': { label: 'En progreso', color: '#C4704A' },
-  done: { label: 'Completada', color: '#056b63' },
+  done: { label: 'Completada', color: '#22C55E' },
 };
 
 export const TASK_PRIORITY_CONFIG: Record<TaskPriority, { label: string; color: string }> = {
@@ -30,10 +30,10 @@ export const TASK_PRIORITY_CONFIG: Record<TaskPriority, { label: string; color: 
 };
 
 export const TASK_STATUS_CONFIG: Record<TaskStatus, { label: string; color: string }> = {
-  todo: { label: 'Pendiente', color: '#9a7a5a' },
-  in_progress: { label: 'En progreso', color: '#c4704a' },
-  review: { label: 'En revisión', color: '#9a6a28' },
-  done: { label: 'Completada', color: '#056b63' },
+  todo: { label: 'Pendiente', color: '#888780' },
+  in_progress: { label: 'En progreso', color: '#C4704A' },
+  review: { label: 'En revisión', color: '#F59E0B' },
+  done: { label: 'Completada', color: '#22C55E' },
 };
 
 // ─── Dynamic project type / status ────
@@ -79,10 +79,10 @@ export const DEFAULT_PROJECT_TYPES: Omit<CreateProjectTypeInput, 'sort_order'>[]
 ];
 
 export const DEFAULT_PROJECT_STATUSES: Omit<CreateProjectStatusInput, 'sort_order'>[] = [
-  { name: 'Idea', color: '#9a7a5a', is_default: true },
-  { name: 'Activo', color: '#056b63' },
-  { name: 'Pausado', color: '#9a6a28' },
-  { name: 'Completado', color: '#c4704a' },
+  { name: 'Idea', color: '#888780', is_default: true },
+  { name: 'Activo', color: '#22C55E' },
+  { name: 'Pausado', color: '#F59E0B' },
+  { name: 'Completado', color: '#C4704A' },
 ];
 
 // ─── Icon picker categories ──────────

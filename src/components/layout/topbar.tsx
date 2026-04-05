@@ -17,7 +17,7 @@ export function Topbar({ userName }: TopbarProps) {
       <header
         className="relative flex h-14 items-center justify-between border-b px-4 lg:hidden"
         style={{
-          backgroundColor: "rgba(242, 237, 230, 0.88)",
+          backgroundColor: "var(--topbar-bg)",
           backdropFilter: "blur(12px)",
           WebkitBackdropFilter: "blur(12px)",
           borderBottomColor: "var(--border-subtle)",

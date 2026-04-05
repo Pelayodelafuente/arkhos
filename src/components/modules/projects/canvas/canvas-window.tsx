@@ -51,7 +51,7 @@ export function CanvasWindow({
       className={`flex flex-col overflow-hidden ${className}`}
       style={{
         background: 'rgba(255,252,248,0.97)',
-        border: '0.5px solid var(--border-medium)',
+        border: '0.5px solid var(--border-stone)',
         borderRadius: 14,
         boxShadow: '0 8px 32px rgba(0,0,0,0.09), 0 1px 4px rgba(0,0,0,0.05)',
         transition: 'box-shadow 200ms ease',
@@ -134,7 +134,7 @@ export function CanvasWindow({
             className="flex h-[22px] w-[22px] cursor-pointer items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent"
             style={{
               borderRadius: 5,
-              border: '0.5px solid var(--border-medium)',
+              border: '0.5px solid var(--border-stone)',
               background: 'transparent',
             }}
             onClick={(e) => {

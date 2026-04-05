@@ -141,7 +141,7 @@ export function QuickCapture({ userId }: Props) {
                   onClick={handleSave}
                   disabled={!title.trim() || saving}
                   className="px-3 py-1 text-[12px] rounded-md font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: "#7a9b76", color: "white" }}
+                  style={{ backgroundColor: "#B07A3A", color: "white" }}
                 >
                   {saving ? "Guardando…" : "Guardar"}
                 </button>
@@ -157,7 +157,7 @@ export function QuickCapture({ userId }: Props) {
         title="Captura rápida de nota"
         aria-label="Captura rápida de nota"
         className="flex h-11 w-11 items-center justify-center rounded-full shadow-md transition-transform hover:scale-105 active:scale-95"
-        style={{ backgroundColor: "#7a9b76", color: "white" }}
+        style={{ backgroundColor: "#B07A3A", color: "white" }}
       >
         <PenLine size={18} strokeWidth={1.75} />
       </button>

@@ -278,10 +278,10 @@ export function SpendingTrend() {
                   <Line
                     type="monotone"
                     dataKey="total"
-                    stroke="#5f1b29"
+                    stroke="#3B78B0"
                     strokeWidth={2}
-                    dot={{ fill: '#5f1b29', r: 3, strokeWidth: 0 }}
-                    activeDot={{ r: 4, fill: '#5f1b29' }}
+                    dot={{ fill: '#3B78B0', r: 3, strokeWidth: 0 }}
+                    activeDot={{ r: 4, fill: '#3B78B0' }}
                   />
                 </LineChart>
               </ResponsiveContainer>

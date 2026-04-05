@@ -80,7 +80,7 @@ export function ProjectCanvas({ userId }: ProjectCanvasProps) {
           background: 'rgba(250,247,242,0.85)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
-          borderBottom: '0.5px solid var(--border-medium)',
+          borderBottom: '0.5px solid var(--border-stone)',
         }}
       >
         <span
@@ -89,7 +89,7 @@ export function ProjectCanvas({ userId }: ProjectCanvasProps) {
         >
           Arkhos
         </span>
-        <div className="h-[15px] w-px" style={{ background: 'var(--border-medium)' }} />
+        <div className="h-[15px] w-px" style={{ background: 'var(--border-stone)' }} />
         <h1 className="text-[12px] font-medium text-text-tertiary" style={{ margin: 0 }}>
           Proyectos
         </h1>

@@ -58,14 +58,14 @@ function StepRow({
   animDelay: number;
 }) {
   const dotStyle: Record<StepStatus, React.CSSProperties> = {
-    done: { background: '#7a9b76' },
+    done: { background: '#22C55E' },
     active: {
       background: '#C4704A',
       animation: 'analysis-pulse 2s ease-in-out infinite',
     },
     pending: {
       background: 'transparent',
-      border: '1.5px solid var(--border-medium)',
+      border: '1.5px solid var(--border-stone)',
     },
   };
 
@@ -92,7 +92,7 @@ function StepRow({
           className="absolute left-[8px] top-[20px] w-px"
           style={{
             height: 'calc(100% - 8px)',
-            background: 'var(--border-medium)',
+            background: 'var(--border-stone)',
             transformOrigin: 'top',
           }}
         />

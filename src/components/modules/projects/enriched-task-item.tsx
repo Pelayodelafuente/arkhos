@@ -72,10 +72,10 @@ function timeAgo(dateStr: string): string {
 // ─── Priority colors ────────────────
 
 const PRIORITY_COLORS: Record<TaskPriority, string> = {
-  none: "#9a7a5a",
-  low: "#9a6a28",
-  medium: "#c4704a",
-  high: "#c4704a",
+  none: "#888780",
+  low: "#22C55E",
+  medium: "#F59E0B",
+  high: "#C4704A",
   urgent: "var(--error)",
 };
 

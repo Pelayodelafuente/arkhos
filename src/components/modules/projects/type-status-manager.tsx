@@ -4,14 +4,11 @@ import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Modal, Button, Input } from "@/components/ui";
 import { ProjectIcon } from "./project-icon";
+import { COLOR_PRESETS as COLOR_PRESETS_CONFIG } from "@/lib/constants/colors";
 
 // ─── Color picker presets ─────────────
 
-const COLOR_PRESETS = [
-  "#C4704A", "#056b63", "#5f1b29", "#9a6a28",
-  "#9a7a5a", "#7C5CBF", "#BF5C5C", "#8a3040",
-  "#4A9B7A", "#9B4A7A", "#BFA05C", "#5CBFBF",
-];
+const COLOR_PRESETS = COLOR_PRESETS_CONFIG.map((p) => p.value);
 
 const DEFAULT_ICONS_FOR_TYPES = [
   "Globe", "Terminal", "Code", "Smartphone", "Pen", "Box",

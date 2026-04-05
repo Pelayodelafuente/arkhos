@@ -76,7 +76,7 @@ export function CustomSelect({
         onClick={() => setOpen((v) => !v)}
         className="flex h-10 w-full items-center justify-between rounded-xl border bg-white/60 px-3 text-sm text-foreground outline-none transition-all duration-150 hover:bg-white cursor-pointer"
         style={{
-          borderColor: error ? 'var(--error)' : open ? 'var(--accent-terracotta)' : 'var(--border-medium)',
+          borderColor: error ? 'var(--error)' : open ? 'var(--accent-terracotta)' : 'var(--border-stone)',
           boxShadow: open ? '0 0 0 3px var(--accent-ring)' : undefined,
         }}
       >

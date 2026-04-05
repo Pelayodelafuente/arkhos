@@ -91,7 +91,7 @@ export const MentionList = forwardRef<MentionListRef, Props>(({ items, command }
             fontSize: 13,
           }}
         >
-          <FileText size={13} strokeWidth={1.75} style={{ color: 'var(--module-notas, #7a9b76)', flexShrink: 0 }} />
+          <FileText size={13} strokeWidth={1.75} style={{ color: 'var(--module-notas, #B07A3A)', flexShrink: 0 }} />
           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {item.title}
           </span>

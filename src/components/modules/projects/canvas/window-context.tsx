@@ -85,7 +85,7 @@ export function WindowContext() {
               <span
                 className="h-[5px] w-[5px] shrink-0 rounded-full"
                 style={{
-                  background: '#7a9b76',
+                  background: '#B07A3A',
                   boxShadow: '0 0 4px rgba(122,155,118,0.6)',
                   animation: 'ctx-pulse 2s ease-in-out infinite',
                 }}

@@ -64,10 +64,10 @@ export function NotesToolbar({ userId }: Props) {
           placeholder="Buscar notas..."
           value={localSearch}
           onChange={(e) => setLocalSearch(e.target.value)}
-          className="w-full rounded-md border border-border bg-card py-2 pl-9 pr-8 text-sm text-foreground placeholder:text-text-tertiary focus:border-[#7a9b76] focus:outline-none"
+          className="w-full rounded-md border border-border bg-card py-2 pl-9 pr-8 text-sm text-foreground placeholder:text-text-tertiary focus:border-[#B07A3A] focus:outline-none"
         />
         {isSearching && !localSearch && (
-          <div className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 animate-spin rounded-full border-2 border-border border-t-[#7a9b76]" />
+          <div className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 animate-spin rounded-full border-2 border-border border-t-[#B07A3A]" />
         )}
         {localSearch && (
           <button onClick={() => { setLocalSearch(""); setSearchQuery("") }} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-foreground">
@@ -115,7 +115,7 @@ export function NotesToolbar({ userId }: Props) {
                   onClick={() => setActiveTag(activeTag === tag ? null : tag)}
                   className={`rounded-md px-2 py-1 text-[11px] font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
                     activeTag === tag
-                      ? "bg-[#7a9b76] text-white"
+                      ? "bg-[#B07A3A] text-white"
                       : "bg-sand text-text-secondary hover:bg-border"
                   }`}
                 >

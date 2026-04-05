@@ -4,11 +4,9 @@ import { useState } from 'react';
 import { Plus, Pencil, Trash2, Check, X } from 'lucide-react';
 import { useProjectsStore } from '@/stores/projects-store';
 import { TagChip } from './tag-chip';
+import { COLOR_PRESETS } from '@/lib/constants/colors';
 
-const PRESET_COLORS = [
-  '#C4704A', '#5B8C6A', '#4A7A9B', '#9B7A4A', '#7a9b76',
-  '#9a6a28', '#5f1b29', '#056b63', '#888780', '#3D3630',
-];
+const PRESET_COLORS = COLOR_PRESETS.map((p) => p.value);
 
 interface TagManagerProps {
   projectId: string;

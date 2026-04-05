@@ -221,12 +221,12 @@ function EvolutionChart({ subscriptions }: { subscriptions: SubscriptionWithCate
             <Tooltip content={<CustomTooltip />} />
             <Bar dataKey="total" radius={[6, 6, 0, 0]}>
               {data.map((entry, i) => (
-                <Cell key={i} fill={entry.isCurrent ? '#5f1b29' : 'rgba(95,27,41,0.35)'} />
+                <Cell key={i} fill={entry.isCurrent ? '#3B78B0' : 'rgba(59,120,176,0.35)'} />
               ))}
             </Bar>
             <Bar dataKey="prevTotal" radius={[6, 6, 0, 0]} fillOpacity={0}>
               {data.map((_, i) => (
-                <Cell key={i} fill="transparent" stroke="#5f1b29" strokeWidth={1} strokeDasharray="4 4" />
+                <Cell key={i} fill="transparent" stroke="#3B78B0" strokeWidth={1} strokeDasharray="4 4" />
               ))}
             </Bar>
           </BarChart>

@@ -380,7 +380,7 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
             className="flex-1 font-heading text-lg text-foreground bg-transparent outline-none placeholder:text-text-tertiary min-w-0"
           />
           {saveStatus !== 'idle' && (
-            <span className={`text-[10px] font-mono flex-shrink-0 transition-opacity duration-500 ${saveStatus === 'saved' ? 'text-[#7a9b76]' : 'text-text-tertiary'}`}>
+            <span className={`text-[10px] font-mono flex-shrink-0 transition-opacity duration-500 ${saveStatus === 'saved' ? 'text-[#B07A3A]' : 'text-text-tertiary'}`}>
               {saveStatus === 'saving' ? 'Guardando…' : 'Guardado ✓'}
             </span>
           )}
@@ -402,12 +402,12 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
           onClick={handleSummarize}
           disabled={summaryLoading}
           className={`flex h-7 w-7 items-center justify-center rounded-md transition-colors flex-shrink-0 ${
-            summaryOpen ? "bg-sand text-[#7a9b76]" : "text-text-tertiary hover:text-[#7a9b76] hover:bg-sand/60"
+            summaryOpen ? "bg-sand text-[#B07A3A]" : "text-text-tertiary hover:text-[#B07A3A] hover:bg-sand/60"
           } disabled:opacity-40`}
           title="Resumir con IA"
         >
           {summaryLoading ? (
-            <span className="h-3 w-3 rounded-full border border-[#7a9b76] border-t-transparent animate-spin" />
+            <span className="h-3 w-3 rounded-full border border-[#B07A3A] border-t-transparent animate-spin" />
           ) : (
             <Sparkles size={14} strokeWidth={1.75} />
           )}
@@ -448,7 +448,7 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
                   type="button"
                   onClick={() => { setIcon(iconName); setShowIcons(false) }}
                   className={`flex h-8 w-8 items-center justify-center rounded-md transition-colors ${
-                    icon === iconName ? 'bg-[#7a9b76] text-white' : 'hover:bg-sand text-text-secondary'
+                    icon === iconName ? 'bg-[#B07A3A] text-white' : 'hover:bg-sand text-text-secondary'
                   }`}
                 >
                   <IC size={15} strokeWidth={1.75} />

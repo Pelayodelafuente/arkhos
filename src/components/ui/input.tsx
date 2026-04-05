@@ -29,7 +29,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
               : "focus:border-accent"
           } ${className}`}
           style={{
-            borderColor: error ? "var(--error)" : "var(--border-medium)",
+            borderColor: error ? "var(--error)" : "var(--border-stone)",
             color: "var(--text-primary)",
           }}
           onFocus={(e) => {
