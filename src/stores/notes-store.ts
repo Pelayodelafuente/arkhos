@@ -66,6 +66,7 @@ function getNodesInGroup(groupNode: CanvasNode, allNodes: CanvasNode[]): CanvasN
 interface NotesState {
   // List view
   notes: Note[]
+  initialized: boolean
   trashedNotes: Note[]
   isLoading: boolean
   searchQuery: string
@@ -309,6 +310,7 @@ type NotesStore = NotesState & NotesActions
 export const useNotesStore = create<NotesStore>((set, get) => ({
   // State
   notes: [],
+  initialized: false,
   trashedNotes: [],
   isLoading: false,
   searchQuery: '',
@@ -354,6 +356,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
       const notes = await notesApi.getNotes(userId, 0)
       set({
         notes,
+        initialized: true,
         isLoading: false,
         notesOffset: notes.length,
         hasMoreNotes: notes.length === notesApi.NOTES_PAGE_SIZE,

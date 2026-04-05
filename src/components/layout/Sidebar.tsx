@@ -86,13 +86,13 @@ export function Sidebar({ userName, initialProjectCount = 0, initialNoteCount = 
   const [isAnimating, setIsAnimating] = useState(false);
   const prevCollapsed = useRef(collapsed);
 
-  // Store counts — fallback a los valores del servidor mientras el store carga
+  // Store counts — fallback a los valores del servidor mientras el store no ha cargado todavía
   // Only count active projects (not archived) and active notes (not archived/trashed)
   const storeProjectCount = useProjectsStore((s) =>
-    s.projects ? s.projects.filter((p) => p.status !== "archived").length : null
+    s.initialized ? s.projects.filter((p) => p.status !== "archived").length : null
   );
   const storeNoteCount = useNotesStore((s) =>
-    s.notes ? s.notes.filter((n) => !n.archived).length : null
+    s.initialized ? s.notes.filter((n) => !n.archived).length : null
   );
   const projectCount = storeProjectCount ?? initialProjectCount;
   const noteCount = storeNoteCount ?? initialNoteCount;

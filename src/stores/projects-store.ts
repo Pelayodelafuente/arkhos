@@ -56,6 +56,7 @@ import { useUIStore } from './ui-store';
 
 interface ProjectsState {
   projects: ProjectListItem[];
+  initialized: boolean;
   activeProject: Project | null;
   loading: boolean;
   error: string | null;
@@ -138,6 +139,7 @@ function toast(message: string, variant: 'success' | 'error') {
 export const useProjectsStore = create<ProjectsStore>((set, get) => ({
   // State
   projects: [],
+  initialized: false,
   activeProject: null,
   loading: false,
   error: null,
@@ -153,7 +155,7 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
     try {
       const client = createClient();
       const projects = await getProjects(client, userId);
-      set({ projects, loading: false });
+      set({ projects, loading: false, initialized: true });
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Error al cargar proyectos';
       set({ error: msg, loading: false });
