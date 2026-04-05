@@ -163,17 +163,28 @@ export function CanvasEdgeComponent({
 
   const from = getAnchorPoint(fromNode, fromSide, scale, offsetX, offsetY)
   const to = getAnchorPoint(toNode, toSide, scale, offsetX, offsetY)
-  const { path, cp1, cp2 } = getBezierPath(from, to, fromSide, toSide)
+  const { path: bezierPath, cp1, cp2 } = getBezierPath(from, to, fromSide, toSide)
   const color = EDGE_COLORS[edge.color] ?? EDGE_COLORS.default
-
-  const mid = bezierMidpoint(from, cp1, cp2, to)
-  const angle = bezierTangentAtEnd(cp2, to)
-  const arrowSize = 6 * (isSelected ? 1.15 : 1)
-  const arrow = arrowHeadPath(to, angle, arrowSize)
   const edgeStyle: EdgeStyle = edge.style ?? 'arrow'
 
-  // For bidirectional: arrowhead at origin (tangent at t=0, inverted)
-  const angleFrom = Math.atan2(from.y - cp1.y, from.x - cp1.x)
+  // Line style: straight path; others: bezier
+  const path = edgeStyle === 'line'
+    ? `M ${from.x} ${from.y} L ${to.x} ${to.y}`
+    : bezierPath
+
+  const mid = edgeStyle === 'line'
+    ? { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 }
+    : bezierMidpoint(from, cp1, cp2, to)
+  const angle = edgeStyle === 'line'
+    ? Math.atan2(to.y - from.y, to.x - from.x)
+    : bezierTangentAtEnd(cp2, to)
+  const arrowSize = 6 * (isSelected ? 1.15 : 1)
+  const arrow = arrowHeadPath(to, angle, arrowSize)
+
+  // For bidirectional: arrowhead at origin
+  const angleFrom = edgeStyle === 'line'
+    ? Math.atan2(from.y - to.y, from.x - to.x)
+    : Math.atan2(from.y - cp1.y, from.x - cp1.x)
   const arrowFrom = arrowHeadPath(from, angleFrom, arrowSize)
 
   // Stroke widths

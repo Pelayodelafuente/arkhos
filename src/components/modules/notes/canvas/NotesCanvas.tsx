@@ -170,6 +170,8 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
   const removeGroupKeepNodes = useNotesStore((s) => s.removeGroupKeepNodes)
   const removeGroupWithContent = useNotesStore((s) => s.removeGroupWithContent)
   const assignNodeToGroup = useNotesStore((s) => s.assignNodeToGroup)
+  const moveGroupWithChildren = useNotesStore((s) => s.moveGroupWithChildren)
+  const persistGroupAndChildren = useNotesStore((s) => s.persistGroupAndChildren)
 
   const { matchingIds: searchMatchingIds } = useCanvasSearchResults()
 
@@ -188,7 +190,7 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
   const [connectionTargetId, setConnectionTargetId] = useState<string | null>(null)
   const [dragOverGroupId, setDragOverGroupId] = useState<string | null>(null)
   const [contextMenu, setContextMenu] = useState<{
-    x: number; y: number; worldX: number; worldY: number; nodeId: string | null; edgeId?: string | null
+    x: number; y: number; worldX: number; worldY: number; nodeId: string | null; edgeId?: string | null; edgeStyle?: import("@/types/notes").EdgeStyle
   } | null>(null)
   const [isResizing, setIsResizing] = useState(false)
   const resizeRef = useRef<{
@@ -501,9 +503,13 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
       const { guides, snappedX, snappedY } = calculateSnapGuides(dragNodeId, newX, newY, node.width, node.height)
       newX = snappedX; newY = snappedY; setSnapGuides(guides)
     }
-    updateNodePos(dragNodeId, { x: newX, y: newY })
-    // Visual feedback: highlight the group the dragged node is hovering over
-    if (node.node_type !== 'group') {
+    if (node.node_type === 'group') {
+      // Move group AND all contained children together
+      moveGroupWithChildren(dragNodeId, newX, newY)
+      setDragOverGroupId(null)
+    } else {
+      updateNodePos(dragNodeId, { x: newX, y: newY })
+      // Visual feedback: highlight the group the dragged node is hovering over
       const cx = newX + node.width / 2
       const cy = newY + node.height / 2
       const hoverGroup = nodes.find((n) =>
@@ -512,10 +518,8 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
         cy >= n.pos_y && cy <= n.pos_y + n.height
       )
       setDragOverGroupId(hoverGroup?.id ?? null)
-    } else {
-      setDragOverGroupId(null)
     }
-  }, [isDraggingNode, dragNodeId, isMultiDrag, dragOffset, viewport, nodeMap, nodes, snapEnabled, calculateSnapGuides, updateNodePos, moveSelectedNodes, setSnapGuides])
+  }, [isDraggingNode, dragNodeId, isMultiDrag, dragOffset, viewport, nodeMap, nodes, snapEnabled, calculateSnapGuides, updateNodePos, moveGroupWithChildren, moveSelectedNodes, setSnapGuides])
 
   const handleNodeDragEnd = useCallback(() => {
     if (dragNodeId) {
@@ -524,7 +528,12 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
       if (isMultiDrag) {
         persistSelectedNodePositions()
       } else if (node) {
-        persistNodePos(dragNodeId, { x: node.pos_x, y: node.pos_y })
+        if (node.node_type === 'group') {
+          // Persist group and all its children
+          persistGroupAndChildren(dragNodeId)
+        } else {
+          persistNodePos(dragNodeId, { x: node.pos_x, y: node.pos_y })
+        }
         // Assign group_id when a non-group node is dropped inside a group
         if (node.node_type !== 'group') {
           const cx = node.pos_x + node.width / 2
@@ -543,7 +552,7 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
       }
     }
     setIsDraggingNode(false); setDragNodeId(null); setIsMultiDrag(false); setSnapGuides([]); setDragOverGroupId(null)
-  }, [dragNodeId, isMultiDrag, nodeMap, nodes, persistNodePos, persistSelectedNodePositions, setSnapGuides, pushHistory, assignNodeToGroup])
+  }, [dragNodeId, isMultiDrag, nodeMap, nodes, persistNodePos, persistGroupAndChildren, persistSelectedNodePositions, setSnapGuides, pushHistory, assignNodeToGroup])
 
   const handleResizeStart = useCallback((nodeId: string, handle: string, e: React.MouseEvent) => {
     e.stopPropagation()
@@ -1024,7 +1033,8 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
               }}
               onContextMenu={(id, ev) => {
                 ev.preventDefault()
-                setContextMenu({ x: ev.clientX, y: ev.clientY, worldX: 0, worldY: 0, nodeId: null, edgeId: id })
+                const edg = edges.find((e) => e.id === id)
+                setContextMenu({ x: ev.clientX, y: ev.clientY, worldX: 0, worldY: 0, nodeId: null, edgeId: id, edgeStyle: edg?.style ?? 'arrow' })
               }} />
           ))}
         </g>
@@ -1134,6 +1144,7 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
           onCopy={copySelectedNodes} onPaste={() => pasteNodes()} onDuplicate={duplicateSelectedNodes}
           hasSelection={selectedNodeIds.size > 0} hasClipboard={clipboard !== null && clipboard.nodes.length > 0}
           targetEdgeId={contextMenu.edgeId ?? null}
+          currentEdgeStyle={contextMenu.edgeStyle}
           onEdgeColorChange={(edgeId, color) => { editEdge(edgeId, { color }); setContextMenu(null) }}
           onEdgeStyleChange={(edgeId, style) => { editEdge(edgeId, { style }); setContextMenu(null) }}
           onEdgeEditLabel={(edgeId) => {

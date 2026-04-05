@@ -191,6 +191,10 @@ interface NotesActions {
   removeGroupWithContent: (groupId: string) => Promise<void>
   assignNodeToGroup: (nodeId: string, groupId: string | null) => Promise<void>
 
+  // Single group drag (moves group + children atomically)
+  moveGroupWithChildren: (groupId: string, newX: number, newY: number) => void
+  persistGroupAndChildren: (groupId: string) => Promise<void>
+
   // Multi-select group drag
   moveSelectedNodes: (deltaX: number, deltaY: number) => void
   persistSelectedNodePositions: () => Promise<void>
@@ -823,6 +827,59 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
       await notesApi.updateNodePosition(id, pos)
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Error al guardar posición'
+      toast(msg, 'error')
+    }
+  },
+
+  moveGroupWithChildren: (groupId, newX, newY) => {
+    const { canvasNodes } = get()
+    const group = canvasNodes.find((n) => n.id === groupId)
+    if (!group) return
+
+    const clamped = clampNodePosition(newX, newY, group.width || 400, group.height || 300)
+    const deltaX = clamped.x - group.pos_x
+    const deltaY = clamped.y - group.pos_y
+    if (deltaX === 0 && deltaY === 0) return
+
+    const children = getNodesInGroup(group, canvasNodes)
+    const childIds = new Set(children.map((n) => n.id))
+    for (const n of canvasNodes) {
+      if (n.group_id === groupId && n.id !== groupId) childIds.add(n.id)
+    }
+
+    set((s) => ({
+      canvasNodes: s.canvasNodes.map((n) => {
+        if (n.id === groupId) return { ...n, pos_x: clamped.x, pos_y: clamped.y }
+        if (childIds.has(n.id) && !n.locked) {
+          const cc = clampNodePosition(
+            n.pos_x + deltaX, n.pos_y + deltaY,
+            n.width || 200, n.height || 100
+          )
+          return { ...n, pos_x: cc.x, pos_y: cc.y }
+        }
+        return n
+      }),
+    }))
+  },
+
+  persistGroupAndChildren: async (groupId) => {
+    const { canvasNodes } = get()
+    const group = canvasNodes.find((n) => n.id === groupId)
+    if (!group) return
+
+    const children = getNodesInGroup(group, canvasNodes)
+    const childIds = new Set(children.map((n) => n.id))
+    for (const n of canvasNodes) {
+      if (n.group_id === groupId && n.id !== groupId) childIds.add(n.id)
+    }
+
+    const nodesToPersist = [group, ...canvasNodes.filter((n) => childIds.has(n.id))]
+    try {
+      await Promise.all(
+        nodesToPersist.map((n) => notesApi.updateNodePosition(n.id, { x: n.pos_x, y: n.pos_y }))
+      )
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Error al guardar posición del grupo'
       toast(msg, 'error')
     }
   },

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useLayoutEffect, useRef } from "react"
 import {
   StickyNote,
   Type,
@@ -52,6 +52,7 @@ interface Props {
   onDuplicate: () => void
   hasSelection?: boolean
   hasClipboard: boolean
+  currentEdgeStyle?: EdgeStyle
   onEdgeColorChange: (edgeId: string, color: EdgeColor) => void
   onEdgeStyleChange: (edgeId: string, style: EdgeStyle) => void
   onEdgeEditLabel: (edgeId: string) => void
@@ -89,6 +90,7 @@ export function CanvasContextMenu({
   onPaste,
   onDuplicate,
   hasClipboard,
+  currentEdgeStyle,
   onEdgeColorChange,
   onEdgeStyleChange,
   onEdgeEditLabel,
@@ -98,6 +100,17 @@ export function CanvasContextMenu({
   onRemoveGroupWithContent,
 }: Props) {
   const menuRef = useRef<HTMLDivElement>(null)
+
+  // Clamp menu position to viewport to prevent clipping
+  useLayoutEffect(() => {
+    const el = menuRef.current
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    const vw = window.innerWidth
+    const vh = window.innerHeight
+    if (rect.right > vw - 8) el.style.left = `${Math.max(8, vw - rect.width - 8)}px`
+    if (rect.bottom > vh - 8) el.style.top = `${Math.max(8, vh - rect.height - 8)}px`
+  })
 
   // Close on Escape or click outside
   useEffect(() => {
@@ -167,27 +180,29 @@ export function CanvasContextMenu({
             Estilo
           </span>
           <div className="mt-1.5 flex items-center gap-1.5">
-            <button
-              onClick={() => { onEdgeStyleChange(targetEdgeId, 'arrow'); onClose() }}
-              title="Flecha"
-              className="flex h-7 w-7 items-center justify-center rounded-lg border border-border text-text-secondary hover:bg-sand hover:text-foreground transition-colors"
-            >
-              <ArrowRight size={14} strokeWidth={1.75} />
-            </button>
-            <button
-              onClick={() => { onEdgeStyleChange(targetEdgeId, 'line'); onClose() }}
-              title="Línea"
-              className="flex h-7 w-7 items-center justify-center rounded-lg border border-border text-text-secondary hover:bg-sand hover:text-foreground transition-colors"
-            >
-              <Minus size={14} strokeWidth={1.75} />
-            </button>
-            <button
-              onClick={() => { onEdgeStyleChange(targetEdgeId, 'bidirectional'); onClose() }}
-              title="Bidireccional"
-              className="flex h-7 w-7 items-center justify-center rounded-lg border border-border text-text-secondary hover:bg-sand hover:text-foreground transition-colors"
-            >
-              <ArrowLeftRight size={14} strokeWidth={1.75} />
-            </button>
+            {(
+              [
+                { value: 'arrow' as const, icon: <ArrowRight size={14} strokeWidth={1.75} />, title: 'Flecha' },
+                { value: 'line' as const, icon: <Minus size={14} strokeWidth={1.75} />, title: 'Línea recta' },
+                { value: 'bidirectional' as const, icon: <ArrowLeftRight size={14} strokeWidth={1.75} />, title: 'Bidireccional' },
+              ] as const
+            ).map(({ value, icon, title }) => {
+              const isActive = (currentEdgeStyle ?? 'arrow') === value
+              return (
+                <button
+                  key={value}
+                  onClick={() => { onEdgeStyleChange(targetEdgeId, value); onClose() }}
+                  title={title}
+                  className={`flex h-7 w-7 items-center justify-center rounded-lg border transition-colors ${
+                    isActive
+                      ? 'border-[#C4704A] bg-[#C4704A]/10 text-[#C4704A]'
+                      : 'border-border text-text-secondary hover:bg-sand hover:text-foreground'
+                  }`}
+                >
+                  {icon}
+                </button>
+              )
+            })}
           </div>
         </div>
 
