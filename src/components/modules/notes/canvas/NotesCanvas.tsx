@@ -172,6 +172,10 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
   const assignNodeToGroup = useNotesStore((s) => s.assignNodeToGroup)
   const moveGroupWithChildren = useNotesStore((s) => s.moveGroupWithChildren)
   const persistGroupAndChildren = useNotesStore((s) => s.persistGroupAndChildren)
+  const updateNodeLabel = useNotesStore((s) => s.updateNodeLabel)
+  const selectNodesInGroup = useNotesStore((s) => s.selectNodesInGroup)
+  const lockGroupChildren = useNotesStore((s) => s.lockGroupChildren)
+  const updateNodeColor = useNotesStore((s) => s.updateNodeColor)
 
   const { matchingIds: searchMatchingIds } = useCanvasSearchResults()
 
@@ -190,7 +194,14 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
   const [connectionTargetId, setConnectionTargetId] = useState<string | null>(null)
   const [dragOverGroupId, setDragOverGroupId] = useState<string | null>(null)
   const [contextMenu, setContextMenu] = useState<{
-    x: number; y: number; worldX: number; worldY: number; nodeId: string | null; edgeId?: string | null; edgeStyle?: import("@/types/notes").EdgeStyle
+    x: number; y: number; worldX: number; worldY: number
+    nodeId: string | null
+    edgeId?: string | null
+    edgeStyle?: import("@/types/notes").EdgeStyle
+    isGroupCollapsed?: boolean
+    groupColor?: import("@/types/notes").NoteColor
+    nodeGroupId?: string | null
+    isGroupChildrenLocked?: boolean
   } | null>(null)
   const [isResizing, setIsResizing] = useState(false)
   const resizeRef = useRef<{
@@ -681,8 +692,17 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
     const target = document.elementFromPoint(e.clientX, e.clientY)
     const nodeEl = target?.closest("[data-node-id]")
     const nodeId = nodeEl?.getAttribute("data-node-id") ?? null
-    setContextMenu({ x: e.clientX, y: e.clientY, worldX, worldY, nodeId })
-  }, [viewport])
+    const node = nodeId ? nodeMap.get(nodeId) : null
+    const isGroup = node?.node_type === 'group'
+    const groupChildren = isGroup && node ? nodes.filter(n => n.group_id === node.id) : []
+    setContextMenu({
+      x: e.clientX, y: e.clientY, worldX, worldY, nodeId,
+      isGroupCollapsed: isGroup ? (node!.collapsed ?? false) : undefined,
+      groupColor: isGroup ? ((node!.color ?? 'default') as import("@/types/notes").NoteColor) : undefined,
+      nodeGroupId: node && !isGroup ? (node.group_id ?? null) : null,
+      isGroupChildrenLocked: isGroup ? groupChildren.length > 0 && groupChildren.every(n => n.locked) : undefined,
+    })
+  }, [viewport, nodeMap])
 
   const touchRef = useRef<{ lastDist: number } | null>(null)
 
@@ -1067,6 +1087,7 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
                 isEditing={editingNodeId === node.id} onSelect={handleNodeSelect} onDragStart={handleNodeDragStart}
                 onDoubleClick={handleNodeDoubleClick} onConnectionStart={handleConnectionStart}
                 onResizeStart={handleResizeStart} onContentChange={handleContentChange}
+                onLabelChange={updateNodeLabel}
                 isConnectionTarget={isConnTarget} isDragOverGroup={dragOverGroupId === node.id}
                 searchDimmed={isDimmed} allNodes={nodes}
                 onToggleCollapsed={toggleGroupCollapsed} />
@@ -1155,8 +1176,18 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
           }}
           onEdgeDelete={(edgeId) => { removeEdge(edgeId); setContextMenu(null) }}
           isGroupNode={contextMenu.nodeId ? (nodeMap.get(contextMenu.nodeId)?.node_type === 'group') : false}
+          isGroupCollapsed={contextMenu.isGroupCollapsed}
+          groupColor={contextMenu.groupColor}
+          nodeGroupId={contextMenu.nodeGroupId}
+          isGroupChildrenLocked={contextMenu.isGroupChildrenLocked}
           onRemoveGroupKeepNodes={(id) => { removeGroupKeepNodes(id); setContextMenu(null) }}
-          onRemoveGroupWithContent={(id) => { removeGroupWithContent(id); setContextMenu(null) }} />
+          onRemoveGroupWithContent={(id) => { removeGroupWithContent(id); setContextMenu(null) }}
+          onToggleGroupCollapsed={(id) => { toggleGroupCollapsed(id); setContextMenu(null) }}
+          onSelectGroupContent={(id) => { selectNodesInGroup(id); setContextMenu(null) }}
+          onLockGroupChildren={(id, locked) => { lockGroupChildren(id, locked); setContextMenu(null) }}
+          onChangeGroupColor={(id, color) => { updateNodeColor(id, color); setContextMenu(null) }}
+          onRenameGroup={updateNodeLabel}
+          onEjectFromGroup={(nodeId) => { assignNodeToGroup(nodeId, null); setContextMenu(null) }} />
       )}
     </div>
     </div>
