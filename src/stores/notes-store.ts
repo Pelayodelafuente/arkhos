@@ -281,6 +281,11 @@ interface NotesActions {
   // Group collapse
   toggleGroupCollapsed: (id: string) => Promise<void>
 
+  // Group utility actions
+  updateNodeLabel: (id: string, label: string) => Promise<void>
+  selectNodesInGroup: (groupId: string) => void
+  lockGroupChildren: (groupId: string, locked: boolean) => Promise<void>
+
   // Node color
   updateNodeColor: (id: string, color: NoteColor) => void
 
@@ -1809,6 +1814,60 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
         canvasNodes: s.canvasNodes.map((n) => (n.id === id ? { ...n, collapsed: !newCollapsed } : n)),
       }))
       const msg = e instanceof Error ? e.message : 'Error al colapsar grupo'
+      toast(msg, 'error')
+    }
+  },
+
+  // ── Group utility actions ────────
+
+  updateNodeLabel: async (id, label) => {
+    set((s) => ({
+      canvasNodes: s.canvasNodes.map((n) => (n.id === id ? { ...n, label } : n)),
+    }))
+    try {
+      await notesApi.updateNodeLabel(id, label)
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Error al guardar nombre'
+      toast(msg, 'error')
+    }
+  },
+
+  selectNodesInGroup: (groupId) => {
+    const { canvasNodes } = get()
+    const group = canvasNodes.find((n) => n.id === groupId)
+    if (!group) return
+    const children = getNodesInGroup(group, canvasNodes)
+    const ids = new Set(children.map((n) => n.id))
+    for (const n of canvasNodes) {
+      if (n.group_id === groupId && n.id !== groupId) ids.add(n.id)
+    }
+    ids.add(groupId)
+    set({ selectedNodeIds: ids })
+  },
+
+  lockGroupChildren: async (groupId, locked) => {
+    const { canvasNodes } = get()
+    const group = canvasNodes.find((n) => n.id === groupId)
+    if (!group) return
+    const children = getNodesInGroup(group, canvasNodes)
+    const childIds = new Set(children.map((n) => n.id))
+    for (const n of canvasNodes) {
+      if (n.group_id === groupId && n.id !== groupId) childIds.add(n.id)
+    }
+    set((s) => ({
+      canvasNodes: s.canvasNodes.map((n) =>
+        childIds.has(n.id) ? { ...n, locked } : n
+      ),
+    }))
+    try {
+      await Promise.all(Array.from(childIds).map((id) => notesApi.updateNodeLocked(id, locked)))
+    } catch (e) {
+      set((s) => ({
+        canvasNodes: s.canvasNodes.map((n) =>
+          childIds.has(n.id) ? { ...n, locked: !locked } : n
+        ),
+      }))
+      const msg = e instanceof Error ? e.message : 'Error al bloquear contenido'
       toast(msg, 'error')
     }
   },

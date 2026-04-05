@@ -99,6 +99,7 @@ interface Props {
   onConnectionStart: (nodeId: string, side: string) => void
   onResizeStart: (nodeId: string, handle: string, e: React.MouseEvent) => void
   onContentChange: (id: string, content: string) => void
+  onLabelChange?: (id: string, label: string) => void
   onToggleCollapsed?: (id: string) => void
 }
 
@@ -107,7 +108,7 @@ export function CanvasNodeComponent({
   node, viewport, isSelected, isEditing,
   isConnectionTarget = false, isDragOverGroup = false, searchDimmed = false, allNodes,
   onSelect, onDragStart, onDoubleClick,
-  onConnectionStart, onResizeStart, onContentChange,
+  onConnectionStart, onResizeStart, onContentChange, onLabelChange,
   onToggleCollapsed,
 }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -152,6 +153,12 @@ export function CanvasNodeComponent({
     () => sanitizeHtml(marked.parse(rawContent) as string),
     [rawContent],
   )
+
+  // ─── Parent group (for membership badge) ────
+  const parentGroup = useMemo(() => {
+    if (isGroup || !node.group_id || !allNodes) return null
+    return allNodes.find((n) => n.id === node.group_id) ?? null
+  }, [isGroup, node.group_id, allNodes])
 
   // ─── Group: count contained nodes ───────
   const groupNodeCount = useMemo(() => {
@@ -216,9 +223,11 @@ export function CanvasNodeComponent({
     setEditingLabel(false)
     const trimmed = labelValue.trim()
     if (trimmed !== (node.label || "")) {
-      onContentChange(node.id, trimmed)
+      // Groups use label column; text/url nodes use content column
+      if (onLabelChange) onLabelChange(node.id, trimmed)
+      else onContentChange(node.id, trimmed)
     }
-  }, [labelValue, node.id, node.label, onContentChange])
+  }, [labelValue, node.id, node.label, onContentChange, onLabelChange])
 
   const handleLabelKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === "Escape") {
@@ -602,6 +611,21 @@ export function CanvasNodeComponent({
           </div>
         )}
       </div>
+
+      {/* Group membership badge */}
+      {parentGroup && !isGroup && (
+        <div style={{
+          position: "absolute", bottom: 4 * scale, right: 4 * scale,
+          display: "flex", alignItems: "center", gap: 2 * scale,
+          padding: `${1 * scale}px ${3 * scale}px`,
+          borderRadius: 3 * scale,
+          backgroundColor: "rgba(0,0,0,0.06)",
+          pointerEvents: "none",
+          zIndex: 101,
+        }}>
+          <Layers size={7 * scale} strokeWidth={1.75} style={{ color: "var(--text-tertiary)", flexShrink: 0 }} />
+        </div>
+      )}
 
       {/* Resize handles — visible on hover or selected */}
       {renderResizeHandles(false)}

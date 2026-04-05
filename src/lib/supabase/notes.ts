@@ -600,6 +600,18 @@ export async function updateNodeContent(
   if (error) throw new NotesError('Error updating node content', error.message)
 }
 
+export async function updateNodeLabel(
+  nodeId: string,
+  label: string
+): Promise<void> {
+  const client = createClient()
+  const { error } = await client
+    .from('canvas_nodes')
+    .update({ label })
+    .eq('id', nodeId)
+  if (error) throw new NotesError('Error updating node label', error.message)
+}
+
 export async function updateNodeLocked(
   nodeId: string,
   locked: boolean
