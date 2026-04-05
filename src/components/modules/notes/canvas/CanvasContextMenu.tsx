@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useRef } from "react"
 import {
   StickyNote,
   Type,
@@ -67,6 +67,7 @@ interface Props {
   isGroupNode?: boolean
   isGroupCollapsed?: boolean
   groupColor?: NoteColor
+  groupLabel?: string
   nodeGroupId?: string | null
   isGroupChildrenLocked?: boolean
   onRemoveGroupKeepNodes?: (id: string) => void
@@ -115,6 +116,7 @@ export function CanvasContextMenu({
   isGroupNode,
   isGroupCollapsed,
   groupColor,
+  groupLabel,
   nodeGroupId,
   isGroupChildrenLocked,
   onRemoveGroupKeepNodes,
@@ -128,8 +130,6 @@ export function CanvasContextMenu({
 }: Props) {
   const menuRef = useRef<HTMLDivElement>(null)
   const renameInputRef = useRef<HTMLInputElement>(null)
-  const [renameValue, setRenameValue] = useState("")
-  const [renameReady, setRenameReady] = useState(false)
 
   // Clamp menu position to viewport to prevent clipping
   useLayoutEffect(() => {
@@ -162,17 +162,11 @@ export function CanvasContextMenu({
 
   // Focus rename input when group menu opens
   useEffect(() => {
-    if (isGroupNode && targetNodeId) {
-      setRenameReady(true)
-    }
-  }, [isGroupNode, targetNodeId])
-
-  useEffect(() => {
-    if (renameReady && renameInputRef.current) {
+    if (isGroupNode && renameInputRef.current) {
       renameInputRef.current.focus()
       renameInputRef.current.select()
     }
-  }, [renameReady])
+  }, [isGroupNode])
 
   const worldPos = { x: worldX, y: worldY }
 
@@ -283,16 +277,9 @@ export function CanvasContextMenu({
           <input
             ref={renameInputRef}
             type="text"
-            defaultValue={renameValue || ""}
+            defaultValue={groupLabel ?? ""}
             placeholder="Sin nombre"
             className="w-full rounded-md border border-border bg-sand px-2 py-1 text-xs text-foreground outline-none focus:border-[#C4704A] transition-colors"
-            onFocus={(e) => {
-              // Load existing label on focus if empty
-              if (!e.target.value) {
-                const el = document.querySelector(`[data-node-id="${targetNodeId}"] [data-group-label]`) as HTMLElement | null
-                if (el) e.target.value = el.textContent ?? ""
-              }
-            }}
             onKeyDown={(e) => {
               e.stopPropagation()
               if (e.key === "Enter") {
@@ -303,7 +290,7 @@ export function CanvasContextMenu({
             }}
             onBlur={(e) => {
               const val = e.target.value.trim()
-              if (val) onRenameGroup?.(targetNodeId, val)
+              if (val && val !== (groupLabel ?? "")) onRenameGroup?.(targetNodeId, val)
             }}
             onClick={(e) => e.stopPropagation()}
           />

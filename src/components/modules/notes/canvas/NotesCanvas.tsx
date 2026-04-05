@@ -200,6 +200,7 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
     edgeStyle?: import("@/types/notes").EdgeStyle
     isGroupCollapsed?: boolean
     groupColor?: import("@/types/notes").NoteColor
+    groupLabel?: string
     nodeGroupId?: string | null
     isGroupChildrenLocked?: boolean
   } | null>(null)
@@ -699,6 +700,7 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
       x: e.clientX, y: e.clientY, worldX, worldY, nodeId,
       isGroupCollapsed: isGroup ? (node!.collapsed ?? false) : undefined,
       groupColor: isGroup ? ((node!.color ?? 'default') as import("@/types/notes").NoteColor) : undefined,
+      groupLabel: isGroup ? (node!.label ?? '') : undefined,
       nodeGroupId: node && !isGroup ? (node.group_id ?? null) : null,
       isGroupChildrenLocked: isGroup ? groupChildren.length > 0 && groupChildren.every(n => n.locked) : undefined,
     })
@@ -1178,6 +1180,7 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
           isGroupNode={contextMenu.nodeId ? (nodeMap.get(contextMenu.nodeId)?.node_type === 'group') : false}
           isGroupCollapsed={contextMenu.isGroupCollapsed}
           groupColor={contextMenu.groupColor}
+          groupLabel={contextMenu.groupLabel}
           nodeGroupId={contextMenu.nodeGroupId}
           isGroupChildrenLocked={contextMenu.isGroupChildrenLocked}
           onRemoveGroupKeepNodes={(id) => { removeGroupKeepNodes(id); setContextMenu(null) }}
