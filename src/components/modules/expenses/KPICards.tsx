@@ -34,7 +34,6 @@ const glassStyle = {
 
 export function KPICards() {
   const subscriptions = useCycleFilteredSubscriptions()
-  const notAmortizeYearly = useExpensesStore((s) => s.notAmortizeYearly)
   const cycleFilter = useExpensesStore((s) => s.cycleFilter)
   const viewedYear = useExpensesStore((s) => s.viewedYear)
   const viewedMonth = useExpensesStore((s) => s.viewedMonth)
@@ -97,11 +96,9 @@ export function KPICards() {
 
   const displayTotal = isAnnualView
     ? annualViewTotal
-    : notAmortizeYearly
-      ? summary.totalMonthly * 12 + summary.totalQuarterly * 4 + summary.totalSemiannual * 2 + summary.totalAnnual
-      : summary.totalMonthly + summary.totalQuarterly / 3 + summary.totalSemiannual / 6 + summary.totalAnnual / 12
+    : summary.totalMonthly + summary.totalQuarterly + summary.totalSemiannual + summary.totalAnnual
 
-  const totalLabel = (isAnnualView || notAmortizeYearly) ? 'GASTO ANUAL' : 'GASTO MENSUAL'
+  const totalLabel = isAnnualView ? 'GASTO ANUAL' : 'GASTO MENSUAL'
 
   const nextBillingDays = nextBilling && isCurrentMonth ? getDaysUntilBilling(nextBilling) : null
 

@@ -523,13 +523,7 @@ export function useCycleFilteredSubscriptions(): SubscriptionWithCategory[] {
 
   if (cycleFilter === 'all') return subscriptions
   if (cycleFilter === 'monthly') {
-    return subscriptions.filter((sub) => {
-      if (sub.cycle === 'monthly') return true
-      if (sub.cycle === 'annual' && sub.started_at) {
-        return new Date(sub.started_at).getMonth() + 1 === viewedMonth
-      }
-      return false
-    })
+    return subscriptions.filter((sub) => sub.cycle === 'monthly')
   }
   return subscriptions.filter((sub) => sub.cycle === cycleFilter)
 }

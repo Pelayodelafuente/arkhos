@@ -308,7 +308,7 @@ export function getMostExpensiveCategory(
   const top = groups[0]
   return {
     category: top.category,
-    total: top.totalMonthly + top.totalQuarterly / 3 + top.totalSemiannual / 6 + top.totalAnnual / 12,
+    total: top.totalMonthly + top.totalQuarterly + top.totalSemiannual + top.totalAnnual,
     count: top.subscriptions.length,
   }
 }
