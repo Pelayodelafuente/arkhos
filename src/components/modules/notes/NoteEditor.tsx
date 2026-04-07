@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import { useEditor, EditorContent, type Editor, ReactRenderer } from '@tiptap/react'
 import { BubbleMenu } from '@tiptap/react/menus'
 import StarterKit from '@tiptap/starter-kit'
@@ -570,8 +571,8 @@ export function NoteEditor({
         className="tiptap-content flex-1 text-sm text-foreground focus:outline-none"
       />
 
-      {/* Slash Command Menu — fixed positioning to avoid clipping */}
-      {slashMenu.visible && filteredCommands.length > 0 && (
+      {/* Slash Command Menu — rendered via portal to escape transform containing blocks */}
+      {slashMenu.visible && filteredCommands.length > 0 && typeof document !== 'undefined' && createPortal(
         <div
           ref={slashMenuRef}
           style={
@@ -607,7 +608,8 @@ export function NoteEditor({
               </button>
             )
           })}
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Stats footer */}

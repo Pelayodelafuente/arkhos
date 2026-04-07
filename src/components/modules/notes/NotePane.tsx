@@ -438,7 +438,7 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
         </div>
 
         {/* Editor */}
-        <div className="rounded-md border border-border bg-card px-3 py-2.5 min-h-[200px]">
+        <div className="rounded-md border border-border bg-card px-3 py-2.5 min-h-[200px] flex-shrink-0">
           {note && !note.contentLoaded ? (
             <div className="space-y-2 py-1 animate-pulse">
               <div className="h-3 bg-border rounded-md w-3/4" />
