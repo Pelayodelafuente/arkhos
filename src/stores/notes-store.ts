@@ -429,6 +429,26 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
       const canvas = await notesApi.getOrCreateDefaultCanvas(userId)
       set({ canvas })
       await get().fetchCanvas(canvas.id)
+
+      // Restore persisted viewport from localStorage
+      if (typeof window !== 'undefined') {
+        try {
+          const raw = localStorage.getItem('arkhos:canvas:viewport')
+          if (raw) {
+            const parsed = JSON.parse(raw) as { offsetX?: number; offsetY?: number; scale?: number }
+            if (
+              typeof parsed.offsetX === 'number' &&
+              typeof parsed.offsetY === 'number' &&
+              typeof parsed.scale === 'number' &&
+              parsed.scale > 0
+            ) {
+              set({ viewport: { offsetX: parsed.offsetX, offsetY: parsed.offsetY, scale: parsed.scale } })
+            }
+          }
+        } catch {
+          // Malformed JSON or localStorage unavailable — use default viewport
+        }
+      }
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Error al inicializar el canvas'
       toast(msg, 'error')
@@ -1331,7 +1351,23 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
 
   // ── Viewport ──────────────────────
 
-  setViewport: (vp) => set((s) => ({ viewport: { ...s.viewport, ...vp } })),
+  setViewport: (vp) => {
+    set((s) => {
+      const next = { ...s.viewport, ...vp }
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('arkhos:canvas:viewport', JSON.stringify({
+            offsetX: next.offsetX,
+            offsetY: next.offsetY,
+            scale: next.scale,
+          }))
+        } catch {
+          // localStorage may be unavailable (private mode, quota exceeded, etc.)
+        }
+      }
+      return { viewport: next }
+    })
+  },
 
   // ── Undo/Redo ───────────────────
 

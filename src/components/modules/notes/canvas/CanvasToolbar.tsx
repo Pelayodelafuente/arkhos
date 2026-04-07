@@ -4,7 +4,6 @@ import {
   Minus,
   Plus,
   Maximize2,
-  Grid3X3,
   StickyNote,
   Undo2,
   Redo2,
@@ -12,15 +11,17 @@ import {
   Type,
   SquareDashed,
   Link,
-  Image as ImageIcon,
   Search,
   LayoutGrid,
-  Layers,
-  Filter,
   Share2,
   Download,
   Loader2,
+  MoreHorizontal,
+  Image as ImageIcon,
+  Filter,
+  Grid3X3,
 } from "lucide-react"
+import { useState, useRef, useEffect } from "react"
 import { useNotesStore } from "@/stores/notes-store"
 
 interface Props {
@@ -78,6 +79,8 @@ export function CanvasToolbar({
 }: Props) {
   const viewport = useNotesStore((s) => s.viewport)
   const setViewport = useNotesStore((s) => s.setViewport)
+  const [showMore, setShowMore] = useState(false)
+  const moreRef = useRef<HTMLDivElement>(null)
 
   const zoomIn = () => setViewport({ scale: Math.min(viewport.scale * 1.2, 3) })
   const zoomOut = () => setViewport({ scale: Math.max(viewport.scale / 1.2, 0.1) })
@@ -85,19 +88,33 @@ export function CanvasToolbar({
 
   const zoomPercent = Math.round(viewport.scale * 100)
 
+  const canGroup = selectionCount >= 2
+
   const btnBase =
     "flex h-7 w-7 items-center justify-center rounded-lg text-text-tertiary hover:bg-sand hover:text-foreground transition-colors"
+  const divider = <div className="mx-0.5 h-4 w-px bg-border" />
 
-  const canGroup = selectionCount >= 2
+  // Close more menu on outside click
+  useEffect(() => {
+    if (!showMore) return
+    const handler = (e: MouseEvent) => {
+      if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
+        setShowMore(false)
+      }
+    }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [showMore])
 
   return (
     <div className="absolute bottom-4 right-4 z-30 flex items-center gap-1 rounded-xl border border-border bg-card/90 backdrop-blur-sm px-1.5 py-1 shadow-sm">
-      {/* Undo / Redo / Duplicate */}
+
+      {/* ── Grupo 1: Historial ── */}
       <button
         onClick={onUndo}
         disabled={!canUndo}
         className={`${btnBase} ${!canUndo ? "opacity-30 cursor-not-allowed" : ""}`}
-        title="Deshacer"
+        title="Deshacer (Ctrl+Z)"
         aria-label="Deshacer"
       >
         <Undo2 size={14} strokeWidth={1.75} />
@@ -106,7 +123,7 @@ export function CanvasToolbar({
         onClick={onRedo}
         disabled={!canRedo}
         className={`${btnBase} ${!canRedo ? "opacity-30 cursor-not-allowed" : ""}`}
-        title="Rehacer"
+        title="Rehacer (Ctrl+Shift+Z)"
         aria-label="Rehacer"
       >
         <Redo2 size={14} strokeWidth={1.75} />
@@ -115,29 +132,85 @@ export function CanvasToolbar({
         onClick={onDuplicate}
         disabled={!hasSelection}
         className={`${btnBase} ${!hasSelection ? "opacity-30 cursor-not-allowed" : ""}`}
-        title="Duplicar selección"
-        aria-label="Duplicar selección"
+        title="Duplicar seleccion (Ctrl+D)"
+        aria-label="Duplicar seleccion"
       >
         <Copy size={14} strokeWidth={1.75} />
       </button>
 
-      <div className="mx-0.5 h-4 w-px bg-border" />
+      {divider}
 
-      {/* Search */}
+      {/* ── Grupo 2: Añadir contenido ── */}
+      <button onClick={onNewNote} className={btnBase} title="Nueva nota" aria-label="Nueva nota">
+        <StickyNote size={14} strokeWidth={1.75} />
+      </button>
+      <button onClick={onAddTextNode} className={btnBase} title="Nodo de texto" aria-label="Nodo de texto">
+        <Type size={14} strokeWidth={1.75} />
+      </button>
+      <button onClick={onAddUrlNode} className={btnBase} title="Nodo URL" aria-label="Nodo URL">
+        <Link size={14} strokeWidth={1.75} />
+      </button>
+      <button onClick={onAddGroupNode} className={btnBase} title="Nuevo grupo" aria-label="Nuevo grupo">
+        <SquareDashed size={14} strokeWidth={1.75} />
+      </button>
+
+      {divider}
+
+      {/* ── Grupo 3: Organizar ── */}
+      <button
+        onClick={onAutoLayout}
+        className={btnBase}
+        title="Auto-organizar nodos"
+        aria-label="Auto-organizar nodos"
+      >
+        <LayoutGrid size={14} strokeWidth={1.75} />
+      </button>
+      <button onClick={onFitAll} className={btnBase} title="Encajar todo (Ctrl+Shift+0)" aria-label="Encajar todo">
+        <Maximize2 size={14} strokeWidth={1.75} />
+      </button>
+      <button
+        onClick={onSyncBacklinks}
+        disabled={!hasSyncableBacklinks}
+        className={`${btnBase} ${!hasSyncableBacklinks ? 'opacity-40 cursor-not-allowed' : ''}`}
+        title="Sincronizar backlinks al canvas"
+        aria-label="Sincronizar backlinks"
+      >
+        <Share2 size={14} strokeWidth={1.75} />
+      </button>
+
+      {divider}
+
+      {/* ── Grupo 4: Vista / Zoom ── */}
+      <button onClick={zoomOut} className={btnBase} title="Alejar (Ctrl+-)" aria-label="Alejar">
+        <Minus size={14} strokeWidth={1.75} />
+      </button>
+      <button
+        onClick={resetZoom}
+        className="px-2 py-0.5 font-mono text-[11px] text-text-secondary hover:text-foreground transition-colors min-w-[44px] text-center"
+        title="Restablecer zoom al 100%"
+        aria-label="Restablecer zoom"
+      >
+        {zoomPercent}%
+      </button>
+      <button onClick={zoomIn} className={btnBase} title="Acercar (Ctrl+=)" aria-label="Acercar">
+        <Plus size={14} strokeWidth={1.75} />
+      </button>
+
+      {divider}
+
+      {/* ── Grupo 5: Buscar y filtrar ── */}
       <button
         onClick={onToggleSearch}
         className={btnBase}
-        title="Buscar en canvas"
+        title="Buscar en canvas (Ctrl+F)"
         aria-label="Buscar en canvas"
       >
         <Search size={14} strokeWidth={1.75} />
       </button>
-
-      {/* Filters */}
       <button
         onClick={onToggleFilters}
         className={`${btnBase} ${activeFilterCount > 0 ? "bg-sand text-foreground" : ""} relative`}
-        title="Filtros"
+        title={activeFilterCount > 0 ? `Filtros activos (${activeFilterCount})` : "Filtros"}
         aria-label="Filtros"
       >
         <Filter size={14} strokeWidth={1.75} />
@@ -150,117 +223,70 @@ export function CanvasToolbar({
         )}
       </button>
 
-      <div className="mx-0.5 h-4 w-px bg-border" />
+      {divider}
 
-      {/* Zoom controls */}
-      <button onClick={zoomOut} className={btnBase} title="Alejar" aria-label="Alejar">
-        <Minus size={14} strokeWidth={1.75} />
-      </button>
-      <button
-        onClick={resetZoom}
-        className="px-2 py-0.5 font-mono text-[11px] text-text-secondary hover:text-foreground transition-colors min-w-[44px] text-center"
-        title="Restablecer zoom"
-        aria-label="Restablecer zoom"
-      >
-        {zoomPercent}%
-      </button>
-      <button onClick={zoomIn} className={btnBase} title="Acercar" aria-label="Acercar">
-        <Plus size={14} strokeWidth={1.75} />
-      </button>
+      {/* ── Grupo 6: Mas opciones (···) ── */}
+      <div ref={moreRef} className="relative">
+        <button
+          onClick={() => setShowMore(v => !v)}
+          className={`${btnBase} ${showMore ? "bg-sand text-foreground" : ""}`}
+          title="Mas opciones"
+          aria-label="Mas opciones"
+        >
+          <MoreHorizontal size={14} strokeWidth={1.75} />
+        </button>
 
-      <div className="mx-0.5 h-4 w-px bg-border" />
+        {showMore && (
+          <div className="absolute bottom-9 right-0 z-50 min-w-[180px] rounded-xl border border-border bg-card/95 backdrop-blur-sm shadow-md py-1 flex flex-col">
+            {/* Imagen */}
+            <button
+              onClick={() => { onAddImageNode?.(); setShowMore(false) }}
+              className="flex items-center gap-2.5 px-3 py-1.5 text-xs text-text-secondary hover:bg-sand hover:text-foreground transition-colors"
+              title="Nodo de imagen"
+            >
+              <ImageIcon size={13} strokeWidth={1.75} />
+              <span>Nodo de imagen</span>
+            </button>
 
-      {/* Fit all */}
-      <button onClick={onFitAll} className={btnBase} title="Encajar todo" aria-label="Encajar todo">
-        <Maximize2 size={14} strokeWidth={1.75} />
-      </button>
+            {/* Agrupar seleccion */}
+            <button
+              onClick={() => { onGroupSelection(); setShowMore(false) }}
+              disabled={!canGroup}
+              className={`flex items-center gap-2.5 px-3 py-1.5 text-xs transition-colors ${!canGroup ? "opacity-30 cursor-not-allowed text-text-tertiary" : "text-text-secondary hover:bg-sand hover:text-foreground"}`}
+              title={canGroup ? "Agrupar seleccion" : "Selecciona 2 o mas nodos para agrupar"}
+            >
+              <SquareDashed size={13} strokeWidth={1.75} />
+              <span>Agrupar seleccion</span>
+            </button>
 
-      {/* Snap toggle */}
-      <button
-        onClick={onToggleSnap}
-        className={`${btnBase} ${snapEnabled ? "bg-sand text-foreground" : ""}`}
-        title={snapEnabled ? "Desactivar snap" : "Activar snap"}
-        aria-label={snapEnabled ? "Desactivar snap" : "Activar snap"}
-      >
-        <Grid3X3 size={14} strokeWidth={1.75} />
-      </button>
+            {/* Snap */}
+            <button
+              onClick={() => { onToggleSnap(); setShowMore(false) }}
+              className={`flex items-center gap-2.5 px-3 py-1.5 text-xs transition-colors ${snapEnabled ? "text-foreground bg-sand" : "text-text-secondary hover:bg-sand hover:text-foreground"}`}
+              title={snapEnabled ? "Desactivar snap a rejilla" : "Activar snap a rejilla"}
+            >
+              <Grid3X3 size={13} strokeWidth={1.75} />
+              <span>{snapEnabled ? "Snap activado" : "Snap desactivado"}</span>
+            </button>
 
-      <div className="mx-0.5 h-4 w-px bg-border" />
+            <div className="my-1 h-px bg-border mx-2" />
 
-      {/* New note */}
-      <button onClick={onNewNote} className={btnBase} title="Nueva nota" aria-label="Nueva nota">
-        <StickyNote size={14} strokeWidth={1.75} />
-      </button>
-
-      {/* Text node */}
-      <button onClick={onAddTextNode} className={btnBase} title="Nodo de texto" aria-label="Nodo de texto">
-        <Type size={14} strokeWidth={1.75} />
-      </button>
-
-      {/* URL node */}
-      <button onClick={onAddUrlNode} className={btnBase} title="Nodo URL" aria-label="Nodo URL">
-        <Link size={14} strokeWidth={1.75} />
-      </button>
-
-      {/* Image node */}
-      <button onClick={onAddImageNode} className={btnBase} title="Nodo de imagen" aria-label="Nodo de imagen">
-        <ImageIcon size={14} strokeWidth={1.75} />
-      </button>
-
-      {/* Group node */}
-      <button onClick={onAddGroupNode} className={btnBase} title="Nodo de grupo" aria-label="Nodo de grupo">
-        <SquareDashed size={14} strokeWidth={1.75} />
-      </button>
-
-      <div className="mx-0.5 h-4 w-px bg-border" />
-
-      {/* Auto-layout */}
-      <button
-        onClick={onAutoLayout}
-        className={btnBase}
-        title="Auto-organizar nodos"
-        aria-label="Auto-organizar nodos"
-      >
-        <LayoutGrid size={14} strokeWidth={1.75} />
-      </button>
-
-      {/* Group selection */}
-      <button
-        onClick={onGroupSelection}
-        disabled={!canGroup}
-        className={`${btnBase} ${!canGroup ? "opacity-30 cursor-not-allowed" : ""}`}
-        title="Agrupar selección"
-        aria-label="Agrupar selección"
-      >
-        <Layers size={14} strokeWidth={1.75} />
-      </button>
-
-      {/* Sync backlinks */}
-      <button
-        onClick={onSyncBacklinks}
-        disabled={!hasSyncableBacklinks}
-        className={`${btnBase} ${!hasSyncableBacklinks ? 'opacity-40 cursor-not-allowed' : ''}`}
-        title="Sincronizar backlinks al canvas"
-        aria-label="Sincronizar backlinks al canvas"
-      >
-        <Share2 size={14} strokeWidth={1.75} />
-      </button>
-
-      <div className="mx-0.5 h-4 w-px bg-border" />
-
-      {/* Export PNG */}
-      <button
-        onClick={onExportPng}
-        disabled={!onExportPng || isExporting}
-        className={`${btnBase} ${!onExportPng || isExporting ? 'opacity-40 cursor-not-allowed' : ''}`}
-        title="Exportar canvas como PNG"
-        aria-label="Exportar canvas como PNG"
-      >
-        {isExporting
-          ? <Loader2 size={14} strokeWidth={1.75} className="animate-spin" />
-          : <Download size={14} strokeWidth={1.75} />
-        }
-      </button>
+            {/* Exportar PNG */}
+            <button
+              onClick={() => { onExportPng?.(); setShowMore(false) }}
+              disabled={!onExportPng || isExporting}
+              className={`flex items-center gap-2.5 px-3 py-1.5 text-xs transition-colors ${!onExportPng || isExporting ? "opacity-40 cursor-not-allowed text-text-tertiary" : "text-text-secondary hover:bg-sand hover:text-foreground"}`}
+              title="Exportar canvas como PNG"
+            >
+              {isExporting
+                ? <Loader2 size={13} strokeWidth={1.75} className="animate-spin" />
+                : <Download size={13} strokeWidth={1.75} />
+              }
+              <span>{isExporting ? "Exportando..." : "Exportar PNG"}</span>
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

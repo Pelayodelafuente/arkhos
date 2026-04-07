@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState, useMemo, useCallback } from "react"
 import dynamic from "next/dynamic"
-import { Filter, X, Circle } from "lucide-react"
+import { Filter, X, Circle, Link2 } from "lucide-react"
 import { useNotesStore } from "@/stores/notes-store"
+import { useToast } from "@/stores/ui-store"
 import type { NoteColor, NoteFolder } from "@/types/notes"
 
 // ForceGraph2D needs window — dynamic import con SSR desactivado
@@ -36,11 +37,15 @@ interface GraphNode {
   folder_id: string | null
   noteColor: NoteColor
   tags: string[]
+  x?: number
+  y?: number
+  vx?: number
+  vy?: number
 }
 
 interface GraphLink {
-  source: string
-  target: string
+  source: string | GraphNode
+  target: string | GraphNode
 }
 
 interface GraphData {
@@ -63,12 +68,19 @@ export function NotesGraph({ onNodeClick }: Props) {
   const backlinks    = useNotesStore((s) => s.graphBacklinks)
   const folders      = useNotesStore((s) => s.folders)
   const loadGraphData = useNotesStore((s) => s.loadGraphData)
+  const editNote     = useNotesStore((s) => s.editNote)
+  const syncBacklinksOnSave = useNotesStore((s) => s.syncBacklinksOnSave)
+  const toast        = useToast()
 
   const containerRef = useRef<HTMLDivElement>(null)
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 })
   const [showFilters, setShowFilters] = useState(false)
   const [filters, setFilters] = useState<FilterState>({ folderId: null, tag: null, color: null })
   const [hoverNodeId, setHoverNodeId] = useState<string | null>(null)
+
+  // Connect mode state
+  const [connectMode, setConnectMode] = useState(false)
+  const [connectSource, setConnectSource] = useState<string | null>(null)
 
   // Carga backlinks al montar
   useEffect(() => {
@@ -108,7 +120,7 @@ export function NotesGraph({ onNodeClick }: Props) {
   }, [notes])
 
   // Construir graphData aplicando filtros
-  const graphData = useMemo<GraphData>(() => {
+  const graphData = useMemo<GraphData & { isolatedSet: Set<string> }>(() => {
     // Filtrar notas
     const filteredNotes = notes.filter((n) => {
       if (n.deleted_at) return false
@@ -127,57 +139,150 @@ export function NotesGraph({ onNodeClick }: Props) {
       }
     }
 
-    const nodes: GraphNode[] = filteredNotes.map((n) => ({
-      id: n.id,
-      name: n.title || 'Sin título',
-      color: n.folder_id ? (folderColorMap[n.folder_id] ?? NOTE_COLOR_HEX[n.color]) : NOTE_COLOR_HEX[n.color],
-      val: Math.max(1, (backlinkCount[n.id] ?? 0) + 1),
-      folder_id: n.folder_id ?? null,
-      noteColor: n.color,
-      tags: n.tags ?? [],
-    }))
-
     const links: GraphLink[] = backlinks
       .filter((bl) => noteIdSet.has(bl.source_note_id) && noteIdSet.has(bl.target_note_id))
       .map((bl) => ({ source: bl.source_note_id, target: bl.target_note_id }))
 
-    return { nodes, links }
+    // Compute isolated nodes (not in any link)
+    const linkedSet = new Set<string>()
+    for (const l of links) {
+      linkedSet.add(typeof l.source === 'string' ? l.source : l.source.id)
+      linkedSet.add(typeof l.target === 'string' ? l.target : l.target.id)
+    }
+    const isolatedSet = new Set<string>()
+    for (const n of filteredNotes) {
+      if (!linkedSet.has(n.id)) isolatedSet.add(n.id)
+    }
+
+    // Group nodes by folder for pre-layout (cluster initialization)
+    const folderCentroids: Record<string, { x: number; y: number; count: number }> = {}
+    const canvasW = 800
+    const canvasH = 600
+    const uniqueFolders = [...new Set(filteredNotes.map(n => n.folder_id).filter(Boolean))] as string[]
+    uniqueFolders.forEach((fid, i) => {
+      const angle = (i / uniqueFolders.length) * 2 * Math.PI
+      const r = Math.min(canvasW, canvasH) * 0.25
+      folderCentroids[fid] = {
+        x: canvasW / 2 + r * Math.cos(angle),
+        y: canvasH / 2 + r * Math.sin(angle),
+        count: 0,
+      }
+    })
+
+    const nodes: GraphNode[] = filteredNotes.map((n) => {
+      const centroid = n.folder_id ? folderCentroids[n.folder_id] : null
+      let initX: number | undefined
+      let initY: number | undefined
+      if (centroid) {
+        const spread = 60
+        initX = centroid.x + (Math.random() - 0.5) * spread
+        initY = centroid.y + (Math.random() - 0.5) * spread
+        centroid.count++
+      }
+      return {
+        id: n.id,
+        name: n.title || 'Sin título',
+        color: n.folder_id ? (folderColorMap[n.folder_id] ?? NOTE_COLOR_HEX[n.color]) : NOTE_COLOR_HEX[n.color],
+        val: Math.max(1, (backlinkCount[n.id] ?? 0) + 1),
+        folder_id: n.folder_id ?? null,
+        noteColor: n.color,
+        tags: n.tags ?? [],
+        ...(initX !== undefined ? { x: initX, y: initY } : {}),
+      }
+    })
+
+    return { nodes, links, isolatedSet }
   }, [notes, backlinks, filters, folderColorMap])
+
+  const { nodes: graphNodes, links: graphLinks, isolatedSet } = graphData
+  const isolatedCount = isolatedSet.size
+
+  // ForceGraph2D data (without the custom isolatedSet field)
+  const fgData = useMemo(() => ({ nodes: graphNodes, links: graphLinks }), [graphNodes, graphLinks])
 
   // Dibujar etiqueta bajo el nodo
   const paintNode = useCallback((
-    node: GraphNode & { x?: number; y?: number },
+    node: GraphNode,
     ctx: CanvasRenderingContext2D,
     globalScale: number
   ) => {
     const { x = 0, y = 0, val, color, name, id } = node
-    const radius = Math.sqrt(val) * 4
+    const isIsolated = isolatedSet.has(id)
     const isHovered = id === hoverNodeId
+    const isConnectSrc = id === connectSource
+
+    const rawRadius = Math.sqrt(val) * 4
+    // Isolated nodes are 20% smaller
+    const radius = isIsolated ? rawRadius * 0.8 : rawRadius
+
+    // Isolated: render at reduced opacity
+    if (isIsolated) ctx.globalAlpha = 0.45
 
     // Círculo
     ctx.beginPath()
     ctx.arc(x, y, radius, 0, 2 * Math.PI)
-    ctx.fillStyle = color
+    ctx.fillStyle = isConnectSrc ? '#F5C842' : color
     ctx.fill()
 
-    // Borde al hacer hover
-    if (isHovered) {
-      ctx.strokeStyle = '#1A1714'
+    // Borde al hacer hover o cuando es la fuente de conexión
+    if (isHovered || isConnectSrc) {
+      ctx.strokeStyle = isConnectSrc ? '#D4A820' : '#1A1714'
       ctx.lineWidth = 1.5 / globalScale
       ctx.stroke()
     }
 
-    // Etiqueta (visible a partir de cierto zoom)
-    if (globalScale >= 0.6) {
-      const fontSize = Math.max(8, 11 / globalScale)
-      ctx.font = `${fontSize}px Plus Jakarta Sans, sans-serif`
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'top'
-      ctx.fillStyle = '#3D3630'
-      const label = name.length > 22 ? name.slice(0, 20) + '…' : name
-      ctx.fillText(label, x, y + radius + 3)
+    // Reset alpha before drawing label
+    if (isIsolated) ctx.globalAlpha = 1
+
+    // Etiqueta — siempre visible, tamaño adaptativo
+    const fontSize = Math.max(8, Math.min(11, 10 * globalScale))
+    ctx.font = `${fontSize}px Plus Jakarta Sans, sans-serif`
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'top'
+    ctx.fillStyle = isIsolated ? '#AAAAAA' : '#3D3630'
+    const label = name.length > 18 ? name.slice(0, 18) + '…' : name
+    ctx.fillText(label, x, y + radius + 3)
+  }, [hoverNodeId, isolatedSet, connectSource])
+
+  // Handle node click — connect mode or regular
+  const handleNodeClick = useCallback((node: object) => {
+    const n = node as GraphNode
+    if (!connectMode) {
+      onNodeClick(n.id)
+      return
     }
-  }, [hoverNodeId])
+    if (!connectSource) {
+      // First click: set source
+      setConnectSource(n.id)
+      return
+    }
+    if (n.id === connectSource) {
+      // Clicked same node, deselect
+      setConnectSource(null)
+      return
+    }
+    // Second click: create link
+    const sourceNote = notes.find((note) => note.id === connectSource)
+    const targetNote = notes.find((note) => note.id === n.id)
+    if (!sourceNote || !targetNote) return
+
+    const targetTitle = targetNote.title || 'Sin título'
+    const link = `[[${targetTitle}]]`
+    const currentContent = sourceNote.content ?? ''
+    if (!currentContent.includes(link)) {
+      const newContent = currentContent + (currentContent.endsWith('\n') || !currentContent ? '' : '\n') + link
+      editNote(connectSource, { content: newContent })
+        .then(() => {
+          syncBacklinksOnSave(connectSource!, newContent).catch(console.error)
+          toast.success(`Nota vinculada a "${targetTitle}"`)
+        })
+        .catch(() => toast.error('Error al vincular notas'))
+    } else {
+      toast.info(`Ya existe el vínculo [[${targetTitle}]]`)
+    }
+    setConnectSource(null)
+    setConnectMode(false)
+  }, [connectMode, connectSource, notes, editNote, syncBacklinksOnSave, toast, onNodeClick])
 
   const noteColors: NoteColor[] = ['default', 'sage', 'terracotta', 'stone', 'blue', 'gold']
   const colorLabels: Record<NoteColor, string> = {
@@ -189,19 +294,11 @@ export function NotesGraph({ onNodeClick }: Props) {
     gold: 'Dorado',
   }
 
-  const isolatedCount = graphData.nodes.filter((n) => {
-    const linkedIds = new Set([
-      ...graphData.links.map((l) => typeof l.source === 'string' ? l.source : (l.source as GraphNode).id),
-      ...graphData.links.map((l) => typeof l.target === 'string' ? l.target : (l.target as GraphNode).id),
-    ])
-    return !linkedIds.has(n.id)
-  }).length
-
   return (
     <div className="flex h-full relative">
       {/* Graph canvas */}
       <div ref={containerRef} className="flex-1 min-w-0 bg-background relative overflow-hidden">
-        {graphData.nodes.length === 0 ? (
+        {graphNodes.length === 0 ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-text-tertiary">
             <Circle size={48} strokeWidth={1} />
             <p className="text-sm">No hay notas que mostrar</p>
@@ -218,11 +315,11 @@ export function NotesGraph({ onNodeClick }: Props) {
           <ForceGraph2D
             width={dimensions.width}
             height={dimensions.height}
-            graphData={graphData}
+            graphData={fgData}
             nodeId="id"
             nodeLabel="name"
             nodeCanvasObject={(node, ctx, globalScale) =>
-              paintNode(node as unknown as GraphNode & { x?: number; y?: number }, ctx, globalScale)
+              paintNode(node as unknown as GraphNode, ctx, globalScale)
             }
             nodeCanvasObjectMode={() => 'replace'}
             linkColor={() => '#E2D9CA'}
@@ -231,7 +328,7 @@ export function NotesGraph({ onNodeClick }: Props) {
             linkDirectionalArrowRelPos={1}
             linkDirectionalParticles={0}
             backgroundColor="#FAF7F2"
-            onNodeClick={(node) => onNodeClick((node as unknown as GraphNode).id)}
+            onNodeClick={handleNodeClick}
             onNodeHover={(node) => setHoverNodeId(node ? (node as unknown as GraphNode).id : null)}
             cooldownTicks={80}
             d3AlphaDecay={0.03}
@@ -239,34 +336,75 @@ export function NotesGraph({ onNodeClick }: Props) {
           />
         )}
 
-        {/* Botón filtros */}
-        <button
-          onClick={() => setShowFilters((v) => !v)}
-          className={`absolute top-4 right-4 flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
-            showFilters || filters.folderId || filters.tag || filters.color
-              ? 'bg-foreground text-card border-foreground'
-              : 'bg-card border-border text-text-secondary hover:text-foreground'
-          }`}
-        >
-          <Filter size={13} strokeWidth={1.75} />
-          Filtros
-          {(filters.folderId || filters.tag || filters.color) && (
-            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-accent text-card text-[10px] font-semibold">
-              {[filters.folderId, filters.tag, filters.color].filter(Boolean).length}
-            </span>
-          )}
-        </button>
+        {/* Connect mode instruction banner */}
+        {connectMode && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-card border border-border rounded-lg px-4 py-2 shadow-sm text-xs text-text-secondary">
+            <Link2 size={13} strokeWidth={1.75} className="text-accent flex-shrink-0" />
+            {connectSource
+              ? 'Ahora haz clic en la nota destino'
+              : 'Haz clic en la nota origen'}
+            <button
+              onClick={() => { setConnectMode(false); setConnectSource(null) }}
+              className="text-text-tertiary hover:text-foreground transition-colors ml-1"
+            >
+              <X size={13} strokeWidth={1.75} />
+            </button>
+          </div>
+        )}
+
+        {/* Toolbar — connect button + filter button */}
+        <div className="absolute top-4 right-4 flex items-center gap-2">
+          <button
+            onClick={() => {
+              if (connectMode) { setConnectMode(false); setConnectSource(null) }
+              else setConnectMode(true)
+            }}
+            title="Modo conectar notas"
+            className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
+              connectMode
+                ? 'bg-foreground text-card border-foreground'
+                : 'bg-card border-border text-text-secondary hover:text-foreground'
+            }`}
+          >
+            <Link2 size={13} strokeWidth={1.75} />
+            Conectar
+          </button>
+          <button
+            onClick={() => setShowFilters((v) => !v)}
+            className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
+              showFilters || filters.folderId || filters.tag || filters.color
+                ? 'bg-foreground text-card border-foreground'
+                : 'bg-card border-border text-text-secondary hover:text-foreground'
+            }`}
+          >
+            <Filter size={13} strokeWidth={1.75} />
+            Filtros
+            {(filters.folderId || filters.tag || filters.color) && (
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-accent text-card text-[10px] font-semibold">
+                {[filters.folderId, filters.tag, filters.color].filter(Boolean).length}
+              </span>
+            )}
+          </button>
+        </div>
 
         {/* Stats */}
-        <div className="absolute bottom-4 left-4 flex items-center gap-3 text-xs text-text-tertiary font-mono">
-          <span>{graphData.nodes.length} notas</span>
-          <span>·</span>
-          <span>{graphData.links.length} conexiones</span>
-          {isolatedCount > 0 && (
-            <>
-              <span>·</span>
-              <span>{isolatedCount} aisladas</span>
-            </>
+        <div className="absolute bottom-4 left-4 flex flex-col gap-1">
+          <div className="flex items-center gap-3 text-xs text-text-tertiary font-mono">
+            <span>{graphNodes.length} notas</span>
+            <span>·</span>
+            <span>{graphLinks.length} conexiones</span>
+            {isolatedCount > 0 && (
+              <>
+                <span>·</span>
+                <span>{isolatedCount} aisladas</span>
+              </>
+            )}
+          </div>
+          {/* CTA for isolated nodes */}
+          {isolatedCount > 2 && (
+            <p className="text-[11px] text-text-tertiary max-w-xs">
+              Conecta notas usando [[título]] en el editor o el modo Conectar
+            </p>
           )}
         </div>
       </div>
@@ -295,7 +433,7 @@ export function NotesGraph({ onNodeClick }: Props) {
                   >
                     Todas
                   </button>
-                  {folders.map((folder, i) => (
+                  {folders.map((folder: NoteFolder, i: number) => (
                     <button
                       key={folder.id}
                       onClick={() => setFilters((f) => ({ ...f, folderId: f.folderId === folder.id ? null : folder.id }))}

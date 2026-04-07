@@ -101,12 +101,14 @@ interface Props {
   onContentChange: (id: string, content: string) => void
   onLabelChange?: (id: string, label: string) => void
   onToggleCollapsed?: (id: string) => void
+  isConnecting?: boolean
 }
 
 // ─── Component ────────────────────────────────
 export function CanvasNodeComponent({
   node, viewport, isSelected, isEditing,
   isConnectionTarget = false, isDragOverGroup = false, searchDimmed = false, allNodes,
+  isConnecting = false,
   onSelect, onDragStart, onDoubleClick,
   onConnectionStart, onResizeStart, onContentChange, onLabelChange,
   onToggleCollapsed,
@@ -253,17 +255,22 @@ export function CanvasNodeComponent({
   // ─── Connection handles (shared) ────────
   const renderConnectionHandles = () => (
     (["top", "right", "bottom", "left"] as const).map((side) => {
-      const handleSize = 12
+      const handleSize = isConnecting ? 14 : 12
+      const portColor = isConnecting ? "#5B8C6A" : "#B07A3A"
+      const visibilityClass = isConnecting
+        ? "opacity-80"
+        : (isSelected ? "" : "opacity-0 group-hover/node:opacity-60")
       return (
         <div
           key={side}
-          className={`${isSelected ? "" : "opacity-0 group-hover/node:opacity-60"}`}
+          className={visibilityClass}
           style={{
             position: "absolute", ...CONNECTION_POS[side],
             width: handleSize, height: handleSize, borderRadius: "50%",
-            backgroundColor: "#B07A3A", border: "2px solid white",
+            backgroundColor: portColor, border: "2px solid white",
             cursor: "crosshair", zIndex: 103,
             transition: "opacity 150ms, transform 150ms",
+            boxShadow: isConnecting ? `0 0 0 3px ${portColor}33` : undefined,
           }}
           onMouseEnter={(e) => {
             (e.currentTarget as HTMLElement).style.transform =
@@ -625,6 +632,24 @@ export function CanvasNodeComponent({
         }}>
           <Layers size={7 * scale} strokeWidth={1.75} style={{ color: "var(--text-tertiary)", flexShrink: 0 }} />
         </div>
+      )}
+
+      {/* Project link badge — top-right corner, visible when not resizing */}
+      {node.node_type === "note" && node.note?.project_id && !node.locked && (
+        <div
+          title="Vinculada a proyecto"
+          style={{
+            position: "absolute",
+            top: 4 * scale,
+            right: 4 * scale,
+            width: 8 * scale,
+            height: 8 * scale,
+            borderRadius: "50%",
+            backgroundColor: "#C4704A",
+            pointerEvents: "none",
+            zIndex: 101,
+          }}
+        />
       )}
 
       {/* Resize handles — visible on hover or selected */}

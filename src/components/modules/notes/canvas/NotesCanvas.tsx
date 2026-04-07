@@ -224,6 +224,21 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
 
   const nodeMap = useMemo(() => new Map(nodes.map((n) => [n.id, n])), [nodes])
 
+  // Group edges by canonical node-pair key to compute parallel indices
+  const parallelEdgeMap = useMemo(() => {
+    const groups = new Map<string, string[]>()
+    for (const edge of edges) {
+      const key = [edge.from_node_id, edge.to_node_id].sort().join('|')
+      if (!groups.has(key)) groups.set(key, [])
+      groups.get(key)!.push(edge.id)
+    }
+    const result = new Map<string, { parallelIndex: number; parallelCount: number }>()
+    for (const ids of groups.values()) {
+      ids.forEach((id, i) => result.set(id, { parallelIndex: i, parallelCount: ids.length }))
+    }
+    return result
+  }, [edges])
+
   // hasSyncableBacklinks: there are canvas notes with backlinks already loaded
   const hasSyncableBacklinks = useMemo(() => {
     const noteIds = new Set(nodes.filter(n => n.note_id).map(n => n.note_id!))
@@ -1041,23 +1056,62 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
         </svg>
       )}
 
+      {/* Group background rects — rendered behind edges and nodes */}
+      <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
+        {nodes
+          .filter(n => n.node_type === 'group' && !n.collapsed)
+          .map(group => {
+            // Find children of this group
+            const children = nodes.filter(n => n.group_id === group.id && n.node_type !== 'group')
+            if (children.length === 0) return null
+            const padding = 16
+            const minX = Math.min(...children.map(n => n.pos_x)) - padding
+            const minY = Math.min(...children.map(n => n.pos_y)) - padding
+            const maxX = Math.max(...children.map(n => n.pos_x + n.width)) + padding
+            const maxY = Math.max(...children.map(n => n.pos_y + n.height)) + padding
+            const rx = minX * viewport.scale + viewport.offsetX
+            const ry = minY * viewport.scale + viewport.offsetY
+            const rw = (maxX - minX) * viewport.scale
+            const rh = (maxY - minY) * viewport.scale
+            return (
+              <rect
+                key={`group-bg-${group.id}`}
+                x={rx}
+                y={ry}
+                width={rw}
+                height={rh}
+                rx={12}
+                ry={12}
+                fill="rgba(240, 235, 225, 0.4)"
+                stroke="rgba(226, 217, 202, 0.6)"
+                strokeWidth={1}
+              />
+            )
+          })}
+      </svg>
+
       <svg className="absolute inset-0 w-full h-full" style={{ zIndex: 1, pointerEvents: "none" }}>
         <g style={{ pointerEvents: "auto" }}>
-          {edges.map((edge) => (
-            <CanvasEdgeComponent key={edge.id} edge={edge} nodes={nodeMap} scale={viewport.scale}
-              offsetX={viewport.offsetX} offsetY={viewport.offsetY} isSelected={selectedEdgeId === edge.id}
-              onSelect={(id) => { setSelectedEdge(id) }} onDelete={removeEdge}
-              onEditLabel={(id) => {
-                const edg = edges.find(ed => ed.id === id)
-                const lbl = prompt("Etiqueta de la conexion:", edg?.label || "")
-                if (lbl !== null) editEdge(id, { label: lbl })
-              }}
-              onContextMenu={(id, ev) => {
-                ev.preventDefault()
-                const edg = edges.find((e) => e.id === id)
-                setContextMenu({ x: ev.clientX, y: ev.clientY, worldX: 0, worldY: 0, nodeId: null, edgeId: id, edgeStyle: edg?.style ?? 'arrow' })
-              }} />
-          ))}
+          {edges.map((edge) => {
+            const parallel = parallelEdgeMap.get(edge.id)
+            return (
+              <CanvasEdgeComponent key={edge.id} edge={edge} nodes={nodeMap} scale={viewport.scale}
+                offsetX={viewport.offsetX} offsetY={viewport.offsetY} isSelected={selectedEdgeId === edge.id}
+                parallelIndex={parallel?.parallelIndex ?? 0}
+                parallelCount={parallel?.parallelCount ?? 1}
+                onSelect={(id) => { setSelectedEdge(id) }} onDelete={removeEdge}
+                onEditLabel={(id) => {
+                  const edg = edges.find(ed => ed.id === id)
+                  const lbl = prompt("Etiqueta de la conexion:", edg?.label || "")
+                  if (lbl !== null) editEdge(id, { label: lbl })
+                }}
+                onContextMenu={(id, ev) => {
+                  ev.preventDefault()
+                  const edg = edges.find((e) => e.id === id)
+                  setContextMenu({ x: ev.clientX, y: ev.clientY, worldX: 0, worldY: 0, nodeId: null, edgeId: id, edgeStyle: edg?.style ?? 'arrow' })
+                }} />
+            )
+          })}
         </g>
         {connectingLine && (
           <>
@@ -1091,6 +1145,7 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
                 onLabelChange={updateNodeLabel}
                 isConnectionTarget={isConnTarget} isDragOverGroup={dragOverGroupId === node.id}
                 searchDimmed={isDimmed} allNodes={nodes}
+                isConnecting={connectingFromNodeId !== null && connectingFromNodeId !== node.id}
                 onToggleCollapsed={toggleGroupCollapsed} />
             </div>
           )

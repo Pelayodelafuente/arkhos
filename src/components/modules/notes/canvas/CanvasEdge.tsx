@@ -25,6 +25,8 @@ interface CanvasEdgeProps {
   onDelete: (id: string) => void
   onEditLabel: (id: string) => void
   onContextMenu: (id: string, e: React.MouseEvent) => void
+  parallelIndex?: number
+  parallelCount?: number
 }
 
 // ─── Geometry Helpers ────────────────────
@@ -54,25 +56,38 @@ function getBezierPath(
   from: { x: number; y: number },
   to: { x: number; y: number },
   fromSide: EdgeSide,
-  toSide: EdgeSide
+  toSide: EdgeSide,
+  parallelOffset: number = 0
 ): { path: string; cp1: { x: number; y: number }; cp2: { x: number; y: number } } {
-  const dist = Math.max(Math.abs(to.x - from.x), Math.abs(to.y - from.y)) * 0.4
-  const minDist = 40
-  const cp = Math.max(dist, minDist)
+  const dx = to.x - from.x
+  const dy = to.y - from.y
+  const dist = Math.sqrt(dx * dx + dy * dy)
+  const h = Math.min(dist * 0.35, 100)
+  const minH = 30
 
   let cp1x = from.x, cp1y = from.y, cp2x = to.x, cp2y = to.y
 
   switch (fromSide) {
-    case 'right': cp1x += cp; break
-    case 'left': cp1x -= cp; break
-    case 'bottom': cp1y += cp; break
-    case 'top': cp1y -= cp; break
+    case 'right': cp1x += Math.max(h, minH); break
+    case 'left': cp1x -= Math.max(h, minH); break
+    case 'bottom': cp1y += Math.max(h, minH); break
+    case 'top': cp1y -= Math.max(h, minH); break
   }
   switch (toSide) {
-    case 'right': cp2x += cp; break
-    case 'left': cp2x -= cp; break
-    case 'bottom': cp2y += cp; break
-    case 'top': cp2y -= cp; break
+    case 'right': cp2x += Math.max(h, minH); break
+    case 'left': cp2x -= Math.max(h, minH); break
+    case 'bottom': cp2y += Math.max(h, minH); break
+    case 'top': cp2y -= Math.max(h, minH); break
+  }
+
+  // Apply parallel offset: shift control points perpendicularly to the chord
+  if (parallelOffset !== 0 && dist > 1) {
+    const perpX = -dy / dist
+    const perpY = dx / dist
+    cp1x += perpX * parallelOffset
+    cp1y += perpY * parallelOffset
+    cp2x += perpX * parallelOffset
+    cp2y += perpY * parallelOffset
   }
 
   return {
@@ -129,6 +144,8 @@ export function CanvasEdgeComponent({
   onDelete,
   onEditLabel,
   onContextMenu,
+  parallelIndex = 0,
+  parallelCount = 1,
 }: CanvasEdgeProps) {
   const [isHovered, setIsHovered] = useState(false)
 
@@ -163,7 +180,10 @@ export function CanvasEdgeComponent({
 
   const from = getAnchorPoint(fromNode, fromSide, scale, offsetX, offsetY)
   const to = getAnchorPoint(toNode, toSide, scale, offsetX, offsetY)
-  const { path: bezierPath, cp1, cp2 } = getBezierPath(from, to, fromSide, toSide)
+  const parallelOffset = parallelCount > 1
+    ? (parallelIndex - (parallelCount - 1) / 2) * 16
+    : 0
+  const { path: bezierPath, cp1, cp2 } = getBezierPath(from, to, fromSide, toSide, parallelOffset)
   const color = EDGE_COLORS[edge.color] ?? EDGE_COLORS.default
   const edgeStyle: EdgeStyle = edge.style ?? 'arrow'
 
