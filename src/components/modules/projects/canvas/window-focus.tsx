@@ -21,7 +21,7 @@ interface WindowFocusProps {
 }
 
 function priorityOrder(p: TaskPriority): number {
-  const order: Record<TaskPriority, number> = { urgent: 4, high: 3, medium: 2, low: 1, none: 0 };
+  const order: Record<TaskPriority, number> = { high: 3, medium: 2, low: 1, none: 0 };
   return order[p];
 }
 
@@ -131,7 +131,7 @@ export function WindowFocus({ userId }: WindowFocusProps) {
 
   const filteredTasks = tasks.filter((t) => {
     if (filterProjectId && t.project_id !== filterProjectId) return false;
-    if (filterPriority === 'high') return t.priority === 'high' || t.priority === 'urgent';
+    if (filterPriority === 'high') return t.priority === 'high';
     if (filterPriority === 'medium') return t.priority === 'medium';
     if (filterPriority === 'low') return t.priority === 'low';
     return true;

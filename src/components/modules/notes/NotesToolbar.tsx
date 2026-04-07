@@ -17,6 +17,7 @@ export function NotesToolbar({ userId }: Props) {
   const allTags = useAllTags()
 
   const [localSearch, setLocalSearch] = useState("")
+  const [searchExpanded, setSearchExpanded] = useState(false)
   const searchRef = useRef<HTMLInputElement>(null)
 
   // Tags scroll state
@@ -55,23 +56,46 @@ export function NotesToolbar({ userId }: Props) {
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      {/* Search */}
-      <div className="relative flex-1 min-w-[200px]">
-        <Search size={15} strokeWidth={1.75} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
+      {/* Search — compact expandable (igual que Gastos) */}
+      <div
+        className={`relative flex h-9 items-center overflow-hidden rounded-full border border-border bg-card transition-all ${
+          searchExpanded ? 'w-[260px] px-3 gap-2' : 'w-9 justify-center hover:bg-sand'
+        }`}
+        style={{
+          transitionDuration: 'var(--transition-normal)',
+          transitionTimingFunction: 'var(--ease-out-expo)',
+        }}
+        onClick={() => {
+          if (!searchExpanded) {
+            setSearchExpanded(true)
+            setTimeout(() => searchRef.current?.focus(), 50)
+          }
+        }}
+      >
+        {isSearching && searchExpanded && !localSearch ? (
+          <div className="h-3.5 w-3.5 flex-shrink-0 animate-spin rounded-full border-2 border-border border-t-[#B07A3A]" />
+        ) : (
+          <Search size={14} strokeWidth={1.75} className="text-text-tertiary flex-shrink-0" />
+        )}
         <input
           ref={searchRef}
           type="text"
           placeholder="Buscar notas..."
           value={localSearch}
           onChange={(e) => setLocalSearch(e.target.value)}
-          className="w-full rounded-md border border-border bg-card py-2 pl-9 pr-8 text-sm text-foreground placeholder:text-text-tertiary focus:border-[#B07A3A] focus:outline-none"
+          onBlur={() => { if (!localSearch) setSearchExpanded(false) }}
+          tabIndex={searchExpanded ? 0 : -1}
+          className={`min-w-0 bg-transparent text-sm text-foreground placeholder:text-text-tertiary focus:outline-none transition-opacity ${
+            searchExpanded ? 'flex-1 opacity-100' : 'w-0 opacity-0 pointer-events-none'
+          }`}
         />
-        {isSearching && !localSearch && (
-          <div className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 animate-spin rounded-full border-2 border-border border-t-[#B07A3A]" />
-        )}
-        {localSearch && (
-          <button onClick={() => { setLocalSearch(""); setSearchQuery("") }} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-foreground">
-            <X size={14} strokeWidth={1.75} />
+        {localSearch && searchExpanded && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setLocalSearch(""); setSearchQuery(""); searchRef.current?.focus() }}
+            className="flex-shrink-0 text-text-tertiary hover:text-foreground"
+          >
+            <X size={13} strokeWidth={1.75} />
           </button>
         )}
       </div>
@@ -100,7 +124,6 @@ export function NotesToolbar({ userId }: Props) {
               className="flex items-center gap-1.5 overflow-x-auto"
               style={{ maxWidth: "min(480px, 50vw)", scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
-              <style>{`.notes-tags-scroll::-webkit-scrollbar { display: none; }`}</style>
               {activeTag && (
                 <button
                   onClick={() => setActiveTag(null)}

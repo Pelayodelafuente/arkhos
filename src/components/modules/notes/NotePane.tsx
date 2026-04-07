@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useMemo } from "react"
-import { X, Trash2, Archive, ArchiveRestore, History, RotateCcw, Link2, ArrowRight, Unlink, ChevronLeft, Sparkles, ChevronDown, FolderKanban, CreditCard, Star } from "lucide-react"
+import { X, Trash2, Archive, ArchiveRestore, History, RotateCcw, Link2, ArrowRight, Unlink, ChevronLeft, ChevronDown, FolderKanban, CreditCard, Star } from "lucide-react"
 import * as LucideIcons from "lucide-react"
 import { Button, SelectCustom } from "@/components/ui"
 import { useNotesStore, useAllTags } from "@/stores/notes-store"
@@ -99,11 +99,6 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
     await linkNoteToSubscription(note.id, subscriptionId)
   }
 
-  // IA — resumen
-  const [summaryOpen, setSummaryOpen] = useState(false)
-  const [summaryText, setSummaryText] = useState("")
-  const [summaryLoading, setSummaryLoading] = useState(false)
-
   // IA — sugerencia de tags
   const [aiSuggestedTags, setAiSuggestedTags] = useState<string[]>([])
   const [suggestTagsLoading, setSuggestTagsLoading] = useState(false)
@@ -132,6 +127,9 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
   // Populate form when note changes
   useEffect(() => {
     if (!note) { onClose(); return }
+    // Cancel any pending save from the previous note
+    if (autoSaveTimer.current) { clearTimeout(autoSaveTimer.current); autoSaveTimer.current = null }
+    pendingSaveRef.current = null
     setTitle(note.title)
     setContent(note.content)
     setColor(note.color)
@@ -147,8 +145,7 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
     setHistoryOpen(false)
     setVersions([])
     setSelectedVersion(null)
-    setSummaryOpen(false)
-    setSummaryText("")
+    setSaveStatus('idle')
     setAiSuggestedTags([])
   }, [noteId]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -284,40 +281,6 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
 
   const SelectedIcon = (LucideIcons as unknown as Record<string, LucideIcons.LucideIcon>)[icon] ?? LucideIcons.FileText
 
-  // IA — Resumen streaming
-  const handleSummarize = async () => {
-    if (summaryLoading) return
-    setSummaryOpen(true)
-    setSummaryText("")
-    setSummaryLoading(true)
-    try {
-      const res = await fetch('/api/notes/summarize', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, content }),
-      })
-      if (!res.ok || !res.body) {
-        const err = await res.json() as { error?: string }
-        toast.error(err.error ?? 'Error al generar resumen')
-        setSummaryLoading(false)
-        return
-      }
-      const reader = res.body.getReader()
-      const decoder = new TextDecoder()
-      let text = ""
-      for (;;) {
-        const { done, value } = await reader.read()
-        if (done) break
-        text += decoder.decode(value, { stream: true })
-        setSummaryText(text)
-      }
-    } catch {
-      toast.error('Error al conectar con la IA')
-    } finally {
-      setSummaryLoading(false)
-    }
-  }
-
   // IA — Sugerir tags
   const handleSuggestTags = async () => {
     if (suggestTagsLoading) return
@@ -396,21 +359,6 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
           title={note?.favorited ? "Quitar de favoritas" : "Añadir a favoritas"}
         >
           <Star size={14} strokeWidth={1.75} className={note?.favorited ? "fill-amber-400" : ""} />
-        </button>
-        <button
-          type="button"
-          onClick={handleSummarize}
-          disabled={summaryLoading}
-          className={`flex h-7 w-7 items-center justify-center rounded-md transition-colors flex-shrink-0 ${
-            summaryOpen ? "bg-sand text-[#B07A3A]" : "text-text-tertiary hover:text-[#B07A3A] hover:bg-sand/60"
-          } disabled:opacity-40`}
-          title="Resumir con IA"
-        >
-          {summaryLoading ? (
-            <span className="h-3 w-3 rounded-full border border-[#B07A3A] border-t-transparent animate-spin" />
-          ) : (
-            <Sparkles size={14} strokeWidth={1.75} />
-          )}
         </button>
         <button
           type="button"
@@ -506,31 +454,6 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
             />
           )}
         </div>
-
-        {/* IA — Panel resumen */}
-        {summaryOpen && (
-          <div className="rounded-md border border-border overflow-hidden" style={{ borderColor: 'rgba(122,155,118,0.3)' }}>
-            <button
-              type="button"
-              onClick={() => setSummaryOpen((v) => !v)}
-              className="w-full flex items-center justify-between px-3 py-2 text-[11px] font-semibold uppercase tracking-wide transition-colors hover:bg-sand/40"
-              style={{ color: '#5a7a56', background: 'rgba(122,155,118,0.06)' }}
-            >
-              <span className="flex items-center gap-1.5">
-                <Sparkles size={11} strokeWidth={2} />
-                Resumen IA
-              </span>
-              <ChevronDown size={11} strokeWidth={2} />
-            </button>
-            <div className="px-3 py-2.5 text-sm text-text-secondary leading-relaxed min-h-[40px]">
-              {summaryText ? (
-                <p>{summaryText}</p>
-              ) : summaryLoading ? (
-                <span className="text-text-tertiary">Generando resumen...</span>
-              ) : null}
-            </div>
-          </div>
-        )}
 
         {/* Backlinks */}
         {hasLinks && (

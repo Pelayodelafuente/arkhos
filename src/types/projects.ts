@@ -7,7 +7,7 @@
 export const PHASE_STATUSES = ['pending', 'in-progress', 'done'] as const;
 export type PhaseStatus = (typeof PHASE_STATUSES)[number];
 
-export const TASK_PRIORITIES = ['none', 'low', 'medium', 'high', 'urgent'] as const;
+export const TASK_PRIORITIES = ['none', 'low', 'medium', 'high'] as const;
 export type TaskPriority = (typeof TASK_PRIORITIES)[number];
 
 export const TASK_STATUSES = ['todo', 'in_progress', 'review', 'done'] as const;
@@ -26,7 +26,6 @@ export const TASK_PRIORITY_CONFIG: Record<TaskPriority, { label: string; color: 
   low: { label: 'Baja', color: '#16a34a' },
   medium: { label: 'Media', color: '#ca8a04' },
   high: { label: 'Alta', color: '#ea580c' },
-  urgent: { label: 'Urgente', color: '#dc2626' },
 };
 
 export const TASK_STATUS_CONFIG: Record<TaskStatus, { label: string; color: string }> = {

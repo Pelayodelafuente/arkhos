@@ -37,7 +37,6 @@ const PRIORITY_COLORS: Record<TaskPriority, string> = {
   low: '#16a34a',
   medium: '#ca8a04',
   high: '#ea580c',
-  urgent: '#dc2626',
 };
 
 // ─── Overdue helper ───────────────────

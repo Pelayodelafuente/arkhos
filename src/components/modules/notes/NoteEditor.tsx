@@ -139,7 +139,7 @@ interface SlashMenuState {
   visible: boolean
   query: string
   selectedIndex: number
-  position: { top: number; left: number }
+  position: { top: number; left: number; flipUp?: boolean }
 }
 
 // ─── NoteEditor Props ────────────────────────────────────
@@ -327,11 +327,10 @@ export function NoteEditor({
         slashStartPos.current = slashIdx
         const query = slashMatch[1] ?? ''
 
-        // Get cursor position for popup
+        // Get cursor position for popup — use viewport coords for fixed positioning
         const coords = ed.view.coordsAtPos(from)
-        const editorDom = ed.view.dom as HTMLElement
-        const containerEl = editorDom.closest('.tiptap-editor-wrap') as HTMLElement | null
-        const containerRect = containerEl?.getBoundingClientRect() ?? editorDom.getBoundingClientRect()
+        const menuHeight = 280 // approx max height
+        const flipUp = coords.bottom + menuHeight > window.innerHeight - 8
 
         slashMenuVisibleRef.current = true
         setSlashMenu({
@@ -339,8 +338,9 @@ export function NoteEditor({
           query,
           selectedIndex: 0,
           position: {
-            top: coords.bottom - containerRect.top + 4,
-            left: Math.max(0, coords.left - containerRect.left),
+            top: flipUp ? coords.top - 4 : coords.bottom + 4,
+            left: Math.min(coords.left, window.innerWidth - 232),
+            flipUp,
           },
         })
       } else {
@@ -570,12 +570,16 @@ export function NoteEditor({
         className="tiptap-content flex-1 text-sm text-foreground focus:outline-none"
       />
 
-      {/* Slash Command Menu */}
+      {/* Slash Command Menu — fixed positioning to avoid clipping */}
       {slashMenu.visible && filteredCommands.length > 0 && (
         <div
           ref={slashMenuRef}
-          style={{ top: slashMenu.position.top, left: slashMenu.position.left }}
-          className="absolute z-50 w-56 rounded-lg border border-border bg-card py-1 shadow-md"
+          style={
+            slashMenu.position.flipUp
+              ? { position: 'fixed', bottom: window.innerHeight - slashMenu.position.top, left: slashMenu.position.left, top: 'auto' }
+              : { position: 'fixed', top: slashMenu.position.top, left: slashMenu.position.left }
+          }
+          className="z-[9999] w-56 rounded-lg border border-border bg-card py-1 shadow-md"
         >
           {filteredCommands.map((cmd, idx) => {
             const Icon = cmd.Icon

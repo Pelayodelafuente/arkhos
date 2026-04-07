@@ -787,6 +787,16 @@ export async function deleteFolder(id: string): Promise<void> {
   if (error) throw new NotesError('Error deleting folder', error.message)
 }
 
+export async function reorderFolders(folders: Array<{ id: string; sort_order: number }>): Promise<void> {
+  const supabase = createClient()
+  const updates = folders.map(({ id, sort_order }) =>
+    supabase.from('note_folders').update({ sort_order }).eq('id', id)
+  )
+  const results = await Promise.all(updates)
+  const failed = results.find((r) => r.error)
+  if (failed?.error) throw new NotesError('Error reordering folders', failed.error.message)
+}
+
 export async function moveNoteToFolder(noteId: string, folderId: string | null): Promise<void> {
   const supabase = createClient()
   const { data: { session } } = await supabase.auth.getSession()

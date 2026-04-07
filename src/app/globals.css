@@ -185,6 +185,21 @@ mark {
   padding: 0 1px;
 }
 
+/* Cursor pointer global — todos los elementos interactivos */
+button,
+a,
+[role="button"],
+[type="button"],
+[type="submit"],
+[type="reset"],
+select,
+input[type="checkbox"],
+input[type="radio"],
+summary,
+[tabindex]:not([tabindex="-1"]) {
+  cursor: pointer;
+}
+
 /* ══════════════════════════════════════
    Auth — Dark Glassmorphism Theme
    ══════════════════════════════════════ */

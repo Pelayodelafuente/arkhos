@@ -12,7 +12,6 @@ const PRIORITY_LABELS: Record<TaskPriority, string> = {
   low: "baja",
   medium: "media",
   high: "alta",
-  urgent: "urgente",
 };
 
 const PHASE_STATUS_LABELS: Record<PhaseStatus, string> = {

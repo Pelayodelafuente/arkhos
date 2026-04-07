@@ -16,8 +16,24 @@ import {
   Check,
   X,
   CalendarDays,
+  GripVertical,
 } from "lucide-react"
 import * as LucideIcons from "lucide-react"
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core"
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
 import { useNotesStore } from "@/stores/notes-store"
 import type { NoteFolder } from "@/types/notes"
 
@@ -46,6 +62,7 @@ export function NotesSidebar({ userId }: Props) {
   const addFolder = useNotesStore((s) => s.addFolder)
   const editFolder = useNotesStore((s) => s.editFolder)
   const removeFolder = useNotesStore((s) => s.removeFolder)
+  const reorderFoldersAction = useNotesStore((s) => s.reorderFoldersAction)
   const fetchFolders = useNotesStore((s) => s.fetchFolders)
   const fetchTrashedNotes = useNotesStore((s) => s.fetchTrashedNotes)
   const addNote = useNotesStore((s) => s.addNote)
@@ -126,6 +143,19 @@ export function NotesSidebar({ userId }: Props) {
     setMenuPos(null)
     setRenameValue(folder.name)
     setRenamingFolderId(folder.id)
+  }
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }))
+
+  const handleFolderDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const oldIndex = folders.findIndex((f) => f.id === active.id)
+    const newIndex = folders.findIndex((f) => f.id === over.id)
+    if (oldIndex !== -1 && newIndex !== -1) {
+      const newOrder = arrayMove(folders, oldIndex, newIndex)
+      reorderFoldersAction(newOrder.map((f) => f.id))
+    }
   }
 
   if (collapsed) {
@@ -281,108 +311,169 @@ export function NotesSidebar({ userId }: Props) {
           </div>
         )}
 
-        {/* Folder list */}
-        <div className="space-y-0.5">
-          {folders.length === 0 && !creatingFolder && (
-            <p className="px-3 py-2 text-[12px] text-text-tertiary italic">
-              Crea tu primera carpeta
-            </p>
-          )}
-          {folders.map((folder) => {
-            const isActive = activeFolderId === folder.id
-            const count = countFor(folder.id)
-            const FolderIcon =
-              (LucideIcons as unknown as Record<string, LucideIcons.LucideIcon>)[folder.icon] ??
-              Folder
-            const isRenaming = renamingFolderId === folder.id
-            return (
-              <div
-                key={folder.id}
-                className={`group relative flex items-center gap-2 rounded-md px-3 py-1.5 text-[13px] transition-colors cursor-pointer ${
-                  isActive
-                    ? "bg-[#B07A3A]/10 text-[#B07A3A] font-medium"
-                    : "text-text-secondary hover:bg-sand"
-                }`}
-                onClick={() => !isRenaming && setActiveFolderId(folder.id)}
-              >
-                <FolderIcon size={14} strokeWidth={1.75} className="flex-shrink-0" />
-                {isRenaming ? (
-                  <input
-                    ref={renameInputRef}
-                    type="text"
-                    value={renameValue}
-                    onChange={(e) => setRenameValue(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") handleRename(folder)
-                      if (e.key === "Escape") setRenamingFolderId(null)
-                    }}
-                    onBlur={() => handleRename(folder)}
-                    onClick={(e) => e.stopPropagation()}
-                    className="flex-1 text-[13px] bg-card border border-border rounded-md px-1.5 py-0.5 text-foreground outline-none focus:ring-1 focus:ring-[#B07A3A]"
-                  />
-                ) : (
-                  <span className="flex-1 truncate">{folder.name}</span>
-                )}
-                {!isRenaming && (
-                  <>
-                    {count > 0 && (
-                      <span className="text-[11px] font-mono text-text-tertiary group-hover:hidden">
-                        {count}
-                      </span>
-                    )}
-                    <div className="relative ml-auto">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          if (menuOpenId === folder.id) {
-                            setMenuOpenId(null)
-                            setMenuPos(null)
-                          } else {
-                            const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
-                            setMenuPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right })
-                            setMenuOpenId(folder.id)
-                          }
-                        }}
-                        className="hidden group-hover:flex h-5 w-5 items-center justify-center rounded-md text-text-tertiary hover:text-text-secondary hover:bg-border/40 transition-colors"
-                        title="Opciones"
-                      >
-                        <MoreHorizontal size={12} strokeWidth={1.75} />
-                      </button>
-                      {menuOpenId === folder.id && menuPos && (
-                        <>
-                          <div
-                            className="fixed inset-0 z-40"
-                            onClick={(e) => { e.stopPropagation(); setMenuOpenId(null); setMenuPos(null) }}
-                          />
-                          <div
-                            className="fixed z-50 w-36 rounded-lg border border-border bg-card py-1 shadow-md"
-                            style={{ top: menuPos.top, right: menuPos.right }}
-                          >
-                            <button
-                              onClick={(e) => { e.stopPropagation(); startRename(folder) }}
-                              className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-text-secondary hover:bg-sand transition-colors"
-                            >
-                              <Pencil size={12} strokeWidth={1.75} />
-                              Renombrar
-                            </button>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); handleDeleteFolder(folder.id) }}
-                              className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 transition-colors"
-                            >
-                              <Trash2 size={12} strokeWidth={1.75} />
-                              Eliminar
-                            </button>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
-            )
-          })}
-        </div>
+        {/* Folder list — sortable */}
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleFolderDragEnd}>
+          <SortableContext items={folders.map((f) => f.id)} strategy={verticalListSortingStrategy}>
+            <div className="space-y-0.5">
+              {folders.length === 0 && !creatingFolder && (
+                <p className="px-3 py-2 text-[12px] text-text-tertiary italic">
+                  Crea tu primera carpeta
+                </p>
+              )}
+              {folders.map((folder) => (
+                <SortableFolderItem
+                  key={folder.id}
+                  folder={folder}
+                  isActive={activeFolderId === folder.id}
+                  count={countFor(folder.id)}
+                  isRenaming={renamingFolderId === folder.id}
+                  renameValue={renameValue}
+                  renameInputRef={renameInputRef}
+                  menuOpenId={menuOpenId}
+                  menuPos={menuPos}
+                  onSelect={() => !renamingFolderId && setActiveFolderId(folder.id)}
+                  onRenameChange={setRenameValue}
+                  onRenameSubmit={() => handleRename(folder)}
+                  onRenameCancel={() => setRenamingFolderId(null)}
+                  onMenuOpen={(e) => {
+                    e.stopPropagation()
+                    if (menuOpenId === folder.id) {
+                      setMenuOpenId(null); setMenuPos(null)
+                    } else {
+                      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+                      setMenuPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right })
+                      setMenuOpenId(folder.id)
+                    }
+                  }}
+                  onMenuClose={() => { setMenuOpenId(null); setMenuPos(null) }}
+                  onRename={() => startRename(folder)}
+                  onDelete={() => handleDeleteFolder(folder.id)}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
       </div>
+    </div>
+  )
+}
+
+// ─── Sortable folder item ─────────────
+
+interface SortableFolderItemProps {
+  folder: NoteFolder
+  isActive: boolean
+  count: number
+  isRenaming: boolean
+  renameValue: string
+  renameInputRef: React.RefObject<HTMLInputElement | null>
+  menuOpenId: string | null
+  menuPos: { top: number; right: number } | null
+  onSelect: () => void
+  onRenameChange: (v: string) => void
+  onRenameSubmit: () => void
+  onRenameCancel: () => void
+  onMenuOpen: (e: React.MouseEvent<HTMLButtonElement>) => void
+  onMenuClose: () => void
+  onRename: () => void
+  onDelete: () => void
+}
+
+function SortableFolderItem({
+  folder, isActive, count, isRenaming,
+  renameValue, renameInputRef, menuOpenId, menuPos,
+  onSelect, onRenameChange, onRenameSubmit, onRenameCancel,
+  onMenuOpen, onMenuClose, onRename, onDelete,
+}: SortableFolderItemProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: folder.id })
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 }
+  const FolderIcon = (LucideIcons as unknown as Record<string, LucideIcons.LucideIcon>)[folder.icon] ?? Folder
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`group relative flex items-center gap-2 rounded-md px-1.5 py-1.5 text-[13px] transition-colors cursor-pointer ${
+        isActive ? "bg-[#B07A3A]/10 text-[#B07A3A] font-medium" : "text-text-secondary hover:bg-sand"
+      }`}
+      onClick={onSelect}
+    >
+      {/* Drag handle */}
+      <button
+        type="button"
+        {...attributes}
+        {...listeners}
+        onClick={(e) => e.stopPropagation()}
+        className="hidden group-hover:flex flex-shrink-0 h-4 w-4 items-center justify-center text-text-tertiary hover:text-text-secondary"
+        tabIndex={-1}
+      >
+        <GripVertical size={12} strokeWidth={1.75} />
+      </button>
+      <FolderIcon size={14} strokeWidth={1.75} className="flex-shrink-0 group-hover:hidden block" />
+
+      {isRenaming ? (
+        <input
+          ref={renameInputRef}
+          type="text"
+          value={renameValue}
+          onChange={(e) => onRenameChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") onRenameSubmit()
+            if (e.key === "Escape") onRenameCancel()
+          }}
+          onBlur={onRenameSubmit}
+          onClick={(e) => e.stopPropagation()}
+          className="flex-1 text-[13px] bg-card border border-border rounded-md px-1.5 py-0.5 text-foreground outline-none focus:ring-1 focus:ring-[#B07A3A]"
+        />
+      ) : (
+        <span className="flex-1 truncate">{folder.name}</span>
+      )}
+
+      {!isRenaming && (
+        <>
+          {count > 0 && (
+            <span className="text-[11px] font-mono text-text-tertiary group-hover:hidden">
+              {count}
+            </span>
+          )}
+          <div className="relative ml-auto">
+            <button
+              onClick={onMenuOpen}
+              className="hidden group-hover:flex h-5 w-5 items-center justify-center rounded-md text-text-tertiary hover:text-text-secondary hover:bg-border/40 transition-colors"
+              title="Opciones"
+            >
+              <MoreHorizontal size={12} strokeWidth={1.75} />
+            </button>
+            {menuOpenId === folder.id && menuPos && (
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={(e) => { e.stopPropagation(); onMenuClose() }}
+                />
+                <div
+                  className="fixed z-50 w-36 rounded-lg border border-border bg-card py-1 shadow-md"
+                  style={{ top: menuPos.top, right: menuPos.right }}
+                >
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onRename() }}
+                    className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-text-secondary hover:bg-sand transition-colors"
+                  >
+                    <Pencil size={12} strokeWidth={1.75} />
+                    Renombrar
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onDelete() }}
+                    className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    <Trash2 size={12} strokeWidth={1.75} />
+                    Eliminar
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </>
+      )}
     </div>
   )
 }

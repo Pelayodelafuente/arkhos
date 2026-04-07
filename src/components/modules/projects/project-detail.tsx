@@ -423,7 +423,7 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
   }
 
   function cyclePriority(taskId: string, current: TaskPriority) {
-    const order: TaskPriority[] = ["none", "low", "medium", "high", "urgent"];
+    const order: TaskPriority[] = ["none", "low", "medium", "high"];
     const nextIdx = (order.indexOf(current) + 1) % order.length;
     editTask(taskId, { priority: order[nextIdx] });
   }

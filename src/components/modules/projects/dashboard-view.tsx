@@ -81,7 +81,7 @@ export default function DashboardView({ phases }: DashboardViewProps) {
   const tasks = getAllTasks(phases);
   const totalTasks = tasks.length;
   const doneTasks = tasks.filter((t) => t.done).length;
-  const highPriorityTasks = tasks.filter((t) => t.priority === 'high' || t.priority === 'urgent').length;
+  const highPriorityTasks = tasks.filter((t) => t.priority === 'high').length;
 
   // Última actividad: max updated_at de todas las tareas
   const lastActivity = tasks.reduce<string | null>((max, t) => {
@@ -95,8 +95,7 @@ export default function DashboardView({ phases }: DashboardViewProps) {
   const progress = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
 
   // Priority counts (excluding 'none')
-  const priorityCounts: { key: 'urgent' | 'high' | 'medium' | 'low'; label: string; color: string; count: number }[] = [
-    { key: 'urgent', label: TASK_PRIORITY_CONFIG.urgent.label, color: TASK_PRIORITY_CONFIG.urgent.color, count: tasks.filter((t) => t.priority === 'urgent').length },
+  const priorityCounts: { key: 'high' | 'medium' | 'low'; label: string; color: string; count: number }[] = [
     { key: 'high', label: TASK_PRIORITY_CONFIG.high.label, color: TASK_PRIORITY_CONFIG.high.color, count: tasks.filter((t) => t.priority === 'high').length },
     { key: 'medium', label: TASK_PRIORITY_CONFIG.medium.label, color: TASK_PRIORITY_CONFIG.medium.color, count: tasks.filter((t) => t.priority === 'medium').length },
     { key: 'low', label: TASK_PRIORITY_CONFIG.low.label, color: TASK_PRIORITY_CONFIG.low.color, count: tasks.filter((t) => t.priority === 'low').length },

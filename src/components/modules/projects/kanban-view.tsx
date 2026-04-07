@@ -203,9 +203,7 @@ function SortableCard({
         {task.priority !== 'none' && (
           <span className="inline-flex items-center gap-1 text-xs">
             <span
-              className={`w-2 h-2 rounded-full shrink-0 ${
-                task.priority === 'urgent' ? 'animate-pulse' : ''
-              }`}
+              className="w-2 h-2 rounded-full shrink-0"
               style={{ backgroundColor: priorityConfig.color }}
             />
             <span style={{ color: priorityConfig.color }}>{priorityConfig.label}</span>
@@ -261,6 +259,8 @@ export default function KanbanView({
   onOpenTask,
 }: KanbanViewProps) {
   const changeTaskStatus = useProjectsStore((s) => s.changeTaskStatus);
+  const reorderTasksAction = useProjectsStore((s) => s.reorderTasksAction);
+  const activeProject = useProjectsStore((s) => s.activeProject);
   const [activePhaseFilter, setActivePhaseFilter] = useState<string | null>(null);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [localOrder, setLocalOrder] = useState<Record<TaskStatus, string[]>>({
@@ -389,20 +389,29 @@ export default function KanbanView({
         // Cross-column move — persist to DB
         changeTaskStatus(taskId, overTask.status);
       } else {
-        // Same-column reorder — local view only (not persisted)
+        // Same-column reorder — update local view AND persist to DB
         const status = task.status;
-        setLocalOrder((prev) => {
-          const ids =
-            prev[status].length > 0
-              ? [...prev[status]]
-              : tasksByStatus[status].map((t) => t.id);
-          const oldIdx = ids.indexOf(taskId);
-          const newIdx = ids.indexOf(overId);
-          if (oldIdx !== -1 && newIdx !== -1 && oldIdx !== newIdx) {
-            return { ...prev, [status]: arrayMove(ids, oldIdx, newIdx) };
-          }
-          return prev;
-        });
+        const currentIds =
+          localOrder[status].length > 0
+            ? [...localOrder[status]]
+            : tasksByStatus[status].map((t) => t.id);
+        const oldIdx = currentIds.indexOf(taskId);
+        const newIdx = currentIds.indexOf(overId);
+        if (oldIdx !== -1 && newIdx !== -1 && oldIdx !== newIdx) {
+          const newStatusIds = arrayMove(currentIds, oldIdx, newIdx);
+          setLocalOrder((prev) => ({ ...prev, [status]: newStatusIds }));
+
+          // Rebuild full phase task order and persist
+          const phaseId = task.phase_id;
+          const phaseTasks = activeProject?.phases.find((p) => p.id === phaseId)?.tasks ?? [];
+          const sorted = [...phaseTasks].sort((a, b) => a.sort_order - b.sort_order);
+          const statusIndices = sorted.map((t, i) => (t.status === status ? i : -1)).filter((i) => i >= 0);
+          const newStatusTasks = newStatusIds.map((id) => sorted.find((t) => t.id === id)!).filter(Boolean);
+          statusIndices.forEach((listIdx, orderIdx) => {
+            if (newStatusTasks[orderIdx]) sorted[listIdx] = newStatusTasks[orderIdx];
+          });
+          reorderTasksAction(phaseId, sorted.map((t) => t.id));
+        }
       }
     }
   }

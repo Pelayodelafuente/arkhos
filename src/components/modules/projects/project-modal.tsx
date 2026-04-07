@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ChevronDown, ChevronUp, Layers, FileText } from "lucide-react";
-import { Modal, Button, Input, Badge } from "@/components/ui";
+import { Modal, Button, Input } from "@/components/ui";
 import { useProjectsStore } from "@/stores/projects-store";
 import { useUIStore, useToast } from "@/stores/ui-store";
 import { createClient } from "@/lib/supabase/client";
@@ -11,9 +10,6 @@ import {
   deleteProjectLogo,
   createProjectType,
   createProjectStatus,
-  getProjectTemplates,
-  createPhase as createPhaseApi,
-  createTask as createTaskApi,
 } from "@/lib/supabase/projects";
 import { ProjectIcon } from "./project-icon";
 import { StatusBadge } from "./status-badge";
@@ -24,8 +20,6 @@ import { TagManager } from "./tag-manager";
 import type {
   CreateProjectInput,
   Project,
-  ProjectTemplate,
-  TemplatePhase,
   ProjectTypeRecord,
   ProjectStatusRecord,
 } from "@/types/projects";
@@ -54,7 +48,6 @@ export function ProjectModal({
   const closeModal = useUIStore((s) => s.closeModal);
   const addProject = useProjectsStore((s) => s.addProject);
   const editProjectAction = useProjectsStore((s) => s.editProject);
-  const fetchProject = useProjectsStore((s) => s.fetchProject);
   const toast = useToast();
 
   const isOpen = disableNewProject
@@ -76,11 +69,6 @@ export function ProjectModal({
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Template state (only for creating)
-  const [templates, setTemplates] = useState<ProjectTemplate[]>([]);
-  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
-  const [showTemplates, setShowTemplates] = useState(true);
-
   // Local copies of types/statuses (updated when user creates new ones inline)
   const [localTypes, setLocalTypes] = useState(projectTypes);
   const [localStatuses, setLocalStatuses] = useState(projectStatuses);
@@ -92,14 +80,6 @@ export function ProjectModal({
   useEffect(() => {
     setLocalStatuses(projectStatuses);
   }, [projectStatuses]);
-
-  // Load templates when creating
-  useEffect(() => {
-    if (activeModal === "new-project") {
-      const client = createClient();
-      getProjectTemplates(client, userId).then(setTemplates);
-    }
-  }, [userId, activeModal]);
 
   // Populate form when editing
   useEffect(() => {
@@ -119,8 +99,6 @@ export function ProjectModal({
       setType(defaultType);
       setStatus(defaultStatus);
       setStack([]);
-      setSelectedTemplate(null);
-      setShowTemplates(true);
     }
     setErrors({});
   }, [activeModal, isEditing, editProject, defaultType, defaultStatus]);
@@ -188,25 +166,6 @@ export function ProjectModal({
     onStatusesChange?.(updated);
   }
 
-  async function applyTemplatePhases(projectId: string, phases: TemplatePhase[]) {
-    const client = createClient();
-    for (const tp of phases) {
-      const phase = await createPhaseApi(client, {
-        project_id: projectId,
-        name: tp.name,
-        sort_order: tp.sort_order,
-      });
-      for (let i = 0; i < tp.tasks.length; i++) {
-        await createTaskApi(client, {
-          phase_id: phase.id,
-          text: tp.tasks[i].text,
-          priority: tp.tasks[i].priority,
-          sort_order: i,
-        });
-      }
-    }
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
@@ -237,16 +196,7 @@ export function ProjectModal({
         status,
         stack,
       };
-      const project = await addProject(userId, input);
-
-      // Apply template phases/tasks if selected
-      if (project && selectedTemplate) {
-        const template = templates.find((t) => t.id === selectedTemplate);
-        if (template && template.phases.length > 0) {
-          await applyTemplatePhases(project.id, template.phases);
-          await fetchProject(project.id);
-        }
-      }
+      await addProject(userId, input);
     }
 
     setSaving(false);
@@ -358,104 +308,6 @@ export function ProjectModal({
             mode="status"
           />
         </div>
-
-        {/* Template selection (only when creating) */}
-        {!isEditing && templates.length > 0 && (
-          <div>
-            <button
-              type="button"
-              onClick={() => setShowTemplates((v) => !v)}
-              className="mb-2 flex w-full items-center gap-1.5 text-xs font-medium text-text-secondary hover:text-foreground"
-            >
-              <Layers size={13} strokeWidth={2} />
-              Plantilla inicial
-              {showTemplates ? (
-                <ChevronUp size={13} strokeWidth={2} className="ml-auto" />
-              ) : (
-                <ChevronDown size={13} strokeWidth={2} className="ml-auto" />
-              )}
-            </button>
-
-            {showTemplates && (
-              <>
-                <div className="grid grid-cols-2 gap-2">
-                  {/* No template option */}
-                  <button
-                    type="button"
-                    onClick={() => setSelectedTemplate(null)}
-                    className={`rounded-lg border p-2.5 text-left transition-colors ${
-                      selectedTemplate === null
-                        ? "border-accent bg-[rgba(196,112,74,0.06)]"
-                        : "border-border bg-card hover:border-accent/40"
-                    }`}
-                  >
-                    <p className="text-xs font-medium text-foreground">Sin plantilla</p>
-                    <p className="mt-0.5 text-[10px] text-text-tertiary">Proyecto en blanco</p>
-                  </button>
-
-                  {/* Template cards */}
-                  {templates.map((t) => (
-                    <button
-                      key={t.id}
-                      type="button"
-                      onClick={() => setSelectedTemplate(t.id)}
-                      className={`rounded-lg border p-2.5 text-left transition-colors ${
-                        selectedTemplate === t.id
-                          ? "border-accent bg-[rgba(196,112,74,0.06)]"
-                          : "border-border bg-card hover:border-accent/40"
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-1">
-                        <p className="text-xs font-medium text-foreground">{t.name}</p>
-                        {t.is_system ? (
-                          <Badge variant="gray">Sistema</Badge>
-                        ) : (
-                          <Badge variant="blue">Personal</Badge>
-                        )}
-                      </div>
-                      {t.description && (
-                        <p className="mt-0.5 line-clamp-1 text-[10px] text-text-tertiary">
-                          {t.description}
-                        </p>
-                      )}
-                      <p className="mt-1 text-[10px] text-text-tertiary">
-                        {t.phases.length} {t.phases.length === 1 ? "fase" : "fases"}
-                      </p>
-                    </button>
-                  ))}
-                </div>
-
-                {/* Template preview */}
-                {selectedTemplate && (() => {
-                  const tpl = templates.find((t) => t.id === selectedTemplate);
-                  if (!tpl) return null;
-                  return (
-                    <div className="mt-2 rounded-md border border-border bg-sand/40 px-3 py-2">
-                      <p className="mb-1 text-[10px] font-medium text-text-tertiary">
-                        Fases incluidas:
-                      </p>
-                      <div className="space-y-0.5">
-                        {tpl.phases
-                          .sort((a, b) => a.sort_order - b.sort_order)
-                          .map((p, i) => (
-                            <div key={i} className="flex items-center gap-1.5 text-xs text-text-secondary">
-                              <FileText size={11} strokeWidth={2} className="flex-shrink-0 text-text-tertiary" />
-                              <span>{p.name}</span>
-                              {p.tasks.length > 0 && (
-                                <span className="text-[10px] text-text-tertiary">
-                                  ({p.tasks.length} {p.tasks.length === 1 ? "tarea" : "tareas"})
-                                </span>
-                              )}
-                            </div>
-                          ))}
-                      </div>
-                    </div>
-                  );
-                })()}
-              </>
-            )}
-          </div>
-        )}
 
         {/* Tags (only when editing — tags need a project to exist) */}
         {isEditing && editProject && (

@@ -70,18 +70,29 @@ export function KPICards() {
   const topCategory = useMemo(() => getMostExpensiveCategory(subscriptions), [subscriptions])
   const nextRenewals = useMemo(() => getNextAnnualRenewals(subscriptions, 1), [subscriptions])
 
-  // Annual view: sum all active annual sub amounts (not restricted to billing month)
+  // Annual view: monthly×12 + quarterly×4 + semiannual×2 + annual×1 (active only)
   const annualViewTotal = useMemo(() => {
     if (!isAnnualView) return 0
-    return subscriptions.filter((s) => s.is_active).reduce((sum, s) => sum + s.amount, 0)
-  }, [subscriptions, isAnnualView])
+    return (
+      summary.totalMonthly * 12 +
+      summary.totalQuarterly * 4 +
+      summary.totalSemiannual * 2 +
+      summary.totalAnnual
+    )
+  }, [summary, isAnnualView])
 
   // Top category total for annual view
   const topCategoryAnnualTotal = useMemo(() => {
     if (!topCategory || !isAnnualView) return 0
+    const cycleMultiplier = (cycle: string) => {
+      if (cycle === 'monthly') return 12
+      if (cycle === 'quarterly') return 4
+      if (cycle === 'semiannual') return 2
+      return 1
+    }
     return subscriptions
       .filter((s) => s.is_active && (topCategory.category ? s.category_id === topCategory.category.id : !s.category_id))
-      .reduce((sum, s) => sum + s.amount, 0)
+      .reduce((sum, s) => sum + s.amount * cycleMultiplier(s.cycle), 0)
   }, [topCategory, subscriptions, isAnnualView])
 
   const displayTotal = isAnnualView

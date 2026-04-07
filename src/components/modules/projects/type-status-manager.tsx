@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Plus } from "lucide-react";
-import { Modal, Button, Input } from "@/components/ui";
+import { Modal, Button, Input, SelectCustom } from "@/components/ui";
 import { ProjectIcon } from "./project-icon";
 import { COLOR_PRESETS as COLOR_PRESETS_CONFIG } from "@/lib/constants/colors";
 
@@ -61,17 +61,13 @@ export function TypeStatusSelect({
         {label}
       </label>
       <div className="flex items-center gap-1.5">
-        <select
+        <SelectCustom
           value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="flex-1 appearance-none rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none"
-        >
-          {options.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
+          onChange={onChange}
+          options={options}
+          className="flex-1"
+          buttonClassName="px-3 py-2 text-sm"
+        />
         <button
           type="button"
           onClick={() => setShowCreate(true)}

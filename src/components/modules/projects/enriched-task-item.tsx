@@ -76,7 +76,6 @@ const PRIORITY_COLORS: Record<TaskPriority, string> = {
   low: "#22C55E",
   medium: "#F59E0B",
   high: "#C4704A",
-  urgent: "var(--error)",
 };
 
 // ─── Props ──────────────────────────
@@ -293,7 +292,7 @@ export function EnrichedTaskItem({
             {liveTask.priority !== "none" && (
               <span
                 className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
-                  liveTask.priority === "urgent" ? "animate-pulse-slow" : ""
+                  ""
                 }`}
                 style={{
                   backgroundColor: `${PRIORITY_COLORS[liveTask.priority]}14`,

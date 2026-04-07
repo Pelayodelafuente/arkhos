@@ -256,6 +256,7 @@ interface NotesActions {
   addFolder: (userId: string, data: Pick<NoteFolder, 'name' | 'icon' | 'color'>) => Promise<void>
   editFolder: (id: string, data: Partial<Pick<NoteFolder, 'name' | 'icon' | 'color'>>) => Promise<void>
   removeFolder: (id: string) => Promise<void>
+  reorderFoldersAction: (orderedIds: string[]) => Promise<void>
   moveNoteToFolder: (noteId: string, folderId: string | null) => Promise<void>
   setActiveFolderId: (id: string | null) => void
 
@@ -1611,6 +1612,22 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
     } catch (e) {
       set({ folders: prev })
       const msg = e instanceof Error ? e.message : 'Error al eliminar la carpeta'
+      toast(msg, 'error')
+    }
+  },
+
+  reorderFoldersAction: async (orderedIds) => {
+    const prev = get().folders
+    const reordered = orderedIds.map((id, i) => {
+      const f = prev.find((x) => x.id === id)!
+      return { ...f, sort_order: i }
+    })
+    set({ folders: reordered })
+    try {
+      await notesApi.reorderFolders(reordered.map((f) => ({ id: f.id, sort_order: f.sort_order })))
+    } catch (e) {
+      set({ folders: prev })
+      const msg = e instanceof Error ? e.message : 'Error al reordenar carpetas'
       toast(msg, 'error')
     }
   },

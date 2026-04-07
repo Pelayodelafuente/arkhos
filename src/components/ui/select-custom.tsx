@@ -14,6 +14,7 @@ interface SelectCustomProps {
   options: SelectCustomOption[]
   placeholder?: string
   className?: string
+  buttonClassName?: string
 }
 
 export function SelectCustom({
@@ -22,6 +23,7 @@ export function SelectCustom({
   options,
   placeholder = "Seleccionar...",
   className = "",
+  buttonClassName = "",
 }: SelectCustomProps) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -61,6 +63,7 @@ export function SelectCustom({
           hover:border-[#C4704A]/40 hover:text-foreground
           focus:outline-none focus:ring-1 focus:ring-[#C4704A]/40
           ${open ? "border-[#C4704A]/40 text-foreground" : ""}
+          ${buttonClassName}
         `}
       >
         <span className="truncate">{selectedLabel}</span>
