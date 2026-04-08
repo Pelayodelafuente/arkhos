@@ -24,6 +24,7 @@ export function NotesView({ initialNotes, initialCanvas, userId }: Props) {
   const setNotes = useNotesStore((s) => s.setNotes)
   const setCanvas = useNotesStore((s) => s.setCanvas)
   const initCanvas = useNotesStore((s) => s.initCanvas)
+  const syncNotesToCanvas = useNotesStore((s) => s.syncNotesToCanvas)
   const addNoteToCanvas = useNotesStore((s) => s.addNoteToCanvas)
   const notes = useNotesStore((s) => s.notes)
   const viewMode = useNotesStore((s) => s.viewMode)
@@ -93,8 +94,10 @@ export function NotesView({ initialNotes, initialCanvas, userId }: Props) {
 
   // After modal saves a new note from canvas, add it to canvas at the pending position
   const handleModalClose = useCallback(async () => {
-    if (pendingCanvasPos && viewMode === "canvas" && notes.length > prevNoteCount.current) {
-      const latestNote = notes[0]
+    // Use getState() to access the freshest store snapshot — avoids stale closure over notes[]
+    const storeNotes = useNotesStore.getState().notes
+    if (pendingCanvasPos && viewMode === "canvas" && storeNotes.length > prevNoteCount.current) {
+      const latestNote = storeNotes[0]
       if (latestNote) {
         const { canvas } = useNotesStore.getState()
         if (!canvas) await initCanvas(userId)
@@ -108,16 +111,19 @@ export function NotesView({ initialNotes, initialCanvas, userId }: Props) {
     setModalOpen(false)
     setEditingNote(null)
     setPendingCanvasPos(null)
-  }, [pendingCanvasPos, viewMode, notes, addNoteToCanvas, initCanvas, userId])
+  }, [pendingCanvasPos, viewMode, addNoteToCanvas, initCanvas, userId])
 
-  // Switch to canvas view: init only once per session
+  // Switch to canvas view: init once, luego re-sync por si hay notas nuevas
   const handleSwitchToCanvas = useCallback(() => {
     setViewMode("canvas")
     if (!canvasLoadedRef.current) {
       canvasLoadedRef.current = true
-      initCanvas(userId)
+      initCanvas(userId).then(() => syncNotesToCanvas(userId))
+    } else {
+      // Re-sync para mostrar notas creadas desde vista lista
+      syncNotesToCanvas(userId)
     }
-  }, [setViewMode, initCanvas, userId])
+  }, [setViewMode, initCanvas, syncNotesToCanvas, userId])
 
   // Switch to graph view
   const handleSwitchToGraph = useCallback(() => {

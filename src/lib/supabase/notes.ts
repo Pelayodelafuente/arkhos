@@ -149,8 +149,8 @@ export async function updateNote(
     const plainText = data.content.replace(/<[^>]*>/g, ' ')
     update.word_count = plainText.trim().split(/\s+/).filter(Boolean).length
   }
-  const query = client.from('notes').update(update).eq('id', id)
-  if (session?.user?.id) query.eq('user_id', session.user.id)
+  let query = client.from('notes').update(update).eq('id', id)
+  if (session?.user?.id) query = query.eq('user_id', session.user.id)
   const { data: row, error } = await query.select().single()
 
   if (error) throw new NotesError('Error updating note', error.message)
@@ -162,8 +162,8 @@ export async function deleteNote(id: string): Promise<void> {
   // Soft-delete: move to trash
   const client = createClient()
   const { data: { session } } = await client.auth.getSession()
-  const query = client.from('notes').update({ deleted_at: new Date().toISOString() }).eq('id', id)
-  if (session?.user?.id) query.eq('user_id', session.user.id)
+  let query = client.from('notes').update({ deleted_at: new Date().toISOString() }).eq('id', id)
+  if (session?.user?.id) query = query.eq('user_id', session.user.id)
   const { error } = await query
   if (error) throw new NotesError('Error moving note to trash', error.message)
 }
@@ -171,8 +171,8 @@ export async function deleteNote(id: string): Promise<void> {
 export async function restoreNote(id: string): Promise<void> {
   const client = createClient()
   const { data: { session } } = await client.auth.getSession()
-  const query = client.from('notes').update({ deleted_at: null }).eq('id', id)
-  if (session?.user?.id) query.eq('user_id', session.user.id)
+  let query = client.from('notes').update({ deleted_at: null }).eq('id', id)
+  if (session?.user?.id) query = query.eq('user_id', session.user.id)
   const { error } = await query
   if (error) throw new NotesError('Error restoring note', error.message)
 }
@@ -180,8 +180,8 @@ export async function restoreNote(id: string): Promise<void> {
 export async function hardDeleteNote(id: string): Promise<void> {
   const client = createClient()
   const { data: { session } } = await client.auth.getSession()
-  const query = client.from('notes').delete().eq('id', id)
-  if (session?.user?.id) query.eq('user_id', session.user.id)
+  let query = client.from('notes').delete().eq('id', id)
+  if (session?.user?.id) query = query.eq('user_id', session.user.id)
   const { error } = await query
   if (error) throw new NotesError('Error permanently deleting note', error.message)
 }
@@ -223,8 +223,8 @@ export async function duplicateNote(userId: string, note: Note): Promise<Note> {
 export async function togglePinNote(id: string, isPinned: boolean): Promise<void> {
   const client = createClient()
   const { data: { session } } = await client.auth.getSession()
-  const query = client.from('notes').update({ is_pinned: isPinned }).eq('id', id)
-  if (session?.user?.id) query.eq('user_id', session.user.id)
+  let query = client.from('notes').update({ is_pinned: isPinned }).eq('id', id)
+  if (session?.user?.id) query = query.eq('user_id', session.user.id)
   const { error } = await query
   if (error) throw new NotesError('Error toggling note pin', error.message)
 }
@@ -333,11 +333,13 @@ export async function getNotesWithoutCanvasNode(
 
   const existingNoteIds = new Set((existingNodes ?? []).map((n) => n.note_id))
 
-  // Get all user's notes
+  // Get all user's active notes (no archivadas ni en papelera)
   const { data: allNotes, error } = await client
     .from('notes')
     .select('*')
     .eq('user_id', userId)
+    .eq('archived', false)
+    .is('deleted_at', null)
     .order('is_pinned', { ascending: false })
     .order('updated_at', { ascending: false })
 
@@ -774,8 +776,8 @@ export async function reorderFolders(folders: Array<{ id: string; sort_order: nu
 export async function moveNoteToFolder(noteId: string, folderId: string | null): Promise<void> {
   const supabase = createClient()
   const { data: { session } } = await supabase.auth.getSession()
-  const query = supabase.from('notes').update({ folder_id: folderId }).eq('id', noteId)
-  if (session?.user?.id) query.eq('user_id', session.user.id)
+  let query = supabase.from('notes').update({ folder_id: folderId }).eq('id', noteId)
+  if (session?.user?.id) query = query.eq('user_id', session.user.id)
   const { error } = await query
   if (error) throw new NotesError('Error moving note to folder', error.message)
 }
@@ -783,8 +785,8 @@ export async function moveNoteToFolder(noteId: string, folderId: string | null):
 export async function archiveNote(noteId: string, archived: boolean): Promise<void> {
   const supabase = createClient()
   const { data: { session } } = await supabase.auth.getSession()
-  const query = supabase.from('notes').update({ archived }).eq('id', noteId)
-  if (session?.user?.id) query.eq('user_id', session.user.id)
+  let query = supabase.from('notes').update({ archived }).eq('id', noteId)
+  if (session?.user?.id) query = query.eq('user_id', session.user.id)
   const { error } = await query
   if (error) throw new NotesError('Error archiving note', error.message)
 }
@@ -792,8 +794,8 @@ export async function archiveNote(noteId: string, archived: boolean): Promise<vo
 export async function toggleFavorite(noteId: string, favorited: boolean): Promise<void> {
   const supabase = createClient()
   const { data: { session } } = await supabase.auth.getSession()
-  const query = supabase.from('notes').update({ favorited }).eq('id', noteId)
-  if (session?.user?.id) query.eq('user_id', session.user.id)
+  let query = supabase.from('notes').update({ favorited }).eq('id', noteId)
+  if (session?.user?.id) query = query.eq('user_id', session.user.id)
   const { error } = await query
   if (error) throw new NotesError('Error toggling favorite', error.message)
 }
@@ -943,8 +945,8 @@ export async function getNotesBySubscription(userId: string, subscriptionId: str
 export async function updateNoteProjectLink(noteId: string, projectId: string | null): Promise<Note> {
   const supabase = createClient()
   const { data: { session } } = await supabase.auth.getSession()
-  const query = supabase.from('notes').update({ project_id: projectId }).eq('id', noteId)
-  if (session?.user?.id) query.eq('user_id', session.user.id)
+  let query = supabase.from('notes').update({ project_id: projectId }).eq('id', noteId)
+  if (session?.user?.id) query = query.eq('user_id', session.user.id)
   const { data, error } = await query.select().single()
   if (error) throw new NotesError('Error updating note project link', error.message)
   if (!data) throw new NotesError('Error updating note project link: no data returned')
@@ -955,8 +957,8 @@ export async function updateNoteProjectLink(noteId: string, projectId: string | 
 export async function updateNoteSubscriptionLink(noteId: string, subscriptionId: string | null): Promise<Note> {
   const supabase = createClient()
   const { data: { session } } = await supabase.auth.getSession()
-  const query = supabase.from('notes').update({ subscription_id: subscriptionId }).eq('id', noteId)
-  if (session?.user?.id) query.eq('user_id', session.user.id)
+  let query = supabase.from('notes').update({ subscription_id: subscriptionId }).eq('id', noteId)
+  if (session?.user?.id) query = query.eq('user_id', session.user.id)
   const { data, error } = await query.select().single()
   if (error) throw new NotesError('Error updating note subscription link', error.message)
   if (!data) throw new NotesError('Error updating note subscription link: no data returned')

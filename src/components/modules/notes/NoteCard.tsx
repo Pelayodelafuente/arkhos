@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from "react"
 import { createPortal } from "react-dom"
-import { Pin, Star, MoreHorizontal, Pencil, Trash2, Layout, Square, CheckSquare, Copy, FolderInput, Folder, Inbox, RotateCcw } from "lucide-react"
+import { Pin, Star, MoreHorizontal, Pencil, Trash2, Layout, Square, CheckSquare, Copy, FolderInput, Folder, Inbox, RotateCcw, ArchiveRestore } from "lucide-react"
 import * as LucideIcons from "lucide-react"
 import type { Note } from "@/types/notes"
 import { NOTE_STATUS_CONFIG } from "@/types/notes"
@@ -59,6 +59,7 @@ export function NoteCard({ note, userId: _userId, onEdit, onDelete, onTogglePin,
   const moveNoteToFolder = useNotesStore((s) => s.moveNoteToFolder)
   const restoreFromTrash = useNotesStore((s) => s.restoreFromTrash)
   const permanentlyDelete = useNotesStore((s) => s.permanentlyDelete)
+  const unarchiveNote = useNotesStore((s) => s.unarchiveNote)
 
   const isInTrash = Boolean(note.deleted_at)
 
@@ -221,7 +222,10 @@ export function NoteCard({ note, userId: _userId, onEdit, onDelete, onTogglePin,
                           </div>
                         )}
                       </div>
-                      {onAddToCanvas && (
+                      {note.archived && (
+                        <MenuButton icon={<ArchiveRestore size={13} />} label="Desarchivar" onClick={() => { handleMenuClose(); unarchiveNote(note.id) }} />
+                      )}
+                      {onAddToCanvas && !note.archived && (
                         <MenuButton icon={<Layout size={13} />} label="Añadir al canvas" onClick={() => { handleMenuClose(); onAddToCanvas(note.id) }} />
                       )}
                       <div className="my-1 border-t border-border" />

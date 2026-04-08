@@ -761,6 +761,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
     try {
       const node = await notesApi.addNoteToCanvas(canvas.id, noteId, pos)
       set((s) => ({ canvasNodes: [...s.canvasNodes, node] }))
+      toast('Nota añadida al canvas', 'success')
       return node
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Error al añadir nota al canvas'
@@ -1409,7 +1410,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
     }
   },
 
-  setActiveFolderId: (id) => set({ activeFolderId: id, selectedNoteId: null }),
+  setActiveFolderId: (id) => set({ activeFolderId: id, selectedNoteId: null, activeTag: null }),
 
   // ── Archive ───────────────────────
 

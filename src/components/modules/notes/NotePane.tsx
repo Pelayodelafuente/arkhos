@@ -210,14 +210,21 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
       const pending = pendingSaveRef.current
       if (pending && autoSaveTimer.current) {
         clearTimeout(autoSaveTimer.current)
-        useNotesStore.getState().editNote(pending.noteId, {
-          title: pending.title || 'Sin título',
-          content: pending.content,
-          color: pending.color,
-          icon: pending.icon,
-          tags: pending.tags,
-          status: pending.status,
-        }).catch(() => {})
+        const store = useNotesStore.getState()
+        const currentNote = store.notes.find((n) => n.id === pending.noteId)
+        // Solo hacer flush si el contenido fue cargado desde la DB.
+        // Evita sobrescribir el contenido real con "" cuando se archiva/cierra
+        // antes de que termine la carga lazy del content.
+        if (currentNote?.contentLoaded !== false) {
+          store.editNote(pending.noteId, {
+            title: pending.title || 'Sin título',
+            content: pending.content,
+            color: pending.color,
+            icon: pending.icon,
+            tags: pending.tags,
+            status: pending.status,
+          }).catch(() => {})
+        }
       }
     }
   }, [])

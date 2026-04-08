@@ -653,7 +653,6 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
   const handleDoubleClick = useCallback((e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest("[data-node-id]")) return
     if ((e.target as HTMLElement).closest("[data-edge-id]")) return
-    if (Date.now() - lastInteractionTimestamp.current < 300) return
     const targetEl = e.target as HTMLElement
     const isBackground = targetEl === containerRef.current ||
       targetEl.tagName === "svg" || targetEl.tagName === "rect" ||
@@ -1015,7 +1014,7 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
       {nodes.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 3, pointerEvents: "none" }}>
           <div className="rounded-xl bg-card/80 backdrop-blur-sm border border-border px-8 py-6 text-center max-w-xs">
-            <p className="text-sm text-text-secondary mb-1 font-medium">Canvas vacio</p>
+            <p className="text-sm text-text-secondary mb-1 font-medium">Canvas vacío</p>
             <p className="text-xs text-text-tertiary">Doble click para crear una nota, o Shift+arrastrar para seleccionar</p>
           </div>
         </div>

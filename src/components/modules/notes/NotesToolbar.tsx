@@ -124,25 +124,29 @@ export function NotesToolbar({ userId }: Props) {
               className="flex items-center gap-1.5 overflow-x-auto"
               style={{ maxWidth: "min(480px, 50vw)", scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
-              {activeTag && (
-                <button
-                  onClick={() => setActiveTag(null)}
-                  className="rounded-md px-2 py-1 text-[11px] font-medium bg-foreground text-card transition-colors whitespace-nowrap flex-shrink-0"
-                >
-                  Todas
-                </button>
-              )}
+              {/* "Todas" siempre visible — indica estado de filtro activo */}
+              <button
+                onClick={() => setActiveTag(null)}
+                className={`rounded-md px-2 py-1 text-[11px] font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
+                  !activeTag
+                    ? "bg-foreground text-card"
+                    : "bg-sand text-text-secondary hover:bg-border"
+                }`}
+              >
+                Todas
+              </button>
               {allTags.map((tag) => (
                 <button
                   key={tag}
                   onClick={() => setActiveTag(activeTag === tag ? null : tag)}
-                  className={`rounded-md px-2 py-1 text-[11px] font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
+                  className={`rounded-md px-2 py-1 text-[11px] font-medium transition-colors whitespace-nowrap flex-shrink-0 inline-flex items-center gap-1 ${
                     activeTag === tag
                       ? "bg-[#B07A3A] text-white"
                       : "bg-sand text-text-secondary hover:bg-border"
                   }`}
                 >
                   {tag}
+                  {activeTag === tag && <X size={10} strokeWidth={2.5} />}
                 </button>
               ))}
             </div>
