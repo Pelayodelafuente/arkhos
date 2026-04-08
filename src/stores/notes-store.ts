@@ -462,13 +462,13 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
         notesApi.batchRemoveNodes(duplicateIds).catch(console.error)
       }
 
-      // Filter out orphaned note-nodes: note was deleted or doesn't exist
+      // Filter out orphaned note-nodes: note was deleted, archived, or doesn't exist
       const cleanNodes = deduped.filter(n => {
         if (!n.note_id) return true // text, url, image nodes are always valid
-        return n.note && !n.note.deleted_at
+        return n.note && !n.note.deleted_at && !n.note.archived
       })
       const orphanIds = deduped
-        .filter(n => n.note_id && (!n.note || n.note.deleted_at))
+        .filter(n => n.note_id && (!n.note || n.note.deleted_at || n.note.archived))
         .map(n => n.id)
       if (orphanIds.length > 0) {
         notesApi.batchRemoveNodes(orphanIds).catch(console.error)
@@ -561,17 +561,19 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
   },
 
   removeNote: async (id) => {
-    // Soft-delete: move to trash
+    // Soft-delete: move to trash.
+    // Note may not be in get().notes if paginated out — don't fail silently.
     const note = get().notes.find((n) => n.id === id)
-    if (!note) return
     const prev = get().notes
     const prevNodes = get().canvasNodes
     const prevEdges = get().canvasEdges
     const nodeToRemove = prevNodes.find((cn) => cn.note_id === id)
-    const trashedNote = { ...note, deleted_at: new Date().toISOString() }
+    // Optimistic: remove from canvas immediately regardless of whether note is in store
     set((s) => ({
-      notes: s.notes.filter((n) => n.id !== id),
-      trashedNotes: [trashedNote, ...s.trashedNotes],
+      notes: note ? s.notes.filter((n) => n.id !== id) : s.notes,
+      trashedNotes: note
+        ? [{ ...note, deleted_at: new Date().toISOString() }, ...s.trashedNotes]
+        : s.trashedNotes,
       canvasNodes: s.canvasNodes.filter((cn) => cn.note_id !== id),
       canvasEdges: nodeToRemove
         ? s.canvasEdges.filter(
@@ -587,7 +589,12 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
       }
       toast('Nota movida a la papelera', 'info')
     } catch (e) {
-      set({ notes: prev, trashedNotes: get().trashedNotes.filter((n) => n.id !== id), canvasNodes: prevNodes, canvasEdges: prevEdges })
+      set({
+        notes: prev,
+        trashedNotes: get().trashedNotes.filter((n) => n.id !== id),
+        canvasNodes: prevNodes,
+        canvasEdges: prevEdges,
+      })
       const msg = e instanceof Error ? e.message : 'Error al mover la nota a la papelera'
       toast(msg, 'error')
     }
@@ -1409,14 +1416,27 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
 
   archiveNote: async (noteId) => {
     const prev = get().notes
+    const prevNodes = get().canvasNodes
+    const prevEdges = get().canvasEdges
+    const nodeToRemove = prevNodes.find((cn) => cn.note_id === noteId)
     set((s) => ({
       notes: s.notes.map((n) => (n.id === noteId ? { ...n, archived: true } : n)),
+      // Remove from canvas immediately — archived notes must not appear on canvas
+      canvasNodes: s.canvasNodes.filter((cn) => cn.note_id !== noteId),
+      canvasEdges: nodeToRemove
+        ? s.canvasEdges.filter(
+            (e) => e.from_node_id !== nodeToRemove.id && e.to_node_id !== nodeToRemove.id
+          )
+        : s.canvasEdges,
     }))
     try {
       await notesApi.archiveNote(noteId, true)
+      if (nodeToRemove) {
+        await notesApi.removeNodeFromCanvas(nodeToRemove.id)
+      }
       toast('Nota archivada', 'success')
     } catch (e) {
-      set({ notes: prev })
+      set({ notes: prev, canvasNodes: prevNodes, canvasEdges: prevEdges })
       const msg = e instanceof Error ? e.message : 'Error al archivar la nota'
       toast(msg, 'error')
     }

@@ -36,6 +36,9 @@ export function NotesView({ initialNotes, initialCanvas, userId }: Props) {
   const [editingNote, setEditingNote] = useState<Note | null>(null)
   const [pendingCanvasPos, setPendingCanvasPos] = useState<{ x: number; y: number } | null>(null)
   const prevNoteCount = useRef(notes.length)
+  // Track whether canvas has been initialized this session — avoid re-fetching DB
+  // on every mode switch, which would overwrite in-memory optimistic updates
+  const canvasLoadedRef = useRef(false)
 
   // Query param handling — ?note=id opens NotePane; ?subscription=id filters by subscription
   const searchParams = useSearchParams()
@@ -107,10 +110,13 @@ export function NotesView({ initialNotes, initialCanvas, userId }: Props) {
     setPendingCanvasPos(null)
   }, [pendingCanvasPos, viewMode, notes, addNoteToCanvas, initCanvas, userId])
 
-  // Switch to canvas view: init + sync
+  // Switch to canvas view: init only once per session
   const handleSwitchToCanvas = useCallback(() => {
     setViewMode("canvas")
-    initCanvas(userId)
+    if (!canvasLoadedRef.current) {
+      canvasLoadedRef.current = true
+      initCanvas(userId)
+    }
   }, [setViewMode, initCanvas, userId])
 
   // Switch to graph view
