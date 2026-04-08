@@ -264,11 +264,13 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
 
   const SelectedIcon = (LucideIcons as unknown as Record<string, LucideIcons.LucideIcon>)[icon] ?? LucideIcons.FileText
 
-  const modalSizeClass = isFullscreen ? 'max-w-[95vw] h-[95vh]' : 'max-w-2xl'
+  const modalSizeClass = isFullscreen
+    ? 'max-w-[95vw] w-[95vw] h-[95vh] !max-h-[95vh]'
+    : 'max-w-2xl'
 
   return (
     <Modal open={open} onClose={onClose} className={modalSizeClass}>
-      <div className={`flex flex-col gap-4 ${isFullscreen ? 'h-full' : ''} relative overflow-hidden`}>
+      <div className={`flex flex-col gap-4 ${isFullscreen ? 'h-full overflow-y-auto' : ''} relative`}>
         {/* Title row with icon + history + fullscreen toggle */}
         <div className="flex items-center gap-3">
           <button

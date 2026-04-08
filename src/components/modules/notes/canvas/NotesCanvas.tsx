@@ -1061,18 +1061,25 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
         {nodes
           .filter(n => n.node_type === 'group' && !n.collapsed)
           .map(group => {
-            // Find children of this group
             const children = nodes.filter(n => n.group_id === group.id && n.node_type !== 'group')
-            if (children.length === 0) return null
-            const padding = 16
-            const minX = Math.min(...children.map(n => n.pos_x)) - padding
-            const minY = Math.min(...children.map(n => n.pos_y)) - padding
-            const maxX = Math.max(...children.map(n => n.pos_x + n.width)) + padding
-            const maxY = Math.max(...children.map(n => n.pos_y + n.height)) + padding
-            const rx = minX * viewport.scale + viewport.offsetX
-            const ry = minY * viewport.scale + viewport.offsetY
-            const rw = (maxX - minX) * viewport.scale
-            const rh = (maxY - minY) * viewport.scale
+            let rx: number, ry: number, rw: number, rh: number
+            if (children.length === 0) {
+              // Render at the group node's own stored position when empty
+              rx = group.pos_x * viewport.scale + viewport.offsetX
+              ry = group.pos_y * viewport.scale + viewport.offsetY
+              rw = group.width * viewport.scale
+              rh = group.height * viewport.scale
+            } else {
+              const padding = 16
+              const minX = Math.min(...children.map(n => n.pos_x)) - padding
+              const minY = Math.min(...children.map(n => n.pos_y)) - padding
+              const maxX = Math.max(...children.map(n => n.pos_x + n.width)) + padding
+              const maxY = Math.max(...children.map(n => n.pos_y + n.height)) + padding
+              rx = minX * viewport.scale + viewport.offsetX
+              ry = minY * viewport.scale + viewport.offsetY
+              rw = (maxX - minX) * viewport.scale
+              rh = (maxY - minY) * viewport.scale
+            }
             return (
               <rect
                 key={`group-bg-${group.id}`}
@@ -1090,7 +1097,7 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
           })}
       </svg>
 
-      <svg className="absolute inset-0 w-full h-full" style={{ zIndex: 1, pointerEvents: "none" }}>
+      <svg className="absolute inset-0 w-full h-full" style={{ zIndex: 1, pointerEvents: "none" }} aria-hidden="true">
         <g style={{ pointerEvents: "auto" }}>
           {edges.map((edge) => {
             const parallel = parallelEdgeMap.get(edge.id)

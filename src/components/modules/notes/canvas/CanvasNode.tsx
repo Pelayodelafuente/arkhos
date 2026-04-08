@@ -162,21 +162,11 @@ export function CanvasNodeComponent({
     return allNodes.find((n) => n.id === node.group_id) ?? null
   }, [isGroup, node.group_id, allNodes])
 
-  // ─── Group: count contained nodes ───────
+  // ─── Group: count contained nodes by group_id ───────
   const groupNodeCount = useMemo(() => {
     if (!isGroup || !allNodes) return 0
-    const gx = node.pos_x
-    const gy = node.pos_y
-    const gw = node.width
-    const gh = node.height
-    return allNodes.filter((n) => {
-      if (n.id === node.id) return false
-      if (n.node_type === "group") return false
-      const cx = n.pos_x + n.width / 2
-      const cy = n.pos_y + n.height / 2
-      return cx >= gx && cx <= gx + gw && cy >= gy && cy <= gy + gh
-    }).length
-  }, [isGroup, allNodes, node.id, node.pos_x, node.pos_y, node.width, node.height])
+    return allNodes.filter((n) => n.group_id === node.id && n.node_type !== 'group').length
+  }, [isGroup, allNodes, node.id])
 
   // ─── Auto-focus textarea on edit ────────
   useEffect(() => {
@@ -402,6 +392,27 @@ export function CanvasNodeComponent({
           {node.locked && <Lock size={10 * scale} style={{ color: "var(--text-tertiary)", flexShrink: 0 }} />}
         </div>
 
+        {/* Drag-over indicator */}
+        {isDragOverGroup && (
+          <div style={{
+            position: 'absolute', inset: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            borderRadius: 10, pointerEvents: 'none',
+          }}>
+            <span style={{
+              fontSize: 10 * scale, fontWeight: 600,
+              color: '#C4704A',
+              backgroundColor: 'rgba(255,255,255,0.85)',
+              padding: `${3 * scale}px ${8 * scale}px`,
+              borderRadius: 20 * scale,
+              border: '1px solid rgba(196,112,74,0.3)',
+              letterSpacing: '0.02em',
+            }}>
+              Soltar para añadir al grupo
+            </span>
+          </div>
+        )}
+
         {/* Resize handles */}
         {renderResizeHandles(false)}
 
@@ -420,8 +431,8 @@ export function CanvasNodeComponent({
         position: "absolute", left: screenX, top: screenY,
         width: screenW, height: screenH,
         backgroundColor: node.node_type === "url" ? colors.bg : colors.bg,
-        borderColor: isConnectionTarget ? "#B07A3A" : isSelected ? "#C4704A" : colors.border,
-        borderWidth: isSelected || isConnectionTarget ? 2 : 1,
+        borderColor: isConnectionTarget ? "#B07A3A" : colors.border,
+        borderWidth: 1,
         borderStyle: "solid", borderRadius: 12,
         zIndex: isSelected ? 100 : node.z_index,
         cursor: isEditing ? "text" : "grab",
@@ -429,7 +440,7 @@ export function CanvasNodeComponent({
         boxShadow: isConnectionTarget
           ? "0 0 0 3px rgba(122, 155, 118, 0.3)"
           : isSelected
-            ? "0 4px 20px rgba(26,23,20,0.12)"
+            ? "0 0 0 2px #C4704A, 0 4px 16px rgba(26,23,20,0.10)"
             : "0 1px 4px rgba(26,23,20,0.04)",
         overflow: "hidden",
         ...(isConnectionTarget ? { transform: "scale(1.02)" } : {}),

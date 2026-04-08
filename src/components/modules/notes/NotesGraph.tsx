@@ -72,6 +72,8 @@ export function NotesGraph({ onNodeClick }: Props) {
   const syncBacklinksOnSave = useNotesStore((s) => s.syncBacklinksOnSave)
   const toast        = useToast()
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const fgRef = useRef<any>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 })
   const [showFilters, setShowFilters] = useState(false)
@@ -86,6 +88,7 @@ export function NotesGraph({ onNodeClick }: Props) {
   useEffect(() => {
     loadGraphData()
   }, [loadGraphData])
+
 
   // Medir el contenedor
   useEffect(() => {
@@ -199,6 +202,19 @@ export function NotesGraph({ onNodeClick }: Props) {
 
   // ForceGraph2D data (without the custom isolatedSet field)
   const fgData = useMemo(() => ({ nodes: graphNodes, links: graphLinks }), [graphNodes, graphLinks])
+
+  // Configurar fuerzas d3 — se ejecuta cuando cambia el dataset
+  useEffect(() => {
+    const fg = fgRef.current
+    if (!fg) return
+    // Repulsión fuerte → nodos se separan más entre sí
+    fg.d3Force('charge')?.strength(-280)
+    // Links más largos → nodos conectados no quedan pegados
+    fg.d3Force('link')?.distance(130).strength(0.5)
+    // Centro débil → no colapsa todo hacia el centro
+    fg.d3Force('center')?.strength(0.05)
+    fg.d3ReheatSimulation?.()
+  }, [graphNodes, graphLinks])
 
   // Dibujar etiqueta bajo el nodo
   const paintNode = useCallback((
@@ -331,9 +347,10 @@ export function NotesGraph({ onNodeClick }: Props) {
             backgroundColor="#FAF7F2"
             onNodeClick={handleNodeClick}
             onNodeHover={(node) => setHoverNodeId(node ? (node as unknown as GraphNode).id : null)}
-            cooldownTicks={80}
-            d3AlphaDecay={0.03}
-            d3VelocityDecay={0.35}
+            ref={fgRef}
+            cooldownTicks={200}
+            d3AlphaDecay={0.012}
+            d3VelocityDecay={0.25}
           />
         )}
 

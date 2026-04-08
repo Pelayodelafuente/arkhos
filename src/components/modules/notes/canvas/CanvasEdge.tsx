@@ -171,6 +171,11 @@ export function CanvasEdgeComponent({
     onDelete(edge.id)
   }, [edge.id, onDelete])
 
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    // Prevent canvas from starting pan/deselectAll when clicking an edge
+    e.stopPropagation()
+  }, [])
+
   const fromNode = nodes.get(edge.from_node_id)
   const toNode = nodes.get(edge.to_node_id)
   if (!fromNode || !toNode) return null
@@ -217,6 +222,8 @@ export function CanvasEdgeComponent({
   return (
     <g
       data-edge-id={edge.id}
+      style={{ pointerEvents: 'auto' }}
+      onMouseDown={handleMouseDown}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
