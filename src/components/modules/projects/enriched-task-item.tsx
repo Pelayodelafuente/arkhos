@@ -28,7 +28,6 @@ import {
   TASK_PRIORITIES,
   type PhaseTask,
   type TaskPriority,
-  type TaskStatus,
   type Subtask,
 } from "@/types/projects";
 import { TagChip } from "./tag-chip";
@@ -107,8 +106,8 @@ export function EnrichedTaskItem({
   isMobile,
   isEditing,
   editingText,
-  projectId,
-  userId,
+  projectId: _projectId,
+  userId: _userId,
   onToggleDone,
   onStartEdit,
   onEditTextChange,
@@ -116,7 +115,7 @@ export function EnrichedTaskItem({
   onCancelEdit,
   onCyclePriority,
   onDelete,
-  debouncedEditTask,
+  debouncedEditTask: _debouncedEditTask,
   onMoveTask,
 }: EnrichedTaskItemProps) {
   const {
@@ -164,6 +163,7 @@ export function EnrichedTaskItem({
   const hasSubtasks = liveTask.subtasks.length > 0;
 
   // Sync description from live task
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     setDescription(liveTask.description || liveTask.content || "");
   }, [liveTask.description, liveTask.content]);

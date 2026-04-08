@@ -18,7 +18,6 @@ import type {
   HistoryEntry,
   EdgeSide,
   EdgeColor,
-  EdgeStyle,
   NodeType,
   NoteColor,
   NoteFolder,
@@ -1784,7 +1783,6 @@ export function useFilteredNotes(): Note[] {
     })
 
     return sorted
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [notes, trashedNotes, searchQuery, searchResults, activeTag, sortMode, activeFolderId])
 }
 

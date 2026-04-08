@@ -519,8 +519,6 @@ export const useExpensesStore = create<ExpensesStore>((set, get) => ({
 export function useCycleFilteredSubscriptions(): SubscriptionWithCategory[] {
   const subscriptions = useExpensesStore((s) => s.subscriptions)
   const cycleFilter = useExpensesStore((s) => s.cycleFilter)
-  const viewedMonth = useExpensesStore((s) => s.viewedMonth)
-
   if (cycleFilter === 'all') return subscriptions
   if (cycleFilter === 'monthly') {
     return subscriptions.filter((sub) => sub.cycle === 'monthly')

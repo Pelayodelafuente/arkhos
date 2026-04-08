@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef, useMemo } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -11,9 +11,6 @@ import {
   Plus,
   ChevronDown,
   ChevronRight,
-  Check,
-  ExternalLink,
-  BookOpen,
   GripVertical,
   ChevronUp,
   Calendar,
@@ -52,7 +49,6 @@ import {
   DEFAULT_PROJECT_TYPES,
   DEFAULT_PROJECT_STATUSES,
   PHASE_STATUS_CONFIG,
-  TASK_PRIORITY_CONFIG,
   type PhaseStatus,
   type TaskPriority,
   type ProjectTypeRecord,
@@ -1247,200 +1243,6 @@ function SortablePhaseItem({
             </Button>
           </div>
         </div>
-      )}
-    </div>
-  );
-}
-
-// ─── Sortable Task Item ───────────────
-
-interface SortableTaskItemProps {
-  task: import("@/types/projects").PhaseTask;
-  taskIdx: number;
-  totalTasks: number;
-  isMobile: boolean;
-  isEditing: boolean;
-  editingText: string;
-  notesOpen: boolean;
-  onToggleDone: () => void;
-  onStartEdit: () => void;
-  onEditTextChange: (text: string) => void;
-  onSaveEdit: () => void;
-  onCancelEdit: () => void;
-  onToggleNotes: () => void;
-  onCyclePriority: () => void;
-  onDelete: () => void;
-  debouncedEditTask: (taskId: string, content: string) => void;
-  onMoveTask: (direction: -1 | 1) => void;
-}
-
-function SortableTaskItem({
-  task,
-  taskIdx,
-  totalTasks,
-  isMobile,
-  isEditing,
-  editingText,
-  notesOpen,
-  onToggleDone,
-  onStartEdit,
-  onEditTextChange,
-  onSaveEdit,
-  onCancelEdit,
-  onToggleNotes,
-  onCyclePriority,
-  onDelete,
-  debouncedEditTask,
-  onMoveTask,
-}: SortableTaskItemProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: task.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
-
-  const hasNotes = !!task.content;
-
-  return (
-    <div ref={setNodeRef} style={style}>
-      <div className="group flex items-start gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-sand/30">
-        {/* Drag handle or mobile arrows */}
-        {isMobile ? (
-          <div className="mt-0.5 flex flex-col gap-0">
-            <button
-              onClick={() => onMoveTask(-1)}
-              disabled={taskIdx === 0}
-              className="text-text-tertiary transition-colors hover:text-accent disabled:opacity-30"
-            >
-              <ChevronUp size={10} strokeWidth={2} />
-            </button>
-            <button
-              onClick={() => onMoveTask(1)}
-              disabled={taskIdx === totalTasks - 1}
-              className="text-text-tertiary transition-colors hover:text-accent disabled:opacity-30"
-            >
-              <ChevronDown size={10} strokeWidth={2} />
-            </button>
-          </div>
-        ) : (
-          <button
-            {...attributes}
-            {...listeners}
-            className="mt-0.5 cursor-grab text-text-tertiary opacity-0 transition-opacity hover:text-accent group-hover:opacity-100"
-            tabIndex={-1}
-          >
-            <GripVertical size={12} strokeWidth={1.75} />
-          </button>
-        )}
-
-        {/* Checkbox */}
-        <button
-          onClick={onToggleDone}
-          className={`mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded border transition-colors ${
-            task.done
-              ? "border-accent bg-accent"
-              : "border-border hover:border-accent"
-          }`}
-        >
-          {task.done && (
-            <Check size={10} strokeWidth={3} className="text-white" />
-          )}
-        </button>
-
-        {/* Task text (editable) */}
-        {isEditing ? (
-          <input
-            autoFocus
-            value={editingText}
-            onChange={(e) => onEditTextChange(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") onSaveEdit();
-              if (e.key === "Escape") onCancelEdit();
-            }}
-            onBlur={onSaveEdit}
-            className="flex-1 rounded-md border border-accent bg-card px-2 py-0.5 text-sm text-foreground focus:outline-none"
-          />
-        ) : (
-          <span
-            className={`flex-1 cursor-text text-sm ${
-              task.done
-                ? "text-text-tertiary line-through"
-                : "text-foreground"
-            }`}
-            onClick={onStartEdit}
-          >
-            {task.text}
-          </span>
-        )}
-
-        {/* Notes indicator */}
-        <button
-          onClick={onToggleNotes}
-          className={`mt-0.5 transition-colors ${
-            hasNotes
-              ? "text-accent"
-              : "text-text-tertiary opacity-0 group-hover:opacity-100"
-          }`}
-          title="Apuntes"
-        >
-          <BookOpen size={13} strokeWidth={1.75} />
-        </button>
-
-        {/* Priority dot */}
-        {task.priority !== "none" && (
-          <button
-            onClick={onCyclePriority}
-            className="mt-1 h-2 w-2 rounded-full"
-            style={{
-              backgroundColor: TASK_PRIORITY_CONFIG[task.priority].color,
-            }}
-            title={TASK_PRIORITY_CONFIG[task.priority].label}
-          />
-        )}
-
-        {/* Links */}
-        {task.links.length > 0 && (
-          <div className="flex items-center gap-1">
-            {task.links.map((link) => (
-              <a
-                key={link.id}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-text-tertiary transition-colors hover:text-accent"
-                title={link.label || link.url}
-              >
-                <ExternalLink size={12} strokeWidth={2} />
-              </a>
-            ))}
-          </div>
-        )}
-
-        {/* Delete task */}
-        <button
-          onClick={onDelete}
-          className="text-text-tertiary opacity-0 transition-opacity hover:text-red-500 group-hover:opacity-100"
-        >
-          <Trash2 size={12} strokeWidth={2} />
-        </button>
-      </div>
-
-      {/* Task notes (expandable) */}
-      {notesOpen && (
-        <TaskNotes
-          taskId={task.id}
-          content={task.content}
-          onSave={debouncedEditTask}
-        />
       )}
     </div>
   );

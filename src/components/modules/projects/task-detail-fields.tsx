@@ -21,15 +21,6 @@ import { useProjectsStore } from '@/stores/projects-store';
 
 marked.setOptions({ breaks: true });
 
-function MarkdownContent({ html }: { html: string }) {
-  return (
-    <div
-      className="prose-arkhos"
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
-  );
-}
-
 // ─── Priority colors ──────────────────
 
 const PRIORITY_COLORS: Record<TaskPriority, string> = {

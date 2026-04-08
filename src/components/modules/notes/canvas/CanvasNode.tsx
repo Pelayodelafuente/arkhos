@@ -98,7 +98,7 @@ export function CanvasNodeComponent({
   isConnectionTarget = false, searchDimmed = false,
   isConnecting = false,
   onSelect, onDragStart, onDoubleClick,
-  onConnectionStart, onResizeStart, onContentChange, onLabelChange,
+  onConnectionStart, onResizeStart, onContentChange, onLabelChange: _onLabelChange,
 }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const { scale, offsetX, offsetY } = viewport

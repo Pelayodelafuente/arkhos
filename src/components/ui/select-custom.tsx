@@ -49,6 +49,7 @@ export function SelectCustom({
       role="combobox"
       aria-expanded={open}
       aria-haspopup="listbox"
+      aria-controls=""
     >
       {/* Trigger */}
       <button

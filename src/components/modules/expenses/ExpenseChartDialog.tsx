@@ -18,6 +18,7 @@ export function ExpenseChartDialog({ externalOpen, onExternalClose }: ExpenseCha
   // Sync with external open state
   useEffect(() => {
     if (externalOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setOpen(true)
     }
   }, [externalOpen])

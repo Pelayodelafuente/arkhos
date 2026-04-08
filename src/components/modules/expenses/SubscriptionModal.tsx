@@ -336,6 +336,7 @@ export function SubscriptionModal({
                 title="Subir logo"
               >
                 {iconUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img src={iconUrl} alt="logo" className="h-full w-full object-contain p-1 rounded-full" />
                 ) : (
                   <Upload size={14} strokeWidth={1.75} className="text-text-tertiary" />

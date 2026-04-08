@@ -26,6 +26,7 @@ export default function NotesView({ projectId, userId }: NotesViewProps) {
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     setLoading(true)
     getNotesByProject(userId, projectId)

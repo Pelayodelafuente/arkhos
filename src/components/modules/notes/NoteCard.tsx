@@ -49,7 +49,7 @@ function getChecklistProgress(html: string): { total: number; checked: number } 
 
 // ─── Component ────────────────────────
 
-export function NoteCard({ note, userId, onEdit, onDelete, onTogglePin, onToggleFavorite, onAddToCanvas, onDuplicate, searchQuery, isSelected, isSelectionMode, onToggleSelect, isPaneActive }: Props) {
+export function NoteCard({ note, userId: _userId, onEdit, onDelete, onTogglePin, onToggleFavorite, onAddToCanvas, onDuplicate, searchQuery, isSelected, isSelectionMode, onToggleSelect, isPaneActive }: Props) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -90,6 +90,7 @@ export function NoteCard({ note, userId, onEdit, onDelete, onTogglePin, onToggle
       {/* Image preview */}
       {firstImage && (
         <div className="w-full h-28 rounded-t-xl overflow-hidden">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={firstImage}
             alt=""

@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { type ProjectPhase, type PhaseTask, TASK_PRIORITY_CONFIG } from '@/types/projects';
+import { type ProjectPhase, type PhaseTask } from '@/types/projects';
 
 // ─── Helpers ─────────────────────────
 

@@ -165,7 +165,6 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
   const generateBacklinkEdges = useNotesStore((s) => s.generateBacklinkEdges)
   const noteBacklinks = useNotesStore((s) => s.noteBacklinks)
   const updateNodeLabel = useNotesStore((s) => s.updateNodeLabel)
-  const updateNodeColor = useNotesStore((s) => s.updateNodeColor)
 
   const { matchingIds: searchMatchingIds } = useCanvasSearchResults()
 
@@ -364,7 +363,6 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
     }
     el.addEventListener("wheel", handler, { passive: false })
     return () => el.removeEventListener("wheel", handler)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setViewport])
 
   const calculateSnapGuides = useCallback((

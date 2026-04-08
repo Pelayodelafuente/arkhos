@@ -68,13 +68,11 @@ interface KanbanTask extends PhaseTask {
 function KanbanColumn({
   column,
   tasks,
-  allTasksForColumn,
   activeId,
   onOpenTask,
 }: {
   column: ColumnDef;
   tasks: KanbanTask[];
-  allTasksForColumn?: KanbanTask[];
   activeId: string | null;
   onOpenTask: (task: PhaseTask) => void;
 }) {
@@ -311,6 +309,7 @@ export default function KanbanView({
   }, [filteredTasks]);
 
   // Sync local order when tasks change from external source (e.g. after cross-column move)
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     setLocalOrder((prev) => {
       const next = { ...prev };
@@ -465,7 +464,6 @@ export default function KanbanView({
               key={col.status}
               column={col}
               tasks={sortedTasksByStatus[col.status]}
-              allTasksForColumn={tasksByStatus[col.status]}
               activeId={activeDragId}
               onOpenTask={onOpenTask}
             />

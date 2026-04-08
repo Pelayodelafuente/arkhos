@@ -51,6 +51,7 @@ export function ServiceAvatar({ name, icon, color, size = 'sm', className = '', 
 
   // Track if the image fails to load so we can fall back to next priority
   const [imgError, setImgError] = useState(false)
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setImgError(false) }, [primaryImg])
 
   return (
@@ -75,6 +76,7 @@ export function ServiceAvatar({ name, icon, color, size = 'sm', className = '', 
 
       {/* Priority: stored/favicon img > predefined service icon > letter */}
       {primaryImg && !imgError ? (
+        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={primaryImg}
           alt={name}

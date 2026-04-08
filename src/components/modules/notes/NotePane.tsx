@@ -220,7 +220,7 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
         }).catch(() => {})
       }
     }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [])
 
   // Escape to close
   useEffect(() => {

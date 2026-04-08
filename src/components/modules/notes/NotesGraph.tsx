@@ -178,8 +178,11 @@ export function NotesGraph({ onNodeClick }: Props) {
       let initY: number | undefined
       if (centroid) {
         const spread = 60
-        initX = centroid.x + (Math.random() - 0.5) * spread
-        initY = centroid.y + (Math.random() - 0.5) * spread
+        // Deterministic offset from node id hash — avoids Math.random() during render
+        const h1 = n.id.split('').reduce((acc, c, i) => acc + c.charCodeAt(0) * (i + 1), 0)
+        const h2 = n.id.split('').reduce((acc, c, i) => acc + c.charCodeAt(0) * (i + 7), 0)
+        initX = centroid.x + ((h1 % 1000) / 1000 - 0.5) * spread
+        initY = centroid.y + ((h2 % 1000) / 1000 - 0.5) * spread
         centroid.count++
       }
       return {
