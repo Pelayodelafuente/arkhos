@@ -258,8 +258,8 @@ export function NoteEditor({
   const notesRef = useRef<Note[]>(storeNotes)
   useEffect(() => { notesRef.current = storeNotes }, [storeNotes])
   // Create mention extension once — it reads from notesRef.current at query time
-  const mentionExtRef = useRef(createMentionExtension(notesRef))
-  const mentionExt = useMemo(() => mentionExtRef.current, [])
+  // eslint-disable-next-line react-hooks/refs
+  const mentionExt = useMemo(() => createMentionExtension(notesRef), [])
 
   const filteredCommands = SLASH_COMMANDS.filter(
     (cmd) =>
