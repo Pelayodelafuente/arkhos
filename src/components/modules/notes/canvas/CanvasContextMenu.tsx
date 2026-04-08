@@ -132,6 +132,7 @@ export function CanvasContextMenu({
         ref={menuRef}
         className="fixed z-50 w-48 rounded-lg border border-border bg-card py-1 shadow-md"
         style={{ left: x, top: y }}
+        onMouseDown={(e) => e.stopPropagation()}
       >
         {/* Edit label */}
         <button
@@ -330,6 +331,7 @@ export function CanvasContextMenu({
       ref={menuRef}
       className="fixed z-50 w-44 rounded-lg border border-border bg-card py-1 shadow-md"
       style={{ left: x, top: y }}
+      onMouseDown={(e) => e.stopPropagation()}
     >
       {items.map((item, i) => (
         <div key={item.label}>
