@@ -272,8 +272,9 @@ export function NotesGraph({ onNodeClick }: Props) {
     if (!currentContent.includes(link)) {
       const newContent = currentContent + (currentContent.endsWith('\n') || !currentContent ? '' : '\n') + link
       editNote(connectSource, { content: newContent })
-        .then(() => {
-          syncBacklinksOnSave(connectSource!, newContent).catch(console.error)
+        .then(async () => {
+          await syncBacklinksOnSave(connectSource!, newContent)
+          await loadGraphData()
           toast.success(`Nota vinculada a "${targetTitle}"`)
         })
         .catch(() => toast.error('Error al vincular notas'))
@@ -282,7 +283,7 @@ export function NotesGraph({ onNodeClick }: Props) {
     }
     setConnectSource(null)
     setConnectMode(false)
-  }, [connectMode, connectSource, notes, editNote, syncBacklinksOnSave, toast, onNodeClick])
+  }, [connectMode, connectSource, notes, editNote, syncBacklinksOnSave, loadGraphData, toast, onNodeClick])
 
   const noteColors: NoteColor[] = ['default', 'sage', 'terracotta', 'stone', 'blue', 'gold']
   const colorLabels: Record<NoteColor, string> = {

@@ -70,6 +70,8 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
 
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const snapshotRef = useRef<{ title: string; content: string; color: NoteColor; icon: string; tags: string[]; status: NoteStatus } | null>(null)
+  const prevOpenRef = useRef(false)
+  const contentEditedRef = useRef(false)
 
   // Lazy load content al abrir
   useEffect(() => {
@@ -91,22 +93,40 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
 
   // Populate form + capture snapshot (must set ref before auto-save effect can fire)
   useEffect(() => {
+    const justOpened = open && !prevOpenRef.current
+    prevOpenRef.current = open
+
     if (note && open) {
-      setTitle(note.title)
-      setContent(note.content)
-      setColor(note.color)
-      setIcon(note.icon)
-      setTags([...note.tags])
-      setStatus(note.status ?? 'none')
-      snapshotRef.current = { title: note.title, content: note.content, color: note.color, icon: note.icon, tags: [...note.tags], status: note.status ?? 'none' }
+      if (justOpened) {
+        // Full reset only on modal open — prevents loadNoteContent from overwriting user edits
+        setTitle(note.title)
+        setContent(note.content)
+        setColor(note.color)
+        setIcon(note.icon)
+        setTags([...note.tags])
+        setStatus(note.status ?? 'none')
+        snapshotRef.current = { title: note.title, content: note.content, color: note.color, icon: note.icon, tags: [...note.tags], status: note.status ?? 'none' }
+        contentEditedRef.current = false
+        setConfirmDelete(false)
+        setShowIcons(false)
+        setHistoryOpen(false)
+        setVersions([])
+        setSelectedVersion(null)
+      } else if (note.contentLoaded && !contentEditedRef.current) {
+        // Content just loaded from server and user hasn't edited yet — update silently
+        setContent(note.content)
+        if (snapshotRef.current) {
+          snapshotRef.current = { ...snapshotRef.current, content: note.content }
+        }
+      }
       // Auto-snapshot: save version if note was last edited >5 minutes ago (solo si content cargado)
-      if (note.contentLoaded) {
+      if (note.contentLoaded && justOpened) {
         const fiveMinutesAgo = Date.now() - 5 * 60 * 1000
         if (new Date(note.updated_at).getTime() < fiveMinutesAgo) {
           notesApi.saveNoteVersion(note.id, userId, note.title, note.content).catch(() => {})
         }
       }
-    } else {
+    } else if (!open) {
       setTitle("")
       setContent("")
       setColor("default")
@@ -114,12 +134,13 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
       setTags([])
       setStatus('none')
       snapshotRef.current = null
+      contentEditedRef.current = false
+      setConfirmDelete(false)
+      setShowIcons(false)
+      setHistoryOpen(false)
+      setVersions([])
+      setSelectedVersion(null)
     }
-    setConfirmDelete(false)
-    setShowIcons(false)
-    setHistoryOpen(false)
-    setVersions([])
-    setSelectedVersion(null)
   }, [note, open]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load versions when history panel opens
@@ -357,7 +378,7 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
         <div className={`rounded-md border border-border bg-card px-3 py-2.5 ${isFullscreen ? 'flex-1 overflow-y-auto' : ''}`}>
           <NoteEditor
             content={content}
-            onChange={setContent}
+            onChange={(html) => { contentEditedRef.current = true; setContent(html) }}
             placeholder="Escribe aquí... usa / para insertar bloques"
             autoFocus={!isEdit}
           />

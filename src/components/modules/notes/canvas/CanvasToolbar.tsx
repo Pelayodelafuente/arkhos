@@ -147,6 +147,9 @@ export function CanvasToolbar({
       <button onClick={onAddTextNode} className={btnBase} title="Nodo de texto" aria-label="Nodo de texto">
         <Type size={14} strokeWidth={1.75} />
       </button>
+      <button onClick={() => onAddImageNode?.()} className={btnBase} title="Nodo de imagen" aria-label="Nodo de imagen">
+        <ImageIcon size={14} strokeWidth={1.75} />
+      </button>
       <button onClick={onAddUrlNode} className={btnBase} title="Nodo URL" aria-label="Nodo URL">
         <Link size={14} strokeWidth={1.75} />
       </button>
@@ -238,16 +241,6 @@ export function CanvasToolbar({
 
         {showMore && (
           <div className="absolute bottom-9 right-0 z-50 min-w-[180px] rounded-xl border border-border bg-card/95 backdrop-blur-sm shadow-md py-1 flex flex-col">
-            {/* Imagen */}
-            <button
-              onClick={() => { onAddImageNode?.(); setShowMore(false) }}
-              className="flex items-center gap-2.5 px-3 py-1.5 text-xs text-text-secondary hover:bg-sand hover:text-foreground transition-colors"
-              title="Nodo de imagen"
-            >
-              <ImageIcon size={13} strokeWidth={1.75} />
-              <span>Nodo de imagen</span>
-            </button>
-
             {/* Agrupar seleccion */}
             <button
               onClick={() => { onGroupSelection(); setShowMore(false) }}

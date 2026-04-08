@@ -176,7 +176,7 @@ export function ExpenseCalendar({ onNewWithDay, onEdit }: ExpenseCalendarProps) 
           </div>
         ))}
         {/* Header for weekly total column */}
-        <div className="w-12 text-center font-mono text-[9px] uppercase tracking-[0.06em] text-text-tertiary hidden sm:block">
+        <div className="w-14 text-center font-mono text-[9px] uppercase tracking-[0.06em] text-text-tertiary hidden sm:block">
           Total
         </div>
       </div>
@@ -233,10 +233,11 @@ export function ExpenseCalendar({ onNewWithDay, onEdit }: ExpenseCalendarProps) 
                   )
                 })}
                 {/* Weekly total */}
-                <div className="w-12 hidden sm:flex items-center justify-center rounded-md" style={{ background: weekTotal > 0 ? 'var(--bg-sand)' : undefined }}>
+                <div className="w-14 hidden sm:flex items-center justify-center rounded-md overflow-hidden" style={{ background: weekTotal > 0 ? 'var(--bg-sand)' : undefined }}>
                   <span
-                    className="font-mono text-[11px] text-text-tertiary tabular-nums leading-tight text-center px-1"
+                    className="font-mono text-[10px] text-text-tertiary tabular-nums leading-tight text-center px-1 w-full truncate"
                     style={{ fontVariantNumeric: 'tabular-nums' }}
+                    title={weekTotal > 0 ? formatCurrency(weekTotal) : '0 €'}
                   >
                     {weekTotal > 0 ? formatCurrency(weekTotal) : '0 €'}
                   </span>

@@ -22,8 +22,6 @@ import { GastosLoading } from "./GastosLoading"
 import { exportToCSV } from "@/lib/gastos-utils"
 import type { SubscriptionWithCategory } from "@/types/expenses"
 
-const AMORTIZE_STORAGE_KEY = "arkhos-expense-amortize"
-
 interface ExpensesViewProps {
   userId: string
 }
@@ -36,8 +34,6 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
   const generateMissingPayments = useExpensesStore((s) => s.generateMissingPayments)
   const setSearchQuery = useExpensesStore((s) => s.setSearchQuery)
   const isLoading = useExpensesStore((s) => s.isLoading)
-  const notAmortizeYearly = useExpensesStore((s) => s.notAmortizeYearly)
-  const setNotAmortizeYearly = useExpensesStore((s) => s.setNotAmortizeYearly)
   const subscriptions = useExpensesStore((s) => s.subscriptions)
   const cycleFilter = useExpensesStore((s) => s.cycleFilter)
 
@@ -52,17 +48,6 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
   const [alertSettingsOpen, setAlertSettingsOpen] = useState(false)
 
   const searchRef = useRef<HTMLInputElement>(null)
-
-  // Restore amortization preference
-  useEffect(() => {
-    const stored = localStorage.getItem(AMORTIZE_STORAGE_KEY)
-    if (stored !== null) setNotAmortizeYearly(stored === "true")
-  }, [setNotAmortizeYearly])
-
-  // Persist amortization preference
-  useEffect(() => {
-    localStorage.setItem(AMORTIZE_STORAGE_KEY, notAmortizeYearly.toString())
-  }, [notAmortizeYearly])
 
   // Fetch data
   useEffect(() => {
@@ -226,29 +211,6 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
           <Download size={16} strokeWidth={1.75} />
           <span className="hidden sm:inline">CSV</span>
         </Button>
-
-        {/* Amortization toggle */}
-        <label className="flex items-center gap-2 cursor-pointer select-none">
-          <span className="hidden sm:inline text-xs text-text-secondary whitespace-nowrap">
-            Precio anual completo
-          </span>
-          <motion.button
-            role="switch"
-            aria-label="Mostrar precio anual completo"
-            aria-checked={notAmortizeYearly}
-            onClick={() => setNotAmortizeYearly(!notAmortizeYearly)}
-            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
-              notAmortizeYearly ? "bg-accent" : "bg-border"
-            }`}
-            whileTap={{ scale: 0.95 }}
-          >
-            <motion.span
-              className="inline-block h-3.5 w-3.5 rounded-full bg-white shadow"
-              animate={{ x: notAmortizeYearly ? 18 : 3 }}
-              transition={{ type: "spring", stiffness: 500, damping: 30 }}
-            />
-          </motion.button>
-        </label>
 
         {/* CTA */}
         <Button variant="primary" size="sm" onClick={handleNew}>
