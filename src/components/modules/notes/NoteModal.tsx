@@ -317,6 +317,14 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
           >
             {isFullscreen ? <Minimize2 size={15} strokeWidth={1.75} /> : <Maximize2 size={15} strokeWidth={1.75} />}
           </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-7 w-7 items-center justify-center rounded-md text-text-tertiary hover:text-foreground hover:bg-sand/60 transition-colors flex-shrink-0"
+            title="Cerrar"
+          >
+            <X size={15} strokeWidth={1.75} />
+          </button>
         </div>
 
         {/* Icon picker (toggle) */}
@@ -515,18 +523,16 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
         <TagInput tags={tags} onChange={setTags} suggestions={allTags} />
 
         {/* Footer */}
-        <div className="flex items-center justify-between pt-2 border-t border-border">
-          <div className="flex items-center gap-3">
-            <span className="font-mono text-[10px] text-text-tertiary">
-              {wordCount} palabra{wordCount !== 1 ? 's' : ''}
-            </span>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 pt-2 border-t border-border">
+          {/* Left: destructive actions */}
+          <div className="flex items-center gap-2 flex-1 min-w-0">
             {isEdit && (
               <>
                 <Button variant="ghost" size="sm" onClick={handleArchive}>
                   {note?.archived
                     ? <ArchiveRestore size={13} strokeWidth={1.75} />
                     : <Archive size={13} strokeWidth={1.75} />}
-                  {note?.archived ? 'Desarchivar' : 'Archivar'}
+                  <span className="hidden sm:inline">{note?.archived ? 'Desarchivar' : 'Archivar'}</span>
                 </Button>
                 <Button variant="danger" size="sm" onClick={handleDelete} loading={saving && confirmDelete}>
                   <Trash2 size={13} strokeWidth={1.75} />
@@ -534,11 +540,16 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
                 </Button>
               </>
             )}
+            <span className="font-mono text-[10px] text-text-tertiary ml-auto">
+              {wordCount} {wordCount !== 1 ? 'palabras' : 'palabra'}
+            </span>
           </div>
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" onClick={onClose}>Cancelar</Button>
+          {/* Right: primary actions */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Button variant="ghost" size="sm" onClick={onClose}>Cancelar</Button>
             <Button
               variant="primary"
+              size="sm"
               onClick={handleSave}
               loading={saving && !confirmDelete}
               disabled={!isEdit && !title.trim() && !content.trim()}

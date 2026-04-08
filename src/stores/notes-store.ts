@@ -462,7 +462,19 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
         notesApi.batchRemoveNodes(duplicateIds).catch(console.error)
       }
 
-      set({ canvas, canvasNodes: deduped, canvasEdges: edges })
+      // Filter out orphaned note-nodes: note was deleted or doesn't exist
+      const cleanNodes = deduped.filter(n => {
+        if (!n.note_id) return true // text, url, image nodes are always valid
+        return n.note && !n.note.deleted_at
+      })
+      const orphanIds = deduped
+        .filter(n => n.note_id && (!n.note || n.note.deleted_at))
+        .map(n => n.id)
+      if (orphanIds.length > 0) {
+        notesApi.batchRemoveNodes(orphanIds).catch(console.error)
+      }
+
+      set({ canvas, canvasNodes: cleanNodes, canvasEdges: edges })
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Error al cargar el canvas'
       toast(msg, 'error')
@@ -569,6 +581,10 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
     }))
     try {
       await notesApi.deleteNote(id)
+      // Also remove the canvas_node from DB so it doesn't become an orphan on next load
+      if (nodeToRemove) {
+        await notesApi.removeNodeFromCanvas(nodeToRemove.id)
+      }
       toast('Nota movida a la papelera', 'info')
     } catch (e) {
       set({ notes: prev, trashedNotes: get().trashedNotes.filter((n) => n.id !== id), canvasNodes: prevNodes, canvasEdges: prevEdges })

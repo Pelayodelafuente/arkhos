@@ -129,6 +129,7 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
   const moveSelectedNodes = useNotesStore((s) => s.moveSelectedNodes)
   const persistSelectedNodePositions = useNotesStore((s) => s.persistSelectedNodePositions)
   const removeSelectedNodes = useNotesStore((s) => s.removeSelectedNodes)
+  const removeNote = useNotesStore((s) => s.removeNote)
   const removeNode = useNotesStore((s) => s.removeNode)
   const removeEdge = useNotesStore((s) => s.removeEdge)
   const editEdge = useNotesStore((s) => s.editEdge)
@@ -137,7 +138,6 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
   const addUrlNode = useNotesStore((s) => s.addUrlNode)
   const addImageNode = useNotesStore((s) => s.addImageNode)
   const fetchCanvas = useNotesStore((s) => s.fetchCanvas)
-  const syncNotesToCanvas = useNotesStore((s) => s.syncNotesToCanvas)
   const snapEnabled = useNotesStore((s) => s.snapEnabled)
   const toggleSnap = useNotesStore((s) => s.toggleSnap)
   const snapGuides = useNotesStore((s) => s.snapGuides)
@@ -319,15 +319,7 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
 
   useEffect(() => {
     if (!canvas) return
-    let cancelled = false
-    const load = async () => {
-      await fetchCanvas(canvas.id)
-      if (!cancelled) {
-        await syncNotesToCanvas(userId)
-      }
-    }
-    load()
-    return () => { cancelled = true }
+    fetchCanvas(canvas.id)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canvas?.id])
 
@@ -699,7 +691,16 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
     if (!url) return
     addUrlNode(url, pos)
   }, [addUrlNode])
-  const handleContextDelete = useCallback((nodeId: string) => { removeNode(nodeId) }, [removeNode])
+  const handleContextDelete = useCallback((nodeId: string) => {
+    const node = nodeMap.get(nodeId)
+    if (node?.node_type === 'note' && node.note_id) {
+      // Soft-delete the note (also removes canvas_node from DB via removeNote)
+      removeNote(node.note_id)
+    } else {
+      // Text / URL / image nodes: only remove from canvas
+      removeNode(nodeId)
+    }
+  }, [nodeMap, removeNote, removeNode])
   const handleContextToggleLock = useCallback((nodeId: string) => { toggleNodeLocked(nodeId) }, [toggleNodeLocked])
   const handleContextEdit = useCallback((nodeId: string) => {
     const node = nodeMap.get(nodeId)
