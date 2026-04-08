@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { marked } from "marked"
-import { FileText, Type, Link, ExternalLink, Layers, Lock, Image as ImageIcon, ChevronDown, ChevronRight } from "lucide-react"
+import { FileText, Type, Link, ExternalLink, Lock, Image as ImageIcon } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import * as LucideIcons from "lucide-react"
 import type { CanvasNode as CanvasNodeType, CanvasViewport } from "@/types/notes"
@@ -20,15 +20,6 @@ const COLOR_MAP = Object.fromEntries(
   NOTE_COLOR_CONFIG.map((c) => [c.value, { bg: c.bg, border: c.border }])
 ) as Record<string, { bg: string; border: string }>
 
-// ─── Group background map (semi-transparent) ──
-const GROUP_BG_MAP: Record<string, string> = {
-  default: "rgba(176, 164, 143, 0.08)",
-  sage: "rgba(122, 155, 118, 0.08)",
-  gold: "rgba(196, 170, 74, 0.08)",
-  terracotta: "rgba(196, 112, 74, 0.08)",
-  stone: "rgba(138, 122, 106, 0.08)",
-  blue: "rgba(107, 140, 196, 0.08)",
-}
 
 // ─── Image URL filename extractor ────────────
 function extractFilenameFromUrl(url: string): string {
@@ -90,9 +81,7 @@ interface Props {
   isSelected: boolean
   isEditing: boolean
   isConnectionTarget?: boolean
-  isDragOverGroup?: boolean
   searchDimmed?: boolean
-  allNodes?: CanvasNodeType[]
   onSelect: (id: string, additive: boolean) => void
   onDragStart: (id: string, e: React.MouseEvent | React.TouchEvent) => void
   onDoubleClick: (node: CanvasNodeType) => void
@@ -100,31 +89,25 @@ interface Props {
   onResizeStart: (nodeId: string, handle: string, e: React.MouseEvent) => void
   onContentChange: (id: string, content: string) => void
   onLabelChange?: (id: string, label: string) => void
-  onToggleCollapsed?: (id: string) => void
   isConnecting?: boolean
 }
 
 // ─── Component ────────────────────────────────
 export function CanvasNodeComponent({
   node, viewport, isSelected, isEditing,
-  isConnectionTarget = false, isDragOverGroup = false, searchDimmed = false, allNodes,
+  isConnectionTarget = false, searchDimmed = false,
   isConnecting = false,
   onSelect, onDragStart, onDoubleClick,
   onConnectionStart, onResizeStart, onContentChange, onLabelChange,
-  onToggleCollapsed,
 }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const [editingLabel, setEditingLabel] = useState(false)
-  const [labelValue, setLabelValue] = useState(node.label || "")
-  const labelInputRef = useRef<HTMLInputElement>(null)
   const { scale, offsetX, offsetY } = viewport
 
   const colors = COLOR_MAP[node.color] ?? COLOR_MAP.default
   const screenX = node.pos_x * scale + offsetX
   const screenY = node.pos_y * scale + offsetY
   const screenW = node.width * scale
-  const isGroup = node.node_type === "group"
-  const screenH = isGroup && node.collapsed ? 36 * scale : node.height * scale
+  const screenH = node.height * scale
 
   const [imageError, setImageError] = useState(false)
 
@@ -132,7 +115,6 @@ export function CanvasNodeComponent({
   const NodeIcon: LucideIcon = useMemo(() => {
     if (node.node_type === "text") return Type
     if (node.node_type === "url") return Link
-    if (node.node_type === "group") return Layers
     if (node.node_type === "image") return ImageIcon
     if (node.node_type === "note" && node.note?.icon) {
       return (LucideIcons as unknown as Record<string, LucideIcon>)[node.note.icon] ?? FileText
@@ -143,7 +125,6 @@ export function CanvasNodeComponent({
   // ─── Derived content ────────────────────
   const title = node.node_type === "note" ? (node.note?.title ?? "Sin titulo")
     : node.node_type === "url" ? extractDomain(node.url || "")
-    : node.node_type === "group" ? (node.label || "Grupo")
     : node.node_type === "image" ? (node.label || extractFilenameFromUrl(node.url) || "Imagen")
     : ""
 
@@ -156,18 +137,6 @@ export function CanvasNodeComponent({
     [rawContent],
   )
 
-  // ─── Parent group (for membership badge) ────
-  const parentGroup = useMemo(() => {
-    if (isGroup || !node.group_id || !allNodes) return null
-    return allNodes.find((n) => n.id === node.group_id) ?? null
-  }, [isGroup, node.group_id, allNodes])
-
-  // ─── Group: count contained nodes by group_id ───────
-  const groupNodeCount = useMemo(() => {
-    if (!isGroup || !allNodes) return 0
-    return allNodes.filter((n) => n.group_id === node.id && n.node_type !== 'group').length
-  }, [isGroup, allNodes, node.id])
-
   // ─── Auto-focus textarea on edit ────────
   useEffect(() => {
     if (isEditing && node.node_type === "text" && textareaRef.current) {
@@ -175,26 +144,12 @@ export function CanvasNodeComponent({
     }
   }, [isEditing, node.node_type])
 
-  // ─── Auto-focus label input on group edit ─
-  useEffect(() => {
-    if (editingLabel && labelInputRef.current) {
-      labelInputRef.current.focus()
-      labelInputRef.current.select()
-    }
-  }, [editingLabel])
-
-  // Sync label value when node changes
-  useEffect(() => {
-    setLabelValue(node.label || "")
-  }, [node.label])
-
   // ─── Handlers ───────────────────────────
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (editingLabel) return
     e.stopPropagation()
     onSelect(node.id, e.shiftKey)
     if (e.button === 0 && !isEditing) onDragStart(node.id, e)
-  }, [node.id, isEditing, editingLabel, onSelect, onDragStart])
+  }, [node.id, isEditing, onSelect, onDragStart])
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     e.stopPropagation()
@@ -204,32 +159,8 @@ export function CanvasNodeComponent({
 
   const handleDblClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
-    if (isGroup) {
-      setEditingLabel(true)
-    } else {
-      onDoubleClick(node)
-    }
-  }, [node, isGroup, onDoubleClick])
-
-  const handleLabelSave = useCallback(() => {
-    setEditingLabel(false)
-    const trimmed = labelValue.trim()
-    if (trimmed !== (node.label || "")) {
-      // Groups use label column; text/url nodes use content column
-      if (onLabelChange) onLabelChange(node.id, trimmed)
-      else onContentChange(node.id, trimmed)
-    }
-  }, [labelValue, node.id, node.label, onContentChange, onLabelChange])
-
-  const handleLabelKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === "Enter" || e.key === "Escape") {
-      e.preventDefault()
-      if (e.key === "Escape") {
-        setLabelValue(node.label || "")
-      }
-      handleLabelSave()
-    }
-  }, [node.label, handleLabelSave])
+    onDoubleClick(node)
+  }, [node, onDoubleClick])
 
   const handleTextareaBlur = useCallback(() => {
     // Text node blur: content is already saved via onChange
@@ -296,133 +227,7 @@ export function CanvasNodeComponent({
   // ─── Wrapper styles for search dimming & connection target ─
   const wrapperTransitions = "border-color 150ms ease, box-shadow 150ms ease, opacity 200ms ease, transform 150ms ease"
 
-  // ─── Group node ─────────────────────────
-  if (isGroup) {
-    const groupBg = GROUP_BG_MAP[node.color] ?? GROUP_BG_MAP.default
-    return (
-      <div
-        data-node-id={node.id}
-        className="group/node"
-        style={{
-          position: "absolute", left: screenX, top: screenY,
-          width: screenW, height: screenH,
-          backgroundColor: isDragOverGroup ? "rgba(196, 112, 74, 0.10)" : groupBg,
-          borderColor: isDragOverGroup ? "#C4704A" : isConnectionTarget ? "#B07A3A" : isSelected ? "#C4704A" : colors.border,
-          borderWidth: isSelected || isConnectionTarget || isDragOverGroup ? 2 : 1.5,
-          borderStyle: "dashed", borderRadius: 12,
-          zIndex: node.z_index,
-          cursor: editingLabel ? "text" : "grab",
-          transition: wrapperTransitions,
-          ...(isConnectionTarget ? {
-            boxShadow: "0 0 0 3px rgba(122, 155, 118, 0.3)",
-            transform: "scale(1.02)",
-          } : {}),
-          ...(searchDimmed ? {
-            opacity: 0.3,
-            pointerEvents: "none" as const,
-          } : {}),
-        }}
-        onMouseDown={handleMouseDown}
-        onTouchStart={handleTouchStart}
-        onDoubleClick={handleDblClick}
-      >
-        {/* Group header */}
-        <div style={{
-          padding: `${6 * scale}px ${10 * scale}px`,
-          display: "flex", alignItems: "center", gap: 4 * scale,
-        }}>
-          <button
-            onMouseDown={(e) => { e.stopPropagation() }}
-            onClick={(e) => { e.stopPropagation(); onToggleCollapsed?.(node.id) }}
-            style={{
-              background: 'rgba(0,0,0,0.06)', border: 'none', cursor: 'pointer',
-              padding: `${2 * scale}px`, borderRadius: 3 * scale,
-              display: 'flex', alignItems: 'center', flexShrink: 0,
-            }}
-            title={node.collapsed ? 'Expandir grupo' : 'Colapsar grupo'}
-          >
-            {node.collapsed
-              ? <ChevronRight size={13 * scale} strokeWidth={2} style={{ color: 'var(--text-secondary)' }} />
-              : <ChevronDown size={13 * scale} strokeWidth={2} style={{ color: 'var(--text-secondary)' }} />
-            }
-          </button>
-          <Layers size={13 * scale} strokeWidth={1.75} style={{ color: colors.border, flexShrink: 0 }} />
-
-          {editingLabel ? (
-            <input
-              ref={labelInputRef}
-              value={labelValue}
-              onChange={(e) => setLabelValue(e.target.value)}
-              onBlur={handleLabelSave}
-              onKeyDown={handleLabelKeyDown}
-              onMouseDown={(e) => e.stopPropagation()}
-              style={{
-                fontSize: 11 * scale, fontWeight: 600,
-                color: "var(--text-secondary)",
-                letterSpacing: "0.02em",
-                background: "transparent", border: "none", outline: "none",
-                padding: 0, margin: 0, flex: 1,
-                minWidth: 0,
-              }}
-            />
-          ) : (
-            <span style={{
-              fontSize: 11 * scale, fontWeight: 600,
-              color: "var(--text-secondary)", letterSpacing: "0.02em",
-              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-              flex: 1,
-            }}>
-              {title}
-            </span>
-          )}
-
-          {/* Node count badge */}
-          <span style={{
-            fontSize: 9 * scale, fontWeight: 500,
-            color: "var(--text-tertiary)",
-            backgroundColor: "rgba(0,0,0,0.06)",
-            padding: `${1 * scale}px ${5 * scale}px`,
-            borderRadius: 4 * scale,
-            whiteSpace: "nowrap",
-            flexShrink: 0,
-          }}>
-            {groupNodeCount} {groupNodeCount === 1 ? "nodo" : "nodos"}
-          </span>
-
-          {node.locked && <Lock size={10 * scale} style={{ color: "var(--text-tertiary)", flexShrink: 0 }} />}
-        </div>
-
-        {/* Drag-over indicator */}
-        {isDragOverGroup && (
-          <div style={{
-            position: 'absolute', inset: 0,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            borderRadius: 10, pointerEvents: 'none',
-          }}>
-            <span style={{
-              fontSize: 10 * scale, fontWeight: 600,
-              color: '#C4704A',
-              backgroundColor: 'rgba(255,255,255,0.85)',
-              padding: `${3 * scale}px ${8 * scale}px`,
-              borderRadius: 20 * scale,
-              border: '1px solid rgba(196,112,74,0.3)',
-              letterSpacing: '0.02em',
-            }}>
-              Soltar para añadir al grupo
-            </span>
-          </div>
-        )}
-
-        {/* Resize handles */}
-        {renderResizeHandles(false)}
-
-        {/* Connection handles */}
-        {renderConnectionHandles()}
-      </div>
-    )
-  }
-
-  // ─── Standard node ──────────────────────
+  // ─── Node ───────────────────────────────
   return (
     <div
       data-node-id={node.id}
@@ -629,21 +434,6 @@ export function CanvasNodeComponent({
           </div>
         )}
       </div>
-
-      {/* Group membership badge */}
-      {parentGroup && !isGroup && (
-        <div style={{
-          position: "absolute", bottom: 4 * scale, right: 4 * scale,
-          display: "flex", alignItems: "center", gap: 2 * scale,
-          padding: `${1 * scale}px ${3 * scale}px`,
-          borderRadius: 3 * scale,
-          backgroundColor: "rgba(0,0,0,0.06)",
-          pointerEvents: "none",
-          zIndex: 101,
-        }}>
-          <Layers size={7 * scale} strokeWidth={1.75} style={{ color: "var(--text-tertiary)", flexShrink: 0 }} />
-        </div>
-      )}
 
       {/* Project link badge — top-right corner, visible when not resizing */}
       {node.node_type === "note" && node.note?.project_id && !node.locked && (

@@ -18,15 +18,8 @@ import {
   ArrowRight,
   Minus,
   ArrowLeftRight,
-  SquareDashedMousePointer,
-  ChevronRight,
-  ChevronDown,
-  MousePointer2,
-  LogOut,
-  Check,
 } from "lucide-react"
-import type { EdgeColor, EdgeStyle, NoteColor } from "@/types/notes"
-import { NOTE_COLOR_CONFIG } from "@/types/notes"
+import type { EdgeColor, EdgeStyle } from "@/types/notes"
 
 const EDGE_COLORS: { value: EdgeColor; color: string; label: string }[] = [
   { value: "default", color: "var(--text-faint)", label: "Neutro" },
@@ -63,21 +56,6 @@ interface Props {
   onEdgeStyleChange: (edgeId: string, style: EdgeStyle) => void
   onEdgeEditLabel: (edgeId: string) => void
   onEdgeDelete: (edgeId: string) => void
-  // Group node props
-  isGroupNode?: boolean
-  isGroupCollapsed?: boolean
-  groupColor?: NoteColor
-  groupLabel?: string
-  nodeGroupId?: string | null
-  isGroupChildrenLocked?: boolean
-  onRemoveGroupKeepNodes?: (id: string) => void
-  onRemoveGroupWithContent?: (id: string) => void
-  onToggleGroupCollapsed?: (id: string) => void
-  onSelectGroupContent?: (id: string) => void
-  onLockGroupChildren?: (id: string, locked: boolean) => void
-  onChangeGroupColor?: (id: string, color: NoteColor) => void
-  onRenameGroup?: (id: string, label: string) => Promise<void>
-  onEjectFromGroup?: (nodeId: string) => void
 }
 
 interface MenuItem {
@@ -113,23 +91,8 @@ export function CanvasContextMenu({
   onEdgeStyleChange,
   onEdgeEditLabel,
   onEdgeDelete,
-  isGroupNode,
-  isGroupCollapsed,
-  groupColor,
-  groupLabel,
-  nodeGroupId,
-  isGroupChildrenLocked,
-  onRemoveGroupKeepNodes,
-  onRemoveGroupWithContent,
-  onToggleGroupCollapsed,
-  onSelectGroupContent,
-  onLockGroupChildren,
-  onChangeGroupColor,
-  onRenameGroup,
-  onEjectFromGroup,
 }: Props) {
   const menuRef = useRef<HTMLDivElement>(null)
-  const renameInputRef = useRef<HTMLInputElement>(null)
 
   // Clamp menu position to viewport to prevent clipping
   useLayoutEffect(() => {
@@ -159,14 +122,6 @@ export function CanvasContextMenu({
       document.removeEventListener("pointerdown", handleClick)
     }
   }, [onClose])
-
-  // Focus rename input when group menu opens
-  useEffect(() => {
-    if (isGroupNode && renameInputRef.current) {
-      renameInputRef.current.focus()
-      renameInputRef.current.select()
-    }
-  }, [isGroupNode])
 
   const worldPos = { x: worldX, y: worldY }
 
@@ -257,120 +212,6 @@ export function CanvasContextMenu({
           <Trash2 size={14} strokeWidth={1.75} />
           Eliminar conexión
         </button>
-      </div>
-    )
-  }
-
-  // ─── Group node context menu ──────────
-  if (targetNodeId && isGroupNode) {
-    return (
-      <div
-        ref={menuRef}
-        className="fixed z-50 w-56 rounded-lg border border-border bg-card shadow-md"
-        style={{ left: x, top: y }}
-      >
-        {/* Header: rename input */}
-        <div className="px-3 pt-2.5 pb-2 border-b border-border">
-          <p className="text-[10px] font-medium uppercase tracking-wider text-text-tertiary mb-1.5">
-            Nombre del grupo
-          </p>
-          <input
-            ref={renameInputRef}
-            type="text"
-            defaultValue={groupLabel ?? ""}
-            placeholder="Sin nombre"
-            className="w-full rounded-md border border-border bg-sand px-2 py-1 text-xs text-foreground outline-none focus:border-[#C4704A] transition-colors"
-            onKeyDown={(e) => {
-              e.stopPropagation()
-              if (e.key === "Enter") {
-                const val = (e.target as HTMLInputElement).value.trim()
-                if (val) onRenameGroup?.(targetNodeId, val)
-                onClose()
-              }
-            }}
-            onBlur={(e) => {
-              const val = e.target.value.trim()
-              if (val && val !== (groupLabel ?? "")) onRenameGroup?.(targetNodeId, val)
-            }}
-            onClick={(e) => e.stopPropagation()}
-          />
-        </div>
-
-        {/* Color swatches */}
-        <div className="px-3 py-2 border-b border-border">
-          <p className="text-[10px] font-medium uppercase tracking-wider text-text-tertiary mb-1.5">
-            Color
-          </p>
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {NOTE_COLOR_CONFIG.map((c) => (
-              <button
-                key={c.value}
-                onClick={() => onChangeGroupColor?.(targetNodeId, c.value)}
-                title={c.label}
-                className="relative h-5 w-5 rounded-full border-2 transition-transform hover:scale-110"
-                style={{
-                  backgroundColor: c.bg,
-                  borderColor: c.border,
-                }}
-              >
-                {groupColor === c.value && (
-                  <Check size={10} className="absolute inset-0 m-auto text-foreground" strokeWidth={2.5} />
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div className="py-1">
-          <button
-            onClick={() => onToggleGroupCollapsed?.(targetNodeId)}
-            className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-text-secondary hover:bg-sand hover:text-foreground transition-colors"
-          >
-            {isGroupCollapsed
-              ? <ChevronRight size={14} strokeWidth={1.75} />
-              : <ChevronDown size={14} strokeWidth={1.75} />}
-            {isGroupCollapsed ? "Expandir grupo" : "Colapsar grupo"}
-          </button>
-
-          <button
-            onClick={() => onSelectGroupContent?.(targetNodeId)}
-            className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-text-secondary hover:bg-sand hover:text-foreground transition-colors"
-          >
-            <MousePointer2 size={14} strokeWidth={1.75} />
-            Seleccionar contenido
-          </button>
-
-          <button
-            onClick={() => onLockGroupChildren?.(targetNodeId, !isGroupChildrenLocked)}
-            className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-text-secondary hover:bg-sand hover:text-foreground transition-colors"
-          >
-            {isGroupChildrenLocked
-              ? <Unlock size={14} strokeWidth={1.75} />
-              : <Lock size={14} strokeWidth={1.75} />}
-            {isGroupChildrenLocked ? "Desbloquear contenido" : "Bloquear contenido"}
-          </button>
-        </div>
-
-        <div className="border-t border-border" />
-
-        {/* Danger zone */}
-        <div className="py-1">
-          <button
-            onClick={() => { onRemoveGroupKeepNodes?.(targetNodeId); onClose() }}
-            className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-text-secondary hover:bg-sand hover:text-foreground transition-colors"
-          >
-            <SquareDashedMousePointer size={14} strokeWidth={1.75} />
-            Disolver grupo
-          </button>
-          <button
-            onClick={() => { onRemoveGroupWithContent?.(targetNodeId); onClose() }}
-            className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 transition-colors"
-          >
-            <Trash2 size={14} strokeWidth={1.75} />
-            Eliminar con contenido
-          </button>
-        </div>
       </div>
     )
   }
@@ -470,17 +311,6 @@ export function CanvasContextMenu({
             onClose()
           },
         },
-        // "Quitar del grupo" when node belongs to a group
-        ...(nodeGroupId
-          ? [{
-              label: "Quitar del grupo",
-              icon: <LogOut size={14} strokeWidth={1.75} />,
-              onClick: () => {
-                onEjectFromGroup?.(targetNodeId)
-                onClose()
-              },
-            }]
-          : []),
         {
           label: "Eliminar",
           icon: <Trash2 size={14} strokeWidth={1.75} />,

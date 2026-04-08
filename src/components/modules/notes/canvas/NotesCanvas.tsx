@@ -135,7 +135,6 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
   const addEdge = useNotesStore((s) => s.addEdge)
   const addTextNode = useNotesStore((s) => s.addTextNode)
   const addUrlNode = useNotesStore((s) => s.addUrlNode)
-  const addGroupNode = useNotesStore((s) => s.addGroupNode)
   const addImageNode = useNotesStore((s) => s.addImageNode)
   const fetchCanvas = useNotesStore((s) => s.fetchCanvas)
   const syncNotesToCanvas = useNotesStore((s) => s.syncNotesToCanvas)
@@ -162,19 +161,10 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
   const canvasSearchQuery = useNotesStore((s) => s.canvasSearchQuery)
   const setCanvasSearch = useNotesStore((s) => s.setCanvasSearch)
   const autoLayoutNodes = useNotesStore((s) => s.autoLayoutNodes)
-  const groupSelectedNodes = useNotesStore((s) => s.groupSelectedNodes)
   const canvasFilters = useNotesStore((s) => s.canvasFilters)
-  const toggleGroupCollapsed = useNotesStore((s) => s.toggleGroupCollapsed)
   const generateBacklinkEdges = useNotesStore((s) => s.generateBacklinkEdges)
   const noteBacklinks = useNotesStore((s) => s.noteBacklinks)
-  const removeGroupKeepNodes = useNotesStore((s) => s.removeGroupKeepNodes)
-  const removeGroupWithContent = useNotesStore((s) => s.removeGroupWithContent)
-  const assignNodeToGroup = useNotesStore((s) => s.assignNodeToGroup)
-  const moveGroupWithChildren = useNotesStore((s) => s.moveGroupWithChildren)
-  const persistGroupAndChildren = useNotesStore((s) => s.persistGroupAndChildren)
   const updateNodeLabel = useNotesStore((s) => s.updateNodeLabel)
-  const selectNodesInGroup = useNotesStore((s) => s.selectNodesInGroup)
-  const lockGroupChildren = useNotesStore((s) => s.lockGroupChildren)
   const updateNodeColor = useNotesStore((s) => s.updateNodeColor)
 
   const { matchingIds: searchMatchingIds } = useCanvasSearchResults()
@@ -192,17 +182,11 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
   } | null>(null)
   const connectingSideRef = useRef<EdgeSide>("right")
   const [connectionTargetId, setConnectionTargetId] = useState<string | null>(null)
-  const [dragOverGroupId, setDragOverGroupId] = useState<string | null>(null)
   const [contextMenu, setContextMenu] = useState<{
     x: number; y: number; worldX: number; worldY: number
     nodeId: string | null
     edgeId?: string | null
     edgeStyle?: import("@/types/notes").EdgeStyle
-    isGroupCollapsed?: boolean
-    groupColor?: import("@/types/notes").NoteColor
-    groupLabel?: string
-    nodeGroupId?: string | null
-    isGroupChildrenLocked?: boolean
   } | null>(null)
   const [isResizing, setIsResizing] = useState(false)
   const resizeRef = useRef<{
@@ -275,42 +259,6 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
     }
   }, [isExporting])
 
-  // Collapsed group IDs
-  const collapsedGroupIds = useMemo(() => {
-    const ids = new Set<string>()
-    for (const n of nodes) {
-      if (n.node_type === 'group' && n.collapsed) ids.add(n.id)
-    }
-    return ids
-  }, [nodes])
-
-  // Nodes hidden because they are inside a collapsed group
-  const hiddenByCollapse = useMemo(() => {
-    if (collapsedGroupIds.size === 0) return new Set<string>()
-    const hidden = new Set<string>()
-    for (const n of nodes) {
-      if (n.node_type !== 'group') {
-        // Check group_id
-        if (n.group_id && collapsedGroupIds.has(n.group_id)) {
-          hidden.add(n.id)
-          continue
-        }
-        // Check spatial containment
-        for (const gid of collapsedGroupIds) {
-          const group = nodeMap.get(gid)
-          if (!group) continue
-          const cx = n.pos_x + n.width / 2
-          const cy = n.pos_y + n.height / 2
-          if (cx >= group.pos_x && cx <= group.pos_x + group.width &&
-              cy >= group.pos_y && cy <= group.pos_y + group.height) {
-            hidden.add(n.id)
-          }
-        }
-      }
-    }
-    return hidden
-  }, [nodes, nodeMap, collapsedGroupIds])
-
   // Filter dimmed IDs
   const filterDimmedIds = useMemo(() => {
     const { types, colors } = canvasFilters
@@ -328,10 +276,9 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
 
   const visibleNodes = useMemo(
     () => nodes.filter((n) =>
-      isNodeVisible(n, viewport, containerSize.w, containerSize.h) &&
-      !hiddenByCollapse.has(n.id)
+      isNodeVisible(n, viewport, containerSize.w, containerSize.h)
     ),
-    [nodes, viewport, containerSize.w, containerSize.h, hiddenByCollapse]
+    [nodes, viewport, containerSize.w, containerSize.h]
   )
 
   useEffect(() => {
@@ -530,23 +477,8 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
       const { guides, snappedX, snappedY } = calculateSnapGuides(dragNodeId, newX, newY, node.width, node.height)
       newX = snappedX; newY = snappedY; setSnapGuides(guides)
     }
-    if (node.node_type === 'group') {
-      // Move group AND all contained children together
-      moveGroupWithChildren(dragNodeId, newX, newY)
-      setDragOverGroupId(null)
-    } else {
-      updateNodePos(dragNodeId, { x: newX, y: newY })
-      // Visual feedback: highlight the group the dragged node is hovering over
-      const cx = newX + node.width / 2
-      const cy = newY + node.height / 2
-      const hoverGroup = nodes.find((n) =>
-        n.node_type === 'group' && n.id !== dragNodeId &&
-        cx >= n.pos_x && cx <= n.pos_x + n.width &&
-        cy >= n.pos_y && cy <= n.pos_y + n.height
-      )
-      setDragOverGroupId(hoverGroup?.id ?? null)
-    }
-  }, [isDraggingNode, dragNodeId, isMultiDrag, dragOffset, viewport, nodeMap, nodes, snapEnabled, calculateSnapGuides, updateNodePos, moveGroupWithChildren, moveSelectedNodes, setSnapGuides])
+    updateNodePos(dragNodeId, { x: newX, y: newY })
+  }, [isDraggingNode, dragNodeId, isMultiDrag, dragOffset, viewport, nodeMap, snapEnabled, calculateSnapGuides, updateNodePos, moveSelectedNodes, setSnapGuides])
 
   const handleNodeDragEnd = useCallback(() => {
     if (dragNodeId) {
@@ -555,31 +487,11 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
       if (isMultiDrag) {
         persistSelectedNodePositions()
       } else if (node) {
-        if (node.node_type === 'group') {
-          // Persist group and all its children
-          persistGroupAndChildren(dragNodeId)
-        } else {
-          persistNodePos(dragNodeId, { x: node.pos_x, y: node.pos_y })
-        }
-        // Assign group_id when a non-group node is dropped inside a group
-        if (node.node_type !== 'group') {
-          const cx = node.pos_x + node.width / 2
-          const cy = node.pos_y + node.height / 2
-          const containerGroup = nodes.find((n) =>
-            n.node_type === 'group' &&
-            n.id !== dragNodeId &&
-            cx >= n.pos_x && cx <= n.pos_x + n.width &&
-            cy >= n.pos_y && cy <= n.pos_y + n.height
-          )
-          const newGroupId = containerGroup?.id ?? null
-          if (newGroupId !== node.group_id) {
-            assignNodeToGroup(dragNodeId, newGroupId)
-          }
-        }
+        persistNodePos(dragNodeId, { x: node.pos_x, y: node.pos_y })
       }
     }
-    setIsDraggingNode(false); setDragNodeId(null); setIsMultiDrag(false); setSnapGuides([]); setDragOverGroupId(null)
-  }, [dragNodeId, isMultiDrag, nodeMap, nodes, persistNodePos, persistGroupAndChildren, persistSelectedNodePositions, setSnapGuides, pushHistory, assignNodeToGroup])
+    setIsDraggingNode(false); setDragNodeId(null); setIsMultiDrag(false); setSnapGuides([])
+  }, [dragNodeId, isMultiDrag, nodeMap, persistNodePos, persistSelectedNodePositions, setSnapGuides, pushHistory])
 
   const handleResizeStart = useCallback((nodeId: string, handle: string, e: React.MouseEvent) => {
     e.stopPropagation()
@@ -708,18 +620,8 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
     const target = document.elementFromPoint(e.clientX, e.clientY)
     const nodeEl = target?.closest("[data-node-id]")
     const nodeId = nodeEl?.getAttribute("data-node-id") ?? null
-    const node = nodeId ? nodeMap.get(nodeId) : null
-    const isGroup = node?.node_type === 'group'
-    const groupChildren = isGroup && node ? nodes.filter(n => n.group_id === node.id) : []
-    setContextMenu({
-      x: e.clientX, y: e.clientY, worldX, worldY, nodeId,
-      isGroupCollapsed: isGroup ? (node!.collapsed ?? false) : undefined,
-      groupColor: isGroup ? ((node!.color ?? 'default') as import("@/types/notes").NoteColor) : undefined,
-      groupLabel: isGroup ? (node!.label ?? '') : undefined,
-      nodeGroupId: node && !isGroup ? (node.group_id ?? null) : null,
-      isGroupChildrenLocked: isGroup ? groupChildren.length > 0 && groupChildren.every(n => n.locked) : undefined,
-    })
-  }, [viewport, nodeMap])
+    setContextMenu({ x: e.clientX, y: e.clientY, worldX, worldY, nodeId })
+  }, [viewport])
 
   const touchRef = useRef<{ lastDist: number } | null>(null)
 
@@ -789,7 +691,9 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
   }, [updateNodeContent])
 
   const handleContextNewText = useCallback((pos: { x: number; y: number }) => { addTextNode("", pos) }, [addTextNode])
-  const handleContextNewGroup = useCallback((pos: { x: number; y: number }) => { addGroupNode("Nuevo grupo", pos, { width: 400, height: 300 }) }, [addGroupNode])
+  const handleContextNewGroup = useCallback((pos: { x: number; y: number }) => {
+    void pos // no-op: groups removed
+  }, [])
   const handleContextNewUrl = useCallback((pos: { x: number; y: number }) => {
     const url = prompt("Introduce la URL:")
     if (!url) return
@@ -858,12 +762,6 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
     addTextNode("", { x: (rect.width / 2 - viewport.offsetX) / viewport.scale, y: (rect.height / 2 - viewport.offsetY) / viewport.scale })
   }, [viewport, addTextNode])
 
-  const handleAddGroupNode = useCallback(() => {
-    const rect = containerRef.current?.getBoundingClientRect()
-    if (!rect) return
-    addGroupNode("Nuevo grupo", { x: (rect.width / 2 - viewport.offsetX) / viewport.scale, y: (rect.height / 2 - viewport.offsetY) / viewport.scale }, { width: 400, height: 300 })
-  }, [viewport, addGroupNode])
-
   const handleAddUrlNode = useCallback(() => {
     const url = prompt("Introduce la URL:")
     if (!url) return
@@ -876,8 +774,6 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
     autoLayoutNodes()
     requestAnimationFrame(() => fitAllNodes())
   }, [autoLayoutNodes, fitAllNodes])
-
-  const handleGroupSelected = useCallback(() => { groupSelectedNodes() }, [groupSelectedNodes])
 
   const handleImageFileSelected = useCallback(async (file: File, pos: { x: number; y: number }) => {
     if (!canvas) return
@@ -1056,47 +952,6 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
         </svg>
       )}
 
-      {/* Group background rects — rendered behind edges and nodes */}
-      <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
-        {nodes
-          .filter(n => n.node_type === 'group' && !n.collapsed)
-          .map(group => {
-            const children = nodes.filter(n => n.group_id === group.id && n.node_type !== 'group')
-            let rx: number, ry: number, rw: number, rh: number
-            if (children.length === 0) {
-              // Render at the group node's own stored position when empty
-              rx = group.pos_x * viewport.scale + viewport.offsetX
-              ry = group.pos_y * viewport.scale + viewport.offsetY
-              rw = group.width * viewport.scale
-              rh = group.height * viewport.scale
-            } else {
-              const padding = 16
-              const minX = Math.min(...children.map(n => n.pos_x)) - padding
-              const minY = Math.min(...children.map(n => n.pos_y)) - padding
-              const maxX = Math.max(...children.map(n => n.pos_x + n.width)) + padding
-              const maxY = Math.max(...children.map(n => n.pos_y + n.height)) + padding
-              rx = minX * viewport.scale + viewport.offsetX
-              ry = minY * viewport.scale + viewport.offsetY
-              rw = (maxX - minX) * viewport.scale
-              rh = (maxY - minY) * viewport.scale
-            }
-            return (
-              <rect
-                key={`group-bg-${group.id}`}
-                x={rx}
-                y={ry}
-                width={rw}
-                height={rh}
-                rx={12}
-                ry={12}
-                fill="rgba(240, 235, 225, 0.4)"
-                stroke="rgba(226, 217, 202, 0.6)"
-                strokeWidth={1}
-              />
-            )
-          })}
-      </svg>
-
       <svg className="absolute inset-0 w-full h-full" style={{ zIndex: 1, pointerEvents: "none" }} aria-hidden="true">
         <g style={{ pointerEvents: "auto" }}>
           {edges.map((edge) => {
@@ -1150,10 +1005,9 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
                 onDoubleClick={handleNodeDoubleClick} onConnectionStart={handleConnectionStart}
                 onResizeStart={handleResizeStart} onContentChange={handleContentChange}
                 onLabelChange={updateNodeLabel}
-                isConnectionTarget={isConnTarget} isDragOverGroup={dragOverGroupId === node.id}
-                searchDimmed={isDimmed} allNodes={nodes}
-                isConnecting={connectingFromNodeId !== null && connectingFromNodeId !== node.id}
-                onToggleCollapsed={toggleGroupCollapsed} />
+                isConnectionTarget={isConnTarget}
+                searchDimmed={isDimmed}
+                isConnecting={connectingFromNodeId !== null && connectingFromNodeId !== node.id} />
             </div>
           )
         })}
@@ -1177,11 +1031,11 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
 
       <div data-export-hide>
         <CanvasToolbar onNewNote={handleNewNote} onAddTextNode={handleAddTextNode} onAddUrlNode={handleAddUrlNode}
-          onAddImageNode={() => handleAddImageNode()} onAddGroupNode={handleAddGroupNode} onFitAll={fitAllNodes}
+          onAddImageNode={() => handleAddImageNode()} onFitAll={fitAllNodes}
           snapEnabled={snapEnabled} onToggleSnap={toggleSnap} onUndo={undo} onRedo={redo}
           onDuplicate={duplicateSelectedNodes} canUndo={historyIndex > 0} canRedo={historyIndex < history.length - 1}
-          hasSelection={selectedNodeIds.size > 0} onAutoLayout={handleAutoLayout} onGroupSelection={handleGroupSelected}
-          onToggleSearch={() => setShowSearch(s => !s)} selectionCount={selectedNodeIds.size}
+          hasSelection={selectedNodeIds.size > 0} onAutoLayout={handleAutoLayout}
+          onToggleSearch={() => setShowSearch(s => !s)}
           onToggleFilters={() => setShowFilters(v => !v)}
           activeFilterCount={canvasFilters.types.length + canvasFilters.colors.length}
           onSyncBacklinks={generateBacklinkEdges}
@@ -1237,21 +1091,7 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
             if (lbl !== null) editEdge(edgeId, { label: lbl })
             setContextMenu(null)
           }}
-          onEdgeDelete={(edgeId) => { removeEdge(edgeId); setContextMenu(null) }}
-          isGroupNode={contextMenu.nodeId ? (nodeMap.get(contextMenu.nodeId)?.node_type === 'group') : false}
-          isGroupCollapsed={contextMenu.isGroupCollapsed}
-          groupColor={contextMenu.groupColor}
-          groupLabel={contextMenu.groupLabel}
-          nodeGroupId={contextMenu.nodeGroupId}
-          isGroupChildrenLocked={contextMenu.isGroupChildrenLocked}
-          onRemoveGroupKeepNodes={(id) => { removeGroupKeepNodes(id); setContextMenu(null) }}
-          onRemoveGroupWithContent={(id) => { removeGroupWithContent(id); setContextMenu(null) }}
-          onToggleGroupCollapsed={(id) => { toggleGroupCollapsed(id); setContextMenu(null) }}
-          onSelectGroupContent={(id) => { selectNodesInGroup(id); setContextMenu(null) }}
-          onLockGroupChildren={(id, locked) => { lockGroupChildren(id, locked); setContextMenu(null) }}
-          onChangeGroupColor={(id, color) => { updateNodeColor(id, color); setContextMenu(null) }}
-          onRenameGroup={updateNodeLabel}
-          onEjectFromGroup={(nodeId) => { assignNodeToGroup(nodeId, null); setContextMenu(null) }} />
+          onEdgeDelete={(edgeId) => { removeEdge(edgeId); setContextMenu(null) }} />
       )}
     </div>
     </div>

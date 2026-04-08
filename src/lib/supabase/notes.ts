@@ -479,32 +479,6 @@ export async function addUrlNodeToCanvas(
   return data as CanvasNode
 }
 
-export async function addGroupNodeToCanvas(
-  canvasId: string,
-  label: string,
-  pos: { x: number; y: number },
-  size: { width: number; height: number }
-): Promise<CanvasNode> {
-  const client = createClient()
-  const { data, error } = await client
-    .from('canvas_nodes')
-    .insert({
-      canvas_id: canvasId,
-      node_type: 'group',
-      label,
-      pos_x: pos.x,
-      pos_y: pos.y,
-      width: size.width,
-      height: size.height,
-      color: 'sage',
-    })
-    .select()
-    .single()
-
-  if (error) throw new NotesError('Error adding group to canvas', error.message)
-  if (!data) throw new NotesError('Error adding group to canvas: no data returned')
-  return data as CanvasNode
-}
 
 export async function addImageNodeToCanvas(
   canvasId: string,

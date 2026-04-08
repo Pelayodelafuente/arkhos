@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Lock, Unlock, Trash2, ExternalLink, ChevronDown, ChevronRight } from "lucide-react"
+import { Lock, Unlock, Trash2, ExternalLink } from "lucide-react"
 import { useNotesStore } from "@/stores/notes-store"
 import { NOTE_COLOR_CONFIG } from "@/types/notes"
 import type { CanvasNode } from "@/types/notes"
@@ -12,19 +12,16 @@ export function NodePropertiesPanel({ node }: Props) {
   const updateNodeContent = useNotesStore((s) => s.updateNodeContent)
   const toggleNodeLocked = useNotesStore((s) => s.toggleNodeLocked)
   const removeNode = useNotesStore((s) => s.removeNode)
-  const toggleGroupCollapsed = useNotesStore((s) => s.toggleGroupCollapsed)
   const updateNodeColor = useNotesStore((s) => s.updateNodeColor)
 
   const [labelValue, setLabelValue] = useState(node.label || '')
   const [urlValue, setUrlValue] = useState(node.url || '')
 
-  const isGroup = node.node_type === 'group'
   const isUrl = node.node_type === 'url' || node.node_type === 'image'
   const isText = node.node_type === 'text'
 
   const nodeTypeLabel =
-    isGroup ? 'Grupo'
-    : node.node_type === 'note' ? 'Nota'
+    node.node_type === 'note' ? 'Nota'
     : node.node_type === 'text' ? 'Texto'
     : node.node_type === 'url' ? 'URL'
     : 'Imagen'
@@ -41,10 +38,10 @@ export function NodePropertiesPanel({ node }: Props) {
       </div>
 
       {/* Label / title */}
-      {(isGroup || isText) && (
+      {isText && (
         <div>
           <label className="text-[10px] text-text-tertiary block mb-1">
-            {isGroup ? 'Nombre' : 'Contenido'}
+            Contenido
           </label>
           <input
             className="w-full rounded-md border border-border bg-background px-2 py-1 text-xs text-text-primary outline-none focus:border-accent"
@@ -105,20 +102,6 @@ export function NodePropertiesPanel({ node }: Props) {
           ))}
         </div>
       </div>
-
-      {/* Group-specific: collapse toggle */}
-      {isGroup && (
-        <button
-          className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs text-text-secondary hover:bg-sand hover:text-foreground transition-colors"
-          onClick={() => toggleGroupCollapsed(node.id)}
-        >
-          {node.collapsed
-            ? <ChevronRight size={13} strokeWidth={1.75} />
-            : <ChevronDown size={13} strokeWidth={1.75} />
-          }
-          {node.collapsed ? 'Expandir grupo' : 'Colapsar grupo'}
-        </button>
-      )}
 
       {/* Divider */}
       <div className="border-t border-border" />

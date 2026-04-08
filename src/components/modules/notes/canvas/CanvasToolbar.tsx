@@ -9,7 +9,6 @@ import {
   Redo2,
   Copy,
   Type,
-  SquareDashed,
   Link,
   Search,
   LayoutGrid,
@@ -29,7 +28,6 @@ interface Props {
   onAddTextNode: () => void
   onAddUrlNode: () => void
   onAddImageNode?: () => void
-  onAddGroupNode: () => void
   onFitAll: () => void
   snapEnabled: boolean
   onToggleSnap: () => void
@@ -41,8 +39,6 @@ interface Props {
   hasSelection: boolean
   onToggleSearch: () => void
   onAutoLayout: () => void
-  onGroupSelection: () => void
-  selectionCount: number
   onToggleFilters: () => void
   activeFilterCount: number
   onSyncBacklinks: () => void
@@ -56,7 +52,6 @@ export function CanvasToolbar({
   onAddTextNode,
   onAddUrlNode,
   onAddImageNode,
-  onAddGroupNode,
   onFitAll,
   snapEnabled,
   onToggleSnap,
@@ -68,8 +63,6 @@ export function CanvasToolbar({
   hasSelection,
   onToggleSearch,
   onAutoLayout,
-  onGroupSelection,
-  selectionCount,
   onToggleFilters,
   activeFilterCount,
   onSyncBacklinks,
@@ -87,8 +80,6 @@ export function CanvasToolbar({
   const resetZoom = () => setViewport({ scale: 1 })
 
   const zoomPercent = Math.round(viewport.scale * 100)
-
-  const canGroup = selectionCount >= 2
 
   const btnBase =
     "flex h-7 w-7 items-center justify-center rounded-lg text-text-tertiary hover:bg-sand hover:text-foreground transition-colors"
@@ -152,9 +143,6 @@ export function CanvasToolbar({
       </button>
       <button onClick={onAddUrlNode} className={btnBase} title="Nodo URL" aria-label="Nodo URL">
         <Link size={14} strokeWidth={1.75} />
-      </button>
-      <button onClick={onAddGroupNode} className={btnBase} title="Nuevo grupo" aria-label="Nuevo grupo">
-        <SquareDashed size={14} strokeWidth={1.75} />
       </button>
 
       {divider}
@@ -241,17 +229,6 @@ export function CanvasToolbar({
 
         {showMore && (
           <div className="absolute bottom-9 right-0 z-50 min-w-[180px] rounded-xl border border-border bg-card/95 backdrop-blur-sm shadow-md py-1 flex flex-col">
-            {/* Agrupar seleccion */}
-            <button
-              onClick={() => { onGroupSelection(); setShowMore(false) }}
-              disabled={!canGroup}
-              className={`flex items-center gap-2.5 px-3 py-1.5 text-xs transition-colors ${!canGroup ? "opacity-30 cursor-not-allowed text-text-tertiary" : "text-text-secondary hover:bg-sand hover:text-foreground"}`}
-              title={canGroup ? "Agrupar seleccion" : "Selecciona 2 o mas nodos para agrupar"}
-            >
-              <SquareDashed size={13} strokeWidth={1.75} />
-              <span>Agrupar seleccion</span>
-            </button>
-
             {/* Snap */}
             <button
               onClick={() => { onToggleSnap(); setShowMore(false) }}

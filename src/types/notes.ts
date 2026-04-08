@@ -14,7 +14,7 @@ export const NOTE_STATUS_CONFIG: Record<NoteStatus, { label: string; color: stri
   in_progress: { label: 'En progreso', color: '#3B78B0', bg: 'rgba(59,120,176,0.12)' },
   done:        { label: 'Hecho',      color: '#2E7D6B',  bg: 'rgba(46,125,107,0.12)' },
 }
-export type NodeType = 'note' | 'text' | 'url' | 'group' | 'image'
+export type NodeType = 'note' | 'text' | 'url' | 'image'
 export type EdgeColor = 'default' | 'sage' | 'terracotta' | 'stone' | 'blue'
 export type EdgeStyle = 'arrow' | 'line' | 'bidirectional'
 export type EdgeSide = 'top' | 'right' | 'bottom' | 'left'
@@ -130,8 +130,6 @@ export interface CanvasNode {
   color: NoteColor
   z_index: number
   locked: boolean
-  group_id: string | null
-  collapsed?: boolean
   created_at: string
   note?: Note
 }

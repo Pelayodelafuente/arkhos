@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import { FileText, Type, Link, Image as ImageIcon, Layers, X } from "lucide-react"
+import { FileText, Type, Link, Image as ImageIcon, X } from "lucide-react"
 import { useNotesStore } from "@/stores/notes-store"
 import { NOTE_COLOR_CONFIG } from "@/types/notes"
 import type { NodeType, NoteColor } from "@/types/notes"
@@ -11,7 +11,6 @@ const NODE_TYPE_OPTIONS: { value: NodeType; label: string; icon: React.ReactNode
   { value: 'text', label: 'Texto', icon: <Type size={13} strokeWidth={1.75} /> },
   { value: 'url', label: 'URL', icon: <Link size={13} strokeWidth={1.75} /> },
   { value: 'image', label: 'Imagen', icon: <ImageIcon size={13} strokeWidth={1.75} /> },
-  { value: 'group', label: 'Grupo', icon: <Layers size={13} strokeWidth={1.75} /> },
 ]
 
 interface Props { onClose: () => void }
