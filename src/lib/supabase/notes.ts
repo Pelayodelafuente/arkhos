@@ -3,7 +3,7 @@
 // Módulo Notas: notes + canvases + nodes + edges
 // ══════════════════════════════════════
 
-import { createBrowserClient } from '@supabase/ssr'
+import { createUntypedClient as createClient } from './client'
 import type {
   Note,
   NoteListItem,
@@ -29,17 +29,10 @@ const NOTE_LIST_FIELDS = [
   'created_at', 'updated_at',
 ].join(', ')
 
-// ─── Client factory ───────────────────
+// ─── List item helper ─────────────────
 
-function createClient() {
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-}
-
-export function getClient() {
-  return createClient()
+function toNoteListItems(data: unknown): Note[] {
+  return ((data ?? []) as NoteListItem[]).map((n) => ({ ...n, content: '', contentLoaded: false }))
 }
 
 // ─── Error helper ─────────────────────
@@ -72,7 +65,7 @@ export async function getNotes(userId: string, offset = 0): Promise<Note[]> {
     .range(offset, offset + NOTES_PAGE_SIZE - 1)
 
   if (error) throw new NotesError('Error fetching notes', error.message)
-  return ((data ?? []) as unknown as NoteListItem[]).map((n) => ({ ...n, content: '', contentLoaded: false }))
+  return toNoteListItems(data)
 }
 
 /**
@@ -99,7 +92,7 @@ export async function getTrashedNotes(userId: string): Promise<Note[]> {
     .order('deleted_at', { ascending: false })
 
   if (error) throw new NotesError('Error fetching trashed notes', error.message)
-  return ((data ?? []) as unknown as NoteListItem[]).map((n) => ({ ...n, content: '', contentLoaded: false }))
+  return toNoteListItems(data)
 }
 
 export async function getNoteById(id: string): Promise<Note | null> {
@@ -245,7 +238,7 @@ export async function searchNotes(userId: string, query: string): Promise<Note[]
     .limit(50)
 
   if (error) throw new NotesError('Error searching notes', error.message)
-  return ((data ?? []) as unknown as NoteListItem[]).map((n) => ({ ...n, content: '', contentLoaded: false }))
+  return toNoteListItems(data)
 }
 
 export async function getNotesByTag(userId: string, tag: string): Promise<Note[]> {
@@ -331,7 +324,7 @@ export async function getNotesWithoutCanvasNode(
     .eq('canvas_id', canvasId)
     .not('note_id', 'is', null)
 
-  const existingNoteIds = new Set((existingNodes ?? []).map((n) => n.note_id))
+  const existingNoteIds = new Set((existingNodes ?? []).map((n: { note_id: string }) => n.note_id))
 
   // Get all user's active notes (no archivadas ni en papelera)
   const { data: allNotes, error } = await client
@@ -830,7 +823,7 @@ export async function saveNoteVersion(
     .eq('note_id', noteId)
     .order('version_number', { ascending: true })
   if (allVersions && allVersions.length > 20) {
-    const toDelete = allVersions.slice(0, allVersions.length - 20).map((v) => v.id)
+    const toDelete = allVersions.slice(0, allVersions.length - 20).map((v: { id: string }) => v.id)
     await supabase.from('note_versions').delete().in('id', toDelete)
   }
 }

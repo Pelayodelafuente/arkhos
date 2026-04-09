@@ -3,7 +3,7 @@
 // Módulo Gastos: expense_categories + subscriptions + price_history + settings
 // ══════════════════════════════════════
 
-import { createBrowserClient } from '@supabase/ssr'
+import { createUntypedClient as createClient } from './client'
 import type {
   ExpenseCategory,
   ExpenseCategoryInsert,
@@ -21,15 +21,6 @@ import type {
   SubscriptionPaymentInsert,
   MonthlySpending,
 } from '@/types/expenses'
-
-// ─── Client factory ───────────────────
-
-function createClient() {
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-}
 
 // ─── Error helper ─────────────────────
 

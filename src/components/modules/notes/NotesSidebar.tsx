@@ -18,7 +18,7 @@ import {
   CalendarDays,
   GripVertical,
 } from "lucide-react"
-import * as LucideIcons from "lucide-react"
+import { getLucideIconOrDefault } from "@/lib/utils/icons"
 import {
   DndContext,
   closestCenter,
@@ -190,9 +190,7 @@ export function NotesSidebar({ userId }: Props) {
           <div className="my-1 border-t border-border w-6" />
           {folders.map((folder) => {
             const isActive = activeFolderId === folder.id
-            const FolderIcon =
-              (LucideIcons as unknown as Record<string, LucideIcons.LucideIcon>)[folder.icon] ??
-              Folder
+            const FolderIcon = getLucideIconOrDefault(folder.icon, Folder)
             return (
               <button
                 key={folder.id}
@@ -387,7 +385,7 @@ function SortableFolderItem({
 }: SortableFolderItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: folder.id })
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 }
-  const FolderIcon = (LucideIcons as unknown as Record<string, LucideIcons.LucideIcon>)[folder.icon] ?? Folder
+  const FolderIcon = getLucideIconOrDefault(folder.icon, Folder)
 
   return (
     <div

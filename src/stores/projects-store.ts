@@ -468,7 +468,7 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
   changeTaskStatus: async (taskId, newStatus) => {
     const validStatuses: TaskStatus[] = ['todo', 'in_progress', 'review', 'done'];
     if (!validStatuses.includes(newStatus)) {
-      console.error(`[changeTaskStatus] Invalid status: "${newStatus}"`);
+      if (process.env.NODE_ENV === 'development') console.error(`[changeTaskStatus] Invalid status: "${newStatus}"`);
       return;
     }
 
@@ -839,28 +839,37 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
         stack: active.stack,
       });
 
-      // Copy phases and non-done tasks
-      for (const phase of active.phases) {
-        const newPhase = await createPhaseApi(client, {
-          project_id: newProject.id,
-          name: phase.name,
-          status: 'pending',
-          notes: phase.notes,
-          sort_order: phase.sort_order,
-        });
+      // Copy phases — batch insert
+      const phaseRows = active.phases.map((phase) => ({
+        project_id: newProject.id,
+        name: phase.name,
+        status: 'pending',
+        notes: phase.notes ?? '',
+        sort_order: phase.sort_order,
+      }));
+      const { data: newPhases, error: phasesError } = await client
+        .from('project_phases')
+        .insert(phaseRows)
+        .select();
+      if (phasesError) throw new Error(phasesError.message);
 
-        const tasksToKeep = phase.tasks.filter((t) => t.status !== 'done');
-        for (let i = 0; i < tasksToKeep.length; i++) {
-          const t = tasksToKeep[i];
-          await createTaskApi(client, {
+      // Copy non-done tasks — batch insert (match phases by insertion order)
+      const taskRows = ((newPhases ?? []) as { id: string }[]).flatMap((newPhase, idx) => {
+        const originalPhase = active.phases[idx];
+        if (!originalPhase) return [];
+        return originalPhase.tasks
+          .filter((t) => t.status !== 'done')
+          .map((t, i) => ({
             phase_id: newPhase.id,
             text: t.text,
-            priority: t.priority,
-            description: t.description,
-            labels: t.labels,
+            priority: t.priority ?? 'none',
+            content: t.content ?? '',
             sort_order: i,
-          });
-        }
+          }));
+      });
+      if (taskRows.length > 0) {
+        const { error: tasksError } = await client.from('phase_tasks').insert(taskRows);
+        if (tasksError) throw new Error(tasksError.message);
       }
 
       // Add to list

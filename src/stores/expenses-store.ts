@@ -3,6 +3,7 @@
 // Módulo Gastos: optimistic updates + rollback + Toast
 // ══════════════════════════════════════
 
+import { useMemo } from 'react'
 import { create } from 'zustand'
 import {
   getSubscriptions,
@@ -538,51 +539,45 @@ export function useFilteredSubscriptions(): SubscriptionWithCategory[] {
   const searchQuery = useExpensesStore((s) => s.searchQuery)
   const viewedMonth = useExpensesStore((s) => s.viewedMonth)
 
-  const cycleMatch = (sub: SubscriptionWithCategory): boolean => {
-    if (cycleFilter === 'all') return true
-    if (cycleFilter === 'monthly') {
-      if (sub.cycle === 'monthly') return true
-      if (sub.cycle === 'annual' && sub.started_at) {
-        return new Date(sub.started_at).getMonth() + 1 === viewedMonth
+  return useMemo(() => {
+    const cycleMatch = (sub: SubscriptionWithCategory): boolean => {
+      if (cycleFilter === 'all') return true
+      if (cycleFilter === 'monthly') {
+        if (sub.cycle === 'monthly') return true
+        if (sub.cycle === 'annual' && sub.started_at) {
+          return new Date(sub.started_at).getMonth() + 1 === viewedMonth
+        }
+        return false
       }
-      return false
+      return sub.cycle === cycleFilter
     }
-    return sub.cycle === cycleFilter
-  }
 
-  const filtered = subscriptions.filter((sub) => {
-    if (!cycleMatch(sub)) return false
-    // Category filter (from donut chart click)
-    if (categoryFilter !== null) {
-      const catId = sub.category_id ?? null
-      if (catId !== categoryFilter) return false
-    }
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase()
-      return (
-        sub.name.toLowerCase().includes(q) ||
-        (sub.category?.name ?? '').toLowerCase().includes(q) ||
-        (sub.notes ?? '').toLowerCase().includes(q) ||
-        (sub.tags?.some((t) => t.toLowerCase().includes(q)) ?? false)
-      )
-    }
-    return true
-  })
+    const filtered = subscriptions.filter((sub) => {
+      if (!cycleMatch(sub)) return false
+      if (categoryFilter !== null) {
+        const catId = sub.category_id ?? null
+        if (catId !== categoryFilter) return false
+      }
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase()
+        return (
+          sub.name.toLowerCase().includes(q) ||
+          (sub.category?.name ?? '').toLowerCase().includes(q) ||
+          (sub.notes ?? '').toLowerCase().includes(q) ||
+          (sub.tags?.some((t) => t.toLowerCase().includes(q)) ?? false)
+        )
+      }
+      return true
+    })
 
-  // Sort: active/trial first, then paused, then cancelled
-  const statusOrder: Record<string, number> = {
-    active: 0,
-    trial: 1,
-    paused: 2,
-    cancelled: 3,
-  }
-
-  return filtered.sort((a, b) => {
-    const aOrder = statusOrder[a.status] ?? 0
-    const bOrder = statusOrder[b.status] ?? 0
-    if (aOrder !== bOrder) return aOrder - bOrder
-    return a.billing_day - b.billing_day
-  })
+    const statusOrder: Record<string, number> = { active: 0, trial: 1, paused: 2, cancelled: 3 }
+    return [...filtered].sort((a, b) => {
+      const aOrder = statusOrder[a.status] ?? 0
+      const bOrder = statusOrder[b.status] ?? 0
+      if (aOrder !== bOrder) return aOrder - bOrder
+      return a.billing_day - b.billing_day
+    })
+  }, [subscriptions, cycleFilter, categoryFilter, searchQuery, viewedMonth])
 }
 
 /**
@@ -700,6 +695,8 @@ export function useExpenseSummary(): ExpenseSummary {
  */
 export function useDayTotal(day: number, year: number, month: number): number {
   const subscriptions = useCycleFilteredSubscriptions()
-  const subs = getSubscriptionsForDay(subscriptions, day, year, month)
-  return subs.reduce((acc, sub) => acc + sub.amount, 0)
+  return useMemo(
+    () => getSubscriptionsForDay(subscriptions, day, year, month).reduce((acc, sub) => acc + sub.amount, 0),
+    [subscriptions, day, year, month]
+  )
 }

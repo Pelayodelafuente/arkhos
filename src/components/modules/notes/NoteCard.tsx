@@ -2,8 +2,8 @@
 
 import { useState, type ReactNode } from "react"
 import { createPortal } from "react-dom"
-import { Pin, Star, MoreHorizontal, Pencil, Trash2, Layout, Square, CheckSquare, Copy, FolderInput, Folder, Inbox, RotateCcw, ArchiveRestore } from "lucide-react"
-import * as LucideIcons from "lucide-react"
+import { Pin, Star, MoreHorizontal, Pencil, Trash2, Layout, Square, CheckSquare, Copy, FolderInput, Folder, Inbox, RotateCcw, ArchiveRestore, FileText } from "lucide-react"
+import { getLucideIconOrDefault } from "@/lib/utils/icons"
 import type { Note } from "@/types/notes"
 import { NOTE_STATUS_CONFIG } from "@/types/notes"
 import { NOTE_COLORS } from "./NoteColorPicker"
@@ -63,7 +63,7 @@ export function NoteCard({ note, userId: _userId, onEdit, onDelete, onTogglePin,
 
   const isInTrash = Boolean(note.deleted_at)
 
-  const IconComponent = (LucideIcons as unknown as Record<string, LucideIcons.LucideIcon>)[note.icon] ?? LucideIcons.FileText
+  const IconComponent = getLucideIconOrDefault(note.icon, FileText)
 
   const preview = stripHtml(note.content)
   const firstImage = extractFirstImage(note.content)

@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useEffect, useRef, useMemo } from "react"
-import { X, Trash2, Archive, ArchiveRestore, History, RotateCcw, Link2, ArrowRight, Unlink, ChevronLeft, ChevronDown, FolderKanban, CreditCard, Star } from "lucide-react"
-import * as LucideIcons from "lucide-react"
+import { X, Trash2, Archive, ArchiveRestore, History, RotateCcw, Link2, ArrowRight, Unlink, ChevronLeft, ChevronDown, FolderKanban, CreditCard, Star, FileText } from "lucide-react"
+import { getLucideIcon, getLucideIconOrDefault } from "@/lib/utils/icons"
 import { Button, SelectCustom } from "@/components/ui"
 import { useNotesStore, useAllTags } from "@/stores/notes-store"
 import { useToast } from "@/stores/ui-store"
@@ -286,7 +286,7 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
     }).slice(0, 6)
   }, [allNotes, note, title])
 
-  const SelectedIcon = (LucideIcons as unknown as Record<string, LucideIcons.LucideIcon>)[icon] ?? LucideIcons.FileText
+  const SelectedIcon = getLucideIconOrDefault(icon, FileText)
 
   // IA — Sugerir tags
   const handleSuggestTags = async () => {
@@ -395,7 +395,7 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
         {showIcons && (
           <div className="grid grid-cols-8 gap-1.5 p-2 rounded-lg bg-sand/50">
             {NOTE_ICONS.map((iconName) => {
-              const IC = (LucideIcons as unknown as Record<string, LucideIcons.LucideIcon>)[iconName]
+              const IC = getLucideIcon(iconName)
               if (!IC) return null
               return (
                 <button

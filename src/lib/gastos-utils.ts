@@ -70,9 +70,6 @@ function getNextAnnualRenewalDate(sub: BillingRef, referenceDate?: Date): Date {
   today.setHours(0, 0, 0, 0)
 
   if (!sub.started_at) {
-    console.warn(
-      `[gastos-utils] Suscripción anual sin started_at (billing_day=${sub.billing_day}) — usando fallback mensual`
-    )
     return getMonthlyNextBillingDate(sub.billing_day, referenceDate)
   }
 
@@ -96,9 +93,6 @@ function getNextQuarterlyBillingDate(sub: BillingRef, referenceDate?: Date): Dat
   today.setHours(0, 0, 0, 0)
 
   if (!sub.started_at) {
-    console.warn(
-      `[gastos-utils] Suscripción trimestral sin started_at (billing_day=${sub.billing_day}) — usando fallback mensual`
-    )
     return getMonthlyNextBillingDate(sub.billing_day, referenceDate)
   }
 
@@ -122,9 +116,6 @@ function getNextSemiannualBillingDate(sub: BillingRef, referenceDate?: Date): Da
   today.setHours(0, 0, 0, 0)
 
   if (!sub.started_at) {
-    console.warn(
-      `[gastos-utils] Suscripción semestral sin started_at (billing_day=${sub.billing_day}) — usando fallback mensual`
-    )
     return getMonthlyNextBillingDate(sub.billing_day, referenceDate)
   }
 

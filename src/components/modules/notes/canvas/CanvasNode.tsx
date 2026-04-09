@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { marked } from "marked"
 import { FileText, Type, Link, ExternalLink, Lock, Image as ImageIcon } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
-import * as LucideIcons from "lucide-react"
+import { getLucideIconOrDefault } from "@/lib/utils/icons"
 import type { CanvasNode as CanvasNodeType, CanvasViewport } from "@/types/notes"
 import { NOTE_COLOR_CONFIG } from "@/types/notes"
 import { sanitizeHtml } from "@/lib/utils/sanitize"
@@ -114,7 +114,7 @@ export function CanvasNodeComponent({
     if (node.node_type === "url") return Link
     if (node.node_type === "image") return ImageIcon
     if (node.node_type === "note" && node.note?.icon) {
-      return (LucideIcons as unknown as Record<string, LucideIcon>)[node.note.icon] ?? FileText
+      return getLucideIconOrDefault(node.note.icon, FileText)
     }
     return FileText
   }, [node.node_type, node.note?.icon])

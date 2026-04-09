@@ -21,9 +21,12 @@ import type {
   NodeType,
   NoteColor,
   NoteFolder,
+  NoteSortMode,
 } from '@/types/notes'
 import { CANVAS_BOUNDS } from '@/types/notes'
+export type { NoteSortMode } from '@/types/notes'
 import * as notesApi from '@/lib/supabase/notes'
+import { createClient } from '@/lib/supabase/client'
 import { useUIStore } from './ui-store'
 
 // ─── Toast helper ─────────────────────
@@ -31,10 +34,6 @@ import { useUIStore } from './ui-store'
 function toast(message: string, variant: 'success' | 'error' | 'info' = 'info') {
   useUIStore.getState().addToast(message, variant)
 }
-
-// ─── Sort modes ──────────────────────
-
-export type NoteSortMode = 'recent' | 'oldest' | 'az' | 'za' | 'color' | 'tag' | 'manual'
 
 // ─── Canvas helpers ──────────────────
 
@@ -443,7 +442,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
         .map(n => ({ id: n.id, pos_x: n.pos_x, pos_y: n.pos_y }))
 
       if (corrections.length > 0) {
-        notesApi.batchUpdateNodePositions(corrections).catch(console.error)
+        notesApi.batchUpdateNodePositions(corrections).catch((e: unknown) => { if (process.env.NODE_ENV === 'development') console.error(e) })
       }
 
       // Deduplicate note nodes — keep the first occurrence per note_id
@@ -458,7 +457,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
         .filter(n => n.note_id && !deduped.includes(n))
         .map(n => n.id)
       if (duplicateIds.length > 0) {
-        notesApi.batchRemoveNodes(duplicateIds).catch(console.error)
+        notesApi.batchRemoveNodes(duplicateIds).catch((e: unknown) => { if (process.env.NODE_ENV === 'development') console.error(e) })
       }
 
       // Filter out orphaned note-nodes: note was deleted, archived, or doesn't exist
@@ -470,7 +469,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
         .filter(n => n.note_id && (!n.note || n.note.deleted_at || n.note.archived))
         .map(n => n.id)
       if (orphanIds.length > 0) {
-        notesApi.batchRemoveNodes(orphanIds).catch(console.error)
+        notesApi.batchRemoveNodes(orphanIds).catch((e: unknown) => { if (process.env.NODE_ENV === 'development') console.error(e) })
       }
 
       set({ canvas, canvasNodes: cleanNodes, canvasEdges: edges })
@@ -549,7 +548,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
       await notesApi.updateNote(id, data)
       // Fire-and-forget backlink sync whenever content changed
       if (data.content !== undefined) {
-        get().syncBacklinksOnSave(id, data.content).catch(console.error)
+        get().syncBacklinksOnSave(id, data.content).catch((e: unknown) => { if (process.env.NODE_ENV === 'development') console.error(e) })
       }
     } catch (e) {
       // Rollback
@@ -1319,7 +1318,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
     const updates = updatedNodes
       .map(n => ({ id: n.id, pos_x: n.pos_x, pos_y: n.pos_y }))
 
-    notesApi.batchUpdateNodePositions(updates).catch(console.error)
+    notesApi.batchUpdateNodePositions(updates).catch((e: unknown) => { if (process.env.NODE_ENV === 'development') console.error(e) })
   },
 
   // ── Folders ───────────────────────
@@ -1614,8 +1613,8 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
     set((s) => ({
       canvasNodes: s.canvasNodes.map((n) => (n.id === id ? { ...n, color } : n)),
     }))
-    const supabase = notesApi.getClient()
-    supabase.from('canvas_nodes').update({ color }).eq('id', id).then(({ error }) => {
+    const supabase = createClient()
+    supabase.from('canvas_nodes').update({ color }).eq('id', id).then(({ error }: { error: { message: string } | null }) => {
       if (error) {
         const msg = error.message ?? 'Error al actualizar color'
         toast(msg, 'error')
