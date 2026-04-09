@@ -345,8 +345,8 @@ export interface ProjectTemplate {
   description: string | null;
   type: string;
   phases: TemplatePhase[];
-  is_system: boolean;
-  created_at: string;
+  is_system: boolean | null;
+  created_at: string | null;
 }
 
 // ─── Task comments ──────────────────
