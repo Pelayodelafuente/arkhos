@@ -9,12 +9,18 @@ export function Progress({ value, showLabel = false, className = "" }: ProgressP
 
   return (
     <div className={`flex items-center gap-3 ${className}`}>
-      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[var(--border-subtle)]">
+      <div
+        role="progressbar"
+        aria-valuenow={clamped}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        className="h-1.5 flex-1 overflow-hidden rounded-full bg-[var(--border-subtle)]"
+      >
         <div
           className="progress-shimmer-once h-full rounded-full transition-all duration-300"
           style={{
             width: `${clamped}%`,
-            background: `linear-gradient(90deg, rgba(196,112,74,0.7), var(--accent-terracotta))`,
+            background: `linear-gradient(90deg, var(--accent-light), var(--accent-terracotta))`,
           }}
         />
       </div>

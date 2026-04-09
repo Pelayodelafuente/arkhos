@@ -7,9 +7,9 @@ const variantConfig: Record<
   ToastVariant,
   { icon: typeof Info; color: string; bg: string }
 > = {
-  success: { icon: CheckCircle, color: "#15803D", bg: "#F0FDF4" },
-  error:   { icon: XCircle,     color: "#B91C1C", bg: "#FEF2F2" },
-  info:    { icon: Info,        color: "#C4704A", bg: "rgba(196,112,74,0.08)" },
+  success: { icon: CheckCircle, color: "var(--success-text)", bg: "var(--success-bg)" },
+  error:   { icon: XCircle,     color: "var(--error-text)",   bg: "var(--error-bg)" },
+  info:    { icon: Info,        color: "var(--accent-terracotta)", bg: "var(--accent-hover-bg)" },
 };
 
 function ToastItem({ toast }: { toast: Toast }) {
@@ -66,7 +66,12 @@ export function ToastProvider() {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed right-4 top-4 z-[100] flex flex-col gap-2 transition-all duration-200">
+    <div
+      role="status"
+      aria-live="polite"
+      aria-atomic="false"
+      className="fixed right-4 top-4 z-[100] flex flex-col gap-2 transition-all duration-200"
+    >
       {toasts.map((toast: Toast) => (
         <ToastItem key={toast.id} toast={toast} />
       ))}

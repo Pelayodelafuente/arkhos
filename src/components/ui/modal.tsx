@@ -37,6 +37,8 @@ interface ModalProps {
   className?: string;
 }
 
+const titleId = "modal-title";
+
 export function Modal({ open, onClose, title, children, footer, className = "" }: ModalProps) {
   useEffect(() => {
     if (!open) return;
@@ -62,6 +64,9 @@ export function Modal({ open, onClose, title, children, footer, className = "" }
           />
           {/* Card */}
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={title ? titleId : undefined}
             variants={cardVariants}
             initial="hidden"
             animate="visible"
@@ -84,7 +89,7 @@ export function Modal({ open, onClose, title, children, footer, className = "" }
             />
             {title && (
               <div className="sticky top-0 z-10 flex flex-shrink-0 items-start justify-between gap-4 border-b border-border bg-card px-6 pb-4 pt-6">
-                <h2 className="font-heading text-xl text-foreground">{title}</h2>
+                <h2 id={titleId} className="font-heading text-xl text-foreground">{title}</h2>
                 <button
                   onClick={onClose}
                   className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-xl text-text-tertiary transition-colors hover:bg-sand hover:text-foreground"

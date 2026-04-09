@@ -23,11 +23,11 @@ const DOT_COLORS: Record<string, string> = {
   error:      'var(--error)',
   warning:    'var(--warning)',
   neutral:    'var(--neutral)',
-  proyectos:  '#C4704A',
-  mercados:   '#7260C4',
-  patrimonio: '#2E7D6B',
-  gastos:     '#3B78B0',
-  notas:      '#B07A3A',
+  proyectos:  'var(--module-proyectos)',
+  mercados:   'var(--module-mercados)',
+  patrimonio: 'var(--module-patrimonio)',
+  gastos:     'var(--module-gastos)',
+  notas:      'var(--module-notas)',
 }
 
 const SEMANTIC_VARIANTS = new Set(['success', 'error', 'warning', 'neutral'])

@@ -1,15 +1,22 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 
 interface AnalyzeRequestBody {
   projectData: string;
 }
 
 export async function POST(req: NextRequest) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  }
+
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
-      { error: 'ANTHROPIC_API_KEY no configurada' },
+      { error: 'Error interno del servidor' },
       { status: 500 }
     );
   }
@@ -92,9 +99,7 @@ export async function POST(req: NextRequest) {
     return new Response(textStream, {
       headers: { 'Content-Type': 'text/plain; charset=utf-8' },
     });
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Error al generar análisis';
-    return NextResponse.json({ error: message }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: 'Error al generar análisis' }, { status: 500 });
   }
 }

@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { marked } from 'marked';
+import { sanitizeHtml } from '@/lib/utils/sanitize';
 import { Check, X, Eye, EyeOff } from 'lucide-react';
 import { TagSelector } from './tag-selector';
 import {
@@ -111,7 +112,7 @@ export function TaskDetailFields({ task, onDelete, onClose, compact = false }: T
   }
 
   const parsedHtml = previewMode
-    ? (marked.parse(description || '') as string)
+    ? sanitizeHtml(marked.parse(description || '') as string)
     : '';
 
   const space = compact ? 'space-y-3' : 'space-y-5';

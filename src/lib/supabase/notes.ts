@@ -897,7 +897,10 @@ export async function getNoteBacklinks(noteId: string): Promise<Note[]> {
   return data.map((r: Record<string, unknown>) => r.notes as Note).filter(Boolean)
 }
 
-/** Todos los backlinks del usuario — para construir el grafo de conocimiento */
+/** Todos los backlinks del usuario — para construir el grafo de conocimiento.
+ *  RLS de note_backlinks filtra por user_id vía:
+ *  source_note_id IN (SELECT id FROM notes WHERE user_id = auth.uid())
+ *  Solo se devuelven backlinks cuya nota origen pertenece al usuario autenticado. */
 export async function getAllBacklinksForGraph(): Promise<Array<{ source_note_id: string; target_note_id: string }>> {
   const supabase = createClient()
   const { data } = await supabase

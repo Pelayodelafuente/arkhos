@@ -7,13 +7,10 @@ import type { LucideIcon } from "lucide-react"
 import * as LucideIcons from "lucide-react"
 import type { CanvasNode as CanvasNodeType, CanvasViewport } from "@/types/notes"
 import { NOTE_COLOR_CONFIG } from "@/types/notes"
+import { sanitizeHtml } from "@/lib/utils/sanitize"
 
 // ─── Marked config ────────────────────────────
 marked.setOptions({ breaks: true, gfm: true })
-
-function sanitizeHtml(html: string): string {
-  return html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
-}
 
 // ─── Color lookup ─────────────────────────────
 const COLOR_MAP = Object.fromEntries(

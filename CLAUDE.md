@@ -4,8 +4,9 @@
 # Repo: github.com/Pelayodelafuente/arkhos
 
 ## Estado actual
-- Fases 0, 1, 2 completadas al 100%
-- Próximo: Fase 3 (Módulo Mercados)
+- Fases 0-4 completadas al 100% (Auth, Layout, Proyectos, Gastos, Notas)
+- Auditoría total completada 2026-04-09 — ver `docs/AUDIT-REPORT.md`
+- Próximo: Fase 5 (Mercados) + Fase 6 (Patrimonio)
 - Ver STATUS.md para checklist detallado
 - Ver CHANGELOG.md para historial de decisiones
 
@@ -20,6 +21,11 @@
 - **Lucide React ^0.577.0** (iconos — cero emojis en UI)
 - **Zod ^4.3.6** (importar desde `'zod/v4'`)
 - **@dnd-kit/core ^6.3.1** + **@dnd-kit/sortable ^10.0.0** drag & drop
+- **Framer Motion ^12.38.0** — animaciones complejas (canvas, modales, transiciones)
+- **TipTap v3.21.x** — editor rich text en módulo Notas (StarterKit incluye Link/Underline por defecto en v3)
+- **marked ^17.0.5** — markdown → HTML (task descriptions, canvas nodes)
+- **Recharts ^3.8.0** — gráficos en módulo Gastos
+- **@anthropic-ai/sdk ^0.80.0** — IA en 4 API routes
 - **pnpm** como gestor de paquetes
 
 ---
@@ -31,19 +37,27 @@ src/
   app/
     (auth)/          → login, register, reset-password, verify-mfa
     (dashboard)/     → layout compartido + módulos + settings/security
+    api/
+      projects/      → analyze/route.ts, chat/route.ts (Anthropic streaming — auth requerida)
+      notes/         → suggest-tags/route.ts, summarize/route.ts (Anthropic — auth requerida)
+    auth/callback/   → OAuth/magic-link code exchange
   components/
     ui/              → component library (barrel: ui/index.ts)
     layout/          → Sidebar.tsx, topbar.tsx, mobile-drawer.tsx, bottom-nav.tsx, NavigationProgress.tsx
-    modules/         → proyectos/, expenses/, (markets/, patrimonio/ — próximos)
+    modules/         → proyectos/, expenses/, notes/, (markets/, portfolio/ — próximos)
   lib/
-    supabase/        → client.ts, server.ts, types.ts, projects.ts, activity.ts, expenses.ts
+    supabase/        → client.ts, server.ts, types.ts, projects.ts, activity.ts, expenses.ts, notes.ts
+    constants/       → colors.ts (MODULE_COLORS, COLOR_PRESETS, SEMANTIC_COLORS)
+    utils/           → format.ts (formatCurrency, relativeTime), sanitize.ts (sanitizeHtml)
+    validations/     → index.ts (projectSchema, phaseSchema, taskSchema — Zod v4)
     animations.ts    → constantes de animación (easings, duraciones, stagger)
-  stores/            → ui-store.ts, projects-store.ts, expenses-store.ts
-  types/             → projects.ts
+    gastos-utils.ts  → cálculos financieros (ciclos, totales, CSV export)
+  stores/            → ui-store.ts, projects-store.ts, expenses-store.ts, notes-store.ts, canvas-store.ts
+  types/             → projects.ts, notes.ts, expenses.ts
   proxy.ts           → middleware de sesión (exporta proxy(), no middleware.ts)
-supabase/migrations/ → 001_initial, 002_projects, 003_refinements
-docs/                → ARCHITECTURE.md, CHANGELOG.md, STATUS.md
-docs/modules/        → PROJECTS.md
+supabase/migrations/ → 001–021 (21 migrations; la próxima debe ser 022_*)
+docs/                → ARCHITECTURE.md, CHANGELOG.md, STATUS.md, AUDIT-REPORT.md
+docs/modules/        → PROJECTS.md, EXPENSES.md
 ```
 
 ---
@@ -66,12 +80,16 @@ docs/modules/        → PROJECTS.md
 ## Paleta de colores (CSS variables — globals.css)
 
 ```
-Fondos:    --bg-cream #FAF7F2 | --bg-sand #F0EBE1 | --bg-card #FFFFFF
-Textos:    --text-primary #1A1714 | --text-secondary #3D3630 | --text-tertiary #888780
-Bordes:    --border-stone #E2D9CA (1px solid)
-Acento:    --accent-terracotta #C4704A
-Módulos:   proyectos #C4704A | patrimonio #5B8C6A | gastos #4A7A9B | mercados #9B7A4A
-Sombras:   --shadow-modal 0 4px 20px rgba(26,23,20,0.08) — solo modales
+Fondos:    --bg-page #f2ede6 | --bg-sand #ece5da | --bg-card #ffffff | --bg-card-hover #faf7f2
+Textos:    --text-primary | --text-secondary | --text-tertiary | --text-faint
+Bordes:    --border-stone (1px solid) | --border-subtle | --border-medium | --border-strong
+Acento:    --accent-terracotta #C4704A | --accent-dark | --accent-light | --accent-hover-bg
+Módulos:   proyectos #C4704A | patrimonio #2E7D6B | gastos #3B78B0 | mercados #7260C4 | notas #B07A3A
+           En CSS: var(--module-proyectos), var(--module-patrimonio), var(--module-gastos), var(--module-mercados), var(--module-notas)
+Semántico: --success / --success-bg / --success-text / --success-border
+           --error / --error-bg / --error-text / --error-border
+           --warning / --warning-bg / --warning-text / --warning-border
+Sombras:   --shadow-modal — solo modales
 ```
 
 Tailwind tokens: `bg-background`, `bg-sand`, `bg-card`, `bg-accent`, `text-foreground`,
@@ -111,13 +129,16 @@ Button        variant: primary|secondary|ghost|danger  size: sm|md|lg  loading?
 Card          padding: sm|md|lg  clickable?
 Input         label  error  forwardRef  useId
 Select        label  error  options: {value,label}[]
+SelectCustom  label  error  options: {value,label}[]  — custom dropdown (no native select)
 Textarea      label  error  forwardRef  resize-y
-Badge         variant: terracotta|green|blue|gold|gray
-Modal         title  onClose — Escape + click-outside + X
-Toast         useToast() → .success(msg) .error(msg) .info(msg)
+Badge         variant: success|error|warning|neutral|proyectos|mercados|patrimonio|gastos|notas|terracotta|green|blue|gold|gray
+Modal         title  onClose — Escape + click-outside + X — role=dialog, aria-modal
+ToastProvider render en layout — Toast via Zustand ui-store: useUIStore().addToast({variant, message})
+              Atajos: const { addToast } = useUIStore(); addToast({ variant: 'success', message: '...' })
 Skeleton      animate-pulse  className para dimensiones
-Progress      value: 0-100
+Progress      value: 0-100  showLabel?  — role=progressbar
 Tooltip       CSS-only  posición: top|bottom
+DropdownMenu  items: {label, onClick, icon?, variant?}[]  align: left|right
 ArkhosIcon    SVG isotipo geométrico
 ArkhosLogo    size: sm|md|lg
 ```
@@ -147,10 +168,13 @@ ArkhosLogo    size: sm|md|lg
 
 - Secretos: solo `.env.local` + Vercel env vars. Nunca en código
 - Variables sensibles: `ANTHROPIC_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`
-- **RLS activo** en todas las tablas. Verificar tras cada migration
+- **RLS activo** en todas las tablas. Verificar tras cada migration. Próxima migration: `022_*`
 - Server Actions usan `createServerClient` de `@supabase/ssr`
 - **MFA TOTP activo** — `src/proxy.ts` verifica AAL: `aal1→aal2` redirige a `/verify-mfa`
+- **API routes con Anthropic**: siempre añadir `getUser()` check antes de llamar al SDK
+- **Markdown + dangerouslySetInnerHTML**: usar `sanitizeHtml()` de `@/lib/utils/sanitize` antes de inyectar
 - No exponer `user_id` en URLs públicas
+- Middleware (`proxy.ts`) excluye `/api/*` — cada route debe autenticarse por sí misma
 
 ---
 
