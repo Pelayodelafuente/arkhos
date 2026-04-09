@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, type ReactNode } from "react"
+import { createElement, useState, type ReactNode } from "react"
 import { createPortal } from "react-dom"
 import { Pin, Star, MoreHorizontal, Pencil, Trash2, Layout, Square, CheckSquare, Copy, FolderInput, Folder, Inbox, RotateCcw, ArchiveRestore, FileText } from "lucide-react"
 import { getLucideIconOrDefault } from "@/lib/utils/icons"
@@ -63,8 +63,6 @@ export function NoteCard({ note, userId: _userId, onEdit, onDelete, onTogglePin,
 
   const isInTrash = Boolean(note.deleted_at)
 
-  const IconComponent = getLucideIconOrDefault(note.icon, FileText)
-
   const preview = stripHtml(note.content)
   const firstImage = extractFirstImage(note.content)
   const checklistProgress = getChecklistProgress(note.content)
@@ -115,7 +113,7 @@ export function NoteCard({ note, userId: _userId, onEdit, onDelete, onTogglePin,
                 : <Square size={15} strokeWidth={1.75} />}
             </button>
           )}
-          <IconComponent size={16} strokeWidth={1.75} className="text-text-secondary mt-0.5 flex-shrink-0" />
+          {createElement(getLucideIconOrDefault(note.icon, FileText), { size: 16, strokeWidth: 1.75, className: "text-text-secondary mt-0.5 flex-shrink-0" })}
           <h3 className={`flex-1 font-heading text-[15px] leading-snug line-clamp-2 ${note.title ? 'text-foreground' : 'text-text-tertiary italic'}`}>
             {note.title
               ? (searchQuery ? highlightText(note.title, searchQuery) : note.title)

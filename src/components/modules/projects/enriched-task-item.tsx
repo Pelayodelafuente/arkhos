@@ -163,8 +163,8 @@ export function EnrichedTaskItem({
   const hasSubtasks = liveTask.subtasks.length > 0;
 
   // Sync description from live task
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDescription(liveTask.description || liveTask.content || "");
   }, [liveTask.description, liveTask.content]);
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { createElement, useState, useRef, useEffect } from "react"
 import {
   FileText,
   Star,
@@ -385,8 +385,6 @@ function SortableFolderItem({
 }: SortableFolderItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: folder.id })
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 }
-  const FolderIcon = getLucideIconOrDefault(folder.icon, Folder)
-
   return (
     <div
       ref={setNodeRef}
@@ -407,7 +405,7 @@ function SortableFolderItem({
       >
         <GripVertical size={12} strokeWidth={1.75} />
       </button>
-      <FolderIcon size={14} strokeWidth={1.75} className="flex-shrink-0 group-hover:hidden block" />
+      {createElement(getLucideIconOrDefault(folder.icon, Folder), { size: 14, strokeWidth: 1.75, className: "flex-shrink-0 group-hover:hidden block" })}
 
       {isRenaming ? (
         <input

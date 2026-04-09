@@ -1248,40 +1248,6 @@ function SortablePhaseItem({
   );
 }
 
-// ─── Task Notes sub-component ─────────
-
-function TaskNotes({
-  taskId,
-  content,
-  onSave,
-}: {
-  taskId: string;
-  content: string;
-  onSave: (taskId: string, content: string) => void;
-}) {
-  const [value, setValue] = useState(content);
-  const charCount = value.length;
-
-  return (
-    <div className="ml-8 mr-2 mt-0.5 mb-1.5 rounded-lg border border-border bg-background p-3">
-      <textarea
-        value={value}
-        onChange={(e) => {
-          setValue(e.target.value);
-          onSave(taskId, e.target.value);
-        }}
-        placeholder="Escribe notas, ideas, snippets de codigo..."
-        rows={3}
-        className="w-full resize-y bg-transparent font-mono text-[13px] text-text-secondary placeholder:text-text-tertiary focus:outline-none"
-      />
-      <div className="mt-1 text-right font-mono text-[10px] text-text-tertiary">
-        {charCount}
-      </div>
-    </div>
-  );
-}
-
-
 // ─── Skeleton ─────────────────────────
 
 function DetailSkeleton() {

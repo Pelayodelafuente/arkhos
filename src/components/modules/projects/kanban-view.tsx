@@ -309,8 +309,8 @@ export default function KanbanView({
   }, [filteredTasks]);
 
   // Sync local order when tasks change from external source (e.g. after cross-column move)
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLocalOrder((prev) => {
       const next = { ...prev };
       for (const col of COLUMNS) {

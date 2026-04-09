@@ -216,7 +216,6 @@ describe('formatNextBilling', () => {
   })
 
   it('returns "En X días" for monthly subscriptions in the future', () => {
-    const ref = new Date(2024, 0, 5)
     const sub = makeSub({ billing_day: 20, cycle: 'monthly' })
     // Can't call formatNextBilling with ref, but we can check structure
     const result = formatNextBilling(sub)

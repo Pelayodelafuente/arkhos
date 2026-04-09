@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { createElement, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { marked } from "marked"
 import { FileText, Type, Link, ExternalLink, Lock, Image as ImageIcon } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
@@ -114,7 +114,7 @@ export function CanvasNodeComponent({
     if (node.node_type === "url") return Link
     if (node.node_type === "image") return ImageIcon
     if (node.node_type === "note" && node.note?.icon) {
-      return getLucideIconOrDefault(node.note.icon, FileText)
+      return getLucideIconOrDefault(node.note?.icon, FileText)
     }
     return FileText
   }, [node.node_type, node.note?.icon])
@@ -280,9 +280,8 @@ export function CanvasNodeComponent({
                 color: "#B07A3A", flexShrink: 0,
               }} />
             </>
-          ) : (
-            <NodeIcon size={14 * scale} strokeWidth={1.75} style={{ color: colors.border, flexShrink: 0 }} />
-          )}
+          ) : createElement(NodeIcon, { size: 14 * scale, strokeWidth: 1.75, style: { color: colors.border, flexShrink: 0 } })
+          }
           <span style={{
             fontSize: 12 * scale, fontWeight: 600,
             color: "var(--text-primary)",

@@ -19,6 +19,8 @@ const eslintConfig = defineConfig([
       // (setState for initialization in useEffect, local accumulators in useMemo)
       "react-hooks/set-state-in-effect": "warn",
       "react-hooks/immutability": "warn",
+      // Allow _-prefixed variables to be intentionally unused
+      "@typescript-eslint/no-unused-vars": ["warn", { "varsIgnorePattern": "^_", "argsIgnorePattern": "^_" }],
     },
   },
 ]);
