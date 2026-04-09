@@ -17,5 +17,78 @@
         "HOME": "C:\\Users\\PC"
       }
     }
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILES=\"${CLAUDE_FILE_PATHS:-}\"; if [ -n \"$FILES\" ]; then for f in $FILES; do if echo \"$f\" | grep -qE '\\.(ts|tsx)$'; then npx prettier --write \"$f\" 2>/dev/null || true; fi; done; fi"
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILES=\"${CLAUDE_FILE_PATHS:-}\"; if [ -n \"$FILES\" ]; then for f in $FILES; do if echo \"$f\" | grep -qE '\\.(ts|tsx)$'; then npx eslint \"$f\" --fix --quiet 2>/dev/null || true; fi; done; fi"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CMD=\"${CLAUDE_TOOL_INPUT:-}\"; if echo \"$CMD\" | grep -qE 'git (commit|push)'; then echo '=== TypeScript Check ===' && pnpm exec tsc --noEmit 2>&1 | tail -20 || exit 2; fi"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CMD=\"${CLAUDE_TOOL_INPUT:-}\"; if echo \"$CMD\" | grep -q 'git commit'; then echo '=== Secret scan ===' && git diff --staged | grep -iE '(password|secret|api_key|service_role|private_key)\\s*=' | grep -v 'example\\|placeholder\\|\\.env\\.example' && echo 'WARNING: Possible secret in commit!' && exit 2 || true; fi"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INPUT=$(cat 2>/dev/null || echo '{}'); ACTIVE=$(echo \"$INPUT\" | node -e \"try{const d=require('fs').readFileSync('/dev/stdin','utf8');const p=JSON.parse(d);process.stdout.write(p.stop_hook_active?'1':'0')}catch{process.stdout.write('0')}\" 2>/dev/null || echo '0'); if [ \"$ACTIVE\" = '1' ]; then exit 0; fi; echo '=== Running tests ===' && pnpm test --run 2>&1 | tail -15 || true",
+            "async": false
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"$(date -u +%Y-%m-%dT%H:%M:%SZ) | session completed\" >> ~/.arkhos-session.log",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"additionalContext\": \"Branch activa: '$(git branch --show-current 2>/dev/null || echo unknown)'. Último commit: '$(git log -1 --format=\"%h %s\" 2>/dev/null || echo unknown)'. Tests: ejecuta pnpm test --run para verificar. Stack: Next.js 16 + TypeScript strict + Supabase + Tailwind v4.\"}'",
+            "async": false
+          }
+        ]
+      }
+    ]
   }
 }

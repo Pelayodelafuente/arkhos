@@ -1,328 +1,77 @@
-# Arkhos — CLAUDE.md
+# Arkhos — Claude Code
 # Centro de mando personal de Pelayo
-# URL: https://arkhos.pelayodelafuente.es
-# Repo: github.com/Pelayodelafuente/arkhos
+# URL: https://arkhos.pelayodelafuente.es | Repo: github.com/Pelayodelafuente/arkhos
 
 ## Estado actual
 - Fases 0-4 completadas al 100% (Auth, Layout, Proyectos, Gastos, Notas)
 - Auditoría total completada 2026-04-09 — ver `docs/AUDIT-REPORT.md`
-- Próximo: Fase 5 (Mercados) + Fase 6 (Patrimonio)
-- Ver STATUS.md para checklist detallado
-- Ver CHANGELOG.md para historial de decisiones
+- Stack Cognitivo v2 instalado 2026-04-09 — agentes, skills, hooks, reglas modulares
+- Próximo: Fase 5 (Mercados) + Fase 6 (Patrimonio) — ver STATUS.md
 
----
+## Stack
+| Tecnología | Versión | Nota |
+|---|---|---|
+| Next.js | 16.1.6 | App Router, RSC por defecto |
+| TypeScript | ^5 | strict, 0 errores siempre |
+| Tailwind CSS | v4 | CSS variables en globals.css |
+| Supabase | @supabase/ssr ^0.9.0 | Auth + PostgreSQL + RLS |
+| Zustand | ^5.0.11 | estado global UI + módulos |
+| Zod | ^4.3.6 | importar de `'zod/v4'` |
+| Anthropic SDK | ^0.80.0 | IA en 4 API routes |
+| TipTap | v3.21.x | editor rich text Notas |
+| Framer Motion | ^12.38.0 | animaciones complejas |
+| Recharts | ^3.8.0 | gráficos Gastos |
+| marked | ^17.0.5 | markdown → HTML |
+| pnpm | — | gestor de paquetes |
 
-## Stack (versiones exactas)
-- **Next.js 16.1.6** (App Router, RSC por defecto)
-- **TypeScript ^5** strict mode (0 errores tsc siempre)
-- **Tailwind CSS v4** (CSS variables en globals.css via `@theme inline`)
-- **Supabase** Auth + PostgreSQL + RLS — `@supabase/ssr ^0.9.0`
-- **Zustand ^5.0.11** (estado global UI + módulos)
-- **Lucide React ^0.577.0** (iconos — cero emojis en UI)
-- **Zod ^4.3.6** (importar desde `'zod/v4'`)
-- **@dnd-kit/core ^6.3.1** + **@dnd-kit/sortable ^10.0.0** drag & drop
-- **Framer Motion ^12.38.0** — animaciones complejas (canvas, modales, transiciones)
-- **TipTap v3.21.x** — editor rich text en módulo Notas (StarterKit incluye Link/Underline por defecto en v3)
-- **marked ^17.0.5** — markdown → HTML (task descriptions, canvas nodes)
-- **Recharts ^3.8.0** — gráficos en módulo Gastos
-- **@anthropic-ai/sdk ^0.80.0** — IA en 4 API routes
-- **pnpm** como gestor de paquetes
+## Módulos
+- Proyectos ✅ — `src/components/modules/proyectos/`
+- Gastos ✅ — `src/components/modules/expenses/`
+- Notas ✅ — `src/components/modules/notes/`
+- Mercados ⏳ — siguiente (Fase 5)
+- Patrimonio ⏳ — después (Fase 6)
 
----
+## Reglas activas
+Ver: `.claude/rules/reading-protocol.md` — lectura eficiente de archivos
+Ver: `.claude/rules/code-conventions.md` — TypeScript, React, Tailwind, commits
+Ver: `.claude/rules/security-rules.md` — secrets, RLS, API routes, XSS
+Ver: `.claude/rules/session-protocol.md` — inicio/cierre, mem_context, mem_session_summary
+Ver: `.claude/rules/supabase-rules.md` — migrations (próxima: 022_*), queries, RLS, storage
 
-## Estructura crítica
+## Agentes disponibles (.claude/agents/)
+`architect` · `database` · `frontend` · `security` · `tester` · `performance` · `api`
 
-```
-src/
-  app/
-    (auth)/          → login, register, reset-password, verify-mfa
-    (dashboard)/     → layout compartido + módulos + settings/security
-    api/
-      projects/      → analyze/route.ts, chat/route.ts (Anthropic streaming — auth requerida)
-      notes/         → suggest-tags/route.ts, summarize/route.ts (Anthropic — auth requerida)
-    auth/callback/   → OAuth/magic-link code exchange
-  components/
-    ui/              → component library (barrel: ui/index.ts)
-    layout/          → Sidebar.tsx, topbar.tsx, mobile-drawer.tsx, bottom-nav.tsx, NavigationProgress.tsx
-    modules/         → proyectos/, expenses/, notes/, (markets/, portfolio/ — próximos)
-  lib/
-    supabase/        → client.ts, server.ts, types.ts, projects.ts, activity.ts, expenses.ts, notes.ts
-    constants/       → colors.ts (MODULE_COLORS, COLOR_PRESETS, SEMANTIC_COLORS)
-    utils/           → format.ts (formatCurrency, relativeTime), sanitize.ts (sanitizeHtml)
-    validations/     → index.ts (projectSchema, phaseSchema, taskSchema — Zod v4)
-    animations.ts    → constantes de animación (easings, duraciones, stagger)
-    gastos-utils.ts  → cálculos financieros (ciclos, totales, CSV export)
-  stores/            → ui-store.ts, projects-store.ts, expenses-store.ts, notes-store.ts, canvas-store.ts
-  types/             → projects.ts, notes.ts, expenses.ts
-  proxy.ts           → middleware de sesión (exporta proxy(), no middleware.ts)
-supabase/migrations/ → 001–021 (21 migrations; la próxima debe ser 022_*)
-docs/                → ARCHITECTURE.md, CHANGELOG.md, STATUS.md, AUDIT-REPORT.md
-docs/modules/        → PROJECTS.md, EXPENSES.md
-```
+## Skills disponibles (.claude/skills/)
+`inicio` · `cierre` · `audit` · `migration` · `rls-check` · `gen-types` · `pre-commit`
+`design` · `component-audit` · `perf-audit` · `tech-debt` · `query-optimize` · `supabase-security`
 
----
-
-## Convenciones (no negociables)
-
-- **Commits**: Conventional Commits (`feat:`, `fix:`, `docs:`, `refactor:`, `chore:`)
-- **Ramas**: `feat/nombre` → PR → `main` (branch protection activa)
-- **Archivos**: kebab-case. Componentes: PascalCase
-- **TypeScript**: strict, sin `any`, interfaces para todo
-- **CSS**: solo Tailwind utilities + CSS variables de `globals.css`
+## Convenciones clave (no negociables)
+- **Commits**: Conventional Commits — `feat:` `fix:` `docs:` `refactor:` `chore:`
+- **TypeScript**: strict, sin `any`, interfaces para todo, `pnpm exec tsc --noEmit` tras cada cambio
 - **Server Components** por defecto. `'use client'` solo para estado/interactividad
 - **Imports UI**: siempre desde `'@/components/ui'` (barrel export)
-- **Server Actions** para mutations. No API routes para CRUD básico
-- **RLS** en TODAS las tablas Supabase. Verificar en cada migration
-- **Zod v4**: importar de `'zod/v4'`. Validar en cliente Y servidor
-
----
-
-## Paleta de colores (CSS variables — globals.css)
-
-```
-Fondos:    --bg-page #f2ede6 | --bg-sand #ece5da | --bg-card #ffffff | --bg-card-hover #faf7f2
-Textos:    --text-primary | --text-secondary | --text-tertiary | --text-faint
-Bordes:    --border-stone (1px solid) | --border-subtle | --border-medium | --border-strong
-Acento:    --accent-terracotta #C4704A | --accent-dark | --accent-light | --accent-hover-bg
-Módulos:   proyectos #C4704A | patrimonio #2E7D6B | gastos #3B78B0 | mercados #7260C4 | notas #B07A3A
-           En CSS: var(--module-proyectos), var(--module-patrimonio), var(--module-gastos), var(--module-mercados), var(--module-notas)
-Semántico: --success / --success-bg / --success-text / --success-border
-           --error / --error-bg / --error-text / --error-border
-           --warning / --warning-bg / --warning-text / --warning-border
-Sombras:   --shadow-modal — solo modales
-```
-
-Tailwind tokens: `bg-background`, `bg-sand`, `bg-card`, `bg-accent`, `text-foreground`,
-`text-text-secondary`, `text-text-tertiary`, `border-border`, `text-accent`.
-
-Principios: flat (sin sombras), sin degradados, máximo whitespace.
-`rounded-xl` cards · `rounded-md` inputs/buttons.
-
-### Animaciones (CSS variables — globals.css)
-
-```
-Easings:    --ease-out-expo cubic-bezier(0.16,1,0.3,1) | --ease-spring cubic-bezier(0.34,1.56,0.64,1)
-Duraciones: --transition-fast 150ms | --transition-normal 250ms | --transition-slow 400ms
-```
-
-Clases CSS disponibles: `animate-fade-in-up`, `animate-fade-in`, `animate-scale-in`,
-`animate-slide-in-right`, `animate-slide-out-right`, `dot-pulse-active`.
-Constantes TS: importar desde `@/lib/animations` (EASE_OUT_EXPO, DURATION_NORMAL, etc.).
-Regla: solo animar `transform` y `opacity`. Respetar `prefers-reduced-motion` siempre.
-
----
-
-## Tipografías
-
-- `font-heading` — DM Serif Display (títulos/display)
-- `font-sans` — Plus Jakarta Sans (interfaz/texto)
-- `font-mono` — JetBrains Mono (datos/código/números)
-
----
-
-## Componentes UI disponibles
-
-Importar desde `'@/components/ui'`:
-
-```
-Button        variant: primary|secondary|ghost|danger  size: sm|md|lg  loading?
-Card          padding: sm|md|lg  clickable?
-Input         label  error  forwardRef  useId
-Select        label  error  options: {value,label}[]
-SelectCustom  label  error  options: {value,label}[]  — custom dropdown (no native select)
-Textarea      label  error  forwardRef  resize-y
-Badge         variant: success|error|warning|neutral|proyectos|mercados|patrimonio|gastos|notas|terracotta|green|blue|gold|gray
-Modal         title  onClose — Escape + click-outside + X — role=dialog, aria-modal
-ToastProvider render en layout — Toast via Zustand ui-store: useUIStore().addToast({variant, message})
-              Atajos: const { addToast } = useUIStore(); addToast({ variant: 'success', message: '...' })
-Skeleton      animate-pulse  className para dimensiones
-Progress      value: 0-100  showLabel?  — role=progressbar
-Tooltip       CSS-only  posición: top|bottom
-DropdownMenu  items: {label, onClick, icon?, variant?}[]  align: left|right
-ArkhosIcon    SVG isotipo geométrico
-ArkhosLogo    size: sm|md|lg
-```
-
----
-
-## Módulo Proyectos — puntos clave
-
-- **Data layer**: `src/lib/supabase/projects.ts` — 27 funciones tipadas; `activity.ts` — logActivity/getProjectActivity/deleteActivity
-- **Store**: `src/stores/projects-store.ts` — optimistic updates + rollback + Toast + computePhaseStatus() + logActivity integrado
-- **Canvas store**: `src/stores/canvas-store.ts` — posiciones ventanas, zoom, selección, localStorage
-- **Selectores**: `useFilteredProjects()`, `useProjectsByStatus(statuses[])`
-- **Tipos/estados**: dinámicos por usuario (`project_types`, `project_statuses`). Sin estado `'blocked'` en tareas
-- **Drag & drop**: `reorderPhasesAction`, `reorderTasksAction` en store
-- **Logo**: Supabase Storage bucket `project-logos` — `{userId}/{projectId}.{ext}`
-- **Búsqueda**: debounce 300ms, filtro name/stack/tags, highlight `<mark>`
-- **Canvas**: `/proyectos` renderiza `ProjectCanvas` — 5 ventanas arrastrables con Framer Motion
-- **API Routes IA**: `/api/projects/analyze` + `/api/projects/chat` — streaming Anthropic SDK
-- **Componentes clave**: `task-detail-fields.tsx` (shared, markdown preview via `marked`), `task-slide-over.tsx` (modal centrado), `activity-view.tsx` (notas manuales CRUD)
-- **Vistas en `/proyectos/[id]`**: Progreso · Kanban · Dashboard · Tabla · Actividad
-- **Fase status**: `computePhaseStatus()` auto-recalcula y persiste en addTask/editTask/removeTask/changeTaskStatus
-- **Docs**: `docs/modules/PROJECTS.md` — schema, data layer, store, componentes
-
----
-
-## Seguridad
-
-- Secretos: solo `.env.local` + Vercel env vars. Nunca en código
-- Variables sensibles: `ANTHROPIC_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`
-- **RLS activo** en todas las tablas. Verificar tras cada migration. Próxima migration: `022_*`
-- Server Actions usan `createServerClient` de `@supabase/ssr`
-- **MFA TOTP activo** — `src/proxy.ts` verifica AAL: `aal1→aal2` redirige a `/verify-mfa`
-- **API routes con Anthropic**: siempre añadir `getUser()` check antes de llamar al SDK
-- **Markdown + dangerouslySetInnerHTML**: usar `sanitizeHtml()` de `@/lib/utils/sanitize` antes de inyectar
-- No exponer `user_id` en URLs públicas
-- Middleware (`proxy.ts`) excluye `/api/*` — cada route debe autenticarse por sí misma
-
----
-
-## Flujo de trabajo
-
-**Bugfix / ajuste < 50 líneas**
-1. Actúa directamente
-2. `tsc --noEmit` al terminar
-3. `mem_save` con el fix
-
-**Feature nueva (módulo completo)**
-1. Plan Mode SIEMPRE antes de código
-2. Esperar aprobación
-3. `mem_session_summary` al cerrar
-
-**Refactor**
-1. Plan Mode obligatorio
-2. `tsc --noEmit` antes Y después
-3. `next build` debe pasar
-4. Actualizar docs si cambian APIs públicas
-
----
+- **RLS** en TODAS las tablas Supabase
+- **Zod v4**: importar de `'zod/v4'`
+- **CSS**: solo Tailwind utilities + CSS variables de globals.css. Nunca hex hardcodeados en componentes
+- **Markdown + HTML**: usar `sanitizeHtml()` de `@/lib/utils/sanitize` antes de `dangerouslySetInnerHTML`
 
 ## Memoria (Engram MCP)
+- **INICIO**: `mem_context project:"arkhos"` — primer paso siempre
+- **TRABAJO**: `mem_save` tras cambios significativos
+- **CIERRE**: `mem_session_summary` — OBLIGATORIO
 
-**INICIO SESIÓN** → `mem_context project:"arkhos"` — primer paso siempre.
-**TRABAJO SIGNIFICATIVO** → `mem_save` inmediatamente.
-**TRAS COMPACTACIÓN** → `mem_context` antes de continuar.
-**FIN SESIÓN** → `mem_session_summary` es OBLIGATORIO.
+## Agent Teams
+Eres COORDINADOR. Delega código real a sub-agentes. Tú: responder preguntas cortas, coordinar, mostrar resúmenes.
+SDD: `/sdd-new` → explore+propose · `/sdd-ff` → fast-forward · `/sdd-apply` → implementar · `/sdd-verify` → verificar
 
-Formato `mem_save.content`:
-```
-**What**: qué se hizo
-**Why**: por qué / qué problema resuelve
-**Where**: archivos afectados
-**Learned**: gotchas, decisiones, recordar para el futuro
-```
-
-Tipos: `decision` · `bugfix` · `pattern` · `config` · `integration`
-Proyecto siempre: `"project": "arkhos"`
-
----
-
-## Skills activos
-
-Skills del proyecto en `.claude/skills/`:
-
-| Skill | Trigger | Qué aporta |
-|-------|---------|-----------|
-| `arkhos-dev` | TODA tarea de desarrollo | Convenciones, estructura, naming, commits, RULE #1 (docs) |
-| `ui` | Componentes UI, diseño visual | Componentes disponibles, tokens, patrones |
-| `supabase` | DB, auth, migrations, RLS | Cliente correcto por contexto, RLS policies, MFA |
-
-Plugins instalados: `frontend-design`, `skill-creator`, `simplify`, `loop`.
-(`feature-dev` desinstalado — sustituido por el suite `sdd-*`)
-
-### Prioridad de skills UI
-
-Cuando `frontend-design` y `ui` entren en conflicto:
-- **`ui` tiene prioridad absoluta** — es el design system específico de Arkhos (tokens, componentes, paleta).
-- `frontend-design` aporta criterio estético genérico y se aplica solo donde `ui` no dicta nada concreto.
-
-### Regla de auto-mejora
-
-- Cuando detectes un patrón repetido 2+ veces en la misma sesión, sugiere crear un skill.
-- Al final de cada sesión, evalúa si algún skill existente necesita actualizarse con nuevos patrones descubiertos.
-- Si un skill no se activa cuando debería, ajusta su `description` para mejorar el triggering.
-
----
-
-## Agent Teams — Orquestador SDD
-
-Eres COORDINADOR, no ejecutor. Delegas TODO el trabajo real a sub-agentes via Agent tool.
-
-### Reglas de delegación (siempre activas)
-
-1. **NUNCA hagas trabajo real inline.** Leer código, escribir código, analizar arquitectura → delegar.
-2. **Puedes:** responder preguntas cortas, coordinar sub-agentes, mostrar resúmenes, pedir decisiones.
-3. **Self-check:** "¿Voy a leer/escribir código o analizar? Si sí → delegar."
-4. **Por qué:** Tú eres contexto siempre-cargado. Cada token que consumes sobrevive toda la conversación. Sub-agentes obtienen contexto fresco y devuelven solo el resumen.
-
-### Escalado de tareas
-
-- **Pregunta simple** → responder si sabes. Si no, delegar.
-- **Tarea pequeña** (1 archivo, quick fix) → sub-agente general.
-- **Feature/refactor sustancial** → sugerir SDD: `/sdd-new {nombre}`.
-
-### Comandos SDD
-
-- `/sdd-init` → inicializar proyecto
-- `/sdd-explore <topic>` → analizar área del codebase
-- `/sdd-new <change>` → explore + propose
-- `/sdd-continue [change]` → siguiente artefacto en la cadena
-- `/sdd-ff [change]` → propose → spec → design → tasks (fast-forward)
-- `/sdd-apply [change]` → implementar en batches
-- `/sdd-verify [change]` → verificar implementación
-- `/sdd-archive [change]` → archivar cambio completado
-
-### Grafo de dependencias
-
-```
-proposal -> specs --> tasks -> apply -> verify -> archive
-             ^
-             |
-           design
-```
-
-### Contexto de sub-agentes (modo engram)
-
-- **Artifact store**: `engram` — siempre. Proyecto: `"arkhos"`.
-- **Topic keys**: `sdd-init/arkhos`, `sdd/{change}/explore`, `sdd/{change}/proposal`, `sdd/{change}/spec`, `sdd/{change}/design`, `sdd/{change}/tasks`, `sdd/{change}/apply-progress`, `sdd/{change}/verify-report`.
-- **Lectura**: orchestrator busca en engram y pasa contexto al sub-agente.
-- **Escritura**: sub-agente guarda descubrimientos/decisiones vía `mem_save`.
-- **Skills**: incluir en prompt del sub-agente: `"Check skills: mem_search(query: 'skill-registry', project: 'arkhos')"`
-
-### Respuesta de sub-agentes
-
-Cada sub-agente debe devolver: `status`, `executive_summary`, `artifacts` (IDs), `next_recommended`, `risks`.
-
-### Recuperación
-
-Si se pierde estado (compactación): `mem_search(query: "{topic_key}", project: "arkhos")` → `mem_get_observation(id)`.
-
----
-
-## Protocolo de cierre de sesión (OBLIGATORIO — no opcional)
-
-Al terminar cualquier sesión de trabajo, en este orden exacto:
-
-1. `tsc --noEmit` → debe pasar con 0 errores
-2. `next build` → debe compilar sin errores
-3. `mem_session_summary` en Engram con:
-   - goal: qué se intentaba conseguir
-   - discoveries: qué se descubrió durante el trabajo
-   - accomplished: qué se completó realmente
-   - files: lista de archivos modificados
-4. Actualizar `docs/CHANGELOG.md`:
-   - Si es cierre de tarea: añadir bullet bajo la fase activa
-   - Si es cierre de fase: añadir sección de cierre completa
-5. Actualizar `docs/STATUS.md`:
-   - Marcar como ✅ las tareas completadas
-   - Actualizar el porcentaje de la fase activa
-6. Commit con Conventional Commits:
-   - `feat:` para features nuevas
-   - `fix:` para correcciones
-   - `docs:` para documentación
-   - `chore:` para infraestructura
-
-Si el contexto se compacta durante la sesión:
-→ Llama `mem_context` inmediatamente antes de continuar
-→ No continúes sin recuperar el contexto
+<!-- REFERENCIA STACK COMPLETO: Ver docs/ARCHITECTURE.md -->
+<!-- REFERENCIA SCHEMA DB: Ver supabase/migrations/ (21 migrations, próxima 022_*) -->
+<!-- REFERENCIA CHANGELOG: Ver docs/CHANGELOG.md -->
+<!-- REFERENCIA ESTADO DETALLADO: Ver docs/STATUS.md -->
+<!-- REFERENCIA COMPONENTES UI: src/components/ui/ — Button, Card, Input, Select, SelectCustom, Textarea, Badge, Modal, ToastProvider, Skeleton, Progress, Tooltip, DropdownMenu, ArkhosIcon, ArkhosLogo -->
+<!-- REFERENCIA COLORES: --bg-page #f2ede6 | --accent-terracotta #C4704A | --module-proyectos | --module-patrimonio | --module-gastos | --module-mercados | --module-notas -->
+<!-- REFERENCIA TIPOGRAFÍAS: font-heading DM Serif Display | font-sans Plus Jakarta Sans | font-mono JetBrains Mono -->
+<!-- REFERENCIA PROYECTOS: docs/modules/PROJECTS.md | src/lib/supabase/projects.ts (27 funciones) | src/stores/projects-store.ts -->
+<!-- REFERENCIA SEGURIDAD: MFA TOTP activo | proxy.ts verifica AAL | API routes: getUser() antes de Anthropic SDK -->
+<!-- REFERENCIA MCP SETUP: docs/MCP-SETUP.md — instrucciones para instalar Supabase MCP, GitHub MCP, Playwright, Brave Search -->
+<!-- REFERENCIA PENDIENTES: docs/PENDING-FIXES.md — backlog priorizado -->
