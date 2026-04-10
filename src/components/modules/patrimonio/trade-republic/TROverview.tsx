@@ -43,18 +43,12 @@ function StatRow({ label, value, sub, icon, color }: StatRowProps) {
 export function TROverview() {
   const assets = usePatrimonioStore((s) => s.assets);
   const platforms = usePatrimonioStore((s) => s.platforms);
-  const overview = usePatrimonioStore((s) => s.overview);
 
   const trAssets = useMemo(() => {
     const trPlatform = platforms.find((p) => p.slug === "trade-republic");
     if (!trPlatform) return [];
     return assets.filter((a) => a.platform_id === trPlatform.id);
   }, [assets, platforms]);
-
-  const summary = useMemo(
-    () => overview?.platforms.find((p) => p.platform.slug === "trade-republic") ?? null,
-    [overview]
-  );
 
   const cashAsset = trAssets.find((a) => a.category === "cash");
   const cashValue = cashAsset?.current_value ?? 0;
@@ -64,8 +58,6 @@ export function TROverview() {
   const valoresInvested = valueAssets.reduce((sum, a) => sum + a.total_invested, 0);
   const valoresPL = valoresValue - valoresInvested;
   const valoresPLPct = valoresInvested > 0 ? (valoresPL / valoresInvested) * 100 : 0;
-
-  const ytdReturn = summary?.pl_percentage ?? 0;
 
   return (
     <div className="rounded-xl border border-border bg-card">
@@ -111,8 +103,8 @@ export function TROverview() {
           color={valoresPL >= 0 ? "var(--module-patrimonio)" : "#A32D2D"}
         />
         <StatRow
-          label="Rentabilidad estimada"
-          value={`${ytdReturn >= 0 ? "+" : ""}${ytdReturn.toFixed(2)}%`}
+          label="Rentabilidad s/ invertido"
+          value={`${valoresPLPct >= 0 ? "+" : ""}${valoresPLPct.toFixed(2)}%`}
           icon={<Calendar size={14} strokeWidth={1.75} />}
           color="#B07A3A"
         />
