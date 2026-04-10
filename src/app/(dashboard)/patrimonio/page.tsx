@@ -41,6 +41,8 @@ export default async function PatrimonioPage() {
     return <PatrimonioOnboarding />;
   }
 
+  console.log('[patrimonio] snapshots:', snapshots.length, 'transactions:', transactions.length, 'assets:', assets.length);
+
   return (
     <PatrimonioView
       overview={overview}
