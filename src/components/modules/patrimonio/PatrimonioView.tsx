@@ -13,9 +13,7 @@ import type {
   PlatformSlug,
 } from "@/types/patrimonio";
 import { OverviewKPIs } from "@/components/modules/patrimonio/dashboard/OverviewKPIs";
-import { PlatformCards } from "@/components/modules/patrimonio/dashboard/PlatformCards";
 import { TRDashboard } from "@/components/modules/patrimonio/trade-republic/TRDashboard";
-import { PlaceholderPlatform } from "@/components/modules/patrimonio/shared/PlaceholderPlatform";
 
 const formatEur = (value: number) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
@@ -30,12 +28,7 @@ interface PatrimonioViewProps {
 }
 
 const PLATFORM_TABS: { slug: PlatformSlug | "all"; label: string }[] = [
-  { slug: "all", label: "Vista General" },
   { slug: "trade-republic", label: "Trade Republic" },
-  { slug: "crypto", label: "Cripto" },
-  { slug: "indexa", label: "Indexa Capital" },
-  { slug: "horos", label: "Horos" },
-  { slug: "mintos", label: "Mintos" },
 ];
 
 export function PatrimonioView({
@@ -78,33 +71,7 @@ export function PatrimonioView({
     setPlatforms,
   ]);
 
-  // Determine which tabs to show (only platforms that exist)
-  const platformSlugs = new Set(platforms.map((p) => p.slug));
-  const availableTabs = PLATFORM_TABS.filter(
-    (tab) => tab.slug === "all" || platformSlugs.has(tab.slug)
-  );
-
-  // Render active tab content
-  function renderTabContent() {
-    if (activePlatform === "all") {
-      return (
-        <div className="space-y-6">
-          <PlatformCards />
-        </div>
-      );
-    }
-
-    if (activePlatform === "trade-republic") {
-      return <TRDashboard />;
-    }
-
-    // Other platforms — placeholder
-    const platform = platforms.find((p) => p.slug === activePlatform);
-    if (!platform) return null;
-
-    const platformAssets = assets.filter((a) => a.platform_id === platform.id);
-    return <PlaceholderPlatform platform={platform} assets={platformAssets} />;
-  }
+  const availableTabs = PLATFORM_TABS;
 
   return (
     <div className="space-y-6">
@@ -165,7 +132,7 @@ export function PatrimonioView({
       </div>
 
       {/* Tab content */}
-      {renderTabContent()}
+      <TRDashboard />
     </div>
   );
 }
