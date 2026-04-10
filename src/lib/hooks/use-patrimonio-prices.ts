@@ -9,14 +9,12 @@ import type { PriceResult, ForexRates } from "@/lib/patrimonio/price-service";
 // Types
 // ---------------------------------------------------------------------------
 
-export type PriceStatus = "idle" | "checking" | "loading" | "live" | "partial" | "offline";
+export type PriceStatus = "idle" | "loading" | "live" | "partial" | "offline";
 
 export interface UsePatrimonioPricesReturn {
   status: PriceStatus;
   lastUpdated: Date | null;
   forex: ForexRates | null;
-  marketStatus: { eu: string; us: string; hk: string } | null;
-  errors: string[];
   refreshPrices: () => Promise<void>;
   isRefreshing: boolean;
 }
@@ -25,37 +23,54 @@ interface ApiResponse {
   prices: PriceResult[];
   forex: ForexRates;
   errors: string[];
-  marketStatus: { eu: string; us: string; hk: string };
-  timestamp: string;
   offline?: boolean;
 }
 
-const PRICE_TTL_MS = 3_600_000; // 1 hour
-const COOLDOWN_MS  = 60_000;    // 60s between manual refreshes
+const COOLDOWN_MS = 60_000; // 60s between manual refreshes
 
 // ---------------------------------------------------------------------------
 // Hook
 // ---------------------------------------------------------------------------
 
 export function usePatrimonioPrices(): UsePatrimonioPricesReturn {
-  const assets                  = usePatrimonioStore((s) => s.assets);
-  const updateAssetPriceByIsin  = usePatrimonioStore((s) => s.updateAssetPriceByIsin);
-  const setPriceChange          = usePatrimonioStore((s) => s.setPriceChange);
-  const setIsLoadingPrices      = usePatrimonioStore((s) => s.setIsLoadingPrices);
-  const setPricesLastUpdated    = usePatrimonioStore((s) => s.setPricesLastUpdated);
+  const assets                 = usePatrimonioStore((s) => s.assets);
+  const updateAssetPriceByIsin = usePatrimonioStore((s) => s.updateAssetPriceByIsin);
+  const setPriceChange         = usePatrimonioStore((s) => s.setPriceChange);
+  const setIsLoadingPrices     = usePatrimonioStore((s) => s.setIsLoadingPrices);
+  const setPricesLastUpdated   = usePatrimonioStore((s) => s.setPricesLastUpdated);
 
-  const [status, setStatus]             = useState<PriceStatus>("idle");
-  const [lastUpdated, setLastUpdated]   = useState<Date | null>(null);
-  const [forex, setForex]               = useState<ForexRates | null>(null);
-  const [marketStatus, setMarketStatus] = useState<{ eu: string; us: string; hk: string } | null>(null);
-  const [errors, setErrors]             = useState<string[]>([]);
+  const [status, setStatus]           = useState<PriceStatus>("idle");
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [forex, setForex]             = useState<ForexRates | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const lastRefreshRef    = useRef<number>(0);
-  const hasFetchedRef     = useRef(false);
+  const lastRefreshRef  = useRef<number>(0);
+  const initializedRef  = useRef(false);
+
+  // On mount: derive lastUpdated from DB prices already in the store.
+  // No API call — prices only update when the user clicks "Actualizar".
+  useEffect(() => {
+    if (initializedRef.current || assets.length === 0) return;
+    initializedRef.current = true;
+
+    const pricedAssets = assets.filter(
+      (a) => a.isin && a.category !== "cash" && a.price_updated_at,
+    );
+
+    if (pricedAssets.length > 0) {
+      const latestTs = pricedAssets.reduce<number>((max, a) => {
+        const ts = a.price_updated_at ? new Date(a.price_updated_at).getTime() : 0;
+        return ts > max ? ts : max;
+      }, 0);
+      if (latestTs > 0) {
+        setLastUpdated(new Date(latestTs));
+        setStatus("live");
+      }
+    }
+  }, [assets]);
 
   // ---------------------------------------------------------------------------
-  // Core fetch function
+  // Core fetch — only invoked by explicit user action
   // ---------------------------------------------------------------------------
   const fetchPrices = useCallback(async () => {
     setIsRefreshing(true);
@@ -77,18 +92,14 @@ export function usePatrimonioPrices(): UsePatrimonioPricesReturn {
 
       if (json.offline) {
         setStatus("offline");
-        setErrors(json.errors);
         return;
       }
 
-      const { prices, forex: fxRates, errors: apiErrors, marketStatus: mkt } = json;
+      const { prices, forex: fxRates } = json;
 
       setForex(fxRates);
-      setMarketStatus(mkt);
-      setErrors(apiErrors);
 
       if (prices.length > 0) {
-        // Update store for each price
         for (const p of prices) {
           updateAssetPriceByIsin(p.isin, p.priceEur);
           setPriceChange(p.isin, p.changePercent ?? null);
@@ -99,13 +110,9 @@ export function usePatrimonioPrices(): UsePatrimonioPricesReturn {
         setPricesLastUpdated(now.toISOString());
         lastRefreshRef.current = Date.now();
 
-        // Persist to DB (fire and forget — non-blocking)
-        const liveInputs = prices.map((p) => ({
-          isin: p.isin,
-          priceEur: p.priceEur,
-          updatedAt: p.updatedAt,
-        }));
-        void updateLivePrices(liveInputs);
+        void updateLivePrices(
+          prices.map((p) => ({ isin: p.isin, priceEur: p.priceEur, updatedAt: p.updatedAt })),
+        );
 
         const totalAssets = assets.filter(
           (a) => a.isin && a.category !== "cash",
@@ -120,65 +127,16 @@ export function usePatrimonioPrices(): UsePatrimonioPricesReturn {
       setIsRefreshing(false);
       setIsLoadingPrices(false);
     }
-  }, [
-    assets,
-    updateAssetPriceByIsin,
-    setPriceChange,
-    setIsLoadingPrices,
-    setPricesLastUpdated,
-  ]);
+  }, [assets, updateAssetPriceByIsin, setPriceChange, setIsLoadingPrices, setPricesLastUpdated]);
 
   // ---------------------------------------------------------------------------
-  // On mount: decide whether to fetch or use DB prices
-  // ---------------------------------------------------------------------------
-  useEffect(() => {
-    if (hasFetchedRef.current || assets.length === 0) return;
-    hasFetchedRef.current = true;
-
-    setStatus("checking");
-
-    const pricedAssets = assets.filter(
-      (a) => a.isin && a.category !== "cash" && a.price_updated_at,
-    );
-
-    if (pricedAssets.length === 0) {
-      // Never fetched — call API immediately
-      void fetchPrices();
-      return;
-    }
-
-    // Find oldest price_updated_at
-    const oldestTs = pricedAssets.reduce<number>((min, a) => {
-      const ts = a.price_updated_at ? new Date(a.price_updated_at).getTime() : 0;
-      return ts < min ? ts : min;
-    }, Infinity);
-
-    if (Date.now() - oldestTs > PRICE_TTL_MS) {
-      // Prices are stale — refresh
-      void fetchPrices();
-    } else {
-      // Prices are fresh — use DB values, mark as live
-      setStatus("live");
-      setLastUpdated(new Date(oldestTs));
-    }
-  }, [assets, fetchPrices]);
-
-  // ---------------------------------------------------------------------------
-  // Public refresh (with cooldown)
+  // Public refresh with 60s cooldown
   // ---------------------------------------------------------------------------
   const refreshPrices = useCallback(async () => {
     const elapsed = Date.now() - lastRefreshRef.current;
-    if (elapsed < COOLDOWN_MS) return; // Still in cooldown
+    if (elapsed < COOLDOWN_MS) return;
     await fetchPrices();
   }, [fetchPrices]);
 
-  return {
-    status,
-    lastUpdated,
-    forex,
-    marketStatus,
-    errors,
-    refreshPrices,
-    isRefreshing,
-  };
+  return { status, lastUpdated, forex, refreshPrices, isRefreshing };
 }
