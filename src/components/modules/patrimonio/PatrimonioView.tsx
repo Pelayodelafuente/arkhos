@@ -6,6 +6,7 @@ import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import type {
   PortfolioOverview,
   PortfolioAsset,
+  PortfolioTransaction,
   SavingsPlanItem,
   PortfolioSnapshot,
   PassiveIncome,
@@ -21,6 +22,7 @@ const formatEur = (value: number) =>
 interface PatrimonioViewProps {
   overview: PortfolioOverview;
   assets: PortfolioAsset[];
+  transactions: PortfolioTransaction[];
   savingsPlan: SavingsPlanItem[];
   snapshots: PortfolioSnapshot[];
   passiveIncome: PassiveIncome[];
@@ -34,6 +36,7 @@ const PLATFORM_TABS: { slug: PlatformSlug | "all"; label: string }[] = [
 export function PatrimonioView({
   overview,
   assets,
+  transactions,
   savingsPlan,
   snapshots,
   passiveIncome,
@@ -41,6 +44,7 @@ export function PatrimonioView({
 }: PatrimonioViewProps) {
   const setOverview = usePatrimonioStore((s) => s.setOverview);
   const setAssets = usePatrimonioStore((s) => s.setAssets);
+  const setTransactions = usePatrimonioStore((s) => s.setTransactions);
   const setSavingsPlan = usePatrimonioStore((s) => s.setSavingsPlan);
   const setSnapshots = usePatrimonioStore((s) => s.setSnapshots);
   const setPassiveIncome = usePatrimonioStore((s) => s.setPassiveIncome);
@@ -52,6 +56,7 @@ export function PatrimonioView({
   useEffect(() => {
     setOverview(overview);
     setAssets(assets);
+    setTransactions(transactions);
     setSavingsPlan(savingsPlan);
     setSnapshots(snapshots);
     setPassiveIncome(passiveIncome);
@@ -59,12 +64,14 @@ export function PatrimonioView({
   }, [
     overview,
     assets,
+    transactions,
     savingsPlan,
     snapshots,
     passiveIncome,
     platforms,
     setOverview,
     setAssets,
+    setTransactions,
     setSavingsPlan,
     setSnapshots,
     setPassiveIncome,

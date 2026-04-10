@@ -4,6 +4,7 @@ import {
   hasPlatforms,
   getPortfolioOverview,
   getAllAssets,
+  getAllTransactions,
   getSavingsPlan,
   getSnapshots,
   getPassiveIncome,
@@ -26,9 +27,10 @@ export default async function PatrimonioPage() {
     return <PatrimonioOnboarding />;
   }
 
-  const [overview, assets, savingsPlan, snapshots, passiveIncome, platforms] = await Promise.all([
+  const [overview, assets, transactions, savingsPlan, snapshots, passiveIncome, platforms] = await Promise.all([
     getPortfolioOverview(user.id),
     getAllAssets(user.id),
+    getAllTransactions(user.id, 500),
     getSavingsPlan(user.id),
     getSnapshots(user.id),
     getPassiveIncome(user.id),
@@ -43,6 +45,7 @@ export default async function PatrimonioPage() {
     <PatrimonioView
       overview={overview}
       assets={assets}
+      transactions={transactions}
       savingsPlan={savingsPlan}
       snapshots={snapshots}
       passiveIncome={passiveIncome}
