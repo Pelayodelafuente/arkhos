@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { CalendarDays } from "lucide-react";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 
@@ -8,8 +9,12 @@ const formatEur = (value: number) =>
 
 export function SavingsPlanPanel() {
   const savingsPlan = usePatrimonioStore((s) => s.savingsPlan);
-  const totalMonthly = usePatrimonioStore((s) => s.getTotalMonthlyPlan());
   const assets = usePatrimonioStore((s) => s.assets);
+
+  const totalMonthly = useMemo(
+    () => savingsPlan.filter((item) => item.is_active).reduce((sum, item) => sum + item.monthly_amount, 0),
+    [savingsPlan]
+  );
 
   const assetMap = new Map(assets.map((a) => [a.id, a]));
 

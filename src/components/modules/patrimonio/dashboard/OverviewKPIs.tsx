@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { TrendingUp, TrendingDown, Wallet, PiggyBank, DollarSign } from "lucide-react";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { PLBadge } from "@/components/modules/patrimonio/shared/PLBadge";
@@ -41,7 +42,14 @@ function KPICard({ label, value, badge, icon, accentColor }: KPICardProps) {
 
 export function OverviewKPIs() {
   const overview = usePatrimonioStore((s) => s.overview);
-  const passiveIncomeYTD = usePatrimonioStore((s) => s.getPassiveIncomeYTD());
+  const passiveIncome = usePatrimonioStore((s) => s.passiveIncome);
+
+  const passiveIncomeYTD = useMemo(() => {
+    const year = new Date().getFullYear().toString();
+    return passiveIncome
+      .filter((item) => item.income_date.startsWith(year))
+      .reduce((sum, item) => sum + item.amount, 0);
+  }, [passiveIncome]);
 
   if (!overview) {
     return (

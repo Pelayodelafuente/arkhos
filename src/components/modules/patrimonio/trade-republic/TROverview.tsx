@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { TrendingUp, TrendingDown, Banknote, BarChart2, Calendar } from "lucide-react";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { PLBadge } from "@/components/modules/patrimonio/shared/PLBadge";
@@ -40,8 +41,20 @@ function StatRow({ label, value, sub, icon, color }: StatRowProps) {
 }
 
 export function TROverview() {
-  const trAssets = usePatrimonioStore((s) => s.getTRAssets());
-  const summary = usePatrimonioStore((s) => s.getPlatformSummary("trade-republic"));
+  const assets = usePatrimonioStore((s) => s.assets);
+  const platforms = usePatrimonioStore((s) => s.platforms);
+  const overview = usePatrimonioStore((s) => s.overview);
+
+  const trAssets = useMemo(() => {
+    const trPlatform = platforms.find((p) => p.slug === "trade-republic");
+    if (!trPlatform) return [];
+    return assets.filter((a) => a.platform_id === trPlatform.id);
+  }, [assets, platforms]);
+
+  const summary = useMemo(
+    () => overview?.platforms.find((p) => p.platform.slug === "trade-republic") ?? null,
+    [overview]
+  );
 
   const cashAsset = trAssets.find((a) => a.category === "cash");
   const cashValue = cashAsset?.current_value ?? 0;

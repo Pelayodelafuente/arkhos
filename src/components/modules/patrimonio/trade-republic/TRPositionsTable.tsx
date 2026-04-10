@@ -193,8 +193,15 @@ function CategoryGroup({ category, assets, savingsPlanMap }: CategoryGroupProps)
 }
 
 export function TRPositionsTable() {
-  const trAssets = usePatrimonioStore((s) => s.getTRAssets());
+  const assets = usePatrimonioStore((s) => s.assets);
+  const platforms = usePatrimonioStore((s) => s.platforms);
   const savingsPlan = usePatrimonioStore((s) => s.savingsPlan);
+
+  const trAssets = useMemo(() => {
+    const trPlatform = platforms.find((p) => p.slug === "trade-republic");
+    if (!trPlatform) return [];
+    return assets.filter((a) => a.platform_id === trPlatform.id);
+  }, [assets, platforms]);
 
   const [filter, setFilter] = useState<FilterTab>("all");
   const [search, setSearch] = useState("");

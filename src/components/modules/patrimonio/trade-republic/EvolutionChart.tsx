@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import {
   AreaChart,
   Area,
@@ -73,7 +74,18 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
 }
 
 export function EvolutionChart() {
-  const data = usePatrimonioStore((s) => s.getEvolutionData());
+  const snapshots = usePatrimonioStore((s) => s.snapshots);
+
+  const data: EvolutionPoint[] = useMemo(
+    () =>
+      snapshots.map((s) => ({
+        date: s.snapshot_date,
+        value: s.total_value,
+        invested: s.total_invested,
+        pl: s.pl_amount ?? 0,
+      })),
+    [snapshots]
+  );
 
   if (data.length === 0) {
     return (

@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import {
   BarChart,
   Bar,
@@ -64,12 +65,27 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
 }
 
 export function TRPLBarChart() {
-  const rawData = usePatrimonioStore((s) => s.getPLBarData());
+  const assets = usePatrimonioStore((s) => s.assets);
+  const platforms = usePatrimonioStore((s) => s.platforms);
 
-  // Top 8 gainers + top 8 losers = max 16
-  const gainers = rawData.filter((d) => d.pl_amount > 0).slice(0, 8);
-  const losers = rawData.filter((d) => d.pl_amount < 0).slice(-8);
-  const data = [...gainers, ...losers].sort((a, b) => b.pl_percentage - a.pl_percentage);
+  const data: PLBarItem[] = useMemo(() => {
+    const trPlatform = platforms.find((p) => p.slug === "trade-republic");
+    if (!trPlatform) return [];
+    const trAssets = assets.filter((a) => a.platform_id === trPlatform.id && a.category !== "cash");
+    const all = trAssets
+      .filter((a) => a.pl_amount !== undefined)
+      .map((a) => ({
+        name: a.name.length > 20 ? a.name.substring(0, 20) + "…" : a.name,
+        ticker: a.ticker ?? a.isin?.substring(0, 6) ?? "",
+        pl_amount: a.pl_amount ?? 0,
+        pl_percentage: a.pl_percentage ?? 0,
+        color: (a.pl_amount ?? 0) >= 0 ? "#2E7D6B" : "#A32D2D",
+      }))
+      .sort((a, b) => b.pl_percentage - a.pl_percentage);
+    const gainers = all.filter((d) => d.pl_amount > 0).slice(0, 8);
+    const losers = all.filter((d) => d.pl_amount < 0).slice(-8);
+    return [...gainers, ...losers].sort((a, b) => b.pl_percentage - a.pl_percentage);
+  }, [assets, platforms]);
 
   if (data.length === 0) {
     return (
