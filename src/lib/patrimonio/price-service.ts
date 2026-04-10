@@ -244,10 +244,16 @@ async function fetchYahooWithFallback(
 // Fetch Yahoo ETFs (EUR prices)
 // ---------------------------------------------------------------------------
 
+interface YahooPricesResult {
+  map: Map<string, YahooPriceData>;
+  /** ISIN → resolved ticker (may differ from primary if fallback was used) */
+  resolvedTickers: Map<string, string>;
+}
+
 async function fetchYahooPrices(
   isinTickerMap: Record<string, string>,
   redis: Redis,
-): Promise<Map<string, YahooPriceData>> {
+): Promise<YahooPricesResult> {
   const ttl = isEUMarketOpen() ? 3600 : 14400;
   const entries = Object.entries(isinTickerMap);
 
@@ -256,6 +262,8 @@ async function fetchYahooPrices(
   );
 
   const map = new Map<string, YahooPriceData>();
+  const resolvedTickers = new Map<string, string>();
+
   for (let i = 0; i < results.length; i++) {
     const r = results[i];
     const [isin, primaryTicker] = entries[i];
@@ -264,11 +272,12 @@ async function fetchYahooPrices(
         console.log(`[prices] Ticker fallback used: ${primaryTicker} → ${r.value.resolvedTicker}`);
       }
       map.set(isin, r.value.data);
+      resolvedTickers.set(isin, r.value.resolvedTicker);
     } else {
       console.log(`[prices] Yahoo EU failed for ISIN ${isin} (ticker: ${primaryTicker})`);
     }
   }
-  return map;
+  return { map, resolvedTickers };
 }
 
 // ---------------------------------------------------------------------------
@@ -431,10 +440,20 @@ async function fetchAlphaVantageBatch(
 // Main export: fetchAllTRPrices
 // ---------------------------------------------------------------------------
 
+export interface PriceDebugInfo {
+  yahoo_eu_count: number;
+  alphavantage_count: number;
+  yahoo_hk_count: number;
+  missing_isins: string[];
+  /** ISIN → resolved ticker (shows fallback when primary failed) */
+  tickers_tried: Record<string, string>;
+}
+
 export async function fetchAllTRPrices(redis: Redis): Promise<{
   prices: PriceResult[];
   forex: ForexRates;
   errors: string[];
+  debug: PriceDebugInfo;
 }> {
   const errors: string[] = [];
   const now = new Date().toISOString();
@@ -452,7 +471,9 @@ export async function fetchAllTRPrices(redis: Redis): Promise<{
     fetchYahooHKPrices(YAHOO_HK_TICKER_MAP, redis, forex.hkdToEur),
   ]);
 
-  const euMap = euResults.status === 'fulfilled' ? euResults.value : new Map<string, YahooPriceData>();
+  const euFull = euResults.status === 'fulfilled' ? euResults.value : { map: new Map<string, YahooPriceData>(), resolvedTickers: new Map<string, string>() };
+  const euMap = euFull.map;
+  const euResolvedTickers = euFull.resolvedTickers;
   const usMap = usResults.status === 'fulfilled' ? usResults.value : new Map<string, YahooPriceData>();
   const hkMap = hkResults.status === 'fulfilled' ? hkResults.value : new Map<string, YahooPriceData>();
 
@@ -460,19 +481,40 @@ export async function fetchAllTRPrices(redis: Redis): Promise<{
   if (usResults.status === 'rejected') errors.push('Alpha Vantage fetch failed');
   if (hkResults.status === 'rejected') errors.push('Yahoo HK fetch failed');
 
-  // Diagnostic logging — helps identify which ISINs/tickers are failing
+  // Build debug info
+  const missingEU = Object.keys(YAHOO_TICKER_MAP).filter((isin) => !euMap.has(isin));
+  const missingUS = Object.keys(ALPHAVANTAGE_TICKER_MAP).filter((isin) => !usMap.has(isin));
+  const missingHK = Object.keys(YAHOO_HK_TICKER_MAP).filter((isin) => !hkMap.has(isin));
+
+  const tickersTried: Record<string, string> = {};
+  for (const [isin, primaryTicker] of Object.entries(YAHOO_TICKER_MAP)) {
+    tickersTried[isin] = euResolvedTickers.get(isin) ?? `${primaryTicker} (failed)`;
+  }
+  for (const [isin, ticker] of Object.entries(ALPHAVANTAGE_TICKER_MAP)) {
+    tickersTried[isin] = usMap.has(isin) ? ticker : `${ticker} (failed)`;
+  }
+  for (const [isin, ticker] of Object.entries(YAHOO_HK_TICKER_MAP)) {
+    tickersTried[isin] = hkMap.has(isin) ? ticker : `${ticker} (failed)`;
+  }
+
+  const debug: PriceDebugInfo = {
+    yahoo_eu_count: euMap.size,
+    alphavantage_count: usMap.size,
+    yahoo_hk_count: hkMap.size,
+    missing_isins: [
+      ...missingEU.map((isin) => `${isin}→${YAHOO_TICKER_MAP[isin]}`),
+      ...missingUS.map((isin) => `${isin}→${ALPHAVANTAGE_TICKER_MAP[isin]}`),
+      ...missingHK.map((isin) => `${isin}→${YAHOO_HK_TICKER_MAP[isin]}`),
+    ],
+    tickers_tried: tickersTried,
+  };
+
+  // Diagnostic logging
   console.log('[prices] Yahoo EU results (ISINs):', [...euMap.keys()]);
   console.log('[prices] Alpha Vantage results (ISINs):', [...usMap.keys()]);
   console.log('[prices] Yahoo HK results (ISINs):', [...hkMap.keys()]);
   console.log('[prices] Errors:', errors);
-
-  // Log missing tickers for easy diagnosis
-  const missingEU = Object.keys(YAHOO_TICKER_MAP).filter((isin) => !euMap.has(isin));
-  const missingUS = Object.keys(ALPHAVANTAGE_TICKER_MAP).filter((isin) => !usMap.has(isin));
-  const missingHK = Object.keys(YAHOO_HK_TICKER_MAP).filter((isin) => !hkMap.has(isin));
-  if (missingEU.length) console.log('[prices] Missing Yahoo EU ISINs:', missingEU.map((isin) => `${isin}→${YAHOO_TICKER_MAP[isin]}`));
-  if (missingUS.length) console.log('[prices] Missing Alpha Vantage ISINs:', missingUS.map((isin) => `${isin}→${ALPHAVANTAGE_TICKER_MAP[isin]}`));
-  if (missingHK.length) console.log('[prices] Missing Yahoo HK ISINs:', missingHK.map((isin) => `${isin}→${YAHOO_HK_TICKER_MAP[isin]}`) );
+  if (debug.missing_isins.length) console.log('[prices] Missing ISINs:', debug.missing_isins);
 
   // 3. Build result array
   const prices: PriceResult[] = [];
@@ -498,5 +540,5 @@ export async function fetchAllTRPrices(redis: Redis): Promise<{
     }
   }
 
-  return { prices, forex, errors };
+  return { prices, forex, errors, debug };
 }
