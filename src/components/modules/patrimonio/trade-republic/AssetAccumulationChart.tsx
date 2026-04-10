@@ -1,5 +1,6 @@
 "use client";
 
+import { useId } from "react";
 import {
   AreaChart,
   Area,
@@ -10,6 +11,7 @@ import {
   ReferenceLine,
   ResponsiveContainer,
 } from "recharts";
+import { C } from "@/lib/patrimonio/chart-colors";
 import type { PortfolioTransaction } from "@/types/patrimonio";
 
 interface RechartsTooltipPayloadItem {
@@ -108,6 +110,10 @@ function CustomTooltip({ active, payload }: RechartsTooltipProps) {
 }
 
 export function AssetAccumulationChart({ transactions, assetName }: AssetAccumulationChartProps) {
+  const uid = useId();
+  const gradQtyId = `gradQty-${uid}`;
+  const gradInvestedId = `gradInvested-${uid}`;
+
   if (transactions.length < 2) {
     return (
       <div className="flex h-[200px] items-center justify-center">
@@ -155,13 +161,13 @@ export function AssetAccumulationChart({ transactions, assetName }: AssetAccumul
       <ResponsiveContainer width="100%" height={200}>
         <AreaChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
           <defs>
-            <linearGradient id="gradQty" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#3B78B0" stopOpacity={0.2} />
-              <stop offset="95%" stopColor="#3B78B0" stopOpacity={0} />
+            <linearGradient id={gradQtyId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={C.blue} stopOpacity={0.2} />
+              <stop offset="95%" stopColor={C.blue} stopOpacity={0} />
             </linearGradient>
-            <linearGradient id="gradInvested" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="var(--module-patrimonio)" stopOpacity={0.2} />
-              <stop offset="95%" stopColor="var(--module-patrimonio)" stopOpacity={0} />
+            <linearGradient id={gradInvestedId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={C.green} stopOpacity={0.2} />
+              <stop offset="95%" stopColor={C.green} stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
@@ -174,7 +180,7 @@ export function AssetAccumulationChart({ transactions, assetName }: AssetAccumul
           />
           <YAxis
             yAxisId="left"
-            tick={{ fontSize: 11, fill: "#3B78B0" }}
+            tick={{ fontSize: 11, fill: C.blue }}
             tickLine={false}
             axisLine={false}
             width={50}
@@ -211,22 +217,22 @@ export function AssetAccumulationChart({ transactions, assetName }: AssetAccumul
             yAxisId="left"
             type="monotone"
             dataKey="quantity"
-            stroke="#3B78B0"
+            stroke={C.blue}
             strokeWidth={2}
-            fill="url(#gradQty)"
+            fill={`url(#${gradQtyId})`}
             dot={false}
-            activeDot={{ r: 4, fill: "#3B78B0" }}
+            activeDot={{ r: 4, fill: C.blue }}
             name="Cantidad"
           />
           <Area
             yAxisId="right"
             type="monotone"
             dataKey="invested"
-            stroke="var(--module-patrimonio)"
+            stroke={C.green}
             strokeWidth={2}
-            fill="url(#gradInvested)"
+            fill={`url(#${gradInvestedId})`}
             dot={false}
-            activeDot={{ r: 4, fill: "var(--module-patrimonio)" }}
+            activeDot={{ r: 4, fill: C.green }}
             name="Invertido €"
           />
         </AreaChart>

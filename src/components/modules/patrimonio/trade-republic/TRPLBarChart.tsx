@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { C } from "@/lib/patrimonio/chart-colors";
 import {
   BarChart,
   Bar,
@@ -45,7 +46,7 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
           <span className="text-text-secondary">P&L</span>
           <span
             className="font-mono font-medium"
-            style={{ color: item.pl_amount >= 0 ? "var(--module-patrimonio)" : "#A32D2D" }}
+            style={{ color: item.pl_amount >= 0 ? C.green : C.red }}
           >
             {formatEur(item.pl_amount)}
           </span>
@@ -54,7 +55,7 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
           <span className="text-text-secondary">Rentabilidad</span>
           <span
             className="font-mono font-medium"
-            style={{ color: item.pl_percentage >= 0 ? "var(--module-patrimonio)" : "#A32D2D" }}
+            style={{ color: item.pl_percentage >= 0 ? C.green : C.red }}
           >
             {formatPct(item.pl_percentage)}
           </span>
@@ -79,7 +80,7 @@ export function TRPLBarChart() {
         ticker: a.ticker ?? a.isin?.substring(0, 6) ?? "",
         pl_amount: a.pl_amount ?? 0,
         pl_percentage: a.pl_percentage ?? 0,
-        color: (a.pl_amount ?? 0) >= 0 ? "#2E7D6B" : "#A32D2D",
+        color: (a.pl_amount ?? 0) >= 0 ? C.green : C.red,
       }))
       .sort((a, b) => b.pl_percentage - a.pl_percentage);
     const gainers = all.filter((d) => d.pl_amount > 0).slice(0, 8);
@@ -124,7 +125,7 @@ export function TRPLBarChart() {
           {data.map((entry, index) => (
             <Cell
               key={`cell-${index}`}
-              fill={entry.pl_amount >= 0 ? "#2E7D6B" : "#A32D2D"}
+              fill={entry.pl_amount >= 0 ? C.green : C.red}
               fillOpacity={0.85}
             />
           ))}

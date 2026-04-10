@@ -7,6 +7,7 @@ import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { deleteTransaction } from "@/app/actions/patrimonio";
 import { useUIStore } from "@/stores/ui-store";
 import { Button, Badge } from "@/components/ui";
+import { C } from "@/lib/patrimonio/chart-colors";
 import { TransactionFormModal } from "./TransactionFormModal";
 import { AssetAccumulationChart } from "./AssetAccumulationChart";
 import { CATEGORY_LABELS } from "@/types/patrimonio";
@@ -25,13 +26,13 @@ const fmtQty = (v: number) =>
     : v.toLocaleString("es-ES", { maximumFractionDigits: 6 });
 
 const TX_BADGE: Record<TransactionType, { label: string; color: string; bg: string }> = {
-  buy: { label: "Compra", color: "#2E7D6B", bg: "#2E7D6B1A" },
-  savings_plan: { label: "Plan ahorro", color: "#3B78B0", bg: "#3B78B01A" },
-  saveback: { label: "Saveback", color: "#7260C4", bg: "#7260C41A" },
-  sell: { label: "Venta", color: "#A32D2D", bg: "#A32D2D1A" },
-  dividend: { label: "Dividendo", color: "#B07A3A", bg: "#B07A3A1A" },
-  transfer_in: { label: "Entrada", color: "#2E7D6B", bg: "#2E7D6B1A" },
-  transfer_out: { label: "Salida", color: "#A32D2D", bg: "#A32D2D1A" },
+  buy:          { label: "Compra",      color: C.green,  bg: `${C.green}1A`  },
+  savings_plan: { label: "Plan ahorro", color: C.blue,   bg: `${C.blue}1A`   },
+  saveback:     { label: "Saveback",    color: C.purple, bg: `${C.purple}1A` },
+  sell:         { label: "Venta",       color: C.red,    bg: `${C.red}1A`    },
+  dividend:     { label: "Dividendo",   color: C.amber,  bg: `${C.amber}1A`  },
+  transfer_in:  { label: "Entrada",     color: C.green,  bg: `${C.green}1A`  },
+  transfer_out: { label: "Salida",      color: C.red,    bg: `${C.red}1A`    },
 };
 
 export function AssetDetailDrawer({ assetId, onClose }: AssetDetailDrawerProps) {
@@ -201,7 +202,7 @@ export function AssetDetailDrawer({ assetId, onClose }: AssetDetailDrawerProps) 
                       label: "P&L",
                       value: `${plPositive ? "+" : ""}${fmt.format(plAmount)} (${plPositive ? "+" : ""}${plPercentage.toFixed(2)}%)`,
                       mono: true,
-                      color: plPositive ? "#2E7D6B" : "#A32D2D",
+                      color: plPositive ? C.green : C.red,
                     },
                   ].map((kpi) => (
                     <div
@@ -345,7 +346,7 @@ export function AssetDetailDrawer({ assetId, onClose }: AssetDetailDrawerProps) 
                                     </button>
                                   </div>
                                 ) : (
-                                  <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                                  <div className="flex items-center gap-1 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100">
                                     <button
                                       onClick={() => handleEditTx(tx)}
                                       className="flex h-6 w-6 items-center justify-center rounded transition-colors"

@@ -316,7 +316,7 @@ export function TRPositionsTable() {
               style={{
                 backgroundColor:
                   filter === tab.key ? "var(--module-patrimonio)" : "var(--bg-sand)",
-                color: filter === tab.key ? "white" : "var(--text-secondary)",
+                color: filter === tab.key ? "var(--card)" : "var(--text-secondary)",
               }}
             >
               {tab.label}

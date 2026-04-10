@@ -92,7 +92,7 @@ export function AllocationDonut({ data, title, totalLabel }: AllocationDonutProp
       </div>
       {/* Legend */}
       <div className="mt-2 space-y-1.5">
-        {data.slice(0, 6).map((item) => (
+        {data.map((item) => (
           <div key={item.name} className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <span

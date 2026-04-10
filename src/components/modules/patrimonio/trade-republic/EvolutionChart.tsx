@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useId, useMemo } from "react";
 import {
   AreaChart,
   Area,
@@ -11,6 +11,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
+import { C } from "@/lib/patrimonio/chart-colors";
 import type { EvolutionPoint } from "@/types/patrimonio";
 
 const formatEur = (value: number) =>
@@ -39,7 +40,7 @@ interface CustomTooltipProps {
 function CustomTooltip({ active, payload }: CustomTooltipProps) {
   if (!active || !payload || payload.length === 0) return null;
   const point = payload[0].payload;
-  const plColor = point.pl >= 0 ? "var(--module-patrimonio)" : "#A32D2D";
+  const plColor = point.pl >= 0 ? C.green : C.red;
 
   return (
     <div
@@ -74,6 +75,9 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
 }
 
 export function EvolutionChart() {
+  const uid = useId();
+  const gradValue = `gradValue-${uid}`;
+  const gradInvested = `gradInvested-${uid}`;
   const snapshots = usePatrimonioStore((s) => s.snapshots);
 
   const data: EvolutionPoint[] = useMemo(
@@ -102,13 +106,13 @@ export function EvolutionChart() {
     <ResponsiveContainer width="100%" height={300}>
       <AreaChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 4 }}>
         <defs>
-          <linearGradient id="gradValue" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#2E7D6B" stopOpacity={0.15} />
-            <stop offset="95%" stopColor="#2E7D6B" stopOpacity={0} />
+          <linearGradient id={gradValue} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor={C.green} stopOpacity={0.15} />
+            <stop offset="95%" stopColor={C.green} stopOpacity={0} />
           </linearGradient>
-          <linearGradient id="gradInvested" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#E2D9CA" stopOpacity={0.4} />
-            <stop offset="95%" stopColor="#E2D9CA" stopOpacity={0} />
+          <linearGradient id={gradInvested} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor={C.border} stopOpacity={0.4} />
+            <stop offset="95%" stopColor={C.border} stopOpacity={0} />
           </linearGradient>
         </defs>
         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
@@ -130,20 +134,20 @@ export function EvolutionChart() {
         <Area
           type="monotone"
           dataKey="invested"
-          stroke="#888780"
+          stroke={C.gray}
           strokeWidth={1.5}
-          fill="url(#gradInvested)"
+          fill={`url(#${gradInvested})`}
           dot={false}
-          activeDot={{ r: 4, fill: "#888780" }}
+          activeDot={{ r: 4, fill: C.gray }}
         />
         <Area
           type="monotone"
           dataKey="value"
-          stroke="#2E7D6B"
+          stroke={C.green}
           strokeWidth={2}
-          fill="url(#gradValue)"
+          fill={`url(#${gradValue})`}
           dot={false}
-          activeDot={{ r: 4, fill: "#2E7D6B" }}
+          activeDot={{ r: 4, fill: C.green }}
         />
       </AreaChart>
     </ResponsiveContainer>

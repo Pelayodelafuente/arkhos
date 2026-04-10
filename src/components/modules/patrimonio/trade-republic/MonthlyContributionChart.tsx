@@ -1,5 +1,6 @@
 "use client";
 
+import { C } from "@/lib/patrimonio/chart-colors";
 import {
   BarChart,
   Bar,
@@ -37,14 +38,14 @@ interface MonthData {
 const fmt = new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" });
 
 const FALLBACK_COLORS = [
-  "#2E7D6B",
-  "#3B78B0",
-  "#7260C4",
-  "#B07A3A",
-  "#C4704A",
-  "#E67E22",
-  "#9B7A4A",
-  "#888780",
+  C.green,
+  C.blue,
+  C.purple,
+  C.amber,
+  "#C4704A", // terracota (--color-terracota)
+  "#E67E22", // naranja cálido
+  "#9B7A4A", // marrón tierra
+  C.gray,
 ];
 
 function getAssetColor(asset: PortfolioAsset, index: number): string {
