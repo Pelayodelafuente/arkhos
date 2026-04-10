@@ -28,8 +28,8 @@
 - Proyectos ✅ — `src/components/modules/proyectos/`
 - Gastos ✅ — `src/components/modules/expenses/`
 - Notas ✅ — `src/components/modules/notes/`
+- Patrimonio ✅ — `src/components/modules/patrimonio/` — 18 componentes, store, migrations 022-023
 - Mercados ⏳ — siguiente (Fase 5)
-- Patrimonio ⏳ — después (Fase 6)
 
 ## Reglas activas
 Ver: `.claude/rules/reading-protocol.md` — lectura eficiente de archivos
