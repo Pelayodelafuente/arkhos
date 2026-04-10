@@ -130,7 +130,9 @@ export async function getPortfolioOverview(userId: string): Promise<PortfolioOve
   });
 
   const plAmount = totalValue - totalInvested;
-  const plPercentage = totalInvested > 0 ? (plAmount / totalInvested) * 100 : 0;
+  // Exclude cash from denominator: cash always has P&L=0 and inflates invested base artificially
+  const nonCashInvested = totalInvested - totalCash;
+  const plPercentage = nonCashInvested > 0 ? (plAmount / nonCashInvested) * 100 : 0;
 
   return {
     total_value: totalValue,

@@ -44,23 +44,22 @@ export function OverviewKPIs() {
   const overview = usePatrimonioStore((s) => s.overview);
   const passiveIncome = usePatrimonioStore((s) => s.passiveIncome);
 
-  const passiveIncomeYTD = useMemo(() => {
-    const year = new Date().getFullYear().toString();
-    return passiveIncome
-      .filter((item) => item.income_date.startsWith(year))
-      .reduce((sum, item) => sum + item.amount, 0);
-  }, [passiveIncome]);
+  const passiveIncomeTotal = useMemo(
+    () => passiveIncome.reduce((sum, item) => sum + item.amount, 0),
+    [passiveIncome]
+  );
 
   if (!overview) {
     return (
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        {Array.from({ length: 5 }).map((_, i) => (
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="h-28 animate-pulse rounded-xl border border-border bg-card" />
         ))}
       </div>
     );
   }
 
+  const capitalInvertido = overview.total_invested - overview.total_cash;
   const plPositive = overview.pl_amount >= 0;
   const plColor = overview.pl_amount === 0
     ? "#B07A3A"
@@ -69,7 +68,7 @@ export function OverviewKPIs() {
       : "#A32D2D";
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <KPICard
         label="Total patrimonio"
         value={formatEur(overview.total_value)}
@@ -77,24 +76,24 @@ export function OverviewKPIs() {
         accentColor="#2E7D6B"
         badge={
           <span className="text-xs text-text-tertiary">
-            {overview.platforms.length} plataformas
+            {overview.platforms.length} plataformas · efectivo: {formatEur(overview.total_cash)}
           </span>
         }
       />
 
       <KPICard
-        label="Total invertido"
-        value={formatEur(overview.total_invested)}
+        label="Capital invertido"
+        value={formatEur(capitalInvertido)}
         icon={<PiggyBank size={14} strokeWidth={1.75} />}
         badge={
           <span className="text-xs text-text-tertiary">
-            Efectivo: {formatEur(overview.total_cash)}
+            Sin contar efectivo en cuenta
           </span>
         }
       />
 
       <KPICard
-        label="P&L en euros"
+        label="P&L sobre invertido"
         value={formatEur(overview.pl_amount)}
         icon={
           plPositive ? (
@@ -114,31 +113,13 @@ export function OverviewKPIs() {
       />
 
       <KPICard
-        label="P&L en %"
-        value={`${overview.pl_percentage >= 0 ? "+" : ""}${overview.pl_percentage.toFixed(2)}%`}
-        icon={
-          plPositive ? (
-            <TrendingUp size={14} strokeWidth={1.75} />
-          ) : (
-            <TrendingDown size={14} strokeWidth={1.75} />
-          )
-        }
-        accentColor={plColor}
-        badge={
-          <span className="text-xs text-text-tertiary">
-            Rentabilidad global
-          </span>
-        }
-      />
-
-      <KPICard
-        label="Ingresos pasivos YTD"
-        value={formatEur(passiveIncomeYTD)}
+        label="Ingresos pasivos"
+        value={formatEur(passiveIncomeTotal)}
         icon={<DollarSign size={14} strokeWidth={1.75} />}
         accentColor="#4A7A9B"
         badge={
           <span className="text-xs text-text-tertiary">
-            {new Date().getFullYear()}
+            Total histórico · todas las plataformas
           </span>
         }
       />

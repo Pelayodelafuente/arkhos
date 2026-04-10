@@ -279,8 +279,10 @@ export function TRPositionsTable() {
     return map;
   }, [filtered]);
 
-  const totalValue = filtered.reduce((s, a) => s + (a.current_value ?? 0), 0);
-  const totalInvested = filtered.reduce((s, a) => s + a.total_invested, 0);
+  // Exclude cash from totals — cash is not an investment position
+  const filteredNonCash = filtered.filter((a) => a.category !== "cash");
+  const totalValue = filteredNonCash.reduce((s, a) => s + (a.current_value ?? 0), 0);
+  const totalInvested = filteredNonCash.reduce((s, a) => s + a.total_invested, 0);
   const totalPL = totalValue - totalInvested;
   const totalPLPct = totalInvested > 0 ? (totalPL / totalInvested) * 100 : 0;
 
@@ -409,11 +411,11 @@ export function TRPositionsTable() {
               </tr>
             )}
           </tbody>
-          {filtered.length > 0 && (
+          {filteredNonCash.length > 0 && (
             <tfoot>
               <tr className="border-t-2 border-border bg-sand/30">
                 <td className="px-4 py-3 text-sm font-semibold text-foreground" colSpan={4}>
-                  Total ({filtered.length} activos)
+                  Total ({filteredNonCash.length} posiciones)
                 </td>
                 <td className="px-3 py-3 text-right font-mono text-sm font-semibold text-foreground">
                   {formatEur(totalValue)}
