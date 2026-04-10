@@ -191,21 +191,14 @@ export async function getSavingsPlan(userId: string): Promise<SavingsPlanItem[]>
   return (data ?? []) as SavingsPlanItem[];
 }
 
-export async function getSnapshots(
-  userId: string,
-  days = 180
-): Promise<PortfolioSnapshot[]> {
+export async function getSnapshots(userId: string): Promise<PortfolioSnapshot[]> {
   const supabase = await getClient();
-  const since = new Date();
-  since.setDate(since.getDate() - days);
   const { data, error } = await supabase
     .from('portfolio_snapshots')
     .select(
       'id, user_id, snapshot_date, platform_id, total_value, total_invested, cash_value, pl_amount, pl_percentage, created_at'
     )
     .eq('user_id', userId)
-    .is('platform_id', null)
-    .gte('snapshot_date', since.toISOString().split('T')[0])
     .order('snapshot_date');
   if (error) return [];
   return (data ?? []) as PortfolioSnapshot[];
