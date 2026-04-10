@@ -38,8 +38,8 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
   const item = payload[0].payload;
   return (
     <div
-      className="rounded-xl border border-border bg-card px-3 py-2.5 text-xs"
-      style={{ boxShadow: "var(--shadow-modal)" }}
+      className="rounded-xl border border-border px-3 py-2.5 text-xs"
+      style={{ backgroundColor: "var(--bg-card)", boxShadow: "var(--shadow-modal)" }}
     >
       <p className="font-medium text-text-secondary">{item.month}</p>
       <div className="mt-2 space-y-1">
@@ -134,7 +134,7 @@ export function PassiveIncomePanel() {
                 tickLine={false}
                 width={36}
               />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(196,160,120,0.08)" }} />
               <Bar dataKey="interest" stackId="a" fill="#4A7A9B" fillOpacity={0.85} radius={[0, 0, 0, 0]} maxBarSize={24} />
               <Bar dataKey="dividend" stackId="a" fill="#2E7D6B" fillOpacity={0.85} radius={[3, 3, 0, 0]} maxBarSize={24} />
             </BarChart>

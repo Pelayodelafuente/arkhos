@@ -1,13 +1,7 @@
 "use client";
 
-import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from "recharts";
+import { useState } from "react";
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import type { AllocationSlice } from "@/types/patrimonio";
 
 const formatEur = (value: number) =>
@@ -19,40 +13,15 @@ interface AllocationDonutProps {
   totalLabel?: string;
 }
 
-interface TooltipPayloadItem {
-  name: string;
-  value: number;
-  payload: AllocationSlice;
-}
-
-interface CustomTooltipProps {
-  active?: boolean;
-  payload?: TooltipPayloadItem[];
-}
-
-function CustomTooltip({ active, payload }: CustomTooltipProps) {
-  if (!active || !payload || payload.length === 0) return null;
-  const item = payload[0];
-  const slice = item.payload;
-  return (
-    <div
-      className="rounded-xl border border-border bg-card px-3 py-2 text-xs"
-      style={{ boxShadow: "var(--shadow-modal)" }}
-    >
-      <p className="font-medium text-foreground">{slice.name}</p>
-      <p className="mt-1 font-mono text-text-secondary">{formatEur(slice.value)}</p>
-      <p className="font-mono text-text-tertiary">{slice.percentage.toFixed(1)}% de cartera</p>
-    </div>
-  );
-}
-
 export function AllocationDonut({ data, title, totalLabel }: AllocationDonutProps) {
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const total = data.reduce((sum, d) => sum + d.value, 0);
+  const active = activeIndex !== null ? data[activeIndex] : null;
 
   if (data.length === 0) {
     return (
       <div className="flex h-[300px] flex-col items-center justify-center text-center">
-        <p className="text-sm text-text-tertiary">Sin datos de asignacion</p>
+        <p className="text-sm text-text-tertiary">Sin datos de asignación</p>
       </div>
     );
   }
@@ -61,7 +30,7 @@ export function AllocationDonut({ data, title, totalLabel }: AllocationDonutProp
     <div>
       <p className="mb-3 text-sm font-medium text-text-secondary">{title}</p>
       <div className="relative">
-        <ResponsiveContainer width="100%" height={300}>
+        <ResponsiveContainer width="100%" height={220}>
           <PieChart>
             <Pie
               data={data}
@@ -71,29 +40,56 @@ export function AllocationDonut({ data, title, totalLabel }: AllocationDonutProp
               outerRadius={85}
               paddingAngle={2}
               dataKey="value"
+              onMouseEnter={(_, index) => setActiveIndex(index)}
+              onMouseLeave={() => setActiveIndex(null)}
             >
               {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} strokeWidth={0} />
+                <Cell
+                  key={`cell-${index}`}
+                  fill={entry.color}
+                  strokeWidth={0}
+                  opacity={activeIndex === null || activeIndex === index ? 1 : 0.45}
+                  style={{ cursor: "pointer", transition: "opacity 0.15s" }}
+                />
               ))}
             </Pie>
-            <Tooltip content={<CustomTooltip />} />
           </PieChart>
         </ResponsiveContainer>
-        {/* Central label */}
+        {/* Central label — shows hovered segment or total */}
         <div
           className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center"
           aria-hidden="true"
         >
-          <span className="font-mono text-xs text-text-tertiary">{totalLabel ?? "Total"}</span>
-          <span className="mt-0.5 font-mono text-sm font-semibold text-foreground">
-            {formatEur(total)}
-          </span>
+          {active ? (
+            <>
+              <span className="max-w-[90px] truncate text-center font-mono text-[10px] text-text-tertiary">
+                {active.name}
+              </span>
+              <span className="mt-0.5 font-mono text-sm font-semibold text-foreground">
+                {active.percentage.toFixed(1)}%
+              </span>
+              <span className="font-mono text-[10px] text-text-tertiary">
+                {formatEur(active.value)}
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="font-mono text-xs text-text-tertiary">{totalLabel ?? "Total"}</span>
+              <span className="mt-0.5 font-mono text-sm font-semibold text-foreground">
+                {formatEur(total)}
+              </span>
+            </>
+          )}
         </div>
       </div>
       {/* Legend */}
-      <div className="mt-2 space-y-1.5">
-        {data.map((item) => (
-          <div key={item.name} className="flex items-center justify-between gap-2">
+      <div className="mt-3 space-y-1.5">
+        {data.map((item, i) => (
+          <div
+            key={item.name}
+            className="flex items-center justify-between gap-2 transition-opacity"
+            style={{ opacity: activeIndex === null || activeIndex === i ? 1 : 0.45 }}
+          >
             <div className="flex items-center gap-2">
               <span
                 className="h-2.5 w-2.5 flex-shrink-0 rounded-full"
@@ -102,9 +98,14 @@ export function AllocationDonut({ data, title, totalLabel }: AllocationDonutProp
               />
               <span className="truncate text-xs text-text-secondary">{item.name}</span>
             </div>
-            <span className="flex-shrink-0 font-mono text-xs text-text-tertiary">
-              {item.percentage.toFixed(1)}%
-            </span>
+            <div className="flex flex-shrink-0 items-center gap-2">
+              <span className="font-mono text-xs text-text-tertiary">
+                {formatEur(item.value)}
+              </span>
+              <span className="w-9 text-right font-mono text-xs text-text-tertiary">
+                {item.percentage.toFixed(1)}%
+              </span>
+            </div>
           </div>
         ))}
       </div>

@@ -78,10 +78,11 @@ function CustomTooltip({
     <div
       className="rounded-xl px-3 py-2.5 text-xs"
       style={{
-        background: "var(--card)",
+        backgroundColor: "var(--bg-card)",
         border: "1px solid var(--border)",
         boxShadow: "var(--shadow-modal)",
         minWidth: 160,
+        maxWidth: 220,
       }}
     >
       <p className="mb-2 font-medium" style={{ color: "var(--foreground)" }}>
@@ -184,6 +185,7 @@ export function MonthlyContributionChart({ transactions, assets }: MonthlyContri
             tickFormatter={(v: number) => `${v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v.toFixed(0)}€`}
           />
           <Tooltip
+            cursor={{ fill: "rgba(196,160,120,0.08)" }}
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             content={(props: any) => (
               <CustomTooltip {...(props as RechartsBarTooltipProps)} assets={assets} assetIds={assetIds} />

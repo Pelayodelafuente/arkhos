@@ -22,8 +22,12 @@ const formatEur = (value: number) =>
 const formatPct = (value: number) =>
   `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
 
+interface PLBarItemExtended extends PLBarItem {
+  fullName: string;
+}
+
 interface TooltipPayloadItem {
-  payload: PLBarItem;
+  payload: PLBarItemExtended;
 }
 
 interface CustomTooltipProps {
@@ -33,13 +37,13 @@ interface CustomTooltipProps {
 
 function CustomTooltip({ active, payload }: CustomTooltipProps) {
   if (!active || !payload || payload.length === 0) return null;
-  const item = payload[0].payload;
+  const item = payload[0].payload as PLBarItemExtended;
   return (
     <div
-      className="rounded-xl border border-border bg-card px-3 py-2.5 text-xs"
-      style={{ boxShadow: "var(--shadow-modal)" }}
+      className="rounded-xl border border-border px-3 py-2.5 text-xs"
+      style={{ backgroundColor: "var(--bg-card)", boxShadow: "var(--shadow-modal)", maxWidth: 220 }}
     >
-      <p className="font-medium text-foreground">{item.name}</p>
+      <p className="font-medium text-foreground">{item.fullName ?? item.name}</p>
       <p className="mt-0.5 font-mono text-text-tertiary">{item.ticker}</p>
       <div className="mt-2 space-y-1">
         <div className="flex justify-between gap-6">
@@ -76,7 +80,8 @@ export function TRPLBarChart() {
     const all = trAssets
       .filter((a) => a.pl_amount !== undefined)
       .map((a) => ({
-        name: a.name.length > 20 ? a.name.substring(0, 20) + "…" : a.name,
+        fullName: a.name,
+        name: a.name.length > 22 ? a.name.substring(0, 22) + "…" : a.name,
         ticker: a.ticker ?? a.isin?.substring(0, 6) ?? "",
         pl_amount: a.pl_amount ?? 0,
         pl_percentage: a.pl_percentage ?? 0,

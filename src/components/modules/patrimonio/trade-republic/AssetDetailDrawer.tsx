@@ -116,7 +116,7 @@ export function AssetDetailDrawer({ assetId, onClose }: AssetDetailDrawerProps) 
               exit={{ x: "100%" }}
               transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
               className="fixed inset-y-0 right-0 z-50 flex w-full flex-col overflow-hidden sm:w-[480px]"
-              style={{ background: "var(--card)", borderLeft: "1px solid var(--border)" }}
+              style={{ background: "var(--bg-card)", borderLeft: "1px solid var(--border)" }}
               role="complementary"
               aria-label="Detalle del activo"
             >

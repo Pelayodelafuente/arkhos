@@ -32,27 +32,27 @@ export function TRChartsPanel() {
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-      <ChartCard title="Evolucion del patrimonio">
+      <ChartCard title="Evolución del patrimonio">
         <EvolutionChart />
       </ChartCard>
 
-      <ChartCard title="P&L por posicion">
+      <ChartCard title="P&L por posición">
         <TRPLBarChart />
       </ChartCard>
 
-      <ChartCard title="Distribucion por categoria">
-        <AllocationDonut data={categoryData} title="Por categoria" totalLabel="Cartera" />
+      <ChartCard title="Distribución por categoría">
+        <AllocationDonut data={categoryData} title="Por categoría" totalLabel="Cartera" />
       </ChartCard>
 
-      <ChartCard title="Distribucion geografica">
-        <AllocationDonut data={geoData} title="Por region" totalLabel="Cartera" />
+      <ChartCard title="Distribución geográfica">
+        <AllocationDonut data={geoData} title="Por región" totalLabel="Cartera" />
       </ChartCard>
 
       <ChartCard title="Aportaciones mensuales al plan">
         <MonthlyContributionChart transactions={transactions} assets={assets} />
       </ChartCard>
 
-      <ChartCard title="Distribucion por nivel de riesgo">
+      <ChartCard title="Distribución por nivel de riesgo">
         <RiskDistributionChart assets={assets} />
       </ChartCard>
     </div>

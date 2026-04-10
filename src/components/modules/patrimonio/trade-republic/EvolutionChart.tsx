@@ -44,8 +44,8 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
 
   return (
     <div
-      className="rounded-xl border border-border bg-card px-3 py-2.5 text-xs"
-      style={{ boxShadow: "var(--shadow-modal)" }}
+      className="rounded-xl border border-border px-3 py-2.5 text-xs"
+      style={{ backgroundColor: "var(--bg-card)", boxShadow: "var(--shadow-modal)" }}
     >
       <p className="font-medium text-text-secondary">
         {new Date(point.date).toLocaleDateString("es-ES", {

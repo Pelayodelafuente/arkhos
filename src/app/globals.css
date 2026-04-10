@@ -743,3 +743,10 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   text-decoration: none;
   white-space: nowrap;
 }
+
+/* ─── Recharts fixes ──────────────────────────── */
+.recharts-surface:focus,
+.recharts-wrapper:focus,
+.recharts-wrapper *:focus {
+  outline: none;
+}
