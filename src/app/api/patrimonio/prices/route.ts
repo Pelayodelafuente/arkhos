@@ -1,51 +1,62 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
-import type { PricesResponse, PriceUpdate } from '@/types/patrimonio';
+import { createClient } from '@/lib/supabase/server';
+import { fetchPrices } from '@/lib/patrimonio/price-service';
+import type { PriceFetchRequest, PriceResult } from '@/lib/patrimonio/price-service';
 
-// Graceful offline: returns {} if APIs not configured
-export async function POST(request: NextRequest) {
-  // Auth guard
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => cookieStore.getAll(),
-        setAll: () => {},
-      },
+interface RequestBody {
+  assets: PriceFetchRequest[];
+}
+
+interface RouteResponse {
+  prices: Record<string, PriceResult>;
+  errors: string[];
+  cached: boolean;
+}
+
+// TTL in seconds per asset category
+function getTtl(category: string): number {
+  if (category === 'crypto') return 30;
+  return 60;
+}
+
+export async function POST(request: NextRequest): Promise<NextResponse> {
+  // 1. Auth guard
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-  );
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
+  } catch {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // If no Redis or API keys configured, return empty (offline mode)
+  // 2. Parse + validate body
+  let body: RequestBody;
+  try {
+    body = (await request.json()) as RequestBody;
+  } catch {
+    return NextResponse.json(
+      { prices: {}, errors: ['Invalid JSON body'], cached: false } satisfies RouteResponse,
+    );
+  }
+
+  if (!Array.isArray(body?.assets)) {
+    return NextResponse.json(
+      { prices: {}, errors: ['assets must be an array'], cached: false } satisfies RouteResponse,
+    );
+  }
+
+  const assets = body.assets;
+  const errors: string[] = [];
+
+  // 3. Redis cache (optional — graceful if not configured)
   const hasRedis =
     process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN;
-  const hasAlphaVantage = !!process.env.ALPHA_VANTAGE_API_KEY;
 
-  if (!hasRedis && !hasAlphaVantage) {
-    const response: PricesResponse = { prices: {} };
-    return NextResponse.json(response);
-  }
-
-  let body: { assetIds?: string[]; tickers?: string[] };
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
-  }
-
-  const { tickers = [] } = body;
-  const prices: Record<string, PriceUpdate> = {};
-
-  // If Redis available, check cache first
   if (hasRedis) {
     try {
       const { Redis } = await import('@upstash/redis');
@@ -54,65 +65,68 @@ export async function POST(request: NextRequest) {
         token: process.env.UPSTASH_REDIS_REST_TOKEN!,
       });
 
-      const cacheMisses: string[] = [];
-      for (const ticker of tickers) {
-        const cached = await redis.get<PriceUpdate>(`price:${ticker}`);
-        if (cached) {
-          prices[ticker] = cached;
+      // Try to serve all from cache
+      const cached: Record<string, PriceResult> = {};
+      const misses: PriceFetchRequest[] = [];
+
+      for (const asset of assets) {
+        const hit = await redis.get<PriceResult>(`prices:${asset.id}`);
+        if (hit) {
+          cached[asset.id] = { ...hit, source: 'cache' };
         } else {
-          cacheMisses.push(ticker);
+          misses.push(asset);
         }
       }
 
-      // Fetch misses from APIs
-      if (cacheMisses.length > 0 && hasAlphaVantage) {
-        for (const ticker of cacheMisses) {
-          const fetched = await fetchPriceFromAPI(ticker);
-          if (fetched) {
-            prices[ticker] = fetched;
-            const ttl = ticker.includes('.') ? 30 : 60; // crypto 30s, others 60s
-            await redis.setex(`price:${ticker}`, ttl, fetched);
-          }
+      // Full cache hit
+      if (misses.length === 0 && Object.keys(cached).length > 0) {
+        return NextResponse.json({
+          prices: cached,
+          errors: [],
+          cached: true,
+        } satisfies RouteResponse);
+      }
+
+      // Fetch only the misses
+      const fresh = await fetchPrices(misses);
+
+      // Store fresh results in Redis
+      for (const [assetId, result] of Object.entries(fresh)) {
+        const asset = assets.find((a) => a.id === assetId);
+        const ttl = asset ? getTtl(asset.category) : 60;
+        try {
+          await redis.setex(`prices:${assetId}`, ttl, result);
+        } catch {
+          // Cache write failure is non-fatal
         }
       }
-    } catch {
-      // Redis error — continue without cache
-    }
-  } else if (hasAlphaVantage) {
-    // No cache, fetch directly (limited)
-    for (const ticker of tickers.slice(0, 5)) {
-      const fetched = await fetchPriceFromAPI(ticker);
-      if (fetched) prices[ticker] = fetched;
+
+      const prices: Record<string, PriceResult> = { ...cached, ...fresh };
+      return NextResponse.json({
+        prices,
+        errors,
+        cached: false,
+      } satisfies RouteResponse);
+    } catch (err) {
+      // Redis failure — fall through to direct fetch
+      errors.push(`Cache unavailable: ${err instanceof Error ? err.message : 'unknown error'}`);
     }
   }
 
-  return NextResponse.json({ prices } satisfies PricesResponse);
-}
-
-async function fetchPriceFromAPI(ticker: string): Promise<PriceUpdate | null> {
-  const apiKey = process.env.ALPHA_VANTAGE_API_KEY;
-  if (!apiKey) return null;
-
+  // 4. Direct fetch (no Redis, or Redis failed)
   try {
-    const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${ticker}&apikey=${apiKey}`;
-    const res = await fetch(url, { next: { revalidate: 60 } });
-    if (!res.ok) return null;
-
-    const data = await res.json() as {
-      'Global Quote'?: { '05. price'?: string; '09. change'?: string };
-    };
-    const quote = data['Global Quote'];
-    if (!quote || !quote['05. price']) return null;
-
-    const price = parseFloat(quote['05. price']);
-    const change = parseFloat(quote['09. change'] ?? '0');
-
-    return {
-      price,
-      change24h: price > 0 ? (change / (price - change)) * 100 : 0,
-      updatedAt: new Date().toISOString(),
-    };
-  } catch {
-    return null;
+    const prices = await fetchPrices(assets);
+    return NextResponse.json({
+      prices,
+      errors,
+      cached: false,
+    } satisfies RouteResponse);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error fetching prices';
+    return NextResponse.json({
+      prices: {},
+      errors: [message],
+      cached: false,
+    } satisfies RouteResponse);
   }
 }

@@ -1,12 +1,15 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { ChevronDown, ChevronRight, Search, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { ChevronDown, ChevronRight, Search, ArrowUpDown, ArrowUp, ArrowDown, Plus } from "lucide-react";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { PLBadge } from "@/components/modules/patrimonio/shared/PLBadge";
+import { PriceProgressBar } from "@/components/modules/patrimonio/shared/PriceProgressBar";
 import { CATEGORY_LABELS } from "@/types/patrimonio";
 import type { PortfolioAsset, AssetCategory } from "@/types/patrimonio";
 import { Input } from "@/components/ui";
+import { AssetDetailDrawer } from "./AssetDetailDrawer";
+import { AssetFormModal } from "./AssetFormModal";
 
 const formatEur = (value: number) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
@@ -77,9 +80,10 @@ interface CategoryGroupProps {
   category: AssetCategory;
   assets: PortfolioAsset[];
   savingsPlanMap: Map<string, number>;
+  onAssetClick: (id: string) => void;
 }
 
-function CategoryGroup({ category, assets, savingsPlanMap }: CategoryGroupProps) {
+function CategoryGroup({ category, assets, savingsPlanMap, onAssetClick }: CategoryGroupProps) {
   const [open, setOpen] = useState(true);
 
   const groupValue = assets.reduce((s, a) => s + (a.current_value ?? 0), 0);
@@ -136,17 +140,29 @@ function CategoryGroup({ category, assets, savingsPlanMap }: CategoryGroupProps)
               className="border-b border-border/50 transition-colors hover:bg-sand/30"
             >
               <td className="px-4 py-3 pl-10">
-                <div>
+                <button
+                  type="button"
+                  className="text-left hover:underline"
+                  onClick={() => onAssetClick(asset.id)}
+                >
                   <p className="text-sm font-medium text-foreground">{asset.name}</p>
                   {asset.sector && (
                     <p className="text-xs text-text-tertiary">{asset.sector}</p>
                   )}
-                </div>
+                </button>
               </td>
               <td className="px-3 py-3">
-                <span className="font-mono text-xs text-text-tertiary">
-                  {asset.ticker ?? asset.isin?.substring(0, 12) ?? "—"}
-                </span>
+                <div className="flex flex-col gap-1">
+                  <span className="font-mono text-xs text-text-tertiary">
+                    {asset.ticker ?? asset.isin?.substring(0, 12) ?? "—"}
+                  </span>
+                  {asset.current_price_eur != null && (
+                    <PriceProgressBar
+                      avgBuyPrice={asset.avg_buy_price}
+                      currentPrice={asset.current_price_eur}
+                    />
+                  )}
+                </div>
               </td>
               <td className="hidden px-3 py-3 text-right font-mono text-xs text-text-secondary md:table-cell">
                 {formatQty(asset.current_quantity)}
@@ -207,6 +223,8 @@ export function TRPositionsTable() {
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("value");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [activeDrawerAssetId, setActiveDrawerAssetId] = useState<string | null>(null);
+  const [showAssetModal, setShowAssetModal] = useState(false);
 
   const savingsPlanMap = useMemo(
     () => new Map(savingsPlan.map((item) => [item.asset_id, item.monthly_amount])),
@@ -305,6 +323,17 @@ export function TRPositionsTable() {
             </button>
           ))}
         </div>
+
+        {/* Add asset button */}
+        <button
+          type="button"
+          onClick={() => setShowAssetModal(true)}
+          className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors"
+          style={{ backgroundColor: "var(--bg-sand)", color: "var(--text-secondary)", border: "1px solid var(--border)" }}
+        >
+          <Plus size={13} strokeWidth={2} />
+          Activo
+        </button>
       </div>
 
       {/* Table — desktop */}
@@ -369,6 +398,7 @@ export function TRPositionsTable() {
                 category={category}
                 assets={assets}
                 savingsPlanMap={savingsPlanMap}
+                onAssetClick={setActiveDrawerAssetId}
               />
             ))}
             {filtered.length === 0 && (
@@ -415,11 +445,22 @@ export function TRPositionsTable() {
                 category={category}
                 assets={assets}
                 savingsPlanMap={savingsPlanMap}
+                onAssetClick={setActiveDrawerAssetId}
               />
             ))}
           </div>
         )}
       </div>
+
+      {/* Modals / Drawers */}
+      <AssetDetailDrawer
+        assetId={activeDrawerAssetId}
+        onClose={() => setActiveDrawerAssetId(null)}
+      />
+      <AssetFormModal
+        isOpen={showAssetModal}
+        onClose={() => setShowAssetModal(false)}
+      />
     </div>
   );
 }
@@ -428,9 +469,10 @@ interface MobileCategoryGroupProps {
   category: AssetCategory;
   assets: PortfolioAsset[];
   savingsPlanMap: Map<string, number>;
+  onAssetClick: (id: string) => void;
 }
 
-function MobileCategoryGroup({ category, assets, savingsPlanMap }: MobileCategoryGroupProps) {
+function MobileCategoryGroup({ category, assets, savingsPlanMap, onAssetClick }: MobileCategoryGroupProps) {
   const [open, setOpen] = useState(true);
   return (
     <div>
@@ -459,10 +501,24 @@ function MobileCategoryGroup({ category, assets, savingsPlanMap }: MobileCategor
               <div key={asset.id} className="px-4 py-3">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-foreground">{asset.name}</p>
+                    <button
+                      type="button"
+                      className="truncate text-left text-sm font-medium text-foreground hover:underline"
+                      onClick={() => onAssetClick(asset.id)}
+                    >
+                      {asset.name}
+                    </button>
                     <p className="font-mono text-xs text-text-tertiary">
                       {asset.ticker ?? asset.isin?.substring(0, 12) ?? "—"}
                     </p>
+                    {asset.current_price_eur != null && (
+                      <div className="mt-1">
+                        <PriceProgressBar
+                          avgBuyPrice={asset.avg_buy_price}
+                          currentPrice={asset.current_price_eur}
+                        />
+                      </div>
+                    )}
                   </div>
                   <div className="flex-shrink-0 text-right">
                     <p className="font-mono text-sm font-semibold text-foreground">
