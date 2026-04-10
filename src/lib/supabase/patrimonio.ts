@@ -187,7 +187,7 @@ export async function getSavingsPlan(userId: string): Promise<SavingsPlanItem[]>
       'id, user_id, asset_id, monthly_amount, is_active, execution_day, started_at, ended_at, notes, sort_order, created_at, updated_at'
     )
     .eq('user_id', userId)
-    .eq('is_active', true)
+    .order('is_active', { ascending: false })
     .order('sort_order');
   if (error) return [];
   return (data ?? []) as SavingsPlanItem[];
