@@ -156,6 +156,22 @@ async function getForexRates(redis: Redis): Promise<ForexRates> {
 }
 
 // ---------------------------------------------------------------------------
+// Ticker fallback: if .AS fails → try .L; if .DE fails → try .F
+// ---------------------------------------------------------------------------
+
+function getAlternativeTickers(ticker: string): string[] {
+  const alts: string[] = [ticker];
+  if (ticker.endsWith('.AS')) {
+    alts.push(ticker.replace('.AS', '.L'));
+    alts.push(ticker.replace('.AS', '.MI'));
+  } else if (ticker.endsWith('.DE')) {
+    alts.push(ticker.replace('.DE', '.F'));
+    alts.push(ticker.replace('.DE', '.L'));
+  }
+  return alts;
+}
+
+// ---------------------------------------------------------------------------
 // Yahoo Finance — individual ticker (EUR)
 // ---------------------------------------------------------------------------
 
@@ -210,6 +226,20 @@ async function fetchYahooSingle(
   }
 }
 
+// Try primary ticker first; if it returns null, try alternative suffixes in order
+async function fetchYahooWithFallback(
+  primaryTicker: string,
+  redis: Redis,
+  ttl: number,
+): Promise<{ data: YahooPriceData; resolvedTicker: string } | null> {
+  const alternatives = getAlternativeTickers(primaryTicker);
+  for (const alt of alternatives) {
+    const result = await fetchYahooSingle(alt, redis, `price:yahoo:${alt}`, ttl);
+    if (result) return { data: result, resolvedTicker: alt };
+  }
+  return null;
+}
+
 // ---------------------------------------------------------------------------
 // Fetch Yahoo ETFs (EUR prices)
 // ---------------------------------------------------------------------------
@@ -222,17 +252,20 @@ async function fetchYahooPrices(
   const entries = Object.entries(isinTickerMap);
 
   const results = await Promise.allSettled(
-    entries.map(([, ticker]) =>
-      fetchYahooSingle(ticker, redis, `price:yahoo:${ticker}`, ttl),
-    ),
+    entries.map(([, ticker]) => fetchYahooWithFallback(ticker, redis, ttl)),
   );
 
   const map = new Map<string, YahooPriceData>();
   for (let i = 0; i < results.length; i++) {
     const r = results[i];
-    const isin = entries[i][0];
+    const [isin, primaryTicker] = entries[i];
     if (r.status === 'fulfilled' && r.value) {
-      map.set(isin, r.value);
+      if (r.value.resolvedTicker !== primaryTicker) {
+        console.log(`[prices] Ticker fallback used: ${primaryTicker} → ${r.value.resolvedTicker}`);
+      }
+      map.set(isin, r.value.data);
+    } else {
+      console.log(`[prices] Yahoo EU failed for ISIN ${isin} (ticker: ${primaryTicker})`);
     }
   }
   return map;
@@ -426,6 +459,20 @@ export async function fetchAllTRPrices(redis: Redis): Promise<{
   if (euResults.status === 'rejected') errors.push('Yahoo EU fetch failed');
   if (usResults.status === 'rejected') errors.push('Alpha Vantage fetch failed');
   if (hkResults.status === 'rejected') errors.push('Yahoo HK fetch failed');
+
+  // Diagnostic logging — helps identify which ISINs/tickers are failing
+  console.log('[prices] Yahoo EU results (ISINs):', [...euMap.keys()]);
+  console.log('[prices] Alpha Vantage results (ISINs):', [...usMap.keys()]);
+  console.log('[prices] Yahoo HK results (ISINs):', [...hkMap.keys()]);
+  console.log('[prices] Errors:', errors);
+
+  // Log missing tickers for easy diagnosis
+  const missingEU = Object.keys(YAHOO_TICKER_MAP).filter((isin) => !euMap.has(isin));
+  const missingUS = Object.keys(ALPHAVANTAGE_TICKER_MAP).filter((isin) => !usMap.has(isin));
+  const missingHK = Object.keys(YAHOO_HK_TICKER_MAP).filter((isin) => !hkMap.has(isin));
+  if (missingEU.length) console.log('[prices] Missing Yahoo EU ISINs:', missingEU.map((isin) => `${isin}→${YAHOO_TICKER_MAP[isin]}`));
+  if (missingUS.length) console.log('[prices] Missing Alpha Vantage ISINs:', missingUS.map((isin) => `${isin}→${ALPHAVANTAGE_TICKER_MAP[isin]}`));
+  if (missingHK.length) console.log('[prices] Missing Yahoo HK ISINs:', missingHK.map((isin) => `${isin}→${YAHOO_HK_TICKER_MAP[isin]}`) );
 
   // 3. Build result array
   const prices: PriceResult[] = [];

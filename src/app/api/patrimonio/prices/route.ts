@@ -80,6 +80,14 @@ export async function POST(): Promise<Response> {
   // 4. Fetch all prices
   const result = await fetchAllTRPrices(redis);
 
+  // Diagnostic summary log
+  const bySource = result.prices.reduce<Record<string, string[]>>((acc, p) => {
+    (acc[p.source] ??= []).push(p.isin);
+    return acc;
+  }, {});
+  console.log('[route/prices] Prices by source:', Object.fromEntries(Object.entries(bySource).map(([s, isins]) => [s, isins.length])));
+  console.log('[route/prices] Errors:', result.errors);
+
   // 5. Market status
   const marketStatus = {
     eu: isEUMarketOpen() ? 'open' : 'closed',
