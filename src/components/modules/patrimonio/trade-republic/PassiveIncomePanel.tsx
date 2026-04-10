@@ -44,7 +44,7 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
       <p className="font-medium text-text-secondary">{item.month}</p>
       <div className="mt-2 space-y-1">
         <div className="flex justify-between gap-5">
-          <span style={{ color: "#3B78B0" }}>Intereses</span>
+          <span style={{ color: "#4A7A9B" }}>Intereses</span>
           <span className="font-mono">{formatEur(item.interest)}</span>
         </div>
         <div className="flex justify-between gap-5">
@@ -96,7 +96,7 @@ export function PassiveIncomePanel() {
     <div className="rounded-xl border border-border bg-card">
       <div className="flex items-center justify-between border-b border-border px-5 py-4">
         <div className="flex items-center gap-2">
-          <TrendingUp size={16} strokeWidth={1.75} style={{ color: "#3B78B0" }} aria-hidden="true" />
+          <TrendingUp size={16} strokeWidth={1.75} style={{ color: "#4A7A9B" }} aria-hidden="true" />
           <h3 className="text-sm font-semibold text-foreground">Ingresos Pasivos</h3>
         </div>
         <span className="font-mono text-sm font-medium" style={{ color: "var(--module-patrimonio)" }}>
@@ -116,19 +116,19 @@ export function PassiveIncomePanel() {
               <XAxis
                 dataKey="month"
                 tickFormatter={formatMonth}
-                tick={{ fontSize: 10, fill: "var(--text-tertiary)", fontFamily: "var(--font-mono)" }}
+                tick={{ fontSize: 11, fill: "var(--text-tertiary)", fontFamily: "var(--font-mono)" }}
                 axisLine={false}
                 tickLine={false}
               />
               <YAxis
                 tickFormatter={(v: number) => `${v}€`}
-                tick={{ fontSize: 10, fill: "var(--text-tertiary)", fontFamily: "var(--font-mono)" }}
+                tick={{ fontSize: 11, fill: "var(--text-tertiary)", fontFamily: "var(--font-mono)" }}
                 axisLine={false}
                 tickLine={false}
                 width={36}
               />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="interest" stackId="a" fill="#3B78B0" fillOpacity={0.85} radius={[0, 0, 0, 0]} maxBarSize={24} />
+              <Bar dataKey="interest" stackId="a" fill="#4A7A9B" fillOpacity={0.85} radius={[0, 0, 0, 0]} maxBarSize={24} />
               <Bar dataKey="dividend" stackId="a" fill="#2E7D6B" fillOpacity={0.85} radius={[3, 3, 0, 0]} maxBarSize={24} />
             </BarChart>
           </ResponsiveContainer>
@@ -136,7 +136,7 @@ export function PassiveIncomePanel() {
           {/* Legend */}
           <div className="mt-3 flex gap-5">
             <div className="flex items-center gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "#3B78B0" }} aria-hidden="true" />
+              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "#4A7A9B" }} aria-hidden="true" />
               <span className="text-xs text-text-secondary">Intereses</span>
             </div>
             <div className="flex items-center gap-1.5">
@@ -162,7 +162,7 @@ export function PassiveIncomePanel() {
                     : item.type === "saveback"
                       ? "Saveback"
                       : "Cupon";
-              const typeColor = item.type === "interest" ? "#3B78B0" : "var(--module-patrimonio)";
+              const typeColor = item.type === "interest" ? "#4A7A9B" : "var(--module-patrimonio)";
               return (
                 <div key={item.id} className="flex items-center justify-between gap-3">
                   <div>

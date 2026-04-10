@@ -167,14 +167,14 @@ export function AssetAccumulationChart({ transactions, assetName }: AssetAccumul
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
           <XAxis
             dataKey="dateLabel"
-            tick={{ fontSize: 10, fill: "var(--text-tertiary)" }}
+            tick={{ fontSize: 11, fill: "var(--text-tertiary)" }}
             tickLine={false}
             axisLine={false}
             interval="preserveStartEnd"
           />
           <YAxis
             yAxisId="left"
-            tick={{ fontSize: 10, fill: "#3B78B0" }}
+            tick={{ fontSize: 11, fill: "#3B78B0" }}
             tickLine={false}
             axisLine={false}
             width={50}
@@ -187,7 +187,7 @@ export function AssetAccumulationChart({ transactions, assetName }: AssetAccumul
           <YAxis
             yAxisId="right"
             orientation="right"
-            tick={{ fontSize: 10, fill: "var(--module-patrimonio)" }}
+            tick={{ fontSize: 11, fill: "var(--module-patrimonio)" }}
             tickLine={false}
             axisLine={false}
             width={55}

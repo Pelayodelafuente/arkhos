@@ -115,13 +115,13 @@ export function EvolutionChart() {
         <XAxis
           dataKey="date"
           tickFormatter={formatMonthYear}
-          tick={{ fontSize: 10, fill: "var(--text-tertiary)", fontFamily: "var(--font-mono)" }}
+          tick={{ fontSize: 11, fill: "var(--text-tertiary)", fontFamily: "var(--font-mono)" }}
           axisLine={false}
           tickLine={false}
         />
         <YAxis
           tickFormatter={formatCompact}
-          tick={{ fontSize: 10, fill: "var(--text-tertiary)", fontFamily: "var(--font-mono)" }}
+          tick={{ fontSize: 11, fill: "var(--text-tertiary)", fontFamily: "var(--font-mono)" }}
           axisLine={false}
           tickLine={false}
           width={40}

@@ -31,7 +31,7 @@ export function PLBadge({
       : "rgba(163,45,45,0.12)";
 
   const color = isZero
-    ? "var(--module-notas)"
+    ? "#B07A3A"
     : isPositive
       ? "var(--module-patrimonio)"
       : "#A32D2D";

@@ -65,7 +65,7 @@ export function OverviewKPIs() {
   const plColor = overview.pl_amount === 0
     ? "#B07A3A"
     : plPositive
-      ? "var(--module-patrimonio)"
+      ? "#2E7D6B"
       : "#A32D2D";
 
   return (
@@ -74,7 +74,7 @@ export function OverviewKPIs() {
         label="Total patrimonio"
         value={formatEur(overview.total_value)}
         icon={<Wallet size={14} strokeWidth={1.75} />}
-        accentColor="var(--module-patrimonio)"
+        accentColor="#2E7D6B"
         badge={
           <span className="text-xs text-text-tertiary">
             {overview.platforms.length} plataformas
@@ -135,7 +135,7 @@ export function OverviewKPIs() {
         label="Ingresos pasivos YTD"
         value={formatEur(passiveIncomeYTD)}
         icon={<DollarSign size={14} strokeWidth={1.75} />}
-        accentColor="#3B78B0"
+        accentColor="#4A7A9B"
         badge={
           <span className="text-xs text-text-tertiary">
             {new Date().getFullYear()}

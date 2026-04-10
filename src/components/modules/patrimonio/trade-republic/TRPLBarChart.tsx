@@ -106,7 +106,7 @@ export function TRPLBarChart() {
         <XAxis
           type="number"
           tickFormatter={(v: number) => formatEur(v)}
-          tick={{ fontSize: 10, fill: "var(--text-tertiary)", fontFamily: "var(--font-mono)" }}
+          tick={{ fontSize: 11, fill: "var(--text-tertiary)", fontFamily: "var(--font-mono)" }}
           axisLine={false}
           tickLine={false}
         />
@@ -114,7 +114,7 @@ export function TRPLBarChart() {
           type="category"
           dataKey="ticker"
           width={52}
-          tick={{ fontSize: 10, fill: "var(--text-tertiary)", fontFamily: "var(--font-mono)" }}
+          tick={{ fontSize: 11, fill: "var(--text-tertiary)", fontFamily: "var(--font-mono)" }}
           axisLine={false}
           tickLine={false}
         />

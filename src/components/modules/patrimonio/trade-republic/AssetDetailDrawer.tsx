@@ -152,8 +152,9 @@ export function AssetDetailDrawer({ assetId, onClose }: AssetDetailDrawerProps) 
                       <span
                         className="rounded-md px-1.5 py-0.5 text-xs"
                         style={{
-                          background: "var(--module-patrimonio)1A",
+                          background: "rgba(46,125,107,0.1)",
                           color: "var(--module-patrimonio)",
+                          border: "1px solid rgba(46,125,107,0.25)",
                         }}
                       >
                         {CATEGORY_LABELS[asset.category]}

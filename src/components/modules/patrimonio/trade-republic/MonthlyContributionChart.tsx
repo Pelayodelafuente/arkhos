@@ -165,12 +165,12 @@ export function MonthlyContributionChart({ transactions, assets }: MonthlyContri
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
           <XAxis
             dataKey="month"
-            tick={{ fontSize: 10, fill: "var(--text-tertiary)" }}
+            tick={{ fontSize: 11, fill: "var(--text-tertiary)" }}
             tickLine={false}
             axisLine={false}
           />
           <YAxis
-            tick={{ fontSize: 10, fill: "var(--text-tertiary)" }}
+            tick={{ fontSize: 11, fill: "var(--text-tertiary)" }}
             tickLine={false}
             axisLine={false}
             width={48}
