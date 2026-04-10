@@ -9,6 +9,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Dot,
 } from "recharts";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { C } from "@/lib/patrimonio/chart-colors";
@@ -28,19 +29,36 @@ const formatMonthYear = (dateStr: string) => {
 };
 
 interface TooltipPayloadItem {
-  payload: EvolutionPoint;
+  payload: EvolutionPointExtended;
 }
 
 interface CustomTooltipProps {
   active?: boolean;
   payload?: TooltipPayloadItem[];
   label?: string;
+  pricesLastUpdated?: string | null;
 }
 
-function CustomTooltip({ active, payload }: CustomTooltipProps) {
+function CustomTooltip({ active, payload, pricesLastUpdated }: CustomTooltipProps) {
   if (!active || !payload || payload.length === 0) return null;
   const point = payload[0].payload;
   const plColor = point.pl >= 0 ? C.green : C.red;
+
+  const dateLabel = point.isToday
+    ? "Valor actual"
+    : new Date(point.date).toLocaleDateString("es-ES", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+
+  const updatedLabel =
+    point.isToday && pricesLastUpdated
+      ? `· Actualizado ${new Date(pricesLastUpdated).toLocaleTimeString("es-ES", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })}`
+      : null;
 
   return (
     <div
@@ -48,12 +66,14 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
       style={{ backgroundColor: "var(--bg-card)", boxShadow: "var(--shadow-modal)" }}
     >
       <p className="font-medium text-text-secondary">
-        {new Date(point.date).toLocaleDateString("es-ES", {
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        })}
+        {dateLabel}
+        {updatedLabel && (
+          <span className="ml-1 font-normal text-text-tertiary">{updatedLabel}</span>
+        )}
       </p>
+      {point.isToday && (
+        <p className="mb-1.5 text-xs text-text-tertiary">En tiempo real</p>
+      )}
       <div className="mt-2 space-y-1">
         <div className="flex justify-between gap-6">
           <span className="text-text-tertiary">Valor</span>
@@ -74,25 +94,49 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
   );
 }
 
+interface EvolutionPointExtended extends EvolutionPoint {
+  isToday?: boolean;
+}
+
 export function EvolutionChart() {
   const uid = useId();
   const gradValue = `gradValue-${uid}`;
   const gradInvested = `gradInvested-${uid}`;
   const snapshots = usePatrimonioStore((s) => s.snapshots);
   const selectedYear = usePatrimonioStore((s) => s.selectedYear);
+  const getTRCurrentValue = usePatrimonioStore((s) => s.getTRCurrentValue);
+  const pricesLastUpdated = usePatrimonioStore((s) => s.pricesLastUpdated);
 
-  const data: EvolutionPoint[] = useMemo(
-    () =>
-      snapshots
-        .filter((s) => selectedYear === 'all' || s.snapshot_date.startsWith(selectedYear))
-        .map((s) => ({
-          date: s.snapshot_date,
-          value: s.total_value,
-          invested: s.total_invested,
-          pl: s.pl_amount ?? 0,
-        })),
-    [snapshots, selectedYear]
-  );
+  const currentTRValue = getTRCurrentValue();
+
+  const data: EvolutionPointExtended[] = useMemo(() => {
+    const filtered = snapshots
+      .filter((s) => selectedYear === 'all' || s.snapshot_date.startsWith(selectedYear))
+      .map((s): EvolutionPointExtended => ({
+        date: s.snapshot_date,
+        value: s.total_value,
+        invested: s.total_invested,
+        pl: s.pl_amount ?? 0,
+      }));
+
+    // Append "today" point if we have a live price and it's not already in snapshots
+    if (currentTRValue > 0) {
+      const today = new Date().toISOString().substring(0, 10);
+      const lastSnapshot = filtered[filtered.length - 1];
+      if (!lastSnapshot || lastSnapshot.date !== today) {
+        const lastInvested = lastSnapshot?.invested ?? 0;
+        filtered.push({
+          date: today,
+          value: currentTRValue,
+          invested: lastInvested,
+          pl: currentTRValue - lastInvested,
+          isToday: true,
+        });
+      }
+    }
+
+    return filtered;
+  }, [snapshots, selectedYear, currentTRValue]);
 
   if (data.length === 0) {
     return (
@@ -133,7 +177,7 @@ export function EvolutionChart() {
           tickLine={false}
           width={40}
         />
-        <Tooltip content={<CustomTooltip />} />
+        <Tooltip content={<CustomTooltip pricesLastUpdated={pricesLastUpdated} />} />
         <Area
           type="monotone"
           dataKey="invested"
@@ -149,8 +193,22 @@ export function EvolutionChart() {
           stroke={C.green}
           strokeWidth={2}
           fill={`url(#${gradValue})`}
-          dot={false}
-          activeDot={{ r: 4, fill: C.green }}
+          dot={(props: { cx?: number; cy?: number; payload?: EvolutionPointExtended; index?: number }) => {
+            const { cx, cy, payload } = props;
+            if (!payload?.isToday || cx == null || cy == null) return <Dot r={0} cx={0} cy={0} />;
+            return (
+              <Dot
+                key="today"
+                cx={cx}
+                cy={cy}
+                r={6}
+                fill={C.green}
+                stroke="var(--bg-card)"
+                strokeWidth={2}
+              />
+            );
+          }}
+          activeDot={{ r: 5, fill: C.green }}
         />
       </AreaChart>
     </ResponsiveContainer>

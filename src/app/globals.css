@@ -750,3 +750,43 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .recharts-wrapper *:focus {
   outline: none;
 }
+
+/* ============================================================
+   Patrimonio — precios en tiempo real
+   ============================================================ */
+
+@keyframes flashUp {
+  0% { background-color: rgba(46, 125, 107, 0.25); }
+  100% { background-color: transparent; }
+}
+
+@keyframes flashDown {
+  0% { background-color: rgba(163, 45, 45, 0.25); }
+  100% { background-color: transparent; }
+}
+
+.price-flash-up {
+  animation: flashUp 400ms ease-out forwards;
+  border-radius: 4px;
+}
+
+.price-flash-down {
+  animation: flashDown 400ms ease-out forwards;
+  border-radius: 4px;
+}
+
+/* Transición suave en valores numéricos de KPIs */
+.kpi-value {
+  transition: color 0.3s ease;
+}
+
+/* Punto animado de estado "en vivo" */
+@keyframes livePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.85); }
+}
+
+.live-dot {
+  animation: livePulse 2s ease-in-out infinite;
+  display: inline-block;
+}

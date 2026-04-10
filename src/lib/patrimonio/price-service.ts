@@ -1,290 +1,455 @@
-// Mapeo ISIN → ticker Yahoo Finance
+import type { Redis } from '@upstash/redis';
+
+// ---------------------------------------------------------------------------
+// ISIN → Ticker maps
+// ---------------------------------------------------------------------------
+
 export const YAHOO_TICKER_MAP: Record<string, string> = {
-  'IE00B5BMR087': 'SXR8.DE',   // iShares Core S&P 500
-  'IE00B4L5Y983': 'IWDA.AS',   // iShares Core MSCI World
-  'IE00B53SZB19': 'CNDX.AS',   // iShares NASDAQ 100
-  'IE00BGYWSW13': 'VDCP.AS',   // Vanguard Corp Bond
-  'IE00BK5BR733': 'VFEM.AS',   // Vanguard Emerging Markets
-  'IE00B6R52259': 'SSAC.AS',   // iShares MSCI ACWI
-  'IE00BGV5VN51': 'XAIX.DE',   // Xtrackers AI Big Data
-  'LU0322253906': 'XXSC.AS',   // Xtrackers Europe Small Cap
-  'IE00BMH5XY61': 'ECOM.AS',   // Global X E-Commerce
-  'IE0002Y8CX98': 'WDEF.AS',   // WisdomTree Defence
-  'IE000U58J0M1': 'STCE.AS',   // iShares Clean Energy
-  'IE00BM67HV82': 'XWIN.AS',   // Xtrackers Industrials
-  'IE00B4ND3602': 'IGLN.AS',   // iShares Physical Gold
-  'IE00B4NCWG09': 'ISLN.AS',   // iShares Physical Silver
-  'IE000GA3D489': 'ARKI.AS',   // ARK Innovation
-  'IE0003A512E4': 'ARKI2.AS',  // ARK AI Robotics
+  'IE00B5BMR087': 'SXR8.DE',    // iShares Core S&P 500
+  'IE00B4L5Y983': 'IWDA.AS',    // iShares Core MSCI World
+  'IE00B53SZB19': 'CNDX.AS',    // iShares NASDAQ 100
+  'IE00BGYWSW13': 'VDCP.AS',    // Vanguard Corp Bond
+  'IE00BK5BR733': 'VFEM.AS',    // Vanguard Emerging Markets
+  'IE00B6R52259': 'SSAC.AS',    // iShares MSCI ACWI
+  'IE00BGV5VN51': 'XAIX.DE',    // Xtrackers AI Big Data
+  'LU0322253906': 'XXSC.AS',    // Xtrackers Europe Small Cap
+  'IE00BMH5XY61': 'ECOM.AS',    // Global X E-Commerce
+  'IE0002Y8CX98': 'WDEF.AS',    // WisdomTree Defence
+  'IE000U58J0M1': 'STCE.AS',    // iShares Clean Energy
+  'IE00BM67HV82': 'XWIN.AS',    // Xtrackers Industrials
+  'IE00B4ND3602': 'IGLN.AS',    // iShares Physical Gold
+  'IE00B4NCWG09': 'ISLN.AS',    // iShares Physical Silver
+  'IE000GA3D489': 'ARKI.AS',    // ARK Innovation
+  'IE0003A512E4': 'ARKI2.AS',   // ARK AI Robotics
 };
 
-export type PriceSource = 'alphavantage' | 'yahoo' | 'coingecko' | 'manual' | 'cache';
+export const ALPHAVANTAGE_TICKER_MAP: Record<string, string> = {
+  'US67066G1040': 'NVDA',
+  'US88160R1014': 'TSLA',
+  'US02079K1079': 'GOOGL',
+  'US30303M1027': 'META',
+  'US0231351067': 'AMZN',
+  'US90353T1007': 'UBER',
+  'US26740W1099': 'QBTS',
+  'US8740391003': 'TSM',
+  'US70450Y1038': 'PYPL',
+  'US91324P1021': 'UNH',
+  'US0079031078': 'AMD',
+};
+
+export const YAHOO_HK_TICKER_MAP: Record<string, string> = {
+  'CNE100000296': '1211.HK',  // BYD
+  'KYG9830T1067': '1810.HK',  // Xiaomi
+};
+
+// ---------------------------------------------------------------------------
+// Interfaces
+// ---------------------------------------------------------------------------
 
 export interface PriceResult {
-  assetId: string;
-  price: number;
+  isin: string;
   priceEur: number;
-  change24h: number | null;
-  changePercent24h: number | null;
+  changePercent: number | null;
+  source: 'yahoo' | 'alphavantage' | 'yahoo_hk' | 'cache' | 'fallback';
   updatedAt: string;
-  source: PriceSource;
 }
 
-export interface PriceFetchRequest {
-  id: string;      // asset UUID
-  ticker?: string; // ticker symbol
-  isin?: string;
-  category: string;
+export interface ForexRates {
+  usdToEur: number;
+  hkdToEur: number;
+  updatedAt: string;
 }
 
-// Yahoo Finance chart API response shape
+// ---------------------------------------------------------------------------
+// Market hours helpers (CET = UTC+1 / UTC+2 in DST)
+// ---------------------------------------------------------------------------
+
+function getCetHour(): number {
+  const now = new Date();
+  // Use Europe/Madrid offset as CET proxy
+  const utcMs = now.getTime() + now.getTimezoneOffset() * 60_000;
+  const cetOffset = now.toLocaleString('en-US', { timeZone: 'Europe/Madrid', hour12: false })
+    .split(',')[1]?.trim().split(':')[0];
+  const cetHour = cetOffset ? parseInt(cetOffset, 10) : Math.floor(utcMs / 3_600_000) % 24 + 1;
+  return cetHour;
+}
+
+function getCetDay(): number {
+  const now = new Date();
+  const cetStr = now.toLocaleString('en-US', { timeZone: 'Europe/Madrid', weekday: 'long' });
+  const days: Record<string, number> = {
+    Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3,
+    Thursday: 4, Friday: 5, Saturday: 6,
+  };
+  return days[cetStr] ?? now.getDay();
+}
+
+export function isEUMarketOpen(): boolean {
+  const day = getCetDay();
+  if (day === 0 || day === 6) return false;
+  const hour = getCetHour();
+  return hour >= 9 && hour < 18; // 09:00-17:30 CET (use 18 as safe upper bound)
+}
+
+export function isUSMarketOpen(): boolean {
+  const day = getCetDay();
+  if (day === 0 || day === 6) return false;
+  const hour = getCetHour();
+  return hour >= 15 && hour < 22; // 14:30-21:00 CET
+}
+
+export function isHKMarketOpen(): boolean {
+  const day = getCetDay();
+  if (day === 0 || day === 6) return false;
+  const hour = getCetHour();
+  return (hour >= 3 && hour < 6) || (hour >= 7 && hour < 10); // 02:30-05:00 and 07:00-09:00 CET
+}
+
+// ---------------------------------------------------------------------------
+// Forex rates — ExchangeRate-API, TTL 24h
+// ---------------------------------------------------------------------------
+
+const FOREX_CACHE_KEY = 'forex:rates';
+const FOREX_FALLBACK: ForexRates = {
+  usdToEur: 0.92,
+  hkdToEur: 0.118,
+  updatedAt: '',
+};
+
+interface ExchangeRateApiResponse {
+  result?: string;
+  conversion_rates?: Record<string, number>;
+}
+
+async function getForexRates(redis: Redis): Promise<ForexRates> {
+  try {
+    const cached = await redis.get<ForexRates>(FOREX_CACHE_KEY);
+    if (cached) return cached;
+
+    const key = process.env.EXCHANGE_RATE_API_KEY;
+    if (!key) return FOREX_FALLBACK;
+
+    const res = await fetch(`https://v6.exchangerate-api.com/v6/${key}/latest/USD`, {
+      signal: AbortSignal.timeout(5_000),
+    });
+    if (!res.ok) return FOREX_FALLBACK;
+
+    const data = (await res.json()) as ExchangeRateApiResponse;
+    if (data.result !== 'success' || !data.conversion_rates) return FOREX_FALLBACK;
+
+    const rates = data.conversion_rates;
+    const eurRate = rates['EUR'];
+    const hkdRate = rates['HKD'];
+    if (!eurRate || !hkdRate) return FOREX_FALLBACK;
+
+    const forex: ForexRates = {
+      usdToEur: eurRate,
+      hkdToEur: eurRate / hkdRate,
+      updatedAt: new Date().toISOString(),
+    };
+
+    await redis.setex(FOREX_CACHE_KEY, 86400, forex);
+    return forex;
+  } catch {
+    return FOREX_FALLBACK;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Yahoo Finance — individual ticker (EUR)
+// ---------------------------------------------------------------------------
+
+interface YahooChartMeta {
+  regularMarketPrice?: number;
+  regularMarketChangePercent?: number;
+}
+
 interface YahooChartResponse {
   chart?: {
-    result?: Array<{
-      meta?: {
-        regularMarketPrice?: number;
-        previousClose?: number;
-        currency?: string;
-      };
-    }>;
+    result?: Array<{ meta?: YahooChartMeta }>;
     error?: unknown;
   };
 }
 
-// Alpha Vantage Global Quote response shape
-interface AlphaVantageResponse {
-  'Global Quote'?: {
-    '05. price'?: string;
-    '08. previous close'?: string;
-    '09. change'?: string;
-    '10. change percent'?: string;
-  };
+interface YahooPriceData {
+  price: number;
+  changePercent: number | null;
 }
 
-/**
- * Fetch current price from Yahoo Finance.
- * Returns null on any error — never throws.
- */
-export async function fetchYahooPrice(ticker: string): Promise<number | null> {
+async function fetchYahooSingle(
+  ticker: string,
+  redis: Redis,
+  cacheKey: string,
+  ttl: number,
+): Promise<YahooPriceData | null> {
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5_000);
+    const cached = await redis.get<YahooPriceData>(cacheKey);
+    if (cached) return cached;
 
     const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=1d`;
     const res = await fetch(url, {
-      signal: controller.signal,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; Arkhos/1.0)',
-      },
+      signal: AbortSignal.timeout(6_000),
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Arkhos/1.0)' },
     });
-    clearTimeout(timeoutId);
-
     if (!res.ok) return null;
 
     const data = (await res.json()) as YahooChartResponse;
-    const price = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
+    const meta = data?.chart?.result?.[0]?.meta;
+    const price = meta?.regularMarketPrice;
+    if (!price || price <= 0) return null;
 
-    return typeof price === 'number' && price > 0 ? price : null;
+    const result: YahooPriceData = {
+      price,
+      changePercent: meta?.regularMarketChangePercent ?? null,
+    };
+
+    await redis.setex(cacheKey, ttl, result);
+    return result;
   } catch {
     return null;
   }
 }
 
-/**
- * Fetch current price from Alpha Vantage.
- * Returns null if no API key configured or on any error.
- */
-export async function fetchAlphaVantagePrice(ticker: string): Promise<number | null> {
-  const key = process.env.ALPHA_VANTAGE_API_KEY;
-  if (!key) return null;
+// ---------------------------------------------------------------------------
+// Fetch Yahoo ETFs (EUR prices)
+// ---------------------------------------------------------------------------
 
+async function fetchYahooPrices(
+  isinTickerMap: Record<string, string>,
+  redis: Redis,
+): Promise<Map<string, YahooPriceData>> {
+  const ttl = isEUMarketOpen() ? 3600 : 14400;
+  const entries = Object.entries(isinTickerMap);
+
+  const results = await Promise.allSettled(
+    entries.map(([, ticker]) =>
+      fetchYahooSingle(ticker, redis, `price:yahoo:${ticker}`, ttl),
+    ),
+  );
+
+  const map = new Map<string, YahooPriceData>();
+  for (let i = 0; i < results.length; i++) {
+    const r = results[i];
+    const isin = entries[i][0];
+    if (r.status === 'fulfilled' && r.value) {
+      map.set(isin, r.value);
+    }
+  }
+  return map;
+}
+
+// ---------------------------------------------------------------------------
+// Fetch Yahoo HK (HKD prices → convert to EUR)
+// ---------------------------------------------------------------------------
+
+async function fetchYahooHKPrices(
+  isinTickerMap: Record<string, string>,
+  redis: Redis,
+  hkdToEur: number,
+): Promise<Map<string, YahooPriceData>> {
+  const ttl = isHKMarketOpen() ? 3600 : 14400;
+  const entries = Object.entries(isinTickerMap);
+
+  const results = await Promise.allSettled(
+    entries.map(([, ticker]) =>
+      fetchYahooSingle(ticker, redis, `price:yahoo_hk:${ticker}`, ttl),
+    ),
+  );
+
+  const map = new Map<string, YahooPriceData>();
+  for (let i = 0; i < results.length; i++) {
+    const r = results[i];
+    const isin = entries[i][0];
+    if (r.status === 'fulfilled' && r.value) {
+      map.set(isin, {
+        price: r.value.price * hkdToEur,
+        changePercent: r.value.changePercent,
+      });
+    }
+  }
+  return map;
+}
+
+// ---------------------------------------------------------------------------
+// Alpha Vantage batch (USD → EUR)
+// ---------------------------------------------------------------------------
+
+interface AVBatchStockQuote {
+  '1. symbol': string;
+  '2. price': string;
+  '3. volume'?: string;
+  '4. timestamp'?: string;
+}
+
+interface AVBatchResponse {
+  'Stock Quotes'?: AVBatchStockQuote[];
+  'Note'?: string;
+  'Information'?: string;
+}
+
+interface AVGlobalQuote {
+  '05. price'?: string;
+  '10. change percent'?: string;
+}
+
+interface AVGlobalResponse {
+  'Global Quote'?: AVGlobalQuote;
+  'Note'?: string;
+  'Information'?: string;
+}
+
+async function fetchAlphaVantageBatch(
+  isinTickerMap: Record<string, string>,
+  redis: Redis,
+  usdToEur: number,
+): Promise<Map<string, YahooPriceData>> {
+  const ttl = isUSMarketOpen() ? 3600 : 14400;
+  const apiKey = process.env.ALPHA_VANTAGE_API_KEY;
+  if (!apiKey) return new Map();
+
+  const entries = Object.entries(isinTickerMap);
+  const map = new Map<string, YahooPriceData>();
+
+  // Check cache first — only fetch tickers not in cache
+  const missingEntries: typeof entries = [];
+  for (const [isin, ticker] of entries) {
+    const cached = await redis.get<YahooPriceData>(`price:av:${ticker}`);
+    if (cached) {
+      map.set(isin, cached);
+    } else {
+      missingEntries.push([isin, ticker]);
+    }
+  }
+
+  if (missingEntries.length === 0) return map;
+
+  const symbols = missingEntries.map(([, t]) => t).join(',');
+
+  // Try BATCH_STOCK_QUOTES first
   try {
-    const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${encodeURIComponent(ticker)}&apikey=${key}`;
-    const res = await fetch(url);
-    if (!res.ok) return null;
+    const url = `https://www.alphavantage.co/query?function=BATCH_STOCK_QUOTES&symbols=${encodeURIComponent(symbols)}&apikey=${apiKey}`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+    if (res.ok) {
+      const data = (await res.json()) as AVBatchResponse;
+      if (!data['Note'] && !data['Information'] && data['Stock Quotes']) {
+        const quotes = data['Stock Quotes'];
+        for (const quote of quotes) {
+          const ticker = quote['1. symbol'];
+          const price = parseFloat(quote['2. price']);
+          if (!Number.isFinite(price) || price <= 0) continue;
 
-    const data = (await res.json()) as AlphaVantageResponse;
-    const raw = data?.['Global Quote']?.['05. price'];
-    if (!raw) return null;
+          const entry = missingEntries.find(([, t]) => t === ticker);
+          if (!entry) continue;
+          const [isin] = entry;
 
-    const price = parseFloat(raw);
-    return Number.isFinite(price) && price > 0 ? price : null;
+          const result: YahooPriceData = {
+            price: price * usdToEur,
+            changePercent: null,
+          };
+          map.set(isin, result);
+          await redis.setex(`price:av:${ticker}`, ttl, result).catch(() => {});
+        }
+        return map;
+      }
+    }
   } catch {
-    return null;
+    // Batch failed — fall through to individual calls
   }
+
+  // Fallback: individual GLOBAL_QUOTE calls (respect rate limit with staggering)
+  const individualResults = await Promise.allSettled(
+    missingEntries.map(async ([isin, ticker], i) => {
+      // Stagger requests slightly to avoid simultaneous bursts
+      await new Promise((r) => setTimeout(r, i * 200));
+      const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${encodeURIComponent(ticker)}&apikey=${apiKey}`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(8_000) });
+      if (!res.ok) return null;
+      const data = (await res.json()) as AVGlobalResponse;
+      if (data['Note'] || data['Information']) return null;
+
+      const raw = data['Global Quote'];
+      const priceStr = raw?.['05. price'];
+      if (!priceStr) return null;
+      const price = parseFloat(priceStr);
+      if (!Number.isFinite(price) || price <= 0) return null;
+
+      const changePctStr = raw?.['10. change percent']?.replace('%', '');
+      const changePercent = changePctStr ? parseFloat(changePctStr) : null;
+
+      const result: YahooPriceData = {
+        price: price * usdToEur,
+        changePercent: Number.isFinite(changePercent as number) ? (changePercent as number) : null,
+      };
+      await redis.setex(`price:av:${ticker}`, ttl, result).catch(() => {});
+      return { isin, result };
+    }),
+  );
+
+  for (const r of individualResults) {
+    if (r.status === 'fulfilled' && r.value) {
+      map.set(r.value.isin, r.value.result);
+    }
+  }
+
+  return map;
 }
 
-/**
- * Compute 24h change and change percent from two prices.
- */
-function computeChange(
-  current: number,
-  previous: number | null | undefined,
-): { change24h: number | null; changePercent24h: number | null } {
-  if (previous == null || previous === 0) {
-    return { change24h: null, changePercent24h: null };
-  }
-  const change24h = current - previous;
-  const changePercent24h = (change24h / previous) * 100;
-  return { change24h, changePercent24h };
-}
+// ---------------------------------------------------------------------------
+// Main export: fetchAllTRPrices
+// ---------------------------------------------------------------------------
 
-/**
- * Main price fetch function. Determines the source per asset, then runs all
- * fetches with Promise.allSettled so individual failures never propagate.
- *
- * Returns {} (empty object) when:
- * - No requests are eligible
- * - No API keys are configured
- */
-export async function fetchPrices(
-  requests: PriceFetchRequest[],
-): Promise<Record<string, PriceResult>> {
+export async function fetchAllTRPrices(redis: Redis): Promise<{
+  prices: PriceResult[];
+  forex: ForexRates;
+  errors: string[];
+}> {
+  const errors: string[] = [];
   const now = new Date().toISOString();
 
-  // Tasks: [assetId, promise returning PriceResult | null]
-  const tasks: Array<{
-    id: string;
-    promise: Promise<PriceResult | null>;
-  }> = [];
+  // 1. Forex rates
+  const forex = await getForexRates(redis);
+  if (!forex.updatedAt) {
+    errors.push('Forex rates unavailable — using fallback (USD 0.92, HKD 0.118)');
+  }
 
-  for (const req of requests) {
-    const { id, isin, ticker, category } = req;
+  // 2. Fetch all three sources in parallel
+  const [euResults, usResults, hkResults] = await Promise.allSettled([
+    fetchYahooPrices(YAHOO_TICKER_MAP, redis),
+    fetchAlphaVantageBatch(ALPHAVANTAGE_TICKER_MAP, redis, forex.usdToEur),
+    fetchYahooHKPrices(YAHOO_HK_TICKER_MAP, redis, forex.hkdToEur),
+  ]);
 
-    // Skip non-priced categories
-    if (category === 'fund' || category === 'p2p' || category === 'cash') {
-      continue;
-    }
+  const euMap = euResults.status === 'fulfilled' ? euResults.value : new Map<string, YahooPriceData>();
+  const usMap = usResults.status === 'fulfilled' ? usResults.value : new Map<string, YahooPriceData>();
+  const hkMap = hkResults.status === 'fulfilled' ? hkResults.value : new Map<string, YahooPriceData>();
 
-    // ETFs with ISIN in our map → Yahoo Finance
-    if (isin && YAHOO_TICKER_MAP[isin]) {
-      const yticker = YAHOO_TICKER_MAP[isin];
-      tasks.push({
-        id,
-        promise: (async (): Promise<PriceResult | null> => {
-          const price = await fetchYahooPrice(yticker);
-          if (price === null) return null;
-          return {
-            assetId: id,
-            price,
-            priceEur: price, // Yahoo returns EUR for .DE / .AS tickers
-            change24h: null,
-            changePercent24h: null,
-            updatedAt: now,
-            source: 'yahoo',
-          };
-        })(),
-      });
-      continue;
-    }
+  if (euResults.status === 'rejected') errors.push('Yahoo EU fetch failed');
+  if (usResults.status === 'rejected') errors.push('Alpha Vantage fetch failed');
+  if (hkResults.status === 'rejected') errors.push('Yahoo HK fetch failed');
 
-    // US stocks: Alpha Vantage with Yahoo fallback
-    if (category === 'stock_us' && ticker) {
-      tasks.push({
-        id,
-        promise: (async (): Promise<PriceResult | null> => {
-          let price = await fetchAlphaVantagePrice(ticker);
-          let source: PriceSource = 'alphavantage';
+  // 3. Build result array
+  const prices: PriceResult[] = [];
 
-          if (price === null) {
-            price = await fetchYahooPrice(ticker);
-            source = 'yahoo';
-          }
-          if (price === null) return null;
-
-          return {
-            assetId: id,
-            price,
-            priceEur: price,
-            change24h: null,
-            changePercent24h: null,
-            updatedAt: now,
-            source,
-          };
-        })(),
-      });
-      continue;
-    }
-
-    // Asia stocks: Yahoo with .HK suffix
-    if (category === 'stock_asia' && ticker) {
-      const hkTicker = `${ticker}.HK`;
-      tasks.push({
-        id,
-        promise: (async (): Promise<PriceResult | null> => {
-          const price = await fetchYahooPrice(hkTicker);
-          if (price === null) return null;
-          return {
-            assetId: id,
-            price,
-            priceEur: price,
-            change24h: null,
-            changePercent24h: null,
-            updatedAt: now,
-            source: 'yahoo',
-          };
-        })(),
-      });
-      continue;
-    }
-
-    // EU stocks: Yahoo with direct ticker
-    if (category === 'stock_eu' && ticker) {
-      tasks.push({
-        id,
-        promise: (async (): Promise<PriceResult | null> => {
-          const price = await fetchYahooPrice(ticker);
-          if (price === null) return null;
-          return {
-            assetId: id,
-            price,
-            priceEur: price,
-            change24h: null,
-            changePercent24h: null,
-            updatedAt: now,
-            source: 'yahoo',
-          };
-        })(),
-      });
-      continue;
-    }
-
-    // ETFs without ISIN map but with ticker: try Yahoo directly
-    if ((category === 'etf_index' || category === 'etf_thematic' || category === 'etf_bond' || category === 'etf_commodity') && ticker) {
-      tasks.push({
-        id,
-        promise: (async (): Promise<PriceResult | null> => {
-          const price = await fetchYahooPrice(ticker);
-          if (price === null) return null;
-          return {
-            assetId: id,
-            price,
-            priceEur: price,
-            change24h: null,
-            changePercent24h: null,
-            updatedAt: now,
-            source: 'yahoo',
-          };
-        })(),
-      });
+  for (const [isin] of Object.entries(YAHOO_TICKER_MAP)) {
+    const d = euMap.get(isin);
+    if (d) {
+      prices.push({ isin, priceEur: d.price, changePercent: d.changePercent, source: 'yahoo', updatedAt: now });
     }
   }
 
-  if (tasks.length === 0) return {};
-
-  const settled = await Promise.allSettled(tasks.map((t) => t.promise));
-
-  const results: Record<string, PriceResult> = {};
-  for (let i = 0; i < settled.length; i++) {
-    const outcome = settled[i];
-    const taskId = tasks[i].id;
-    if (outcome.status === 'fulfilled' && outcome.value !== null) {
-      results[taskId] = outcome.value;
+  for (const [isin] of Object.entries(ALPHAVANTAGE_TICKER_MAP)) {
+    const d = usMap.get(isin);
+    if (d) {
+      prices.push({ isin, priceEur: d.price, changePercent: d.changePercent, source: 'alphavantage', updatedAt: now });
     }
   }
 
-  // Suppress unused variable warning for computeChange by calling it if needed
-  void computeChange;
+  for (const [isin] of Object.entries(YAHOO_HK_TICKER_MAP)) {
+    const d = hkMap.get(isin);
+    if (d) {
+      prices.push({ isin, priceEur: d.price, changePercent: d.changePercent, source: 'yahoo_hk', updatedAt: now });
+    }
+  }
 
-  return results;
+  return { prices, forex, errors };
 }

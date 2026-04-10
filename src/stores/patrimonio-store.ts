@@ -29,6 +29,9 @@ interface PatrimonioStore {
   snapshots: PortfolioSnapshot[];
   passiveIncome: PassiveIncome[];
 
+  // Price change map: isin → day change %
+  priceChanges: Record<string, number | null>;
+
   // Loading
   isLoading: boolean;
   isLoadingPrices: boolean;
@@ -54,6 +57,8 @@ interface PatrimonioStore {
   setActivePlatform: (slug: PlatformSlug | 'all') => void;
   setActiveAsset: (id: string | null) => void;
   updateAssetPrice: (assetId: string, price: number, priceEur?: number) => void;
+  updateAssetPriceByIsin: (isin: string, priceEur: number) => void;
+  setPriceChange: (isin: string, changePercent: number | null) => void;
   setPricesLastUpdated: (ts: string) => void;
   setSelectedYear: (year: string | 'all') => void;
 
@@ -61,6 +66,7 @@ interface PatrimonioStore {
   getAssetsByPlatformSlug: (slug: PlatformSlug) => PortfolioAsset[];
   getPlatformSummary: (slug: PlatformSlug) => PlatformSummary | null;
   getTRAssets: () => PortfolioAsset[];
+  getTRCurrentValue: () => number;
   getAvailableYears: () => string[];
   getAllocationByCategory: () => AllocationSlice[];
   getAllocationByGeography: () => AllocationSlice[];
@@ -82,6 +88,7 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
   savingsPlan: [],
   snapshots: [],
   passiveIncome: [],
+  priceChanges: {},
   isLoading: false,
   isLoadingPrices: false,
   pricesLastUpdated: null,
@@ -124,6 +131,53 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
     }));
   },
 
+  updateAssetPriceByIsin: (isin, priceEur) => {
+    set((state) => {
+      const updatedAssets = state.assets.map((a) => {
+        if (!a.isin || a.isin !== isin) return a;
+        const currentValue = priceEur * a.current_quantity;
+        const plAmount = currentValue - a.total_invested;
+        const plPercentage = a.total_invested > 0 ? (plAmount / a.total_invested) * 100 : 0;
+        return {
+          ...a,
+          current_price: priceEur,
+          current_price_eur: priceEur,
+          price_updated_at: new Date().toISOString(),
+          current_value: currentValue,
+          pl_amount: plAmount,
+          pl_percentage: plPercentage,
+        };
+      });
+
+      // Recalculate overview from updated assets
+      const totalValue = updatedAssets.reduce((s, a) => s + (a.current_value ?? 0), 0);
+      const totalInvested = updatedAssets.reduce((s, a) => s + a.total_invested, 0);
+      const totalCash = updatedAssets
+        .filter((a) => a.category === 'cash')
+        .reduce((s, a) => s + (a.current_value ?? 0), 0);
+      const plAmount = totalValue - totalInvested;
+      const nonCashInvested = totalInvested - totalCash;
+      const plPercentage = nonCashInvested > 0 ? (plAmount / nonCashInvested) * 100 : 0;
+
+      const updatedOverview = state.overview
+        ? {
+            ...state.overview,
+            total_value: totalValue,
+            pl_amount: plAmount,
+            pl_percentage: plPercentage,
+          }
+        : state.overview;
+
+      return { assets: updatedAssets, overview: updatedOverview };
+    });
+  },
+
+  setPriceChange: (isin, changePercent) => {
+    set((state) => ({
+      priceChanges: { ...state.priceChanges, [isin]: changePercent },
+    }));
+  },
+
   getAssetsByPlatformSlug: (slug) => {
     const { assets, platforms } = get();
     const platform = platforms.find((p) => p.slug === slug);
@@ -138,6 +192,11 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
   },
 
   getTRAssets: () => get().getAssetsByPlatformSlug('trade-republic'),
+
+  getTRCurrentValue: () =>
+    get()
+      .getTRAssets()
+      .reduce((sum, a) => sum + (a.current_value ?? 0), 0),
 
   getAvailableYears: () => {
     const { transactions, passiveIncome, snapshots } = get();

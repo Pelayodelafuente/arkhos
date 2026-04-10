@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { ChevronDown, ChevronRight, Search, ArrowUpDown, ArrowUp, ArrowDown, Plus } from "lucide-react";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { PLBadge } from "@/components/modules/patrimonio/shared/PLBadge";
@@ -76,14 +76,73 @@ function SortHeader({ label, sortKey, currentKey, currentDir, onSort, className 
   );
 }
 
+// ---------------------------------------------------------------------------
+// PriceCell — shows price with day-change badge and flash animation
+// ---------------------------------------------------------------------------
+
+interface PriceCellProps {
+  asset: PortfolioAsset;
+  changePercent: number | null | undefined;
+}
+
+function PriceCell({ asset, changePercent }: PriceCellProps) {
+  const prevPrice = useRef<number | undefined>(asset.current_price_eur);
+  const [flashClass, setFlashClass] = useState("");
+
+  useEffect(() => {
+    const prev = prevPrice.current;
+    const curr = asset.current_price_eur;
+    if (prev != null && curr != null && prev !== curr) {
+      const cls = curr > prev ? "price-flash-up" : "price-flash-down";
+      setFlashClass(cls);
+      const timer = setTimeout(() => setFlashClass(""), 400);
+      prevPrice.current = curr;
+      return () => clearTimeout(timer);
+    }
+    prevPrice.current = curr;
+  }, [asset.current_price_eur]);
+
+  if (asset.current_price_eur == null) {
+    return <span className="font-mono text-xs text-text-tertiary">—</span>;
+  }
+
+  const isUp = (changePercent ?? 0) >= 0;
+  const changeBadgeColor = (changePercent ?? 0) === 0
+    ? "var(--text-tertiary)"
+    : isUp
+    ? "var(--module-patrimonio)"
+    : "#A32D2D";
+
+  return (
+    <div className={`flex flex-col items-end gap-0.5 rounded ${flashClass}`}>
+      <span className="font-mono text-xs text-text-secondary">
+        {formatEur(asset.current_price_eur)}
+      </span>
+      {changePercent != null && (
+        <span
+          className="font-mono text-xs font-medium"
+          style={{ color: changeBadgeColor }}
+          title="Variación del día"
+        >
+          {changePercent >= 0 ? "+" : ""}
+          {changePercent.toFixed(2)}%
+        </span>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+
 interface CategoryGroupProps {
   category: AssetCategory;
   assets: PortfolioAsset[];
   savingsPlanMap: Map<string, number>;
+  priceChanges: Record<string, number | null>;
   onAssetClick: (id: string) => void;
 }
 
-function CategoryGroup({ category, assets, savingsPlanMap, onAssetClick }: CategoryGroupProps) {
+function CategoryGroup({ category, assets, savingsPlanMap, priceChanges, onAssetClick }: CategoryGroupProps) {
   const [open, setOpen] = useState(true);
 
   const groupValue = assets.reduce((s, a) => s + (a.current_value ?? 0), 0);
@@ -167,8 +226,11 @@ function CategoryGroup({ category, assets, savingsPlanMap, onAssetClick }: Categ
               <td className="hidden px-3 py-3 text-right font-mono text-xs text-text-secondary md:table-cell">
                 {formatQty(asset.current_quantity)}
               </td>
-              <td className="hidden px-3 py-3 text-right font-mono text-xs text-text-secondary md:table-cell">
-                {asset.current_price_eur != null ? formatEur(asset.current_price_eur) : "—"}
+              <td className="hidden px-3 py-3 text-right md:table-cell">
+                <PriceCell
+                  asset={asset}
+                  changePercent={asset.isin ? priceChanges[asset.isin] : undefined}
+                />
               </td>
               <td className="px-3 py-3 text-right font-mono text-sm font-medium text-foreground">
                 {formatEur(asset.current_value ?? 0)}
@@ -212,6 +274,7 @@ export function TRPositionsTable() {
   const assets = usePatrimonioStore((s) => s.assets);
   const platforms = usePatrimonioStore((s) => s.platforms);
   const savingsPlan = usePatrimonioStore((s) => s.savingsPlan);
+  const priceChanges = usePatrimonioStore((s) => s.priceChanges);
 
   const trAssets = useMemo(() => {
     const trPlatform = platforms.find((p) => p.slug === "trade-republic");
@@ -400,6 +463,7 @@ export function TRPositionsTable() {
                 category={category}
                 assets={assets}
                 savingsPlanMap={savingsPlanMap}
+                priceChanges={priceChanges}
                 onAssetClick={setActiveDrawerAssetId}
               />
             ))}

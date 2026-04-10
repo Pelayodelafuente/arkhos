@@ -523,3 +523,44 @@ async function recalcAssets(
       .eq('user_id', userId);
   }
 }
+
+// ---------------------------------------------------------------------------
+// updateLivePrices — persist live prices to DB by ISIN
+// ---------------------------------------------------------------------------
+
+export interface LivePriceInput {
+  isin: string;
+  priceEur: number;
+  updatedAt: string;
+}
+
+export async function updateLivePrices(
+  prices: LivePriceInput[],
+): Promise<{ updated: number; error?: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return { updated: 0, error: 'No autenticado' };
+
+  const results = await Promise.allSettled(
+    prices.map((p) =>
+      supabase
+        .from('portfolio_assets')
+        .update({
+          current_price_eur: p.priceEur,
+          current_price: p.priceEur,
+          price_updated_at: p.updatedAt,
+        })
+        .eq('isin', p.isin)
+        .eq('user_id', user.id),
+    ),
+  );
+
+  const updated = results.filter(
+    (r) => r.status === 'fulfilled' && !r.value.error,
+  ).length;
+
+  return { updated };
+}

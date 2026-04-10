@@ -2,183 +2,183 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
-import type { PriceFetchRequest, PriceResult } from "@/lib/patrimonio/price-service";
+import { updateLivePrices } from "@/app/actions/patrimonio";
+import type { PriceResult, ForexRates } from "@/lib/patrimonio/price-service";
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+export type PriceStatus = "idle" | "checking" | "loading" | "live" | "partial" | "offline";
 
 export interface UsePatrimonioPricesReturn {
-  status: "loading" | "live" | "offline" | "partial";
-  lastUpdated: string | null;
-  flashingAssets: string[]; // IDs de assets con cambio > 1%
-  refreshNow: () => void;
-}
-
-const DESKTOP_INTERVAL_MS = 60_000;   // 60 s
-const MOBILE_INTERVAL_MS  = 300_000;  // 5 min
-const FLASH_DURATION_MS   = 300;
-
-// Categories that do not have live prices
-const SKIP_CATEGORIES = new Set(["fund", "p2p", "cash"]);
-
-function getIntervalMs(): number {
-  if (typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches) {
-    return MOBILE_INTERVAL_MS;
-  }
-  return DESKTOP_INTERVAL_MS;
-}
-
-interface RouteResponse {
-  prices: Record<string, PriceResult>;
+  status: PriceStatus;
+  lastUpdated: Date | null;
+  forex: ForexRates | null;
+  marketStatus: { eu: string; us: string; hk: string } | null;
   errors: string[];
-  cached: boolean;
+  refreshPrices: () => Promise<void>;
+  isRefreshing: boolean;
 }
+
+interface ApiResponse {
+  prices: PriceResult[];
+  forex: ForexRates;
+  errors: string[];
+  marketStatus: { eu: string; us: string; hk: string };
+  timestamp: string;
+  offline?: boolean;
+}
+
+const PRICE_TTL_MS = 3_600_000; // 1 hour
+const COOLDOWN_MS  = 60_000;    // 60s between manual refreshes
+
+// ---------------------------------------------------------------------------
+// Hook
+// ---------------------------------------------------------------------------
 
 export function usePatrimonioPrices(): UsePatrimonioPricesReturn {
-  const assets           = usePatrimonioStore((s) => s.assets);
-  const updateAssetPrice = usePatrimonioStore((s) => s.updateAssetPrice);
-  const setIsLoadingPrices   = usePatrimonioStore((s) => s.setIsLoadingPrices);
-  const setPricesLastUpdated = usePatrimonioStore((s) => s.setPricesLastUpdated);
-  const pricesLastUpdated    = usePatrimonioStore((s) => s.pricesLastUpdated);
+  const assets                  = usePatrimonioStore((s) => s.assets);
+  const updateAssetPriceByIsin  = usePatrimonioStore((s) => s.updateAssetPriceByIsin);
+  const setPriceChange          = usePatrimonioStore((s) => s.setPriceChange);
+  const setIsLoadingPrices      = usePatrimonioStore((s) => s.setIsLoadingPrices);
+  const setPricesLastUpdated    = usePatrimonioStore((s) => s.setPricesLastUpdated);
 
-  const [status, setStatus]               = useState<UsePatrimonioPricesReturn["status"]>("loading");
-  const [flashingAssets, setFlashingAssets] = useState<string[]>([]);
+  const [status, setStatus]             = useState<PriceStatus>("idle");
+  const [lastUpdated, setLastUpdated]   = useState<Date | null>(null);
+  const [forex, setForex]               = useState<ForexRates | null>(null);
+  const [marketStatus, setMarketStatus] = useState<{ eu: string; us: string; hk: string } | null>(null);
+  const [errors, setErrors]             = useState<string[]>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Track consecutive failures to detect "offline"
-  const failureCount  = useRef(0);
-  const successCount  = useRef(0);
-  const intervalRef   = useRef<ReturnType<typeof setInterval> | null>(null);
-  const abortRef      = useRef<AbortController | null>(null);
+  const lastRefreshRef    = useRef<number>(0);
+  const hasFetchedRef     = useRef(false);
 
-  // Build eligible requests from the current asset list
-  const eligibleRequests: PriceFetchRequest[] = assets
-    .filter((a) => !SKIP_CATEGORIES.has(a.category))
-    .map((a) => ({
-      id: a.id,
-      ticker: a.ticker,
-      isin: a.isin,
-      category: a.category,
-    }));
-
-  const fetchOnce = useCallback(async () => {
-    if (eligibleRequests.length === 0) return;
-
-    // Cancel any in-flight request
-    abortRef.current?.abort();
-    abortRef.current = new AbortController();
-
+  // ---------------------------------------------------------------------------
+  // Core fetch function
+  // ---------------------------------------------------------------------------
+  const fetchPrices = useCallback(async () => {
+    setIsRefreshing(true);
     setIsLoadingPrices(true);
+    setStatus("loading");
 
     try {
       const res = await fetch("/api/patrimonio/prices", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ assets: eligibleRequests }),
-        signal: abortRef.current.signal,
       });
 
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-      const json = (await res.json()) as RouteResponse;
-      const { prices, errors } = json;
-
-      const receivedCount = Object.keys(prices).length;
-
-      if (receivedCount > 0) {
-        const newFlashing: string[] = [];
-
-        for (const asset of assets) {
-          const result = prices[asset.id];
-          if (!result) continue;
-
-          // Detect significant change (>1%)
-          const prevPrice = asset.current_price ?? 0;
-          if (prevPrice > 0) {
-            const changePct = Math.abs((result.price - prevPrice) / prevPrice) * 100;
-            if (changePct > 1) {
-              newFlashing.push(asset.id);
-            }
-          }
-
-          updateAssetPrice(asset.id, result.price, result.priceEur);
-        }
-
-        const ts = new Date().toISOString();
-        setPricesLastUpdated(ts);
-        failureCount.current = 0;
-        successCount.current += 1;
-
-        // Flash assets with >1% change
-        if (newFlashing.length > 0) {
-          setFlashingAssets(newFlashing);
-          setTimeout(() => setFlashingAssets([]), FLASH_DURATION_MS);
-        }
-
-        // Status: partial if some assets did not come back
-        if (errors.length > 0 || receivedCount < eligibleRequests.length) {
-          setStatus("partial");
-        } else {
-          setStatus("live");
-        }
-      } else {
-        // No prices received — could be offline or no API keys
-        failureCount.current += 1;
-        if (failureCount.current >= 2) {
-          setStatus("offline");
-        } else if (successCount.current > 0) {
-          setStatus("partial");
-        }
+      if (!res.ok) {
+        setStatus("offline");
+        return;
       }
-    } catch (err) {
-      if ((err as Error).name === "AbortError") return;
-      failureCount.current += 1;
-      if (failureCount.current >= 2) {
+
+      const json = (await res.json()) as ApiResponse;
+
+      if (json.offline) {
+        setStatus("offline");
+        setErrors(json.errors);
+        return;
+      }
+
+      const { prices, forex: fxRates, errors: apiErrors, marketStatus: mkt } = json;
+
+      setForex(fxRates);
+      setMarketStatus(mkt);
+      setErrors(apiErrors);
+
+      if (prices.length > 0) {
+        // Update store for each price
+        for (const p of prices) {
+          updateAssetPriceByIsin(p.isin, p.priceEur);
+          setPriceChange(p.isin, p.changePercent ?? null);
+        }
+
+        const now = new Date();
+        setLastUpdated(now);
+        setPricesLastUpdated(now.toISOString());
+        lastRefreshRef.current = Date.now();
+
+        // Persist to DB (fire and forget — non-blocking)
+        const liveInputs = prices.map((p) => ({
+          isin: p.isin,
+          priceEur: p.priceEur,
+          updatedAt: p.updatedAt,
+        }));
+        void updateLivePrices(liveInputs);
+
+        const totalAssets = assets.filter(
+          (a) => a.isin && a.category !== "cash",
+        ).length;
+        setStatus(prices.length >= totalAssets ? "live" : "partial");
+      } else {
         setStatus("offline");
       }
+    } catch {
+      setStatus("offline");
     } finally {
+      setIsRefreshing(false);
       setIsLoadingPrices(false);
     }
-  }, [assets, eligibleRequests, updateAssetPrice, setIsLoadingPrices, setPricesLastUpdated]);
+  }, [
+    assets,
+    updateAssetPriceByIsin,
+    setPriceChange,
+    setIsLoadingPrices,
+    setPricesLastUpdated,
+  ]);
 
-  // Start / restart polling when eligible assets change
+  // ---------------------------------------------------------------------------
+  // On mount: decide whether to fetch or use DB prices
+  // ---------------------------------------------------------------------------
   useEffect(() => {
-    if (eligibleRequests.length === 0) return;
+    if (hasFetchedRef.current || assets.length === 0) return;
+    hasFetchedRef.current = true;
 
-    const interval = getIntervalMs();
+    setStatus("checking");
 
-    // Immediate fetch
-    void fetchOnce();
+    const pricedAssets = assets.filter(
+      (a) => a.isin && a.category !== "cash" && a.price_updated_at,
+    );
 
-    intervalRef.current = setInterval(() => {
-      void fetchOnce();
-    }, interval);
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-      abortRef.current?.abort();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [eligibleRequests.length, fetchOnce]);
-
-  // Reconnect on online event
-  useEffect(() => {
-    function handleOnline() {
-      failureCount.current = 0;
-      void fetchOnce();
+    if (pricedAssets.length === 0) {
+      // Never fetched — call API immediately
+      void fetchPrices();
+      return;
     }
 
-    window.addEventListener("online", handleOnline);
-    return () => window.removeEventListener("online", handleOnline);
-  }, [fetchOnce]);
+    // Find oldest price_updated_at
+    const oldestTs = pricedAssets.reduce<number>((min, a) => {
+      const ts = a.price_updated_at ? new Date(a.price_updated_at).getTime() : 0;
+      return ts < min ? ts : min;
+    }, Infinity);
 
-  const refreshNow = useCallback(() => {
-    void fetchOnce();
-  }, [fetchOnce]);
+    if (Date.now() - oldestTs > PRICE_TTL_MS) {
+      // Prices are stale — refresh
+      void fetchPrices();
+    } else {
+      // Prices are fresh — use DB values, mark as live
+      setStatus("live");
+      setLastUpdated(new Date(oldestTs));
+    }
+  }, [assets, fetchPrices]);
+
+  // ---------------------------------------------------------------------------
+  // Public refresh (with cooldown)
+  // ---------------------------------------------------------------------------
+  const refreshPrices = useCallback(async () => {
+    const elapsed = Date.now() - lastRefreshRef.current;
+    if (elapsed < COOLDOWN_MS) return; // Still in cooldown
+    await fetchPrices();
+  }, [fetchPrices]);
 
   return {
     status,
-    lastUpdated: pricesLastUpdated,
-    flashingAssets,
-    refreshNow,
+    lastUpdated,
+    forex,
+    marketStatus,
+    errors,
+    refreshPrices,
+    isRefreshing,
   };
 }

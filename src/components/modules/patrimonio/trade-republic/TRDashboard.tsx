@@ -7,6 +7,7 @@ import { SavingsPlanPanel } from "./SavingsPlanPanel";
 import { TRChartsPanel } from "./TRChartsPanel";
 import { TRPositionsTable } from "./TRPositionsTable";
 import { PassiveIncomePanel } from "./PassiveIncomePanel";
+import { PriceStatusBanner } from "@/components/modules/patrimonio/shared/PriceStatusBanner";
 
 function YearFilter() {
   const selectedYear = usePatrimonioStore((s) => s.selectedYear);
@@ -44,6 +45,9 @@ function YearFilter() {
 export function TRDashboard() {
   return (
     <div className="space-y-6">
+      {/* Price status banner */}
+      <PriceStatusBanner />
+
       {/* Year filter */}
       <div className="flex items-center justify-between">
         <p className="text-xs text-text-tertiary">Filtra los graficos por año para ver el progreso anual</p>

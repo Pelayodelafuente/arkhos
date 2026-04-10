@@ -1,132 +1,98 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { fetchPrices } from '@/lib/patrimonio/price-service';
-import type { PriceFetchRequest, PriceResult } from '@/lib/patrimonio/price-service';
+import { Redis } from '@upstash/redis';
+import { Ratelimit } from '@upstash/ratelimit';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+import {
+  fetchAllTRPrices,
+  isEUMarketOpen,
+  isUSMarketOpen,
+  isHKMarketOpen,
+} from '@/lib/patrimonio/price-service';
 
-interface RequestBody {
-  assets: PriceFetchRequest[];
-}
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
 
-interface RouteResponse {
-  prices: Record<string, PriceResult>;
-  errors: string[];
-  cached: boolean;
-}
+const ratelimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(10, '60 s'),
+});
 
-// TTL in seconds per asset category
-function getTtl(category: string): number {
-  if (category === 'crypto') return 30;
-  return 60;
-}
-
-export async function POST(request: NextRequest): Promise<NextResponse> {
+export async function POST(): Promise<Response> {
   // 1. Auth guard
+  let userId: string;
   try {
-    const supabase = await createClient();
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll: () => cookieStore.getAll(),
+          setAll: (cookiesToSet) => {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) =>
+                cookieStore.set(name, value, options),
+              );
+            } catch {}
+          },
+        },
+      },
+    );
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    userId = user.id;
   } catch {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // 2. Parse + validate body
-  let body: RequestBody;
-  try {
-    body = (await request.json()) as RequestBody;
-  } catch {
-    return NextResponse.json(
-      { prices: {}, errors: ['Invalid JSON body'], cached: false } satisfies RouteResponse,
+  // 2. Rate limit by userId
+  const { success, reset } = await ratelimit.limit(userId);
+  if (!success) {
+    const retryAfter = Math.ceil((reset - Date.now()) / 1000);
+    return Response.json(
+      { error: 'Too many requests', retryAfter },
+      {
+        status: 429,
+        headers: { 'Retry-After': String(retryAfter) },
+      },
     );
   }
 
-  if (!Array.isArray(body?.assets)) {
-    return NextResponse.json(
-      { prices: {}, errors: ['assets must be an array'], cached: false } satisfies RouteResponse,
-    );
+  // 3. Verify env vars are configured
+  const hasAlphaVantage = Boolean(process.env.ALPHA_VANTAGE_API_KEY);
+  const hasExchangeRate = Boolean(process.env.EXCHANGE_RATE_API_KEY);
+  if (!hasAlphaVantage && !hasExchangeRate) {
+    return Response.json({
+      prices: [],
+      errors: ['APIs no configuradas'],
+      offline: true,
+      timestamp: new Date().toISOString(),
+    });
   }
 
-  const assets = body.assets;
-  const errors: string[] = [];
+  // 4. Fetch all prices
+  const result = await fetchAllTRPrices(redis);
 
-  // 3. Redis cache (optional — graceful if not configured)
-  const hasRedis =
-    process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN;
+  // 5. Market status
+  const marketStatus = {
+    eu: isEUMarketOpen() ? 'open' : 'closed',
+    us: isUSMarketOpen() ? 'open' : 'closed',
+    hk: isHKMarketOpen() ? 'open' : 'closed',
+  };
 
-  if (hasRedis) {
-    try {
-      const { Redis } = await import('@upstash/redis');
-      const redis = new Redis({
-        url: process.env.UPSTASH_REDIS_REST_URL!,
-        token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-      });
-
-      // Try to serve all from cache
-      const cached: Record<string, PriceResult> = {};
-      const misses: PriceFetchRequest[] = [];
-
-      for (const asset of assets) {
-        const hit = await redis.get<PriceResult>(`prices:${asset.id}`);
-        if (hit) {
-          cached[asset.id] = { ...hit, source: 'cache' };
-        } else {
-          misses.push(asset);
-        }
-      }
-
-      // Full cache hit
-      if (misses.length === 0 && Object.keys(cached).length > 0) {
-        return NextResponse.json({
-          prices: cached,
-          errors: [],
-          cached: true,
-        } satisfies RouteResponse);
-      }
-
-      // Fetch only the misses
-      const fresh = await fetchPrices(misses);
-
-      // Store fresh results in Redis
-      for (const [assetId, result] of Object.entries(fresh)) {
-        const asset = assets.find((a) => a.id === assetId);
-        const ttl = asset ? getTtl(asset.category) : 60;
-        try {
-          await redis.setex(`prices:${assetId}`, ttl, result);
-        } catch {
-          // Cache write failure is non-fatal
-        }
-      }
-
-      const prices: Record<string, PriceResult> = { ...cached, ...fresh };
-      return NextResponse.json({
-        prices,
-        errors,
-        cached: false,
-      } satisfies RouteResponse);
-    } catch (err) {
-      // Redis failure — fall through to direct fetch
-      errors.push(`Cache unavailable: ${err instanceof Error ? err.message : 'unknown error'}`);
-    }
-  }
-
-  // 4. Direct fetch (no Redis, or Redis failed)
-  try {
-    const prices = await fetchPrices(assets);
-    return NextResponse.json({
-      prices,
-      errors,
-      cached: false,
-    } satisfies RouteResponse);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error fetching prices';
-    return NextResponse.json({
-      prices: {},
-      errors: [message],
-      cached: false,
-    } satisfies RouteResponse);
-  }
+  // 6. Always return 200
+  return Response.json({
+    prices: result.prices,
+    forex: result.forex,
+    errors: result.errors,
+    marketStatus,
+    timestamp: new Date().toISOString(),
+  });
 }
