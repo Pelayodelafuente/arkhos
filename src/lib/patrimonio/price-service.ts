@@ -23,7 +23,7 @@ export const YAHOO_TICKER_MAP: Record<string, string> = {
   'IE0003A512E4': 'ARKI2.AS',   // ARK AI Robotics
 };
 
-export const ALPHAVANTAGE_TICKER_MAP: Record<string, string> = {
+export const FINNHUB_TICKER_MAP: Record<string, string> = {
   'US67066G1040': 'NVDA',
   'US88160R1014': 'TSLA',
   'US02079K1079': 'GOOGL',
@@ -50,7 +50,7 @@ export interface PriceResult {
   isin: string;
   priceEur: number;
   changePercent: number | null;
-  source: 'yahoo' | 'alphavantage' | 'yahoo_hk' | 'cache' | 'fallback';
+  source: 'yahoo' | 'finnhub' | 'yahoo_hk' | 'cache' | 'fallback';
   updatedAt: string;
 }
 
@@ -313,126 +313,76 @@ async function fetchYahooHKPrices(
 }
 
 // ---------------------------------------------------------------------------
-// Alpha Vantage batch (USD → EUR)
+// Finnhub — acciones USA (USD → EUR)
 // ---------------------------------------------------------------------------
 
-interface AVBatchStockQuote {
-  '1. symbol': string;
-  '2. price': string;
-  '3. volume'?: string;
-  '4. timestamp'?: string;
+interface FinnhubQuote {
+  c: number;   // current price
+  d: number;   // day change $
+  dp: number;  // day change %
+  h: number;   // high
+  l: number;   // low
+  o: number;   // open
+  pc: number;  // previous close
 }
 
-interface AVBatchResponse {
-  'Stock Quotes'?: AVBatchStockQuote[];
-  'Note'?: string;
-  'Information'?: string;
+async function fetchFinnhubSingle(
+  ticker: string,
+  redis: Redis,
+  usdToEur: number,
+  ttl: number,
+): Promise<YahooPriceData | null> {
+  const cacheKey = `price:finnhub:${ticker}`;
+  try {
+    const cached = await redis.get<YahooPriceData>(cacheKey);
+    if (cached) return cached;
+
+    const apiKey = process.env.FINNHUB_API_KEY;
+    if (!apiKey) return null;
+
+    const url = `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(ticker)}&token=${apiKey}`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(6_000) });
+    if (!res.ok) return null;
+
+    const data = (await res.json()) as FinnhubQuote;
+
+    // c === 0 means no data (market closed with no cached price on their end)
+    if (!data.c || data.c <= 0) return null;
+
+    const result: YahooPriceData = {
+      price: data.c * usdToEur,
+      changePercent: Number.isFinite(data.dp) ? data.dp : null,
+    };
+
+    await redis.setex(cacheKey, ttl, result);
+    return result;
+  } catch {
+    return null;
+  }
 }
 
-interface AVGlobalQuote {
-  '05. price'?: string;
-  '10. change percent'?: string;
-}
-
-interface AVGlobalResponse {
-  'Global Quote'?: AVGlobalQuote;
-  'Note'?: string;
-  'Information'?: string;
-}
-
-async function fetchAlphaVantageBatch(
+async function fetchFinnhubPrices(
   isinTickerMap: Record<string, string>,
   redis: Redis,
   usdToEur: number,
 ): Promise<Map<string, YahooPriceData>> {
   const ttl = isUSMarketOpen() ? 3600 : 14400;
-  const apiKey = process.env.ALPHA_VANTAGE_API_KEY;
-  if (!apiKey) return new Map();
-
   const entries = Object.entries(isinTickerMap);
-  const map = new Map<string, YahooPriceData>();
 
-  // Check cache first — only fetch tickers not in cache
-  const missingEntries: typeof entries = [];
-  for (const [isin, ticker] of entries) {
-    const cached = await redis.get<YahooPriceData>(`price:av:${ticker}`);
-    if (cached) {
-      map.set(isin, cached);
-    } else {
-      missingEntries.push([isin, ticker]);
-    }
-  }
-
-  if (missingEntries.length === 0) return map;
-
-  const symbols = missingEntries.map(([, t]) => t).join(',');
-
-  // Try BATCH_STOCK_QUOTES first
-  try {
-    const url = `https://www.alphavantage.co/query?function=BATCH_STOCK_QUOTES&symbols=${encodeURIComponent(symbols)}&apikey=${apiKey}`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
-    if (res.ok) {
-      const data = (await res.json()) as AVBatchResponse;
-      if (!data['Note'] && !data['Information'] && data['Stock Quotes']) {
-        const quotes = data['Stock Quotes'];
-        for (const quote of quotes) {
-          const ticker = quote['1. symbol'];
-          const price = parseFloat(quote['2. price']);
-          if (!Number.isFinite(price) || price <= 0) continue;
-
-          const entry = missingEntries.find(([, t]) => t === ticker);
-          if (!entry) continue;
-          const [isin] = entry;
-
-          const result: YahooPriceData = {
-            price: price * usdToEur,
-            changePercent: null,
-          };
-          map.set(isin, result);
-          await redis.setex(`price:av:${ticker}`, ttl, result).catch(() => {});
-        }
-        return map;
-      }
-    }
-  } catch {
-    // Batch failed — fall through to individual calls
-  }
-
-  // Fallback: individual GLOBAL_QUOTE calls (respect rate limit with staggering)
-  const individualResults = await Promise.allSettled(
-    missingEntries.map(async ([isin, ticker], i) => {
-      // Stagger requests slightly to avoid simultaneous bursts
-      await new Promise((r) => setTimeout(r, i * 200));
-      const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${encodeURIComponent(ticker)}&apikey=${apiKey}`;
-      const res = await fetch(url, { signal: AbortSignal.timeout(8_000) });
-      if (!res.ok) return null;
-      const data = (await res.json()) as AVGlobalResponse;
-      if (data['Note'] || data['Information']) return null;
-
-      const raw = data['Global Quote'];
-      const priceStr = raw?.['05. price'];
-      if (!priceStr) return null;
-      const price = parseFloat(priceStr);
-      if (!Number.isFinite(price) || price <= 0) return null;
-
-      const changePctStr = raw?.['10. change percent']?.replace('%', '');
-      const changePercent = changePctStr ? parseFloat(changePctStr) : null;
-
-      const result: YahooPriceData = {
-        price: price * usdToEur,
-        changePercent: Number.isFinite(changePercent as number) ? (changePercent as number) : null,
-      };
-      await redis.setex(`price:av:${ticker}`, ttl, result).catch(() => {});
-      return { isin, result };
-    }),
+  const results = await Promise.allSettled(
+    entries.map(([, ticker]) => fetchFinnhubSingle(ticker, redis, usdToEur, ttl)),
   );
 
-  for (const r of individualResults) {
+  const map = new Map<string, YahooPriceData>();
+  for (let i = 0; i < results.length; i++) {
+    const r = results[i];
+    const [isin, ticker] = entries[i];
     if (r.status === 'fulfilled' && r.value) {
-      map.set(r.value.isin, r.value.result);
+      map.set(isin, r.value);
+    } else {
+      console.log(`[prices] Finnhub failed for ISIN ${isin} (ticker: ${ticker})`);
     }
   }
-
   return map;
 }
 
@@ -442,7 +392,7 @@ async function fetchAlphaVantageBatch(
 
 export interface PriceDebugInfo {
   yahoo_eu_count: number;
-  alphavantage_count: number;
+  finnhub_count: number;
   yahoo_hk_count: number;
   missing_isins: string[];
   /** ISIN → resolved ticker (shows fallback when primary failed) */
@@ -467,7 +417,7 @@ export async function fetchAllTRPrices(redis: Redis): Promise<{
   // 2. Fetch all three sources in parallel
   const [euResults, usResults, hkResults] = await Promise.allSettled([
     fetchYahooPrices(YAHOO_TICKER_MAP, redis),
-    fetchAlphaVantageBatch(ALPHAVANTAGE_TICKER_MAP, redis, forex.usdToEur),
+    fetchFinnhubPrices(FINNHUB_TICKER_MAP, redis, forex.usdToEur),
     fetchYahooHKPrices(YAHOO_HK_TICKER_MAP, redis, forex.hkdToEur),
   ]);
 
@@ -478,19 +428,19 @@ export async function fetchAllTRPrices(redis: Redis): Promise<{
   const hkMap = hkResults.status === 'fulfilled' ? hkResults.value : new Map<string, YahooPriceData>();
 
   if (euResults.status === 'rejected') errors.push('Yahoo EU fetch failed');
-  if (usResults.status === 'rejected') errors.push('Alpha Vantage fetch failed');
+  if (usResults.status === 'rejected') errors.push('Finnhub fetch failed');
   if (hkResults.status === 'rejected') errors.push('Yahoo HK fetch failed');
 
   // Build debug info
   const missingEU = Object.keys(YAHOO_TICKER_MAP).filter((isin) => !euMap.has(isin));
-  const missingUS = Object.keys(ALPHAVANTAGE_TICKER_MAP).filter((isin) => !usMap.has(isin));
+  const missingUS = Object.keys(FINNHUB_TICKER_MAP).filter((isin) => !usMap.has(isin));
   const missingHK = Object.keys(YAHOO_HK_TICKER_MAP).filter((isin) => !hkMap.has(isin));
 
   const tickersTried: Record<string, string> = {};
   for (const [isin, primaryTicker] of Object.entries(YAHOO_TICKER_MAP)) {
     tickersTried[isin] = euResolvedTickers.get(isin) ?? `${primaryTicker} (failed)`;
   }
-  for (const [isin, ticker] of Object.entries(ALPHAVANTAGE_TICKER_MAP)) {
+  for (const [isin, ticker] of Object.entries(FINNHUB_TICKER_MAP)) {
     tickersTried[isin] = usMap.has(isin) ? ticker : `${ticker} (failed)`;
   }
   for (const [isin, ticker] of Object.entries(YAHOO_HK_TICKER_MAP)) {
@@ -499,11 +449,11 @@ export async function fetchAllTRPrices(redis: Redis): Promise<{
 
   const debug: PriceDebugInfo = {
     yahoo_eu_count: euMap.size,
-    alphavantage_count: usMap.size,
+    finnhub_count: usMap.size,
     yahoo_hk_count: hkMap.size,
     missing_isins: [
       ...missingEU.map((isin) => `${isin}→${YAHOO_TICKER_MAP[isin]}`),
-      ...missingUS.map((isin) => `${isin}→${ALPHAVANTAGE_TICKER_MAP[isin]}`),
+      ...missingUS.map((isin) => `${isin}→${FINNHUB_TICKER_MAP[isin]}`),
       ...missingHK.map((isin) => `${isin}→${YAHOO_HK_TICKER_MAP[isin]}`),
     ],
     tickers_tried: tickersTried,
@@ -511,7 +461,7 @@ export async function fetchAllTRPrices(redis: Redis): Promise<{
 
   // Diagnostic logging
   console.log('[prices] Yahoo EU results (ISINs):', [...euMap.keys()]);
-  console.log('[prices] Alpha Vantage results (ISINs):', [...usMap.keys()]);
+  console.log('[prices] Finnhub results (ISINs):', [...usMap.keys()]);
   console.log('[prices] Yahoo HK results (ISINs):', [...hkMap.keys()]);
   console.log('[prices] Errors:', errors);
   if (debug.missing_isins.length) console.log('[prices] Missing ISINs:', debug.missing_isins);
@@ -526,10 +476,10 @@ export async function fetchAllTRPrices(redis: Redis): Promise<{
     }
   }
 
-  for (const [isin] of Object.entries(ALPHAVANTAGE_TICKER_MAP)) {
+  for (const [isin] of Object.entries(FINNHUB_TICKER_MAP)) {
     const d = usMap.get(isin);
     if (d) {
-      prices.push({ isin, priceEur: d.price, changePercent: d.changePercent, source: 'alphavantage', updatedAt: now });
+      prices.push({ isin, priceEur: d.price, changePercent: d.changePercent, source: 'finnhub', updatedAt: now });
     }
   }
 

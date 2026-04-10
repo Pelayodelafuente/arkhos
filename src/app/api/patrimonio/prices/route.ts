@@ -66,9 +66,9 @@ export async function POST(): Promise<Response> {
   }
 
   // 3. Verify env vars are configured
-  const hasAlphaVantage = Boolean(process.env.ALPHA_VANTAGE_API_KEY);
+  const hasFinnhub = Boolean(process.env.FINNHUB_API_KEY);
   const hasExchangeRate = Boolean(process.env.EXCHANGE_RATE_API_KEY);
-  if (!hasAlphaVantage && !hasExchangeRate) {
+  if (!hasFinnhub && !hasExchangeRate) {
     return Response.json({
       prices: [],
       errors: ['APIs no configuradas'],
