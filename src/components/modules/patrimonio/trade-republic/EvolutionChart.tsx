@@ -79,16 +79,19 @@ export function EvolutionChart() {
   const gradValue = `gradValue-${uid}`;
   const gradInvested = `gradInvested-${uid}`;
   const snapshots = usePatrimonioStore((s) => s.snapshots);
+  const selectedYear = usePatrimonioStore((s) => s.selectedYear);
 
   const data: EvolutionPoint[] = useMemo(
     () =>
-      snapshots.map((s) => ({
-        date: s.snapshot_date,
-        value: s.total_value,
-        invested: s.total_invested,
-        pl: s.pl_amount ?? 0,
-      })),
-    [snapshots]
+      snapshots
+        .filter((s) => selectedYear === 'all' || s.snapshot_date.startsWith(selectedYear))
+        .map((s) => ({
+          date: s.snapshot_date,
+          value: s.total_value,
+          invested: s.total_invested,
+          pl: s.pl_amount ?? 0,
+        })),
+    [snapshots, selectedYear]
   );
 
   if (data.length === 0) {

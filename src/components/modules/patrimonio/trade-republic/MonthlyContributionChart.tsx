@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import type { PortfolioTransaction, PortfolioAsset } from "@/types/patrimonio";
 import { CATEGORY_COLORS } from "@/types/patrimonio";
+import { usePatrimonioStore } from "@/stores/patrimonio-store";
 
 interface RechartsPayloadItem {
   dataKey?: string;
@@ -116,7 +117,12 @@ function CustomTooltip({
 }
 
 export function MonthlyContributionChart({ transactions, assets }: MonthlyContributionChartProps) {
-  const planTxs = transactions.filter((t) => t.type === "savings_plan");
+  const selectedYear = usePatrimonioStore((s) => s.selectedYear);
+  const planTxs = transactions.filter(
+    (t) =>
+      t.type === "savings_plan" &&
+      (selectedYear === "all" || t.transaction_date.startsWith(selectedYear))
+  );
 
   if (planTxs.length === 0) {
     return (

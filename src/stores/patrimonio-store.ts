@@ -38,6 +38,9 @@ interface PatrimonioStore {
   activePlatform: PlatformSlug | 'all';
   activeAssetId: string | null;
 
+  // Year filter
+  selectedYear: string | 'all';
+
   // Actions
   setOverview: (overview: PortfolioOverview) => void;
   setPlatforms: (platforms: InvestmentPlatform[]) => void;
@@ -52,11 +55,13 @@ interface PatrimonioStore {
   setActiveAsset: (id: string | null) => void;
   updateAssetPrice: (assetId: string, price: number, priceEur?: number) => void;
   setPricesLastUpdated: (ts: string) => void;
+  setSelectedYear: (year: string | 'all') => void;
 
   // Selectors
   getAssetsByPlatformSlug: (slug: PlatformSlug) => PortfolioAsset[];
   getPlatformSummary: (slug: PlatformSlug) => PlatformSummary | null;
   getTRAssets: () => PortfolioAsset[];
+  getAvailableYears: () => string[];
   getAllocationByCategory: () => AllocationSlice[];
   getAllocationByGeography: () => AllocationSlice[];
   getAllocationByRisk: () => AllocationSlice[];
@@ -82,6 +87,7 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
   pricesLastUpdated: null,
   activePlatform: 'all',
   activeAssetId: null,
+  selectedYear: new Date().getFullYear().toString(),
 
   setOverview: (overview) => set({ overview }),
   setPlatforms: (platforms) => set({ platforms }),
@@ -95,6 +101,7 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
   setActivePlatform: (activePlatform) => set({ activePlatform }),
   setActiveAsset: (activeAssetId) => set({ activeAssetId }),
   setPricesLastUpdated: (ts) => set({ pricesLastUpdated: ts }),
+  setSelectedYear: (selectedYear) => set({ selectedYear }),
 
   updateAssetPrice: (assetId, price, priceEur) => {
     const eur = priceEur ?? price;
@@ -131,6 +138,15 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
   },
 
   getTRAssets: () => get().getAssetsByPlatformSlug('trade-republic'),
+
+  getAvailableYears: () => {
+    const { transactions, passiveIncome, snapshots } = get();
+    const years = new Set<string>();
+    for (const t of transactions) years.add(t.transaction_date.substring(0, 4));
+    for (const i of passiveIncome) years.add(i.income_date.substring(0, 4));
+    for (const s of snapshots) years.add(s.snapshot_date.substring(0, 4));
+    return Array.from(years).sort();
+  },
 
   getAllocationByCategory: () => {
     const trAssets = get().getTRAssets().filter((a) => a.category !== 'cash');

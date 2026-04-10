@@ -63,19 +63,26 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
 export function PassiveIncomePanel() {
   const passiveIncome = usePatrimonioStore((s) => s.passiveIncome);
   const assets = usePatrimonioStore((s) => s.assets);
+  const selectedYear = usePatrimonioStore((s) => s.selectedYear);
 
   const assetMap = useMemo(() => new Map(assets.map((a) => [a.id, a])), [assets]);
 
-  const totalYTD = useMemo(() => {
-    const year = new Date().getFullYear().toString();
-    return passiveIncome
-      .filter((item) => item.income_date.startsWith(year))
-      .reduce((sum, item) => sum + item.amount, 0);
-  }, [passiveIncome]);
+  const filteredIncome = useMemo(
+    () =>
+      selectedYear === 'all'
+        ? passiveIncome
+        : passiveIncome.filter((item) => item.income_date.startsWith(selectedYear)),
+    [passiveIncome, selectedYear]
+  );
+
+  const totalPeriod = useMemo(
+    () => filteredIncome.reduce((sum, item) => sum + item.amount, 0),
+    [filteredIncome]
+  );
 
   const monthData = useMemo(() => {
     const map = new Map<string, { interest: number; dividend: number }>();
-    for (const item of passiveIncome) {
+    for (const item of filteredIncome) {
       const month = item.income_date.substring(0, 7);
       const current = map.get(month) ?? { interest: 0, dividend: 0 };
       if (item.type === "interest") current.interest += item.amount;
@@ -85,11 +92,11 @@ export function PassiveIncomePanel() {
     return Array.from(map.entries())
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([month, { interest, dividend }]) => ({ month, interest, dividend, total: interest + dividend }));
-  }, [passiveIncome]);
+  }, [filteredIncome]);
 
   const recentIncome = useMemo(
-    () => [...passiveIncome].sort((a, b) => b.income_date.localeCompare(a.income_date)).slice(0, 5),
-    [passiveIncome]
+    () => [...filteredIncome].sort((a, b) => b.income_date.localeCompare(a.income_date)).slice(0, 5),
+    [filteredIncome]
   );
 
   return (
@@ -100,7 +107,7 @@ export function PassiveIncomePanel() {
           <h3 className="text-sm font-semibold text-foreground">Ingresos Pasivos</h3>
         </div>
         <span className="font-mono text-sm font-medium" style={{ color: "var(--module-patrimonio)" }}>
-          {formatEur(totalYTD)} YTD
+          {formatEur(totalPeriod)}{selectedYear !== 'all' ? ` · ${selectedYear}` : ' · Total'}
         </span>
       </div>
 
