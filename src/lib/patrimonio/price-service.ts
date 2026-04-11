@@ -56,6 +56,7 @@ export interface PriceResult {
 
 export interface ForexRates {
   usdToEur: number;
+  gbpToEur: number;
   hkdToEur: number;
   updatedAt: string;
 }
@@ -112,6 +113,7 @@ export function isHKMarketOpen(): boolean {
 const FOREX_CACHE_KEY = 'forex:rates';
 const FOREX_FALLBACK: ForexRates = {
   usdToEur: 0.92,
+  gbpToEur: 1.17,
   hkdToEur: 0.118,
   updatedAt: '',
 };
@@ -139,11 +141,13 @@ async function getForexRates(redis: Redis): Promise<ForexRates> {
 
     const rates = data.conversion_rates;
     const eurRate = rates['EUR'];
+    const gbpRate = rates['GBP'];
     const hkdRate = rates['HKD'];
-    if (!eurRate || !hkdRate) return FOREX_FALLBACK;
+    if (!eurRate || !gbpRate || !hkdRate) return FOREX_FALLBACK;
 
     const forex: ForexRates = {
       usdToEur: eurRate,
+      gbpToEur: eurRate / gbpRate,
       hkdToEur: eurRate / hkdRate,
       updatedAt: new Date().toISOString(),
     };
@@ -156,10 +160,40 @@ async function getForexRates(redis: Redis): Promise<ForexRates> {
 }
 
 // ---------------------------------------------------------------------------
+// Universal EUR conversion
+// ---------------------------------------------------------------------------
+
+function convertToEur(rawPrice: number, currency: string, forex: ForexRates): number | null {
+  switch (currency) {
+    case 'EUR': return rawPrice;
+    case 'USD': return rawPrice * forex.usdToEur;
+    case 'GBP': return rawPrice * forex.gbpToEur;
+    case 'GBp': return (rawPrice / 100) * forex.gbpToEur; // GBX = pence
+    case 'HKD': return rawPrice * forex.hkdToEur;
+    default:
+      console.log(`[prices] Unknown currency "${currency}" for price ${rawPrice} — skipping`);
+      return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Ticker fallback: if .AS fails → try .L; if .DE fails → try .F
 // ---------------------------------------------------------------------------
 
+// Per-ticker overrides (tried in order before generic suffix fallbacks)
+const TICKER_ALTERNATIVES: Record<string, string[]> = {
+  'STCE.AS':  ['STCE.AS', 'INRG.L',  'IQQH.DE'],  // iShares Clean Energy
+  'XWIN.AS':  ['XWIN.AS', 'XWIN.L',  'XWID.L'],   // Xtrackers World Industrials
+  'ARKI2.AS': ['ARKI2.AS', 'ARKI2.L', '2B76.DE'],  // ARK AI Robotics
+  'ARKI.AS':  ['ARKI.AS',  'ARKI.L'],              // ARK Innovation
+  'ECOM.AS':  ['ECOM.AS',  'ECOM.L'],              // Global X E-Commerce
+  'WDEF.AS':  ['WDEF.AS',  'WDEF.L'],              // WisdomTree Defence
+  'SSAC.AS':  ['SSAC.AS',  'SSAC.L'],              // iShares MSCI ACWI
+};
+
 function getAlternativeTickers(ticker: string): string[] {
+  if (TICKER_ALTERNATIVES[ticker]) return TICKER_ALTERNATIVES[ticker];
+
   const alts: string[] = [ticker];
   if (ticker.endsWith('.AS')) {
     alts.push(ticker.replace('.AS', '.L'));
@@ -178,6 +212,7 @@ function getAlternativeTickers(ticker: string): string[] {
 interface YahooChartMeta {
   regularMarketPrice?: number;
   regularMarketChangePercent?: number;
+  currency?: string;
 }
 
 interface YahooChartResponse {
@@ -197,6 +232,7 @@ async function fetchYahooSingle(
   redis: Redis,
   cacheKey: string,
   ttl: number,
+  forex: ForexRates,
 ): Promise<YahooPriceData | null> {
   try {
     const cached = await redis.get<YahooPriceData>(cacheKey);
@@ -211,11 +247,15 @@ async function fetchYahooSingle(
 
     const data = (await res.json()) as YahooChartResponse;
     const meta = data?.chart?.result?.[0]?.meta;
-    const price = meta?.regularMarketPrice;
-    if (!price || price <= 0) return null;
+    const rawPrice = meta?.regularMarketPrice;
+    if (!rawPrice || rawPrice <= 0) return null;
+
+    const currency = meta?.currency ?? 'EUR';
+    const priceEur = convertToEur(rawPrice, currency, forex);
+    if (priceEur === null) return null; // unknown currency — skip
 
     const result: YahooPriceData = {
-      price,
+      price: priceEur,
       changePercent: meta?.regularMarketChangePercent ?? null,
     };
 
@@ -231,10 +271,11 @@ async function fetchYahooWithFallback(
   primaryTicker: string,
   redis: Redis,
   ttl: number,
+  forex: ForexRates,
 ): Promise<{ data: YahooPriceData; resolvedTicker: string } | null> {
   const alternatives = getAlternativeTickers(primaryTicker);
   for (const alt of alternatives) {
-    const result = await fetchYahooSingle(alt, redis, `price:yahoo:${alt}`, ttl);
+    const result = await fetchYahooSingle(alt, redis, `price:yahoo:${alt}`, ttl, forex);
     if (result) return { data: result, resolvedTicker: alt };
   }
   return null;
@@ -253,12 +294,13 @@ interface YahooPricesResult {
 async function fetchYahooPrices(
   isinTickerMap: Record<string, string>,
   redis: Redis,
+  forex: ForexRates,
 ): Promise<YahooPricesResult> {
   const ttl = isEUMarketOpen() ? 3600 : 14400;
   const entries = Object.entries(isinTickerMap);
 
   const results = await Promise.allSettled(
-    entries.map(([, ticker]) => fetchYahooWithFallback(ticker, redis, ttl)),
+    entries.map(([, ticker]) => fetchYahooWithFallback(ticker, redis, ttl, forex)),
   );
 
   const map = new Map<string, YahooPriceData>();
@@ -287,14 +329,14 @@ async function fetchYahooPrices(
 async function fetchYahooHKPrices(
   isinTickerMap: Record<string, string>,
   redis: Redis,
-  hkdToEur: number,
+  forex: ForexRates,
 ): Promise<Map<string, YahooPriceData>> {
   const ttl = isHKMarketOpen() ? 3600 : 14400;
   const entries = Object.entries(isinTickerMap);
 
   const results = await Promise.allSettled(
     entries.map(([, ticker]) =>
-      fetchYahooSingle(ticker, redis, `price:yahoo_hk:${ticker}`, ttl),
+      fetchYahooSingle(ticker, redis, `price:yahoo_hk:${ticker}`, ttl, forex),
     ),
   );
 
@@ -303,10 +345,7 @@ async function fetchYahooHKPrices(
     const r = results[i];
     const isin = entries[i][0];
     if (r.status === 'fulfilled' && r.value) {
-      map.set(isin, {
-        price: r.value.price * hkdToEur,
-        changePercent: r.value.changePercent,
-      });
+      map.set(isin, r.value); // already converted to EUR by fetchYahooSingle
     }
   }
   return map;
@@ -416,9 +455,9 @@ export async function fetchAllTRPrices(redis: Redis): Promise<{
 
   // 2. Fetch all three sources in parallel
   const [euResults, usResults, hkResults] = await Promise.allSettled([
-    fetchYahooPrices(YAHOO_TICKER_MAP, redis),
+    fetchYahooPrices(YAHOO_TICKER_MAP, redis, forex),
     fetchFinnhubPrices(FINNHUB_TICKER_MAP, redis, forex.usdToEur),
-    fetchYahooHKPrices(YAHOO_HK_TICKER_MAP, redis, forex.hkdToEur),
+    fetchYahooHKPrices(YAHOO_HK_TICKER_MAP, redis, forex),
   ]);
 
   const euFull = euResults.status === 'fulfilled' ? euResults.value : { map: new Map<string, YahooPriceData>(), resolvedTickers: new Map<string, string>() };
