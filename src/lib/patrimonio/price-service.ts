@@ -12,12 +12,16 @@ export const TICKER_CONFIG: Record<string, {
   'IE00B5BMR087': { ticker: 'SXR8.DE',  currency: 'EUR', source: 'yahoo' },
   'IE00B4L5Y983': { ticker: 'IWDA.AS',  currency: 'EUR', source: 'yahoo' },
   'IE00B53SZB19': { ticker: 'CNDX.AS',  currency: 'EUR', source: 'yahoo' },
-  'IE00BK5BR733': { ticker: 'VFEM.AS',  currency: 'EUR', source: 'yahoo' },
+  // VFEM: VFEM.AS en Yahoo es producto distinto; VFEA.L (USD) da 71.19€ ≈ TR 70.59€
+  'IE00BK5BR733': { ticker: 'VFEA.L',   currency: 'USD', source: 'yahoo' },
   'IE00B6R52259': { ticker: 'SSAC.AS',  currency: 'EUR', source: 'yahoo' },
   'IE00BGV5VN51': { ticker: 'XAIX.DE',  currency: 'EUR', source: 'yahoo' },
-  'IE00BMH5XY61': { ticker: 'ECOM.AS',  currency: 'EUR', source: 'yahoo' },
-  'IE0003A512E4': { ticker: '2B76.DE',  currency: 'EUR', source: 'yahoo' },
-  'IE0002Y8CX98': { ticker: 'WDEF.L',   currency: 'EUR', source: 'yahoo' },
+  // ECOM: ECOM.AS en Yahoo es producto distinto (15.28€); .SG da 10.87€ ≈ TR 10.80€
+  'IE00BMH5XY61': { ticker: 'IE00BMH5XY61.SG', currency: 'EUR', source: 'yahoo' },
+  // ARK AI: 2B76.DE en Yahoo es producto distinto (14.32€); .SG da 7.94€ ≈ TR 7.85€
+  'IE0003A512E4': { ticker: 'IE0003A512E4.SG', currency: 'EUR', source: 'yahoo' },
+  // WDEF: WDEF.L EUR → EUDF.DE EUR (Xetra, mismo precio ~32.90€)
+  'IE0002Y8CX98': { ticker: 'EUDF.DE',  currency: 'EUR', source: 'yahoo' },
   // ARK Innovation UCITS ETF — ticker verificado via Yahoo search por ISIN
   'IE000GA3D489': { ticker: 'ARXK.DE',  currency: 'EUR', source: 'yahoo' },
   // iShares Clean Energy Transition — Yahoo: INRA.AS (AMS, USD-priced ~27.96 → ~23€)
