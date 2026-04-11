@@ -110,8 +110,8 @@ export function isHKMarketOpen(): boolean {
 // Forex rates — ExchangeRate-API, TTL 24h
 // ---------------------------------------------------------------------------
 
-// v2: added gbpToEur field — forces rebuild of old cache entries that lack it
-const FOREX_CACHE_KEY = 'forex:rates:v2';
+// v3: in sync with price:yahoo:v3 — all cache entries rebuilt together
+const FOREX_CACHE_KEY = 'forex:rates:v3';
 const FOREX_FALLBACK: ForexRates = {
   usdToEur: 0.92,
   gbpToEur: 1.17,
