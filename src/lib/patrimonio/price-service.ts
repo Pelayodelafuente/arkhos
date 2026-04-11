@@ -18,21 +18,22 @@ export const TICKER_CONFIG: Record<string, {
   'IE00BMH5XY61': { ticker: 'ECOM.AS',  currency: 'EUR', source: 'yahoo' },
   'IE0003A512E4': { ticker: '2B76.DE',  currency: 'EUR', source: 'yahoo' },
   'IE0002Y8CX98': { ticker: 'WDEF.L',   currency: 'EUR', source: 'yahoo' },
+  // ARK Innovation UCITS ETF — ticker verificado via Yahoo search por ISIN
+  'IE000GA3D489': { ticker: 'ARXK.DE',  currency: 'EUR', source: 'yahoo' },
+  // iShares Clean Energy Transition — Yahoo: INRA.AS (AMS, USD-priced ~27.96 → ~23€)
+  'IE000U58J0M1': { ticker: 'INRA.AS',  currency: 'USD', source: 'yahoo' },
 
   // ETFs Londres en GBX (peniques → /100 → GBP → EUR)
   'LU0322253906': { ticker: 'XXSC.L',   currency: 'GBX', source: 'yahoo' },
-  'IE000U58J0M1': { ticker: 'INRG.L',   currency: 'GBX', source: 'yahoo' },
 
-  // ETFs Londres en USD verificados via Yahoo Finance (no GBP)
+  // ETFs Londres en USD verificados via Yahoo Finance
   'IE00B4ND3602': { ticker: 'IGLN.L',   currency: 'USD', source: 'yahoo' },
   'IE00B4NCWG09': { ticker: 'ISLN.L',   currency: 'USD', source: 'yahoo' },
-  'IE000GA3D489': { ticker: 'ARKI.L',   currency: 'USD', source: 'yahoo' },
+  // Xtrackers World Industrials — ticker verificado via Yahoo search por ISIN (no XDWD.L que es MSCI World)
+  'IE00BM67HV82': { ticker: 'XDWI.L',   currency: 'USD', source: 'yahoo' },
 
-  // ETFs Londres en GBP verificados (Yahoo GBp→GBX daría absurdo, small diff vs TR confirma GBP)
+  // ETFs Londres en GBP verificados
   'IE00BGYWSW13': { ticker: 'VDCP.L',   currency: 'GBP', source: 'yahoo' },
-
-  // ETFs Londres en USD (cotiza en USD en LSE → EUR)
-  'IE00BM67HV82': { ticker: 'XDWD.L',   currency: 'USD', source: 'yahoo' },
 
   // Acciones USA via Finnhub (USD → EUR)
   'US67066G1040': { ticker: 'NVDA',     currency: 'USD', source: 'finnhub' },
