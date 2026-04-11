@@ -1,45 +1,53 @@
-import type { Redis } from '@upstash/redis';
-
 // ---------------------------------------------------------------------------
-// ISIN → Ticker maps
+// TICKER_CONFIG — fuente de verdad única: ISIN → ticker + divisa + fuente
+// Sin heurísticas, sin fallbacks de divisa, sin caché.
 // ---------------------------------------------------------------------------
 
-export const YAHOO_TICKER_MAP: Record<string, string> = {
-  'IE00B5BMR087': 'SXR8.DE',    // iShares Core S&P 500
-  'IE00B4L5Y983': 'IWDA.AS',    // iShares Core MSCI World
-  'IE00B53SZB19': 'CNDX.AS',    // iShares NASDAQ 100
-  'IE00BGYWSW13': 'VDCP.AS',    // Vanguard Corp Bond
-  'IE00BK5BR733': 'VFEM.AS',    // Vanguard Emerging Markets
-  'IE00B6R52259': 'SSAC.AS',    // iShares MSCI ACWI
-  'IE00BGV5VN51': 'XAIX.DE',    // Xtrackers AI Big Data
-  'LU0322253906': 'XXSC.AS',    // Xtrackers Europe Small Cap
-  'IE00BMH5XY61': 'ECOM.AS',    // Global X E-Commerce
-  'IE0002Y8CX98': 'WDEF.AS',    // WisdomTree Defence
-  'IE000U58J0M1': 'STCE.AS',    // iShares Clean Energy
-  'IE00BM67HV82': 'XWIN.AS',    // Xtrackers Industrials
-  'IE00B4ND3602': 'IGLN.AS',    // iShares Physical Gold
-  'IE00B4NCWG09': 'ISLN.AS',    // iShares Physical Silver
-  'IE000GA3D489': 'ARKI.AS',    // ARK Innovation
-  'IE0003A512E4': 'ARKI2.AS',   // ARK AI Robotics
-};
+export const TICKER_CONFIG: Record<string, {
+  ticker: string;
+  currency: 'EUR' | 'GBP' | 'GBX' | 'USD' | 'HKD';
+  source: 'yahoo' | 'finnhub' | 'yahoo_hk';
+}> = {
+  // ETFs EUR directos (Euronext/Xetra)
+  'IE00B5BMR087': { ticker: 'SXR8.DE',  currency: 'EUR', source: 'yahoo' },
+  'IE00B4L5Y983': { ticker: 'IWDA.AS',  currency: 'EUR', source: 'yahoo' },
+  'IE00B53SZB19': { ticker: 'CNDX.AS',  currency: 'EUR', source: 'yahoo' },
+  'IE00BK5BR733': { ticker: 'VFEM.AS',  currency: 'EUR', source: 'yahoo' },
+  'IE00B6R52259': { ticker: 'SSAC.AS',  currency: 'EUR', source: 'yahoo' },
+  'IE00BGV5VN51': { ticker: 'XAIX.DE',  currency: 'EUR', source: 'yahoo' },
+  'IE00BMH5XY61': { ticker: 'ECOM.AS',  currency: 'EUR', source: 'yahoo' },
+  'IE0003A512E4': { ticker: '2B76.DE',  currency: 'EUR', source: 'yahoo' },
+  'IE0002Y8CX98': { ticker: 'WDEF.L',   currency: 'EUR', source: 'yahoo' },
 
-export const FINNHUB_TICKER_MAP: Record<string, string> = {
-  'US67066G1040': 'NVDA',
-  'US88160R1014': 'TSLA',
-  'US02079K1079': 'GOOGL',
-  'US30303M1027': 'META',
-  'US0231351067': 'AMZN',
-  'US90353T1007': 'UBER',
-  'US26740W1099': 'QBTS',
-  'US8740391003': 'TSM',
-  'US70450Y1038': 'PYPL',
-  'US91324P1021': 'UNH',
-  'US0079031078': 'AMD',
-};
+  // ETFs Londres en GBX (peniques → /100 → GBP → EUR)
+  'LU0322253906': { ticker: 'XXSC.L',   currency: 'GBX', source: 'yahoo' },
+  'IE000U58J0M1': { ticker: 'INRG.L',   currency: 'GBX', source: 'yahoo' },
+  'IE00B4ND3602': { ticker: 'IGLN.L',   currency: 'GBX', source: 'yahoo' },
+  'IE00B4NCWG09': { ticker: 'ISLN.L',   currency: 'GBX', source: 'yahoo' },
 
-export const YAHOO_HK_TICKER_MAP: Record<string, string> = {
-  'CNE100000296': '1211.HK',  // BYD
-  'KYG9830T1067': '1810.HK',  // Xiaomi
+  // ETFs Londres en GBP (libras → EUR)
+  'IE00BGYWSW13': { ticker: 'VDCP.L',   currency: 'GBP', source: 'yahoo' },
+  'IE000GA3D489': { ticker: 'ARKI.L',   currency: 'GBP', source: 'yahoo' },
+
+  // ETFs Londres en USD (cotiza en USD en LSE → EUR)
+  'IE00BM67HV82': { ticker: 'XDWD.L',   currency: 'USD', source: 'yahoo' },
+
+  // Acciones USA via Finnhub (USD → EUR)
+  'US67066G1040': { ticker: 'NVDA',     currency: 'USD', source: 'finnhub' },
+  'US88160R1014': { ticker: 'TSLA',     currency: 'USD', source: 'finnhub' },
+  'US02079K1079': { ticker: 'GOOGL',    currency: 'USD', source: 'finnhub' },
+  'US30303M1027': { ticker: 'META',     currency: 'USD', source: 'finnhub' },
+  'US0231351067': { ticker: 'AMZN',     currency: 'USD', source: 'finnhub' },
+  'US90353T1007': { ticker: 'UBER',     currency: 'USD', source: 'finnhub' },
+  'US26740W1099': { ticker: 'QBTS',     currency: 'USD', source: 'finnhub' },
+  'US8740391003': { ticker: 'TSM',      currency: 'USD', source: 'finnhub' },
+  'US70450Y1038': { ticker: 'PYPL',     currency: 'USD', source: 'finnhub' },
+  'US91324P1021': { ticker: 'UNH',      currency: 'USD', source: 'finnhub' },
+  'US0079031078': { ticker: 'AMD',      currency: 'USD', source: 'finnhub' },
+
+  // Acciones Hong Kong (HKD → EUR)
+  'CNE100000296': { ticker: '1211.HK',  currency: 'HKD', source: 'yahoo_hk' },
+  'KYG9830T1067': { ticker: '1810.HK',  currency: 'HKD', source: 'yahoo_hk' },
 };
 
 // ---------------------------------------------------------------------------
@@ -50,7 +58,7 @@ export interface PriceResult {
   isin: string;
   priceEur: number;
   changePercent: number | null;
-  source: 'yahoo' | 'finnhub' | 'yahoo_hk' | 'cache' | 'fallback';
+  source: 'yahoo' | 'finnhub' | 'yahoo_hk';
   updatedAt: string;
 }
 
@@ -61,18 +69,22 @@ export interface ForexRates {
   updatedAt: string;
 }
 
+export interface PriceDebugInfo {
+  yahoo_eu_count: number;
+  finnhub_count: number;
+  yahoo_hk_count: number;
+  missing_isins: string[];
+  tickers_tried: Record<string, string>;
+}
+
 // ---------------------------------------------------------------------------
 // Market hours helpers (CET = UTC+1 / UTC+2 in DST)
 // ---------------------------------------------------------------------------
 
 function getCetHour(): number {
   const now = new Date();
-  // Use Europe/Madrid offset as CET proxy
-  const utcMs = now.getTime() + now.getTimezoneOffset() * 60_000;
-  const cetOffset = now.toLocaleString('en-US', { timeZone: 'Europe/Madrid', hour12: false })
-    .split(',')[1]?.trim().split(':')[0];
-  const cetHour = cetOffset ? parseInt(cetOffset, 10) : Math.floor(utcMs / 3_600_000) % 24 + 1;
-  return cetHour;
+  const cetStr = now.toLocaleString('en-US', { timeZone: 'Europe/Madrid', hour: '2-digit', hour12: false });
+  return parseInt(cetStr, 10);
 }
 
 function getCetDay(): number {
@@ -89,400 +101,209 @@ export function isEUMarketOpen(): boolean {
   const day = getCetDay();
   if (day === 0 || day === 6) return false;
   const hour = getCetHour();
-  return hour >= 9 && hour < 18; // 09:00-17:30 CET (use 18 as safe upper bound)
+  return hour >= 9 && hour < 18;
 }
 
 export function isUSMarketOpen(): boolean {
   const day = getCetDay();
   if (day === 0 || day === 6) return false;
   const hour = getCetHour();
-  return hour >= 15 && hour < 22; // 14:30-21:00 CET
+  return hour >= 15 && hour < 22;
 }
 
 export function isHKMarketOpen(): boolean {
   const day = getCetDay();
   if (day === 0 || day === 6) return false;
   const hour = getCetHour();
-  return (hour >= 3 && hour < 6) || (hour >= 7 && hour < 10); // 02:30-05:00 and 07:00-09:00 CET
+  return (hour >= 3 && hour < 6) || (hour >= 7 && hour < 10);
 }
 
 // ---------------------------------------------------------------------------
-// Forex rates — ExchangeRate-API, TTL 24h
+// Forex rates — sin caché, siempre frescos
 // ---------------------------------------------------------------------------
 
-// v3: in sync with price:yahoo:v3 — all cache entries rebuilt together
-const FOREX_CACHE_KEY = 'forex:rates:v3';
 const FOREX_FALLBACK: ForexRates = {
-  usdToEur: 0.92,
-  gbpToEur: 1.17,
-  hkdToEur: 0.118,
+  usdToEur: 0.85,
+  gbpToEur: 1.15,
+  hkdToEur: 0.109,
   updatedAt: '',
 };
 
 interface ExchangeRateApiResponse {
   result?: string;
-  conversion_rates?: Record<string, number>;
+  rates?: Record<string, number>;
 }
 
-async function getForexRates(redis: Redis): Promise<ForexRates> {
+async function getForexRates(errors: string[]): Promise<ForexRates> {
+  const key = process.env.EXCHANGE_RATE_API_KEY;
+  if (!key) {
+    errors.push('Forex API no disponible — usando tipo de cambio aproximado');
+    return FOREX_FALLBACK;
+  }
+
   try {
-    const cached = await redis.get<ForexRates>(FOREX_CACHE_KEY);
-    if (cached) return cached;
-
-    const key = process.env.EXCHANGE_RATE_API_KEY;
-    if (!key) return FOREX_FALLBACK;
-
-    const res = await fetch(`https://v6.exchangerate-api.com/v6/${key}/latest/USD`, {
-      signal: AbortSignal.timeout(5_000),
-    });
-    if (!res.ok) return FOREX_FALLBACK;
+    const res = await fetch(
+      `https://v6.exchangerate-api.com/v6/${key}/latest/USD`,
+      { signal: AbortSignal.timeout(8_000) },
+    );
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
     const data = (await res.json()) as ExchangeRateApiResponse;
-    if (data.result !== 'success' || !data.conversion_rates) return FOREX_FALLBACK;
+    const rates = data.rates;
+    if (!rates) throw new Error('No rates in response');
 
-    const rates = data.conversion_rates;
     const eurRate = rates['EUR'];
     const gbpRate = rates['GBP'];
     const hkdRate = rates['HKD'];
-    if (!eurRate || !gbpRate || !hkdRate) return FOREX_FALLBACK;
+    if (!eurRate || !gbpRate || !hkdRate) throw new Error('Missing EUR/GBP/HKD rates');
 
-    const forex: ForexRates = {
+    return {
       usdToEur: eurRate,
       gbpToEur: eurRate / gbpRate,
       hkdToEur: eurRate / hkdRate,
       updatedAt: new Date().toISOString(),
     };
-
-    await redis.setex(FOREX_CACHE_KEY, 86400, forex);
-    return forex;
-  } catch {
+  } catch (e) {
+    errors.push(`Forex API no disponible — usando tipo de cambio aproximado (${String(e)})`);
     return FOREX_FALLBACK;
   }
 }
 
 // ---------------------------------------------------------------------------
-// Universal EUR conversion
+// EUR conversion — usa la divisa del TICKER_CONFIG, NUNCA la de Yahoo
 // ---------------------------------------------------------------------------
 
 function convertToEur(
   rawPrice: number,
-  currency: string,
-  forex: ForexRates,
+  currency: 'EUR' | 'GBP' | 'GBX' | 'USD' | 'HKD',
   ticker: string,
+  forex: ForexRates,
 ): number | null {
-  if (!forex.gbpToEur || !forex.usdToEur || !forex.hkdToEur) return null;
-
-  // London Stock Exchange tickers (.L): Yahoo sometimes reports currency=USD
-  // but the price is always in GBX (pence) or GBP — ignore Yahoo's currency field.
-  // Heuristic: raw > 500 → GBX (pence), raw ≤ 500 → GBP.
-  if (ticker.endsWith('.L')) {
-    if (rawPrice > 500) {
-      return (rawPrice / 100) * forex.gbpToEur; // GBX → GBP → EUR
-    } else {
-      return rawPrice * forex.gbpToEur; // GBP → EUR
-    }
-  }
-
-  if (currency === 'GBp') {
-    return (rawPrice / 100) * forex.gbpToEur; // GBX = pence
-  } else if (currency === 'GBP') {
-    return rawPrice * forex.gbpToEur;
-  } else if (currency === 'EUR') {
-    return rawPrice;
-  } else if (currency === 'USD') {
-    return rawPrice * forex.usdToEur;
-  } else if (currency === 'HKD') {
-    return rawPrice * forex.hkdToEur;
-  } else {
-    console.warn(`[price-service] divisa desconocida: ${currency} ticker=${ticker} raw=${rawPrice}`);
-    return null;
+  if (!rawPrice || rawPrice <= 0) return null;
+  switch (currency) {
+    case 'EUR': return rawPrice;
+    case 'GBX':
+      if (!forex.gbpToEur) return null;
+      return (rawPrice / 100) * forex.gbpToEur;
+    case 'GBP':
+      if (!forex.gbpToEur) return null;
+      return rawPrice * forex.gbpToEur;
+    case 'USD':
+      if (!forex.usdToEur) return null;
+      return rawPrice * forex.usdToEur;
+    case 'HKD':
+      if (!forex.hkdToEur) return null;
+      return rawPrice * forex.hkdToEur;
+    default:
+      console.error('[price-service] divisa no soportada:', currency, ticker);
+      return null;
   }
 }
 
-// ---------------------------------------------------------------------------
-// Ticker fallback: if .AS fails → try .L; if .DE fails → try .F
-// ---------------------------------------------------------------------------
-
-// Per-ticker overrides (tried in order before generic suffix fallbacks)
-const TICKER_ALTERNATIVES: Record<string, string[]> = {
-  // iShares Clean Energy — INRG.L is London listing; also try INRG.AS and WCEU.L
-  'STCE.AS':  ['STCE.AS', 'INRG.L', 'INRG.AS', 'WCEU.L', 'IQQH.DE'],
-  // Xtrackers World Industrials — try all known exchange suffixes
-  'XWIN.AS':  ['XWIN.AS', 'XDWD.L', 'XWIN.L', 'DBXI.DE', 'XWID.AS'],
-  'ARKI2.AS': ['ARKI2.AS', 'ARKI2.L', '2B76.DE'],  // ARK AI Robotics
-  'ARKI.AS':  ['ARKI.AS',  'ARKI.L'],               // ARK Innovation
-  'ECOM.AS':  ['ECOM.AS',  'ECOM.L'],               // Global X E-Commerce
-  'WDEF.AS':  ['WDEF.AS',  'WDEF.L'],               // WisdomTree Defence
-  'SSAC.AS':  ['SSAC.AS',  'SSAC.L'],               // iShares MSCI ACWI
-};
-
-function getAlternativeTickers(ticker: string): string[] {
-  if (TICKER_ALTERNATIVES[ticker]) return TICKER_ALTERNATIVES[ticker];
-
-  const alts: string[] = [ticker];
-  if (ticker.endsWith('.AS')) {
-    alts.push(ticker.replace('.AS', '.L'));
-    alts.push(ticker.replace('.AS', '.MI'));
-  } else if (ticker.endsWith('.DE')) {
-    alts.push(ticker.replace('.DE', '.F'));
-    alts.push(ticker.replace('.DE', '.L'));
+function formatPriceLog(
+  ticker: string,
+  rawPrice: number,
+  currency: 'EUR' | 'GBP' | 'GBX' | 'USD' | 'HKD',
+  priceEur: number,
+  forex: ForexRates,
+): string {
+  let conversion: string;
+  switch (currency) {
+    case 'EUR': conversion = '(directo)'; break;
+    case 'GBX': conversion = `(/100×${forex.gbpToEur.toFixed(4)})`; break;
+    case 'GBP': conversion = `(×${forex.gbpToEur.toFixed(4)})`; break;
+    case 'USD': conversion = `(×${forex.usdToEur.toFixed(4)})`; break;
+    case 'HKD': conversion = `(×${forex.hkdToEur.toFixed(4)})`; break;
   }
-  return alts;
+  return `[price-service] ${ticker} | raw=${rawPrice} ${currency} | → ${priceEur.toFixed(2)}€ ${conversion}`;
 }
 
 // ---------------------------------------------------------------------------
-// Yahoo Finance — individual ticker (EUR)
+// Yahoo Finance — individual ticker, sin caché
 // ---------------------------------------------------------------------------
 
 interface YahooChartMeta {
   regularMarketPrice?: number;
   regularMarketChangePercent?: number;
-  currency?: string;
 }
 
 interface YahooChartResponse {
   chart?: {
     result?: Array<{ meta?: YahooChartMeta }>;
-    error?: unknown;
   };
 }
 
-interface YahooPriceData {
+interface PriceData {
   price: number;
   changePercent: number | null;
 }
 
 async function fetchYahooSingle(
   ticker: string,
-  redis: Redis,
-  cacheKey: string,
-  ttl: number,
+  currency: 'EUR' | 'GBP' | 'GBX' | 'USD' | 'HKD',
   forex: ForexRates,
-): Promise<YahooPriceData | null> {
-  try {
-    const cached = await redis.get<YahooPriceData>(cacheKey);
-    if (cached) return cached;
+): Promise<PriceData | null> {
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=1d`;
+  const res = await fetch(url, {
+    signal: AbortSignal.timeout(8_000),
+    headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Arkhos/1.0)' },
+  });
+  if (!res.ok) return null;
 
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=1d`;
-    const res = await fetch(url, {
-      signal: AbortSignal.timeout(6_000),
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Arkhos/1.0)' },
-    });
-    if (!res.ok) return null;
+  const data = (await res.json()) as YahooChartResponse;
+  const meta = data?.chart?.result?.[0]?.meta;
+  const rawPrice = meta?.regularMarketPrice;
+  if (!rawPrice || rawPrice <= 0) return null;
 
-    const data = (await res.json()) as YahooChartResponse;
-    const meta = data?.chart?.result?.[0]?.meta;
-    const rawPrice = meta?.regularMarketPrice;
-    if (!rawPrice || rawPrice <= 0) return null;
+  const priceEur = convertToEur(rawPrice, currency, ticker, forex);
+  if (priceEur === null || !Number.isFinite(priceEur)) return null;
 
-    const currency = meta?.currency ?? 'EUR';
-    const priceEur = convertToEur(rawPrice, currency, forex, ticker);
+  console.log(formatPriceLog(ticker, rawPrice, currency, priceEur, forex));
 
-    // Verification log — visible in Vercel logs on every cache miss
-    const appliedCurrency = ticker.endsWith('.L')
-      ? (rawPrice > 500 ? 'GBX→GBP(.L)' : 'GBP(.L)')
-      : currency;
-    const rateUsed = (appliedCurrency.startsWith('GB'))
-      ? `gbpToEur=${forex.gbpToEur?.toFixed(4) ?? 'UNDEFINED'}`
-      : appliedCurrency === 'HKD'
-      ? `hkdToEur=${forex.hkdToEur?.toFixed(4) ?? 'UNDEFINED'}`
-      : appliedCurrency === 'USD'
-      ? `usdToEur=${forex.usdToEur?.toFixed(4) ?? 'UNDEFINED'}`
-      : 'no conversion';
-    const resultLabel = priceEur !== null && Number.isFinite(priceEur)
-      ? `${priceEur.toFixed(2)}€`
-      : `null/NaN (skipped)`;
-    console.log(`[price-service] VERIFY ticker=${ticker} raw=${rawPrice} yahoo_currency=${currency} applied=${appliedCurrency} → ${rateUsed} → result=${resultLabel}`);
-
-    if (priceEur === null || !Number.isFinite(priceEur)) return null;
-
-    const result: YahooPriceData = {
-      price: priceEur,
-      changePercent: meta?.regularMarketChangePercent ?? null,
-    };
-
-    await redis.setex(cacheKey, ttl, result);
-    return result;
-  } catch {
-    return null;
-  }
-}
-
-// Try primary ticker first; if it returns null, try alternative suffixes in order
-async function fetchYahooWithFallback(
-  primaryTicker: string,
-  redis: Redis,
-  ttl: number,
-  forex: ForexRates,
-): Promise<{ data: YahooPriceData; resolvedTicker: string } | null> {
-  const alternatives = getAlternativeTickers(primaryTicker);
-  for (const alt of alternatives) {
-    // v4: .L tickers now override Yahoo's currency field (was reporting USD incorrectly)
-    const result = await fetchYahooSingle(alt, redis, `price:yahoo:v4:${alt}`, ttl, forex);
-    if (result) return { data: result, resolvedTicker: alt };
-  }
-  return null;
+  return {
+    price: priceEur,
+    changePercent: meta?.regularMarketChangePercent ?? null,
+  };
 }
 
 // ---------------------------------------------------------------------------
-// Fetch Yahoo ETFs (EUR prices)
-// ---------------------------------------------------------------------------
-
-interface YahooPricesResult {
-  map: Map<string, YahooPriceData>;
-  /** ISIN → resolved ticker (may differ from primary if fallback was used) */
-  resolvedTickers: Map<string, string>;
-}
-
-async function fetchYahooPrices(
-  isinTickerMap: Record<string, string>,
-  redis: Redis,
-  forex: ForexRates,
-): Promise<YahooPricesResult> {
-  const ttl = isEUMarketOpen() ? 3600 : 14400;
-  const entries = Object.entries(isinTickerMap);
-
-  const results = await Promise.allSettled(
-    entries.map(([, ticker]) => fetchYahooWithFallback(ticker, redis, ttl, forex)),
-  );
-
-  const map = new Map<string, YahooPriceData>();
-  const resolvedTickers = new Map<string, string>();
-
-  for (let i = 0; i < results.length; i++) {
-    const r = results[i];
-    const [isin, primaryTicker] = entries[i];
-    if (r.status === 'fulfilled' && r.value) {
-      if (r.value.resolvedTicker !== primaryTicker) {
-        console.log(`[prices] Ticker fallback used: ${primaryTicker} → ${r.value.resolvedTicker}`);
-      }
-      map.set(isin, r.value.data);
-      resolvedTickers.set(isin, r.value.resolvedTicker);
-    } else {
-      console.log(`[prices] Yahoo EU failed for ISIN ${isin} (ticker: ${primaryTicker})`);
-    }
-  }
-  return { map, resolvedTickers };
-}
-
-// ---------------------------------------------------------------------------
-// Fetch Yahoo HK (HKD prices → convert to EUR)
-// ---------------------------------------------------------------------------
-
-async function fetchYahooHKPrices(
-  isinTickerMap: Record<string, string>,
-  redis: Redis,
-  forex: ForexRates,
-): Promise<Map<string, YahooPriceData>> {
-  const ttl = isHKMarketOpen() ? 3600 : 14400;
-  const entries = Object.entries(isinTickerMap);
-
-  const results = await Promise.allSettled(
-    entries.map(([, ticker]) =>
-      // v4: aligned with EU cache version bump
-      fetchYahooSingle(ticker, redis, `price:yahoo_hk:v4:${ticker}`, ttl, forex),
-    ),
-  );
-
-  const map = new Map<string, YahooPriceData>();
-  for (let i = 0; i < results.length; i++) {
-    const r = results[i];
-    const isin = entries[i][0];
-    if (r.status === 'fulfilled' && r.value) {
-      map.set(isin, r.value); // already converted to EUR by fetchYahooSingle
-    }
-  }
-  return map;
-}
-
-// ---------------------------------------------------------------------------
-// Finnhub — acciones USA (USD → EUR)
+// Finnhub — acciones USA, sin caché
 // ---------------------------------------------------------------------------
 
 interface FinnhubQuote {
-  c: number;   // current price
-  d: number;   // day change $
-  dp: number;  // day change %
-  h: number;   // high
-  l: number;   // low
-  o: number;   // open
-  pc: number;  // previous close
+  c: number;
+  dp: number;
 }
 
 async function fetchFinnhubSingle(
   ticker: string,
-  redis: Redis,
   usdToEur: number,
-  ttl: number,
-): Promise<YahooPriceData | null> {
-  const cacheKey = `price:finnhub:${ticker}`;
-  try {
-    const cached = await redis.get<YahooPriceData>(cacheKey);
-    if (cached) return cached;
+  forex: ForexRates,
+): Promise<PriceData | null> {
+  const apiKey = process.env.FINNHUB_API_KEY;
+  if (!apiKey) return null;
 
-    const apiKey = process.env.FINNHUB_API_KEY;
-    if (!apiKey) return null;
+  const url = `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(ticker)}&token=${apiKey}`;
+  const res = await fetch(url, { signal: AbortSignal.timeout(8_000) });
+  if (!res.ok) return null;
 
-    const url = `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(ticker)}&token=${apiKey}`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(6_000) });
-    if (!res.ok) return null;
+  const data = (await res.json()) as FinnhubQuote;
+  if (!data.c || data.c <= 0) return null;
 
-    const data = (await res.json()) as FinnhubQuote;
+  const priceEur = data.c * usdToEur;
+  console.log(formatPriceLog(ticker, data.c, 'USD', priceEur, forex));
 
-    // c === 0 means no data (market closed with no cached price on their end)
-    if (!data.c || data.c <= 0) return null;
-
-    const result: YahooPriceData = {
-      price: data.c * usdToEur,
-      changePercent: Number.isFinite(data.dp) ? data.dp : null,
-    };
-
-    await redis.setex(cacheKey, ttl, result);
-    return result;
-  } catch {
-    return null;
-  }
-}
-
-async function fetchFinnhubPrices(
-  isinTickerMap: Record<string, string>,
-  redis: Redis,
-  usdToEur: number,
-): Promise<Map<string, YahooPriceData>> {
-  const ttl = isUSMarketOpen() ? 3600 : 14400;
-  const entries = Object.entries(isinTickerMap);
-
-  const results = await Promise.allSettled(
-    entries.map(([, ticker]) => fetchFinnhubSingle(ticker, redis, usdToEur, ttl)),
-  );
-
-  const map = new Map<string, YahooPriceData>();
-  for (let i = 0; i < results.length; i++) {
-    const r = results[i];
-    const [isin, ticker] = entries[i];
-    if (r.status === 'fulfilled' && r.value) {
-      map.set(isin, r.value);
-    } else {
-      console.log(`[prices] Finnhub failed for ISIN ${isin} (ticker: ${ticker})`);
-    }
-  }
-  return map;
+  return {
+    price: priceEur,
+    changePercent: Number.isFinite(data.dp) ? data.dp : null,
+  };
 }
 
 // ---------------------------------------------------------------------------
-// Main export: fetchAllTRPrices
+// Main export: fetchAllTRPrices — sin Redis, sin caché
 // ---------------------------------------------------------------------------
 
-export interface PriceDebugInfo {
-  yahoo_eu_count: number;
-  finnhub_count: number;
-  yahoo_hk_count: number;
-  missing_isins: string[];
-  /** ISIN → resolved ticker (shows fallback when primary failed) */
-  tickers_tried: Record<string, string>;
-}
-
-export async function fetchAllTRPrices(redis: Redis): Promise<{
+export async function fetchAllTRPrices(): Promise<{
   prices: PriceResult[];
   forex: ForexRates;
   errors: string[];
@@ -491,87 +312,99 @@ export async function fetchAllTRPrices(redis: Redis): Promise<{
   const errors: string[] = [];
   const now = new Date().toISOString();
 
-  // 1. Forex rates
-  const forex = await getForexRates(redis);
-  if (!forex.updatedAt) {
-    errors.push('Forex rates unavailable — using fallback (USD 0.92, HKD 0.118)');
+  // 1. Forex en tiempo real (sin caché)
+  const forex = await getForexRates(errors);
+
+  // 2. Agrupar ISINs por fuente
+  const yahooEntries: Array<[string, string, 'EUR' | 'GBP' | 'GBX' | 'USD' | 'HKD']> = [];
+  const finnhubEntries: Array<[string, string]> = [];
+  const yahooHkEntries: Array<[string, string, 'HKD']> = [];
+
+  for (const [isin, cfg] of Object.entries(TICKER_CONFIG)) {
+    if (cfg.source === 'yahoo') {
+      yahooEntries.push([isin, cfg.ticker, cfg.currency]);
+    } else if (cfg.source === 'finnhub') {
+      finnhubEntries.push([isin, cfg.ticker]);
+    } else {
+      yahooHkEntries.push([isin, cfg.ticker, 'HKD']);
+    }
   }
 
-  // 2. Fetch all three sources in parallel
-  const [euResults, usResults, hkResults] = await Promise.allSettled([
-    fetchYahooPrices(YAHOO_TICKER_MAP, redis, forex),
-    fetchFinnhubPrices(FINNHUB_TICKER_MAP, redis, forex.usdToEur),
-    fetchYahooHKPrices(YAHOO_HK_TICKER_MAP, redis, forex),
-  ]);
+  // 3. Lanzar todas las llamadas en paralelo con Promise.allSettled
+  const allPromises = [
+    ...yahooEntries.map(([, ticker, currency]) =>
+      fetchYahooSingle(ticker, currency, forex),
+    ),
+    ...finnhubEntries.map(([, ticker]) =>
+      fetchFinnhubSingle(ticker, forex.usdToEur, forex),
+    ),
+    ...yahooHkEntries.map(([, ticker]) =>
+      fetchYahooSingle(ticker, 'HKD', forex),
+    ),
+  ];
 
-  const euFull = euResults.status === 'fulfilled' ? euResults.value : { map: new Map<string, YahooPriceData>(), resolvedTickers: new Map<string, string>() };
-  const euMap = euFull.map;
-  const euResolvedTickers = euFull.resolvedTickers;
-  const usMap = usResults.status === 'fulfilled' ? usResults.value : new Map<string, YahooPriceData>();
-  const hkMap = hkResults.status === 'fulfilled' ? hkResults.value : new Map<string, YahooPriceData>();
+  const settled = await Promise.allSettled(allPromises);
 
-  if (euResults.status === 'rejected') errors.push('Yahoo EU fetch failed');
-  if (usResults.status === 'rejected') errors.push('Finnhub fetch failed');
-  if (hkResults.status === 'rejected') errors.push('Yahoo HK fetch failed');
-
-  // Build debug info
-  const missingEU = Object.keys(YAHOO_TICKER_MAP).filter((isin) => !euMap.has(isin));
-  const missingUS = Object.keys(FINNHUB_TICKER_MAP).filter((isin) => !usMap.has(isin));
-  const missingHK = Object.keys(YAHOO_HK_TICKER_MAP).filter((isin) => !hkMap.has(isin));
-
+  // 4. Reconstruir resultados por grupo
+  const prices: PriceResult[] = [];
+  const missingIsins: string[] = [];
   const tickersTried: Record<string, string> = {};
-  for (const [isin, primaryTicker] of Object.entries(YAHOO_TICKER_MAP)) {
-    tickersTried[isin] = euResolvedTickers.get(isin) ?? `${primaryTicker} (failed)`;
+
+  let idx = 0;
+
+  // Yahoo EU
+  for (const [isin, ticker, currency] of yahooEntries) {
+    const r = settled[idx++];
+    const data = r.status === 'fulfilled' ? r.value : null;
+    tickersTried[isin] = data ? ticker : `${ticker} (failed)`;
+    if (data) {
+      prices.push({ isin, priceEur: data.price, changePercent: data.changePercent, source: 'yahoo', updatedAt: now });
+    } else {
+      missingIsins.push(`${isin}→${ticker}(${currency})`);
+      console.log(`[price-service] FAILED ${ticker} (${isin})`);
+    }
   }
-  for (const [isin, ticker] of Object.entries(FINNHUB_TICKER_MAP)) {
-    tickersTried[isin] = usMap.has(isin) ? ticker : `${ticker} (failed)`;
+
+  // Finnhub
+  for (const [isin, ticker] of finnhubEntries) {
+    const r = settled[idx++];
+    const data = r.status === 'fulfilled' ? r.value : null;
+    tickersTried[isin] = data ? ticker : `${ticker} (failed)`;
+    if (data) {
+      prices.push({ isin, priceEur: data.price, changePercent: data.changePercent, source: 'finnhub', updatedAt: now });
+    } else {
+      missingIsins.push(`${isin}→${ticker}(USD)`);
+      console.log(`[price-service] FAILED ${ticker} (${isin})`);
+    }
   }
-  for (const [isin, ticker] of Object.entries(YAHOO_HK_TICKER_MAP)) {
-    tickersTried[isin] = hkMap.has(isin) ? ticker : `${ticker} (failed)`;
+
+  // Yahoo HK
+  for (const [isin, ticker] of yahooHkEntries) {
+    const r = settled[idx++];
+    const data = r.status === 'fulfilled' ? r.value : null;
+    tickersTried[isin] = data ? ticker : `${ticker} (failed)`;
+    if (data) {
+      prices.push({ isin, priceEur: data.price, changePercent: data.changePercent, source: 'yahoo_hk', updatedAt: now });
+    } else {
+      missingIsins.push(`${isin}→${ticker}(HKD)`);
+      console.log(`[price-service] FAILED ${ticker} (${isin})`);
+    }
   }
+
+  const yahooEuCount = prices.filter((p) => p.source === 'yahoo').length;
+  const finnhubCount = prices.filter((p) => p.source === 'finnhub').length;
+  const yahooHkCount = prices.filter((p) => p.source === 'yahoo_hk').length;
+
+  console.log(`[price-service] Total: ${prices.length} precios — yahoo=${yahooEuCount} finnhub=${finnhubCount} hk=${yahooHkCount} missing=${missingIsins.length}`);
+  if (errors.length) console.log('[price-service] Errors:', errors);
 
   const debug: PriceDebugInfo = {
-    yahoo_eu_count: euMap.size,
-    finnhub_count: usMap.size,
-    yahoo_hk_count: hkMap.size,
-    missing_isins: [
-      ...missingEU.map((isin) => `${isin}→${YAHOO_TICKER_MAP[isin]}`),
-      ...missingUS.map((isin) => `${isin}→${FINNHUB_TICKER_MAP[isin]}`),
-      ...missingHK.map((isin) => `${isin}→${YAHOO_HK_TICKER_MAP[isin]}`),
-    ],
+    yahoo_eu_count: yahooEuCount,
+    finnhub_count: finnhubCount,
+    yahoo_hk_count: yahooHkCount,
+    missing_isins: missingIsins,
     tickers_tried: tickersTried,
   };
-
-  // Diagnostic logging
-  console.log('[prices] Yahoo EU results (ISINs):', [...euMap.keys()]);
-  console.log('[prices] Finnhub results (ISINs):', [...usMap.keys()]);
-  console.log('[prices] Yahoo HK results (ISINs):', [...hkMap.keys()]);
-  console.log('[prices] Errors:', errors);
-  if (debug.missing_isins.length) console.log('[prices] Missing ISINs:', debug.missing_isins);
-
-  // 3. Build result array
-  const prices: PriceResult[] = [];
-
-  for (const [isin] of Object.entries(YAHOO_TICKER_MAP)) {
-    const d = euMap.get(isin);
-    if (d) {
-      prices.push({ isin, priceEur: d.price, changePercent: d.changePercent, source: 'yahoo', updatedAt: now });
-    }
-  }
-
-  for (const [isin] of Object.entries(FINNHUB_TICKER_MAP)) {
-    const d = usMap.get(isin);
-    if (d) {
-      prices.push({ isin, priceEur: d.price, changePercent: d.changePercent, source: 'finnhub', updatedAt: now });
-    }
-  }
-
-  for (const [isin] of Object.entries(YAHOO_HK_TICKER_MAP)) {
-    const d = hkMap.get(isin);
-    if (d) {
-      prices.push({ isin, priceEur: d.price, changePercent: d.changePercent, source: 'yahoo_hk', updatedAt: now });
-    }
-  }
 
   return { prices, forex, errors, debug };
 }
