@@ -22,8 +22,10 @@ export const TICKER_CONFIG: Record<string, {
   // ETFs Londres en GBX (peniques → /100 → GBP → EUR)
   'LU0322253906': { ticker: 'XXSC.L',   currency: 'GBX', source: 'yahoo' },
   'IE000U58J0M1': { ticker: 'INRG.L',   currency: 'GBX', source: 'yahoo' },
-  'IE00B4ND3602': { ticker: 'IGLN.L',   currency: 'GBX', source: 'yahoo' },
-  'IE00B4NCWG09': { ticker: 'ISLN.L',   currency: 'GBX', source: 'yahoo' },
+
+  // ETFs Londres en GBP verificados: raw ~92-93 GBP (no GBX)
+  'IE00B4ND3602': { ticker: 'IGLN.L',   currency: 'GBP', source: 'yahoo' },
+  'IE00B4NCWG09': { ticker: 'ISLN.L',   currency: 'GBP', source: 'yahoo' },
 
   // ETFs Londres en GBP (libras → EUR)
   'IE00BGYWSW13': { ticker: 'VDCP.L',   currency: 'GBP', source: 'yahoo' },
@@ -131,6 +133,7 @@ const FOREX_FALLBACK: ForexRates = {
 
 interface ExchangeRateApiResponse {
   result?: string;
+  conversion_rates?: Record<string, number>;
   rates?: Record<string, number>;
 }
 
@@ -149,7 +152,7 @@ async function getForexRates(errors: string[]): Promise<ForexRates> {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
     const data = (await res.json()) as ExchangeRateApiResponse;
-    const rates = data.rates;
+    const rates = data.conversion_rates ?? data.rates;
     if (!rates) throw new Error('No rates in response');
 
     const eurRate = rates['EUR'];
