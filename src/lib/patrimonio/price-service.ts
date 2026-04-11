@@ -164,24 +164,37 @@ async function getForexRates(redis: Redis): Promise<ForexRates> {
 // Universal EUR conversion
 // ---------------------------------------------------------------------------
 
-function convertToEur(rawPrice: number, currency: string, forex: ForexRates): number | null {
+function convertToEur(
+  rawPrice: number,
+  currency: string,
+  forex: ForexRates,
+  ticker: string,
+): number | null {
+  if (!forex.gbpToEur || !forex.usdToEur || !forex.hkdToEur) return null;
+
+  // London Stock Exchange tickers (.L): Yahoo sometimes reports currency=USD
+  // but the price is always in GBX (pence) or GBP — ignore Yahoo's currency field.
+  // Heuristic: raw > 500 → GBX (pence), raw ≤ 500 → GBP.
+  if (ticker.endsWith('.L')) {
+    if (rawPrice > 500) {
+      return (rawPrice / 100) * forex.gbpToEur; // GBX → GBP → EUR
+    } else {
+      return rawPrice * forex.gbpToEur; // GBP → EUR
+    }
+  }
+
   if (currency === 'GBp') {
-    // GBX (pence) → divide by 100 to get GBP → multiply by gbpToEur
-    if (!forex.gbpToEur) return null;
-    return (rawPrice / 100) * forex.gbpToEur;
+    return (rawPrice / 100) * forex.gbpToEur; // GBX = pence
   } else if (currency === 'GBP') {
-    if (!forex.gbpToEur) return null;
     return rawPrice * forex.gbpToEur;
   } else if (currency === 'EUR') {
     return rawPrice;
   } else if (currency === 'USD') {
-    if (!forex.usdToEur) return null;
     return rawPrice * forex.usdToEur;
   } else if (currency === 'HKD') {
-    if (!forex.hkdToEur) return null;
     return rawPrice * forex.hkdToEur;
   } else {
-    console.warn(`[price-service] divisa desconocida: ${currency} raw=${rawPrice}`);
+    console.warn(`[price-service] divisa desconocida: ${currency} ticker=${ticker} raw=${rawPrice}`);
     return null;
   }
 }
@@ -263,20 +276,23 @@ async function fetchYahooSingle(
     if (!rawPrice || rawPrice <= 0) return null;
 
     const currency = meta?.currency ?? 'EUR';
-    const priceEur = convertToEur(rawPrice, currency, forex);
+    const priceEur = convertToEur(rawPrice, currency, forex, ticker);
 
-    // Verification log — visible in Vercel logs and DevTools for server actions
-    const rateUsed = (currency === 'GBp' || currency === 'GBP')
+    // Verification log — visible in Vercel logs on every cache miss
+    const appliedCurrency = ticker.endsWith('.L')
+      ? (rawPrice > 500 ? 'GBX→GBP(.L)' : 'GBP(.L)')
+      : currency;
+    const rateUsed = (appliedCurrency.startsWith('GB'))
       ? `gbpToEur=${forex.gbpToEur?.toFixed(4) ?? 'UNDEFINED'}`
-      : currency === 'HKD'
+      : appliedCurrency === 'HKD'
       ? `hkdToEur=${forex.hkdToEur?.toFixed(4) ?? 'UNDEFINED'}`
-      : currency === 'USD'
+      : appliedCurrency === 'USD'
       ? `usdToEur=${forex.usdToEur?.toFixed(4) ?? 'UNDEFINED'}`
       : 'no conversion';
     const resultLabel = priceEur !== null && Number.isFinite(priceEur)
       ? `${priceEur.toFixed(2)}€`
       : `null/NaN (skipped)`;
-    console.log(`[price-service] VERIFY ticker=${ticker} raw=${rawPrice} currency=${currency} → ${rateUsed} → result=${resultLabel}`);
+    console.log(`[price-service] VERIFY ticker=${ticker} raw=${rawPrice} yahoo_currency=${currency} applied=${appliedCurrency} → ${rateUsed} → result=${resultLabel}`);
 
     if (priceEur === null || !Number.isFinite(priceEur)) return null;
 
@@ -301,8 +317,8 @@ async function fetchYahooWithFallback(
 ): Promise<{ data: YahooPriceData; resolvedTicker: string } | null> {
   const alternatives = getAlternativeTickers(primaryTicker);
   for (const alt of alternatives) {
-    // v3: purges any NaN values cached when gbpToEur/hkdToEur was undefined in v2
-    const result = await fetchYahooSingle(alt, redis, `price:yahoo:v3:${alt}`, ttl, forex);
+    // v4: .L tickers now override Yahoo's currency field (was reporting USD incorrectly)
+    const result = await fetchYahooSingle(alt, redis, `price:yahoo:v4:${alt}`, ttl, forex);
     if (result) return { data: result, resolvedTicker: alt };
   }
   return null;
@@ -363,8 +379,8 @@ async function fetchYahooHKPrices(
 
   const results = await Promise.allSettled(
     entries.map(([, ticker]) =>
-      // v3: purges any NaN values cached when hkdToEur was undefined in v2
-      fetchYahooSingle(ticker, redis, `price:yahoo_hk:v3:${ticker}`, ttl, forex),
+      // v4: aligned with EU cache version bump
+      fetchYahooSingle(ticker, redis, `price:yahoo_hk:v4:${ticker}`, ttl, forex),
     ),
   );
 
