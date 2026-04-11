@@ -23,13 +23,13 @@ export const TICKER_CONFIG: Record<string, {
   'LU0322253906': { ticker: 'XXSC.L',   currency: 'GBX', source: 'yahoo' },
   'IE000U58J0M1': { ticker: 'INRG.L',   currency: 'GBX', source: 'yahoo' },
 
-  // ETFs Londres en GBP verificados: raw ~92-93 GBP (no GBX)
-  'IE00B4ND3602': { ticker: 'IGLN.L',   currency: 'GBP', source: 'yahoo' },
-  'IE00B4NCWG09': { ticker: 'ISLN.L',   currency: 'GBP', source: 'yahoo' },
+  // ETFs Londres en USD verificados via Yahoo Finance (no GBP)
+  'IE00B4ND3602': { ticker: 'IGLN.L',   currency: 'USD', source: 'yahoo' },
+  'IE00B4NCWG09': { ticker: 'ISLN.L',   currency: 'USD', source: 'yahoo' },
+  'IE000GA3D489': { ticker: 'ARKI.L',   currency: 'USD', source: 'yahoo' },
 
-  // ETFs Londres en GBP (libras → EUR)
+  // ETFs Londres en GBP verificados (Yahoo GBp→GBX daría absurdo, small diff vs TR confirma GBP)
   'IE00BGYWSW13': { ticker: 'VDCP.L',   currency: 'GBP', source: 'yahoo' },
-  'IE000GA3D489': { ticker: 'ARKI.L',   currency: 'GBP', source: 'yahoo' },
 
   // ETFs Londres en USD (cotiza en USD en LSE → EUR)
   'IE00BM67HV82': { ticker: 'XDWD.L',   currency: 'USD', source: 'yahoo' },
