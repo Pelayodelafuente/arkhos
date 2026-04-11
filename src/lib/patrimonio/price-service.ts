@@ -110,7 +110,8 @@ export function isHKMarketOpen(): boolean {
 // Forex rates — ExchangeRate-API, TTL 24h
 // ---------------------------------------------------------------------------
 
-const FOREX_CACHE_KEY = 'forex:rates';
+// v2: added gbpToEur field — forces rebuild of old cache entries that lack it
+const FOREX_CACHE_KEY = 'forex:rates:v2';
 const FOREX_FALLBACK: ForexRates = {
   usdToEur: 0.92,
   gbpToEur: 1.17,
@@ -182,13 +183,15 @@ function convertToEur(rawPrice: number, currency: string, forex: ForexRates): nu
 
 // Per-ticker overrides (tried in order before generic suffix fallbacks)
 const TICKER_ALTERNATIVES: Record<string, string[]> = {
-  'STCE.AS':  ['STCE.AS', 'INRG.L',  'IQQH.DE'],  // iShares Clean Energy
-  'XWIN.AS':  ['XWIN.AS', 'XWIN.L',  'XWID.L'],   // Xtrackers World Industrials
+  // iShares Clean Energy — INRG.L is London listing; also try INRG.AS and WCEU.L
+  'STCE.AS':  ['STCE.AS', 'INRG.L', 'INRG.AS', 'WCEU.L', 'IQQH.DE'],
+  // Xtrackers World Industrials — try all known exchange suffixes
+  'XWIN.AS':  ['XWIN.AS', 'XDWD.L', 'XWIN.L', 'DBXI.DE', 'XWID.AS'],
   'ARKI2.AS': ['ARKI2.AS', 'ARKI2.L', '2B76.DE'],  // ARK AI Robotics
-  'ARKI.AS':  ['ARKI.AS',  'ARKI.L'],              // ARK Innovation
-  'ECOM.AS':  ['ECOM.AS',  'ECOM.L'],              // Global X E-Commerce
-  'WDEF.AS':  ['WDEF.AS',  'WDEF.L'],              // WisdomTree Defence
-  'SSAC.AS':  ['SSAC.AS',  'SSAC.L'],              // iShares MSCI ACWI
+  'ARKI.AS':  ['ARKI.AS',  'ARKI.L'],               // ARK Innovation
+  'ECOM.AS':  ['ECOM.AS',  'ECOM.L'],               // Global X E-Commerce
+  'WDEF.AS':  ['WDEF.AS',  'WDEF.L'],               // WisdomTree Defence
+  'SSAC.AS':  ['SSAC.AS',  'SSAC.L'],               // iShares MSCI ACWI
 };
 
 function getAlternativeTickers(ticker: string): string[] {
@@ -251,6 +254,8 @@ async function fetchYahooSingle(
     if (!rawPrice || rawPrice <= 0) return null;
 
     const currency = meta?.currency ?? 'EUR';
+    console.log(`[debug] ticker: ${ticker} | currency: ${currency} | raw price: ${rawPrice} | gbpToEur: ${forex.gbpToEur} | hkdToEur: ${forex.hkdToEur}`);
+
     const priceEur = convertToEur(rawPrice, currency, forex);
     if (priceEur === null) return null; // unknown currency — skip
 
@@ -275,7 +280,8 @@ async function fetchYahooWithFallback(
 ): Promise<{ data: YahooPriceData; resolvedTicker: string } | null> {
   const alternatives = getAlternativeTickers(primaryTicker);
   for (const alt of alternatives) {
-    const result = await fetchYahooSingle(alt, redis, `price:yahoo:${alt}`, ttl, forex);
+    // v2 prefix forces re-fetch; old entries lacked currency-aware conversion
+    const result = await fetchYahooSingle(alt, redis, `price:yahoo:v2:${alt}`, ttl, forex);
     if (result) return { data: result, resolvedTicker: alt };
   }
   return null;
@@ -336,7 +342,8 @@ async function fetchYahooHKPrices(
 
   const results = await Promise.allSettled(
     entries.map(([, ticker]) =>
-      fetchYahooSingle(ticker, redis, `price:yahoo_hk:${ticker}`, ttl, forex),
+      // v2 prefix forces re-fetch; old entries stored raw HKD without conversion
+      fetchYahooSingle(ticker, redis, `price:yahoo_hk:v2:${ticker}`, ttl, forex),
     ),
   );
 
