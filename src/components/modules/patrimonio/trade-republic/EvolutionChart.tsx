@@ -187,12 +187,12 @@ export function EvolutionChart({ height = 300, showBenchmark = false }: Evolutio
   const gradInvested = `gradInvested-${uid}`;
 
   const snapshots = usePatrimonioStore((s) => s.snapshots);
-  const getTRCurrentValue = usePatrimonioStore((s) => s.getTRCurrentValue);
+  const getTRInvestmentValue = usePatrimonioStore((s) => s.getTRInvestmentValue);
   const pricesLastUpdated = usePatrimonioStore((s) => s.pricesLastUpdated);
 
   const [period, setPeriod] = useState<Period>("Todo");
 
-  const currentTRValue = getTRCurrentValue();
+  const currentTRValue = getTRInvestmentValue();
 
   const data: EvolutionPointExtended[] = useMemo(() => {
     const cutoff = getCutoffDate(period);
@@ -200,7 +200,7 @@ export function EvolutionChart({ height = 300, showBenchmark = false }: Evolutio
       .filter((s) => cutoff === null || s.snapshot_date >= cutoff)
       .map((s): EvolutionPointExtended => ({
         date: s.snapshot_date,
-        value: s.total_value,
+        value: s.total_value - s.cash_value,
         invested: s.total_invested,
         pl: s.pl_amount ?? 0,
       }));

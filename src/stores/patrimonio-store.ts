@@ -67,6 +67,7 @@ interface PatrimonioStore {
   getPlatformSummary: (slug: PlatformSlug) => PlatformSummary | null;
   getTRAssets: () => PortfolioAsset[];
   getTRCurrentValue: () => number;
+  getTRInvestmentValue: () => number;
   getAvailableYears: () => string[];
   getAllocationByCategory: () => AllocationSlice[];
   getAllocationByGeography: () => AllocationSlice[];
@@ -207,6 +208,12 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
       .getTRAssets()
       .reduce((sum, a) => sum + (a.current_value ?? 0), 0),
 
+  getTRInvestmentValue: () =>
+    get()
+      .getTRAssets()
+      .filter((a) => a.category !== 'cash')
+      .reduce((sum, a) => sum + (a.current_value ?? 0), 0),
+
   getAvailableYears: () => {
     const { transactions, passiveIncome, snapshots } = get();
     const years = new Set<string>();
@@ -339,7 +346,7 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
     const { snapshots } = get();
     return snapshots.map((s) => ({
       date: s.snapshot_date,
-      value: s.total_value,
+      value: s.total_value - s.cash_value,
       invested: s.total_invested,
       pl: s.pl_amount ?? 0,
     }));
@@ -403,11 +410,12 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
     const { snapshots } = get();
     if (snapshots.length < 2) return null;
     const sorted = [...snapshots].sort((a, b) => a.snapshot_date.localeCompare(b.snapshot_date));
-    let peak = sorted[0].total_value;
+    let peak = sorted[0].total_value - sorted[0].cash_value;
     let maxDrawdown = 0;
     for (const s of sorted) {
-      if (s.total_value > peak) peak = s.total_value;
-      const dd = peak > 0 ? (s.total_value - peak) / peak : 0;
+      const invValue = s.total_value - s.cash_value;
+      if (invValue > peak) peak = invValue;
+      const dd = peak > 0 ? (invValue - peak) / peak : 0;
       if (dd < maxDrawdown) maxDrawdown = dd;
     }
     return maxDrawdown * 100; // percentage, negative
@@ -421,10 +429,12 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
     for (let i = 1; i < sorted.length; i++) {
       const prev = sorted[i - 1];
       const curr = sorted[i];
+      const prevInv = prev.total_value - prev.cash_value;
+      const currInv = curr.total_value - curr.cash_value;
       const cashFlow = curr.total_invested - prev.total_invested;
-      const denominator = prev.total_value + cashFlow;
+      const denominator = prevInv + cashFlow;
       if (denominator <= 0) continue;
-      twr *= curr.total_value / denominator;
+      twr *= currInv / denominator;
     }
     return twr - 1;
   },
@@ -437,8 +447,10 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
     for (let i = 1; i < sorted.length; i++) {
       const prev = sorted[i - 1];
       const curr = sorted[i];
-      if (prev.total_value > 0) {
-        returns.push((curr.total_value - prev.total_value) / prev.total_value);
+      const prevInv = prev.total_value - prev.cash_value;
+      const currInv = curr.total_value - curr.cash_value;
+      if (prevInv > 0) {
+        returns.push((currInv - prevInv) / prevInv);
       }
     }
     if (returns.length < 2) return null;

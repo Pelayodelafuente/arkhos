@@ -11,6 +11,8 @@ import { Input } from "@/components/ui";
 import { AssetDetailDrawer } from "./AssetDetailDrawer";
 import { AssetFormModal } from "./AssetFormModal";
 
+const TODAY_MS = Date.now();
+
 const formatEur = (value: number) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
 
@@ -63,7 +65,7 @@ function SortHeader({ label, sortKey, currentKey, currentDir, onSort, className 
       className={`flex items-center gap-1 text-xs font-medium transition-colors hover:text-foreground ${
         isActive ? "text-foreground" : "text-text-tertiary"
       } ${className}`}
-      aria-sort={isActive ? (currentDir === "asc" ? "ascending" : "descending") : "none"}
+      aria-label={`${label}${isActive ? `, ordenado ${currentDir === "asc" ? "ascendente" : "descendente"}` : ""}`}
     >
       {label}
       {isActive ? (
@@ -95,14 +97,15 @@ function PriceCell({ asset, changePercent }: PriceCellProps) {
   useEffect(() => {
     const prev = prevPrice.current;
     const curr = asset.current_price_eur;
-    if (prev != null && curr != null && prev !== curr) {
-      const cls = curr > prev ? "price-flash-up" : "price-flash-down";
-      setFlashClass(cls);
-      const timer = setTimeout(() => setFlashClass(""), 400);
-      prevPrice.current = curr;
-      return () => clearTimeout(timer);
-    }
     prevPrice.current = curr;
+    if (prev == null || curr == null || prev === curr) return;
+    const cls = curr > prev ? "price-flash-up" : "price-flash-down";
+    const flashTimer = setTimeout(() => setFlashClass(cls), 0);
+    const clearTimer = setTimeout(() => setFlashClass(""), 400);
+    return () => {
+      clearTimeout(flashTimer);
+      clearTimeout(clearTimer);
+    };
   }, [asset.current_price_eur]);
 
   if (asset.current_price_eur == null) {
@@ -213,7 +216,7 @@ function CategoryGroup({ category, assets, savingsPlanMap, priceChanges, trCurre
           const planAmount = savingsPlanMap.get(asset.id);
           const firstBuyDate = firstBuyDateMap.get(asset.id);
           const daysInPortfolio = firstBuyDate
-            ? Math.floor((Date.now() - new Date(firstBuyDate).getTime()) / (1000 * 60 * 60 * 24))
+            ? Math.floor((TODAY_MS - new Date(firstBuyDate).getTime()) / (1000 * 60 * 60 * 24))
             : null;
           const plAnnualized =
             asset.pl_percentage != null && daysInPortfolio != null

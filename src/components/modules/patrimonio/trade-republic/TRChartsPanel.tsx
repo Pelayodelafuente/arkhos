@@ -3,7 +3,6 @@
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { TRPLBarChart } from "./TRPLBarChart";
 import { MonthlyContributionChart } from "./MonthlyContributionChart";
-import { RiskDistributionChart } from "./RiskDistributionChart";
 import { AllocationBars } from "./AllocationBars";
 
 interface ChartCardProps {

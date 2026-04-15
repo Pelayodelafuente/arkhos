@@ -1,6 +1,6 @@
 "use client";
 
-import { useId } from "react";
+import { useId, useMemo } from "react";
 import {
   AreaChart,
   Area,
@@ -114,7 +114,38 @@ export function AssetAccumulationChart({ transactions, assetName }: AssetAccumul
   const gradQtyId = `gradQty-${uid}`;
   const gradInvestedId = `gradInvested-${uid}`;
 
-  if (transactions.length < 2) {
+  const { sortedTransactions, data } = useMemo(() => {
+    const sorted = [...transactions].sort((a, b) =>
+      a.transaction_date.localeCompare(b.transaction_date)
+    );
+    if (transactions.length < 2) {
+      return { sortedTransactions: sorted, data: null };
+    }
+    let accQty = 0;
+    let accInvested = 0;
+    const chartData: ChartPoint[] = sorted.map((tx) => {
+      const qty = tx.quantity ?? 0;
+      const total = tx.total_amount;
+      if (tx.type === "sell" || tx.type === "transfer_out") {
+        accQty = Math.max(0, accQty - qty);
+        accInvested = Math.max(0, accInvested - total);
+      } else {
+        accQty += qty;
+        accInvested += total;
+      }
+      return {
+        date: tx.transaction_date,
+        dateLabel: formatDateLabel(tx.transaction_date),
+        quantity: accQty,
+        invested: accInvested,
+        txType: tx.type,
+        txPrice: tx.price_per_unit ?? null,
+      };
+    });
+    return { sortedTransactions: sorted, data: chartData };
+  }, [transactions]);
+
+  if (!data) {
     return (
       <div className="flex h-[200px] items-center justify-center">
         <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
@@ -123,35 +154,6 @@ export function AssetAccumulationChart({ transactions, assetName }: AssetAccumul
       </div>
     );
   }
-
-  const sorted = [...transactions].sort((a, b) =>
-    a.transaction_date.localeCompare(b.transaction_date)
-  );
-
-  let accQty = 0;
-  let accInvested = 0;
-
-  const data: ChartPoint[] = sorted.map((tx) => {
-    const qty = tx.quantity ?? 0;
-    const total = tx.total_amount;
-
-    if (tx.type === "sell" || tx.type === "transfer_out") {
-      accQty = Math.max(0, accQty - qty);
-      accInvested = Math.max(0, accInvested - total);
-    } else {
-      accQty += qty;
-      accInvested += total;
-    }
-
-    return {
-      date: tx.transaction_date,
-      dateLabel: formatDateLabel(tx.transaction_date),
-      quantity: accQty,
-      invested: accInvested,
-      txType: tx.type,
-      txPrice: tx.price_per_unit ?? null,
-    };
-  });
 
   return (
     <div>
@@ -204,7 +206,7 @@ export function AssetAccumulationChart({ transactions, assetName }: AssetAccumul
           <Tooltip
             content={<CustomTooltip />}
           />
-          {sorted.map((tx) => (
+          {sortedTransactions.map((tx) => (
             <ReferenceLine
               key={tx.id}
               x={formatDateLabel(tx.transaction_date)}

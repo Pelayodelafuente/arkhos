@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { deleteTransaction } from "@/app/actions/patrimonio";
 import { useUIStore } from "@/stores/ui-store";
-import { Button, Badge } from "@/components/ui";
+import { Button } from "@/components/ui";
 import { C } from "@/lib/patrimonio/chart-colors";
 import { TransactionFormModal } from "./TransactionFormModal";
 import { AssetAccumulationChart } from "./AssetAccumulationChart";
@@ -38,7 +38,6 @@ const TX_BADGE: Record<TransactionType, { label: string; color: string; bg: stri
 export function AssetDetailDrawer({ assetId, onClose }: AssetDetailDrawerProps) {
   const assets = usePatrimonioStore((s) => s.assets);
   const transactions = usePatrimonioStore((s) => s.transactions);
-  const platforms = usePatrimonioStore((s) => s.platforms);
   const addToast = useUIStore((s) => s.addToast);
 
   const [showTransactionModal, setShowTransactionModal] = useState(false);

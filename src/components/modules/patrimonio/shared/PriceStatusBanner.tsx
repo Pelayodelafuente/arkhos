@@ -19,11 +19,11 @@ export function PriceStatusBanner() {
 
   const [cooldown, setCooldown] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const isCounting = cooldown > 0;
 
-  // Countdown after each manual refresh
+  // Tick down once per second while countdown is active
   useEffect(() => {
-    if (!isRefreshing) return;
-    setCooldown(COOLDOWN_S);
+    if (!isCounting) return;
     if (intervalRef.current) clearInterval(intervalRef.current);
     intervalRef.current = setInterval(() => {
       setCooldown((prev) => {
@@ -38,10 +38,11 @@ export function PriceStatusBanner() {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [isRefreshing]);
+  }, [isCounting]);
 
   const handleRefresh = useCallback(async () => {
     if (cooldown > 0 || isRefreshing) return;
+    setCooldown(COOLDOWN_S);
     await refreshPrices();
   }, [cooldown, isRefreshing, refreshPrices]);
 

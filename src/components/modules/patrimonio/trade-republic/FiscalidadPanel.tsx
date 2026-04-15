@@ -153,21 +153,23 @@ function Row({ label, value }: { label: string; value: number }) {
 
 function TramosDetail({ base }: { base: number }) {
   if (base <= 0) return null;
-  let remaining = base;
+  const tramoRows = TRAMOS.reduce<{ rows: Array<{ label: string; tax: number }>; remaining: number }>(
+    ({ rows, remaining }, t) => {
+      if (remaining <= 0) return { rows, remaining };
+      const taxable = Math.min(remaining, t.limit);
+      const tax = taxable * t.rate;
+      return { rows: [...rows, { label: t.label, tax }], remaining: remaining - taxable };
+    },
+    { rows: [], remaining: base }
+  ).rows;
   return (
     <div className="mt-2 space-y-0.5 rounded-lg bg-sand/40 p-3">
-      {TRAMOS.map((t) => {
-        if (remaining <= 0) return null;
-        const taxable = Math.min(remaining, t.limit);
-        const tax = taxable * t.rate;
-        remaining -= taxable;
-        return (
-          <div key={t.label} className="flex items-center justify-between text-xs">
-            <span className="text-text-tertiary">{t.label}</span>
-            <span className="font-mono text-text-secondary">{formatEur(tax)}</span>
-          </div>
-        );
-      })}
+      {tramoRows.map(({ label, tax }) => (
+        <div key={label} className="flex items-center justify-between text-xs">
+          <span className="text-text-tertiary">{label}</span>
+          <span className="font-mono text-text-secondary">{formatEur(tax)}</span>
+        </div>
+      ))}
     </div>
   );
 }
