@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, EyeOff, Eye } from "lucide-react";
 import { usePatrimonioPrices } from "@/lib/hooks/use-patrimonio-prices";
+import { useToast } from "@/stores/ui-store";
+import { usePatrimonioStore } from "@/stores/patrimonio-store";
 
 const formatDateTime = (date: Date) =>
   date.toLocaleDateString("es-ES", {
@@ -16,6 +18,9 @@ const COOLDOWN_S = 60;
 
 export function PriceStatusBanner() {
   const { lastUpdated, refreshPrices, isRefreshing } = usePatrimonioPrices();
+  const toast = useToast();
+  const privacyMode = usePatrimonioStore((s) => s.privacyMode);
+  const togglePrivacyMode = usePatrimonioStore((s) => s.togglePrivacyMode);
 
   const [cooldown, setCooldown] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -43,8 +48,13 @@ export function PriceStatusBanner() {
   const handleRefresh = useCallback(async () => {
     if (cooldown > 0 || isRefreshing) return;
     setCooldown(COOLDOWN_S);
-    await refreshPrices();
-  }, [cooldown, isRefreshing, refreshPrices]);
+    try {
+      await refreshPrices();
+      toast.success("Precios actualizados correctamente");
+    } catch {
+      toast.error("Error al actualizar precios");
+    }
+  }, [cooldown, isRefreshing, refreshPrices, toast]);
 
   const btnDisabled = isRefreshing || cooldown > 0;
   const btnLabel = isRefreshing
@@ -55,12 +65,30 @@ export function PriceStatusBanner() {
     ? "Actualizar"
     : "Obtener precios";
 
+  const privacyBtn = (
+    <button
+      type="button"
+      onClick={togglePrivacyMode}
+      className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors"
+      style={{
+        backgroundColor: privacyMode ? "rgba(91,140,106,0.12)" : "transparent",
+        color: privacyMode ? "var(--module-patrimonio)" : "var(--text-tertiary)",
+        border: `1px solid ${privacyMode ? "rgba(91,140,106,0.3)" : "var(--border)"}`,
+      }}
+      aria-label={privacyMode ? "Mostrar cifras" : "Ocultar cifras"}
+      title={privacyMode ? "Mostrar cifras" : "Modo privacidad: ocultar cifras"}
+    >
+      {privacyMode ? <Eye size={11} strokeWidth={2} aria-hidden="true" /> : <EyeOff size={11} strokeWidth={2} aria-hidden="true" />}
+      {privacyMode ? "Mostrar" : "Privacidad"}
+    </button>
+  );
+
   const refreshBtn = (
     <button
       type="button"
       onClick={handleRefresh}
       disabled={btnDisabled}
-      className="ml-auto flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors"
+      className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors"
       style={{
         backgroundColor: btnDisabled ? "transparent" : "rgba(46,125,107,0.10)",
         color: btnDisabled ? "var(--text-tertiary)" : "var(--module-patrimonio)",
@@ -87,7 +115,7 @@ export function PriceStatusBanner() {
         style={{ backgroundColor: "var(--bg-sand)", border: "1px solid var(--border)" }}
       >
         <span className="text-text-tertiary">Sin precios</span>
-        {refreshBtn}
+        <div className="ml-auto flex items-center gap-2">{privacyBtn}{refreshBtn}</div>
       </div>
     );
   }
@@ -111,7 +139,7 @@ export function PriceStatusBanner() {
       <span className="text-text-secondary font-medium">
         Precios del {formatDateTime(lastUpdated)}
       </span>
-      {refreshBtn}
+      <div className="ml-auto flex items-center gap-2">{privacyBtn}{refreshBtn}</div>
     </div>
   );
 }

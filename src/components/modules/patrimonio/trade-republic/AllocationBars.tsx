@@ -56,11 +56,11 @@ export function AllocationBars({ data, title }: AllocationBarsProps) {
                 </div>
               </div>
               <div
-                className="h-1.5 overflow-hidden rounded-full"
+                className="h-2.5 overflow-hidden rounded-full"
                 style={{ backgroundColor: "var(--bg-sand)" }}
               >
                 <div
-                  className="h-1.5 rounded-full transition-all duration-500"
+                  className="h-2.5 rounded-full transition-all duration-500"
                   style={{ width: `${item.percentage}%`, backgroundColor: item.color }}
                 />
               </div>

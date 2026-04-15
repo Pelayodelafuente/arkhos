@@ -38,19 +38,23 @@ interface MonthData {
 
 const fmt = new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" });
 
-const FALLBACK_COLORS = [
+// Stable palette keyed by position — avoids every ETF getting the same category color
+const STABLE_COLORS = [
   C.green,
   C.blue,
   C.purple,
   C.amber,
-  "#C4704A", // terracota (--color-terracota)
-  "#E67E22", // naranja cálido
-  "#9B7A4A", // marrón tierra
+  "#C4704A",
+  "#E67E22",
+  "#9B7A4A",
   C.gray,
 ];
 
-function getAssetColor(asset: PortfolioAsset, index: number): string {
-  return CATEGORY_COLORS[asset.category] ?? FALLBACK_COLORS[index % FALLBACK_COLORS.length];
+function getAssetColor(asset: PortfolioAsset | undefined, index: number): string {
+  // Prefer explicit category color only when unambiguous (cash); otherwise use
+  // stable index-based color so the same ETF keeps the same color across months.
+  if (asset?.category === "cash") return CATEGORY_COLORS["cash"] ?? STABLE_COLORS[index % STABLE_COLORS.length];
+  return STABLE_COLORS[index % STABLE_COLORS.length];
 }
 
 function formatMonthLabel(yyyyMM: string): string {
@@ -95,7 +99,7 @@ function CustomTooltip({
         if (!val) return null;
         return (
           <div key={id} className="flex items-center justify-between gap-3 py-0.5">
-            <span style={{ color: getAssetColor(asset!, i) }}>
+            <span style={{ color: getAssetColor(asset ?? undefined, i) }}>
               {asset?.ticker ?? asset?.name.slice(0, 12) ?? id.slice(0, 8)}
             </span>
             <span className="font-mono" style={{ color: "var(--foreground)" }}>
@@ -198,7 +202,7 @@ export function MonthlyContributionChart({ transactions, assets }: MonthlyContri
                 key={id}
                 dataKey={id}
                 stackId="monthly"
-                fill={getAssetColor(asset!, i)}
+                fill={getAssetColor(asset ?? undefined, i)}
                 name={asset?.ticker ?? asset?.name.slice(0, 12) ?? id.slice(0, 8)}
                 radius={i === assetIds.length - 1 ? [3, 3, 0, 0] : [0, 0, 0, 0]}
               />

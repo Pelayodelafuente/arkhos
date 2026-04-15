@@ -207,7 +207,7 @@ export function OverviewKPIs() {
         accentColor="#7260C4"
         badge={
           <span className="text-xs text-text-tertiary">
-            CAGR desde inicio · sin efectivo
+            TWR anualizado · sin efectivo
           </span>
         }
       />

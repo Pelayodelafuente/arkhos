@@ -83,6 +83,8 @@ const MSCI_WORLD_ANNUAL = 0.085;
 interface EvolutionPointExtended extends EvolutionPoint {
   isToday?: boolean;
   benchmark?: number;
+  totalValue?: number; // portfolio value including cash (E-01)
+  periodChangePct?: number; // % change since start of selected period (UX-01)
 }
 
 interface TooltipPayloadItem {
@@ -94,9 +96,10 @@ interface CustomTooltipProps {
   payload?: TooltipPayloadItem[];
   pricesLastUpdated?: string | null;
   showBenchmark?: boolean;
+  showTotal?: boolean;
 }
 
-function CustomTooltip({ active, payload, pricesLastUpdated, showBenchmark }: CustomTooltipProps) {
+function CustomTooltip({ active, payload, pricesLastUpdated, showBenchmark, showTotal }: CustomTooltipProps) {
   if (!active || !payload || payload.length === 0) return null;
   const point = payload[0].payload;
   const plColor = point.pl >= 0 ? C.green : C.red;
@@ -136,9 +139,25 @@ function CustomTooltip({ active, payload, pricesLastUpdated, showBenchmark }: Cu
       {point.isToday && <p className="mb-1.5 text-xs text-text-tertiary">En tiempo real</p>}
       <div className="mt-2 space-y-1">
         <div className="flex justify-between gap-6">
-          <span className="text-text-tertiary">Valor</span>
-          <span className="font-mono font-medium text-foreground">{formatEur(point.value)}</span>
+          <span className="text-text-tertiary">Cartera</span>
+          <div className="flex items-center gap-1.5">
+            <span className="font-mono font-medium text-foreground">{formatEur(point.value)}</span>
+            {point.periodChangePct != null && (
+              <span
+                className="font-mono text-[10px] font-medium"
+                style={{ color: point.periodChangePct >= 0 ? C.green : C.red }}
+              >
+                {point.periodChangePct >= 0 ? "+" : ""}{point.periodChangePct.toFixed(2)}%
+              </span>
+            )}
+          </div>
         </div>
+        {showTotal && point.totalValue != null && (
+          <div className="flex justify-between gap-6">
+            <span className="text-text-tertiary">Patrimonio total</span>
+            <span className="font-mono text-text-secondary">{formatEur(point.totalValue)}</span>
+          </div>
+        )}
         <div className="flex justify-between gap-6">
           <span className="text-text-tertiary">Invertido</span>
           <span className="font-mono text-text-secondary">{formatEur(point.invested)}</span>
@@ -179,20 +198,38 @@ function CustomTooltip({ active, payload, pricesLastUpdated, showBenchmark }: Cu
 interface EvolutionChartProps {
   height?: number;
   showBenchmark?: boolean;
+  showTotal?: boolean; // show patrimonio total (incl. cash) line
 }
 
-export function EvolutionChart({ height = 300, showBenchmark = false }: EvolutionChartProps) {
+export function EvolutionChart({ height = 300, showBenchmark = false, showTotal: showTotalProp }: EvolutionChartProps) {
+  const [showTotal, setShowTotal] = useState(showTotalProp ?? false);
   const uid = useId();
   const gradValue = `gradValue-${uid}`;
   const gradInvested = `gradInvested-${uid}`;
 
   const snapshots = usePatrimonioStore((s) => s.snapshots);
   const getTRInvestmentValue = usePatrimonioStore((s) => s.getTRInvestmentValue);
+  const getTRCurrentValue = usePatrimonioStore((s) => s.getTRCurrentValue);
   const pricesLastUpdated = usePatrimonioStore((s) => s.pricesLastUpdated);
 
   const [period, setPeriod] = useState<Period>("Todo");
 
+  // Deduplicate X-axis ticks to one per calendar month (BUG-06)
+  const uniqueMonthTicks = useMemo(() => {
+    const seen = new Set<string>();
+    return ([] as EvolutionPointExtended[])
+      .concat(snapshots.map((s) => ({ date: s.snapshot_date, value: 0, invested: 0, pl: 0 })))
+      .filter((p) => {
+        const key = p.date.substring(0, 7);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .map((p) => p.date);
+  }, [snapshots]);
+
   const currentTRValue = getTRInvestmentValue();
+  const currentTRTotal = getTRCurrentValue(); // includes cash
 
   const data: EvolutionPointExtended[] = useMemo(() => {
     const cutoff = getCutoffDate(period);
@@ -203,6 +240,7 @@ export function EvolutionChart({ height = 300, showBenchmark = false }: Evolutio
         value: s.total_value - s.cash_value,
         invested: s.total_invested,
         pl: s.pl_amount ?? 0,
+        totalValue: s.total_value,
       }));
 
     // Append "today" point if we have a live price and it's not already in snapshots
@@ -216,9 +254,18 @@ export function EvolutionChart({ height = 300, showBenchmark = false }: Evolutio
           value: currentTRValue,
           invested: lastInvested,
           pl: currentTRValue - lastInvested,
+          totalValue: currentTRTotal,
           isToday: true,
         });
       }
+    }
+
+    // Compute period % change from first point (UX-01)
+    const firstValue = base[0]?.value ?? 0;
+    if (firstValue > 0) {
+      base.forEach((p) => {
+        p.periodChangePct = ((p.value - firstValue) / firstValue) * 100;
+      });
     }
 
     // Compute cash-flow-adjusted MSCI World benchmark
@@ -240,7 +287,7 @@ export function EvolutionChart({ height = 300, showBenchmark = false }: Evolutio
       acc.push({ ...point, benchmark: newBenchmark });
       return acc;
     }, []);
-  }, [snapshots, period, currentTRValue, showBenchmark]);
+  }, [snapshots, period, currentTRValue, currentTRTotal, showBenchmark]);
 
   if (data.length === 0) {
     return (
@@ -258,9 +305,23 @@ export function EvolutionChart({ height = 300, showBenchmark = false }: Evolutio
 
   return (
     <div>
-      {/* Period selector */}
-      <div className="mb-3 flex justify-end gap-1">
-        {PERIODS.map(({ key, label }) => {
+      {/* Controls row: toggle total + period selector */}
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <button
+          type="button"
+          onClick={() => setShowTotal((v) => !v)}
+          className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors"
+          style={{
+            backgroundColor: showTotal ? "rgba(59,120,176,0.12)" : "var(--bg-sand)",
+            color: showTotal ? "#3B78B0" : "var(--text-tertiary)",
+            border: `1px solid ${showTotal ? "rgba(59,120,176,0.3)" : "var(--border)"}`,
+          }}
+          aria-pressed={showTotal}
+        >
+          {showTotal ? "Ocultar" : "Mostrar"} patrimonio total
+        </button>
+        <div className="flex gap-1">
+          {PERIODS.map(({ key, label }) => {
           const active = period === key;
           return (
             <button
@@ -279,7 +340,18 @@ export function EvolutionChart({ height = 300, showBenchmark = false }: Evolutio
             </button>
           );
         })}
+        </div>
       </div>
+
+      {/* Legend for total line */}
+      {showTotal && (
+        <div className="mb-3 flex items-center gap-4 text-xs text-text-tertiary">
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-0.5 w-5 rounded-full" style={{ backgroundColor: "#3B78B0" }} />
+            Patrimonio total (con efectivo)
+          </span>
+        </div>
+      )}
 
       {showBenchmark && (
         <div className="mb-3 flex flex-wrap items-center gap-4 text-xs text-text-tertiary">
@@ -315,6 +387,7 @@ export function EvolutionChart({ height = 300, showBenchmark = false }: Evolutio
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
           <XAxis
             dataKey="date"
+            ticks={uniqueMonthTicks}
             tickFormatter={formatMonthYear}
             tick={{ fontSize: 11, fill: "var(--text-tertiary)", fontFamily: "var(--font-mono)" }}
             axisLine={false}
@@ -322,12 +395,13 @@ export function EvolutionChart({ height = 300, showBenchmark = false }: Evolutio
           />
           <YAxis
             tickFormatter={formatCompact}
+            domain={["auto", "auto"]}
             tick={{ fontSize: 11, fill: "var(--text-tertiary)", fontFamily: "var(--font-mono)" }}
             axisLine={false}
             tickLine={false}
             width={40}
           />
-          <Tooltip content={<CustomTooltip pricesLastUpdated={pricesLastUpdated} showBenchmark={showBenchmark} />} />
+          <Tooltip content={<CustomTooltip pricesLastUpdated={pricesLastUpdated} showBenchmark={showBenchmark} showTotal={showTotal} />} />
           <Area
             type="monotone"
             dataKey="invested"
@@ -367,6 +441,18 @@ export function EvolutionChart({ height = 300, showBenchmark = false }: Evolutio
             activeDot={{ r: 5, fill: C.green }}
             legendType="none"
           />
+          {showTotal && (
+            <Line
+              type="monotone"
+              dataKey="totalValue"
+              stroke="#3B78B0"
+              strokeWidth={1.5}
+              strokeDasharray="4 2"
+              dot={false}
+              activeDot={{ r: 4, fill: "#3B78B0" }}
+              legendType="none"
+            />
+          )}
           {showBenchmark && (
             <Line
               type="monotone"

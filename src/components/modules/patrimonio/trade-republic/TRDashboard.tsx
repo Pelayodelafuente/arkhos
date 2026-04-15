@@ -14,6 +14,9 @@ import { PositionTreemap } from "./PositionTreemap";
 import { FiscalidadPanel } from "./FiscalidadPanel";
 import { MetricasAvanzadasPanel } from "./MetricasAvanzadasPanel";
 import { SimuladorProyeccion } from "./SimuladorProyeccion";
+import { CapitalVsReturnChart } from "./CapitalVsReturnChart";
+import { MonthlyReturnHeatmap } from "./MonthlyReturnHeatmap";
+import { RebalanceoPanel } from "./RebalanceoPanel";
 
 type Tab = "overview" | "cartera" | "plan" | "analisis" | "ingresos" | "fiscal";
 
@@ -84,7 +87,7 @@ function TopPerformers() {
           {gainers.map((asset) => (
             <div key={asset.id} className="flex items-center justify-between gap-3">
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-foreground">{asset.name}</p>
+                <p className="truncate text-sm font-medium text-foreground" title={asset.name}>{asset.name}</p>
                 <p className="font-mono text-xs text-text-tertiary">{asset.ticker ?? "—"}</p>
               </div>
               <div className="flex-shrink-0 text-right">
@@ -114,7 +117,7 @@ function TopPerformers() {
           {losers.map((asset) => (
             <div key={asset.id} className="flex items-center justify-between gap-3">
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-foreground">{asset.name}</p>
+                <p className="truncate text-sm font-medium text-foreground" title={asset.name}>{asset.name}</p>
                 <p className="font-mono text-xs text-text-tertiary">{asset.ticker ?? "—"}</p>
               </div>
               <div className="flex-shrink-0 text-right">
@@ -179,7 +182,7 @@ export function TRDashboard() {
           {/* Evolución chart */}
           <div className="rounded-xl border border-border bg-card p-5">
             <h3 className="mb-4 text-sm font-semibold text-foreground">
-              Evolución del patrimonio
+              Evolución de la cartera (sin efectivo)
             </h3>
             <EvolutionChart height={380} />
           </div>
@@ -197,6 +200,17 @@ export function TRDashboard() {
               <TopPerformers />
             </div>
           </div>
+
+          {/* IDEA-03 — Capital invertido vs Rentabilidad */}
+          <div className="rounded-xl border border-border bg-card p-5">
+            <h3 className="mb-0.5 text-sm font-semibold text-foreground">
+              Capital invertido vs Rentabilidad
+            </h3>
+            <p className="mb-4 text-xs text-text-tertiary">
+              Area apilada: capital aportado (azul) + rentabilidad acumulada (verde)
+            </p>
+            <CapitalVsReturnChart height={280} />
+          </div>
         </div>
       )}
 
@@ -208,9 +222,10 @@ export function TRDashboard() {
         <div className="space-y-5">
           <SavingsPlanPanel />
           <div className="rounded-xl border border-border bg-card p-5">
-            <h4 className="mb-4 text-sm font-semibold text-foreground">
-              Aportaciones mensuales al plan
-            </h4>
+            <div className="mb-4 flex items-center justify-between">
+              <h4 className="text-sm font-semibold text-foreground">Aportaciones mensuales al plan</h4>
+              <YearFilter />
+            </div>
             <MonthlyContributionChart transactions={transactions} assets={assets} />
           </div>
         </div>
@@ -236,17 +251,46 @@ export function TRDashboard() {
           {/* F6 — Simulador de proyección */}
           <SimuladorProyeccion />
 
+          {/* IDEA-05 — Seguimiento del rebalanceo */}
+          <div className="rounded-xl border border-border bg-card p-5">
+            <h3 className="mb-0.5 text-sm font-semibold text-foreground">
+              Seguimiento del rebalanceo
+            </h3>
+            <p className="mb-4 text-xs text-text-tertiary">
+              Peso actual vs objetivo del plan de ahorro activo. Alerta si la desviacion supera ±5 pp.
+            </p>
+            <RebalanceoPanel />
+          </div>
+
           {/* Distribuciones (año) */}
           <div className="flex items-center justify-between">
             <p className="text-xs text-text-tertiary">Filtra los gráficos por año</p>
             <YearFilter />
           </div>
           <TRChartsPanel />
+
+          {/* IDEA-04 — Heatmap de retorno mensual */}
+          <div className="rounded-xl border border-border bg-card p-5">
+            <h3 className="mb-0.5 text-sm font-semibold text-foreground">
+              Retorno mensual
+            </h3>
+            <p className="mb-4 text-xs text-text-tertiary">
+              Rendimiento de la cartera (sin efectivo) por mes
+            </p>
+            <MonthlyReturnHeatmap />
+          </div>
         </div>
       )}
 
       {/* Tab: Ingresos Pasivos */}
-      {activeTab === "ingresos" && <PassiveIncomePanel />}
+      {activeTab === "ingresos" && (
+        <div className="space-y-3">
+          <div className="flex justify-end">
+            <YearFilter />
+          </div>
+          <PassiveIncomePanel />
+        </div>
+      )}
 
       {/* Tab: Fiscalidad */}
       {activeTab === "fiscal" && <FiscalidadPanel />}

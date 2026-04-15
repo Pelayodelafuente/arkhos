@@ -51,6 +51,7 @@ export function PatrimonioView({
   const setPlatforms = usePatrimonioStore((s) => s.setPlatforms);
   const activePlatform = usePatrimonioStore((s) => s.activePlatform);
   const setActivePlatform = usePatrimonioStore((s) => s.setActivePlatform);
+  const privacyMode = usePatrimonioStore((s) => s.privacyMode);
 
   // Sync server data into store on mount
   useEffect(() => {
@@ -81,7 +82,7 @@ export function PatrimonioView({
   const availableTabs = PLATFORM_TABS;
 
   return (
-    <div className="space-y-6">
+    <div className={`space-y-6${privacyMode ? " patrimonio-privacy" : ""}`}>
       {/* Header */}
       <div className="flex items-center gap-3">
         <div

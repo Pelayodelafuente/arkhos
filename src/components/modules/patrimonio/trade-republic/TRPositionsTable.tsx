@@ -538,18 +538,47 @@ export function TRPositionsTable() {
             </tr>
           </thead>
           <tbody>
-            {Array.from(groups.entries()).map(([category, assets]) => (
-              <CategoryGroup
-                key={category}
-                category={category}
-                assets={assets}
-                savingsPlanMap={savingsPlanMap}
-                priceChanges={priceChanges}
-                trCurrentValue={trCurrentValue}
-                firstBuyDateMap={firstBuyDateMap}
-                onAssetClick={setActiveDrawerAssetId}
-              />
-            ))}
+            {/* Investment positions first (non-cash) */}
+            {Array.from(groups.entries())
+              .filter(([cat]) => cat !== "cash")
+              .map(([category, assets]) => (
+                <CategoryGroup
+                  key={category}
+                  category={category}
+                  assets={assets}
+                  savingsPlanMap={savingsPlanMap}
+                  priceChanges={priceChanges}
+                  trCurrentValue={trCurrentValue}
+                  firstBuyDateMap={firstBuyDateMap}
+                  onAssetClick={setActiveDrawerAssetId}
+                />
+              ))}
+            {/* Cash separator + group — always last */}
+            {groups.has("cash") && (
+              <>
+                <tr>
+                  <td colSpan={11} className="px-4 py-2">
+                    <div className="flex items-center gap-3">
+                      <span className="h-px flex-1" style={{ backgroundColor: "var(--border)" }} />
+                      <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "var(--text-tertiary)" }}>
+                        Efectivo (no invertido)
+                      </span>
+                      <span className="h-px flex-1" style={{ backgroundColor: "var(--border)" }} />
+                    </div>
+                  </td>
+                </tr>
+                <CategoryGroup
+                  key="cash"
+                  category="cash"
+                  assets={groups.get("cash")!}
+                  savingsPlanMap={savingsPlanMap}
+                  priceChanges={priceChanges}
+                  trCurrentValue={trCurrentValue}
+                  firstBuyDateMap={firstBuyDateMap}
+                  onAssetClick={setActiveDrawerAssetId}
+                />
+              </>
+            )}
             {filtered.length === 0 && (
               <tr>
                 <td colSpan={11} className="py-12 text-center text-sm text-text-tertiary">
@@ -590,15 +619,33 @@ export function TRPositionsTable() {
           </div>
         ) : (
           <div className="divide-y divide-border">
-            {Array.from(groups.entries()).map(([category, assets]) => (
-              <MobileCategoryGroup
-                key={category}
-                category={category}
-                assets={assets}
-                savingsPlanMap={savingsPlanMap}
-                onAssetClick={setActiveDrawerAssetId}
-              />
-            ))}
+            {Array.from(groups.entries())
+              .filter(([cat]) => cat !== "cash")
+              .map(([category, assets]) => (
+                <MobileCategoryGroup
+                  key={category}
+                  category={category}
+                  assets={assets}
+                  savingsPlanMap={savingsPlanMap}
+                  onAssetClick={setActiveDrawerAssetId}
+                />
+              ))}
+            {groups.has("cash") && (
+              <>
+                <div className="px-4 py-2" style={{ backgroundColor: "var(--bg-sand)" }}>
+                  <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "var(--text-tertiary)" }}>
+                    Efectivo (no invertido)
+                  </span>
+                </div>
+                <MobileCategoryGroup
+                  key="cash"
+                  category="cash"
+                  assets={groups.get("cash")!}
+                  savingsPlanMap={savingsPlanMap}
+                  onAssetClick={setActiveDrawerAssetId}
+                />
+              </>
+            )}
           </div>
         )}
       </div>

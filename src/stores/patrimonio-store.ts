@@ -44,6 +44,10 @@ interface PatrimonioStore {
   // Year filter
   selectedYear: string | 'all';
 
+  // Privacy mode
+  privacyMode: boolean;
+  togglePrivacyMode: () => void;
+
   // Actions
   setOverview: (overview: PortfolioOverview) => void;
   setPlatforms: (platforms: InvestmentPlatform[]) => void;
@@ -105,6 +109,8 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
   activePlatform: 'all',
   activeAssetId: null,
   selectedYear: new Date().getFullYear().toString(),
+  privacyMode: false,
+  togglePrivacyMode: () => set((s) => ({ privacyMode: !s.privacyMode })),
 
   setOverview: (overview) => set({ overview }),
   setPlatforms: (platforms) => set({ platforms }),
@@ -390,20 +396,18 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
   },
 
   getCAGR: () => {
+    // Derive annualized return from TWR to avoid distortion caused by DCA and
+    // small initial non-cash values (which inflated the simple CAGR formula).
     const { snapshots } = get();
-    const trAssets = get().getTRAssets();
-    if (snapshots.length === 0) return null;
+    if (snapshots.length < 2) return null;
+    const twr = get().getTWR();
+    if (twr === null) return null;
     const sorted = [...snapshots].sort((a, b) => a.snapshot_date.localeCompare(b.snapshot_date));
-    const first = sorted[0];
-    const startValue = first.total_value - first.cash_value;
-    if (startValue <= 0) return null;
-    const currentCash = trAssets.filter((a) => a.category === 'cash').reduce((s, a) => s + (a.current_value ?? 0), 0);
-    const currentNonCash = trAssets.reduce((s, a) => s + (a.current_value ?? 0), 0) - currentCash;
-    if (currentNonCash <= 0) return null;
-    const startDate = new Date(first.snapshot_date);
-    const years = (Date.now() - startDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
-    if (years < 0.08) return null;
-    return Math.pow(currentNonCash / startValue, 1 / years) - 1;
+    const firstDate = new Date(sorted[0].snapshot_date);
+    const lastDate = new Date(sorted[sorted.length - 1].snapshot_date);
+    const days = (lastDate.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24);
+    if (days < 30) return null;
+    return Math.pow(1 + twr, 365.25 / days) - 1;
   },
 
   getMaxDrawdown: () => {

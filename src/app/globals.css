@@ -790,3 +790,14 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   animation: livePulse 2s ease-in-out infinite;
   display: inline-block;
 }
+
+/* ─── Privacy mode — blur all mono-font values (amounts, prices, %) ──────── */
+.patrimonio-privacy .font-mono {
+  filter: blur(6px);
+  transition: filter 0.2s ease;
+  cursor: pointer;
+  user-select: none;
+}
+.patrimonio-privacy .font-mono:hover {
+  filter: blur(0);
+}

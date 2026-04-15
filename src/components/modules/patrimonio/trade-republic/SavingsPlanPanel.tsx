@@ -93,15 +93,28 @@ function ActiveToggle({ item }: { item: SavingsPlanItem }) {
   );
 }
 
+function getNextContributionLabel(activeItems: SavingsPlanItem[]): string | null {
+  if (activeItems.length === 0) return null;
+  const executionDay = activeItems[0].execution_day;
+  const now = new Date();
+  const thisMonth = new Date(now.getFullYear(), now.getMonth(), executionDay);
+  const nextDate = thisMonth > now ? thisMonth : new Date(now.getFullYear(), now.getMonth() + 1, executionDay);
+  return nextDate.toLocaleDateString("es-ES", { day: "numeric", month: "long" });
+}
+
 export function SavingsPlanPanel() {
   const savingsPlan = usePatrimonioStore((s) => s.savingsPlan);
   const assets = usePatrimonioStore((s) => s.assets);
   const [showExecuteModal, setShowExecuteModal] = useState(false);
 
+  const activeItems = useMemo(() => savingsPlan.filter((item) => item.is_active), [savingsPlan]);
+
   const totalMonthly = useMemo(
-    () => savingsPlan.filter((item) => item.is_active).reduce((sum, item) => sum + item.monthly_amount, 0),
-    [savingsPlan]
+    () => activeItems.reduce((sum, item) => sum + item.monthly_amount, 0),
+    [activeItems]
   );
+
+  const nextContributionLabel = useMemo(() => getNextContributionLabel(activeItems), [activeItems]);
 
   const assetMap = new Map(assets.map((a) => [a.id, a]));
 
@@ -122,12 +135,18 @@ export function SavingsPlanPanel() {
             <h3 className="text-sm font-semibold text-foreground">Plan de Ahorro Activo</h3>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-xs text-text-tertiary">
-              Día 2 de cada mes ·{" "}
-              <span className="font-mono font-medium" style={{ color: "var(--module-patrimonio)" }}>
-                {formatEur(totalMonthly)}/mes
+            <div className="flex flex-col items-end gap-0.5">
+              <span className="text-xs text-text-tertiary">
+                <span className="font-mono font-medium" style={{ color: "var(--module-patrimonio)" }}>
+                  {formatEur(totalMonthly)}/mes
+                </span>
               </span>
-            </span>
+              {nextContributionLabel && (
+                <span className="text-[10px] text-text-tertiary">
+                  Próxima aportación: <span className="font-medium text-text-secondary">{nextContributionLabel}</span>
+                </span>
+              )}
+            </div>
             <button
               type="button"
               onClick={() => setShowExecuteModal(true)}

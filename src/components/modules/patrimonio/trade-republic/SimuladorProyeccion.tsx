@@ -139,7 +139,7 @@ export function SimuladorProyeccion() {
   const storeMonthly = getTotalMonthlyPlan();
   const storeValue = getTRCurrentValue();
 
-  const defaultRate = storeCagr !== null ? Math.round(storeCagr * 100) : 7;
+  const defaultRate = storeCagr !== null ? Math.min(Math.max(Math.round(storeCagr * 100 * 10) / 10, 1), 30) : 7;
 
   const [initialCapital, setInitialCapital] = useState(() => Math.round(storeValue));
   const [monthlyContrib, setMonthlyContrib] = useState(() => Math.round(storeMonthly) || 500);
@@ -174,7 +174,7 @@ export function SimuladorProyeccion() {
       </div>
 
       {/* Inputs */}
-      <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <NumInput
           label="Capital inicial"
           value={initialCapital}
@@ -191,15 +191,42 @@ export function SimuladorProyeccion() {
           step={50}
           suffix="€/mes"
         />
-        <NumInput
-          label="Rentabilidad base"
-          value={annualRatePct}
-          onChange={setAnnualRatePct}
-          min={1}
-          max={30}
-          step={0.5}
-          suffix="% / año"
-        />
+        {/* Rate slider with presets */}
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-medium text-text-secondary">Rentabilidad base</label>
+            <span className="font-mono text-sm font-semibold text-foreground">{annualRatePct}%/año</span>
+          </div>
+          <input
+            type="range"
+            min={1}
+            max={30}
+            step={0.5}
+            value={annualRatePct}
+            onChange={(e) => setAnnualRatePct(parseFloat(e.target.value))}
+            className="w-full cursor-pointer"
+            style={{ accentColor: "var(--module-patrimonio)" }}
+            aria-label="Rentabilidad anual base"
+          />
+          <div className="flex flex-wrap gap-1">
+            {[5, 7, 8.5, 10, 15].map((v) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setAnnualRatePct(v)}
+                className="rounded px-2 py-0.5 font-mono text-xs transition-colors"
+                style={{
+                  backgroundColor: annualRatePct === v ? "var(--module-patrimonio)" : "var(--bg-sand)",
+                  color: annualRatePct === v ? "#fff" : "var(--text-tertiary)",
+                  border: `1px solid ${annualRatePct === v ? "var(--module-patrimonio)" : "var(--border)"}`,
+                }}
+                aria-pressed={annualRatePct === v}
+              >
+                {v}%
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="flex flex-col gap-1">
           <p className="text-xs font-medium text-text-secondary">Horizonte</p>
           <div className="flex flex-wrap gap-1.5">

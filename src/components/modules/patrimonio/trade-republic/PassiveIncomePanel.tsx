@@ -135,8 +135,8 @@ export function PassiveIncomePanel() {
                 width={36}
               />
               <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(196,160,120,0.08)" }} />
-              <Bar dataKey="interest" stackId="a" fill="#4A7A9B" fillOpacity={0.85} radius={[0, 0, 0, 0]} maxBarSize={24} />
-              <Bar dataKey="dividend" stackId="a" fill="#2E7D6B" fillOpacity={0.85} radius={[3, 3, 0, 0]} maxBarSize={24} />
+              <Bar dataKey="interest" stackId="a" fill="#4A7A9B" fillOpacity={0.85} radius={[0, 0, 0, 0]} maxBarSize={24} isAnimationActive={false} />
+              <Bar dataKey="dividend" stackId="a" fill="#2E7D6B" fillOpacity={0.85} radius={[3, 3, 0, 0]} maxBarSize={24} isAnimationActive={false} />
             </BarChart>
           </ResponsiveContainer>
 
@@ -157,13 +157,13 @@ export function PassiveIncomePanel() {
       {/* Recent income list */}
       {recentIncome.length > 0 && (
         <div className="border-t border-border px-5 pb-5">
-          <p className="mb-3 pt-4 text-xs font-medium text-text-tertiary">Ultimos ingresos</p>
+          <p className="mb-3 pt-4 text-xs font-medium text-text-tertiary">Últimos ingresos</p>
           <div className="space-y-2.5">
             {recentIncome.map((item) => {
               const asset = item.asset_id ? assetMap.get(item.asset_id) : null;
               const typeLabel =
                 item.type === "interest"
-                  ? "Interes"
+                  ? "Intereses"
                   : item.type === "dividend"
                     ? "Dividendo"
                     : item.type === "saveback"

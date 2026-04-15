@@ -175,6 +175,225 @@ function TramosDetail({ base }: { base: number }) {
 }
 
 // ---------------------------------------------------------------------------
+// Tax Loss Harvesting tracker
+// ---------------------------------------------------------------------------
+
+interface TLHCandidate {
+  id: string;
+  ticker: string;
+  name: string;
+  currentValue: number;
+  costBasis: number;
+  lossAmount: number;
+  lossPercent: number;
+  taxSaving: number;
+}
+
+interface TaxLossHarvestingProps {
+  trNonCash: PortfolioAsset[];
+  totalRealizedThisYear: number;
+}
+
+function TaxLossHarvestingPanel({ trNonCash, totalRealizedThisYear }: TaxLossHarvestingProps) {
+  const candidates: TLHCandidate[] = trNonCash
+    .filter((a) => (a.pl_amount ?? 0) < 0)
+    .map((a) => {
+      const lossAmount = a.pl_amount ?? 0;
+      const currentValue = a.current_value ?? a.total_invested + lossAmount;
+      const costBasis = a.total_invested;
+      const lossPercent =
+        costBasis > 0 ? (lossAmount / costBasis) * 100 : 0;
+      const taxSaving = Math.abs(lossAmount) * 0.19;
+      return {
+        id: a.id,
+        ticker: a.ticker ?? a.name.slice(0, 6).toUpperCase(),
+        name: a.name,
+        currentValue,
+        costBasis,
+        lossAmount,
+        lossPercent,
+        taxSaving,
+      };
+    })
+    .sort((a, b) => a.lossAmount - b.lossAmount);
+
+  const totalLatentLoss = candidates.reduce((s, c) => s + Math.abs(c.lossAmount), 0);
+  const compensable = Math.min(Math.max(0, totalRealizedThisYear), totalLatentLoss);
+  const estimatedSaving = compensable * 0.19;
+  const canFullyOffset =
+    totalRealizedThisYear > 0 && totalLatentLoss >= totalRealizedThisYear;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-foreground">
+          Optimización fiscal — Tax Loss Harvesting
+        </h3>
+        <span
+          className="rounded-full px-2.5 py-1 text-xs font-medium"
+          style={{
+            backgroundColor: "var(--bg-sand)",
+            color: "var(--text-tertiary)",
+            border: "1px solid var(--border)",
+          }}
+        >
+          Orientativo
+        </span>
+      </div>
+
+      {/* KPI destacado */}
+      <div
+        className="rounded-xl border border-border p-5"
+        style={{ borderTopColor: "var(--module-patrimonio)", borderTopWidth: 2 }}
+      >
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div>
+            <p className="text-xs font-medium" style={{ color: "var(--text-tertiary)" }}>
+              Ganancias realizadas {YEAR}
+            </p>
+            <p
+              className="mt-1 font-mono text-lg font-semibold"
+              style={{
+                color:
+                  totalRealizedThisYear > 0
+                    ? "#C4704A"
+                    : totalRealizedThisYear < 0
+                    ? "#2E7D6B"
+                    : "var(--foreground)",
+              }}
+            >
+              {formatEur(totalRealizedThisYear)}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs font-medium" style={{ color: "var(--text-tertiary)" }}>
+              Pérdidas latentes disponibles
+            </p>
+            <p className="mt-1 font-mono text-lg font-semibold" style={{ color: "#A32D2D" }}>
+              -{formatEur(totalLatentLoss)}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs font-medium" style={{ color: "var(--text-tertiary)" }}>
+              Ahorro fiscal estimado
+            </p>
+            <p className="mt-1 font-mono text-lg font-semibold" style={{ color: "#2E7D6B" }}>
+              {formatEur(estimatedSaving)}
+            </p>
+            <p className="mt-0.5 text-xs" style={{ color: "var(--text-tertiary)" }}>
+              {formatEur(compensable)} compensable × 19%
+            </p>
+          </div>
+        </div>
+
+        {totalRealizedThisYear > 0 && (
+          <div
+            className="mt-4 rounded-lg px-4 py-3"
+            style={{
+              backgroundColor: canFullyOffset ? "rgba(46,125,107,0.08)" : "rgba(163,45,45,0.08)",
+              border: `1px solid ${canFullyOffset ? "rgba(46,125,107,0.25)" : "rgba(163,45,45,0.25)"}`,
+            }}
+          >
+            <p
+              className="text-sm font-medium"
+              style={{ color: canFullyOffset ? "#2E7D6B" : "#A32D2D" }}
+            >
+              {canFullyOffset
+                ? "Puedes compensar totalmente las ganancias de este ano"
+                : `Solo puedes compensar ${formatEur(totalLatentLoss)} de ${formatEur(totalRealizedThisYear)} en ganancias`}
+            </p>
+          </div>
+        )}
+
+        {totalRealizedThisYear <= 0 && candidates.length > 0 && (
+          <div
+            className="mt-4 rounded-lg px-4 py-3"
+            style={{
+              backgroundColor: "rgba(46,125,107,0.08)",
+              border: "1px solid rgba(46,125,107,0.25)",
+            }}
+          >
+            <p className="text-sm font-medium" style={{ color: "#2E7D6B" }}>
+              Sin ganancias realizadas este ano. Las perdidas latentes podran compensar ganancias futuras hasta 4 anos.
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Candidatos TLH */}
+      {candidates.length > 0 ? (
+        <div className="rounded-xl border border-border bg-card p-5">
+          <h4 className="mb-3 text-sm font-semibold text-foreground">
+            Candidatos a realizar perdidas ({candidates.length})
+          </h4>
+          <div className="space-y-3">
+            {candidates.map((c) => (
+              <div
+                key={c.id}
+                className="flex items-center justify-between gap-3 border-b border-border/50 pb-3 last:border-0 last:pb-0"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <span
+                    className="shrink-0 rounded-md px-2 py-0.5 text-xs font-semibold"
+                    style={{
+                      backgroundColor: "rgba(163,45,45,0.12)",
+                      color: "#A32D2D",
+                      fontFamily: "var(--font-mono)",
+                    }}
+                  >
+                    {c.lossPercent.toFixed(1)}%
+                  </span>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-foreground">{c.name}</p>
+                    <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
+                      {c.ticker} · coste {formatEur(c.costBasis)} · valor {formatEur(c.currentValue)}
+                    </p>
+                  </div>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="font-mono text-sm font-semibold" style={{ color: "#A32D2D" }}>
+                    {formatEur(c.lossAmount)}
+                  </p>
+                  <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
+                    ahorro {formatEur(c.taxSaving)}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div
+          className="rounded-xl border border-border px-5 py-8 text-center"
+          style={{ backgroundColor: "var(--bg-card)" }}
+        >
+          <p className="text-sm font-medium text-foreground">
+            Sin posiciones con perdidas latentes
+          </p>
+          <p className="mt-1 text-xs" style={{ color: "var(--text-tertiary)" }}>
+            Todas tus posiciones en TR estan en positivo o son efectivo.
+          </p>
+        </div>
+      )}
+
+      {/* Nota legal */}
+      <div
+        className="rounded-xl border border-border p-4"
+        style={{ backgroundColor: "var(--bg-sand)" }}
+      >
+        <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
+          Este analisis es orientativo. Consulta con un asesor fiscal antes de tomar decisiones.
+          La regla de los 2 meses (art. 33.5 LIRPF) impide recomprar el mismo activo (o uno
+          sustancialmente identico) en los 2 meses anteriores o posteriores a la venta con perdida
+          si quieres que esa perdida sea computable en el mismo ejercicio. El ahorro estimado
+          usa el primer tramo IRPF (19%) como referencia simplificada.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Main panel
 // ---------------------------------------------------------------------------
 
@@ -380,6 +599,14 @@ export function FiscalidadPanel() {
           </p>
         </div>
       )}
+
+      {/* Tax Loss Harvesting */}
+      <div className="border-t border-border pt-5">
+        <TaxLossHarvestingPanel
+          trNonCash={trNonCash}
+          totalRealizedThisYear={totalRealizedThisYear}
+        />
+      </div>
 
       {/* Disclaimer */}
       <div
