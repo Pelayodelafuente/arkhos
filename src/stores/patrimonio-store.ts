@@ -82,6 +82,9 @@ interface PatrimonioStore {
   getPassiveIncomeYTD: () => number;
   getCAGR: () => number | null;
   getMaxDrawdown: () => number | null;
+  getTWR: () => number | null;
+  getAnnualizedVolatility: () => number | null;
+  getSharpeRatio: () => number | null;
   getMonthlyKPIDeltas: () => { totalValue: number | null; capitalInvertido: number | null; passiveIncomeMonth: number | null };
   getKPISparklines: () => { totalValue: number[]; capitalInvertido: number[]; plAmount: number[] };
 }
@@ -408,6 +411,49 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
       if (dd < maxDrawdown) maxDrawdown = dd;
     }
     return maxDrawdown * 100; // percentage, negative
+  },
+
+  getTWR: () => {
+    const { snapshots } = get();
+    if (snapshots.length < 2) return null;
+    const sorted = [...snapshots].sort((a, b) => a.snapshot_date.localeCompare(b.snapshot_date));
+    let twr = 1;
+    for (let i = 1; i < sorted.length; i++) {
+      const prev = sorted[i - 1];
+      const curr = sorted[i];
+      const cashFlow = curr.total_invested - prev.total_invested;
+      const denominator = prev.total_value + cashFlow;
+      if (denominator <= 0) continue;
+      twr *= curr.total_value / denominator;
+    }
+    return twr - 1;
+  },
+
+  getAnnualizedVolatility: () => {
+    const { snapshots } = get();
+    if (snapshots.length < 3) return null;
+    const sorted = [...snapshots].sort((a, b) => a.snapshot_date.localeCompare(b.snapshot_date));
+    const returns: number[] = [];
+    for (let i = 1; i < sorted.length; i++) {
+      const prev = sorted[i - 1];
+      const curr = sorted[i];
+      if (prev.total_value > 0) {
+        returns.push((curr.total_value - prev.total_value) / prev.total_value);
+      }
+    }
+    if (returns.length < 2) return null;
+    const mean = returns.reduce((a, b) => a + b, 0) / returns.length;
+    const variance = returns.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) / (returns.length - 1);
+    // Assume monthly snapshots — annualize with sqrt(12)
+    return Math.sqrt(variance) * Math.sqrt(12);
+  },
+
+  getSharpeRatio: () => {
+    const cagr = get().getCAGR();
+    const vol = get().getAnnualizedVolatility();
+    if (cagr === null || vol === null || vol === 0) return null;
+    const riskFreeRate = 0.03; // Euribor approx
+    return (cagr - riskFreeRate) / vol;
   },
 
   getMonthlyKPIDeltas: () => {

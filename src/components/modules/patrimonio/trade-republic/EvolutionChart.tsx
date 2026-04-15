@@ -2,8 +2,9 @@
 
 import { useId, useMemo, useState } from "react";
 import {
-  AreaChart,
+  ComposedChart,
   Area,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -77,8 +78,11 @@ function getCutoffDate(period: Period): string | null {
 // Tooltip
 // ---------------------------------------------------------------------------
 
+const MSCI_WORLD_ANNUAL = 0.085;
+
 interface EvolutionPointExtended extends EvolutionPoint {
   isToday?: boolean;
+  benchmark?: number;
 }
 
 interface TooltipPayloadItem {
@@ -89,9 +93,10 @@ interface CustomTooltipProps {
   active?: boolean;
   payload?: TooltipPayloadItem[];
   pricesLastUpdated?: string | null;
+  showBenchmark?: boolean;
 }
 
-function CustomTooltip({ active, payload, pricesLastUpdated }: CustomTooltipProps) {
+function CustomTooltip({ active, payload, pricesLastUpdated, showBenchmark }: CustomTooltipProps) {
   if (!active || !payload || payload.length === 0) return null;
   const point = payload[0].payload;
   const plColor = point.pl >= 0 ? C.green : C.red;
@@ -110,6 +115,11 @@ function CustomTooltip({ active, payload, pricesLastUpdated }: CustomTooltipProp
           hour: "2-digit",
           minute: "2-digit",
         })}`
+      : null;
+
+  const benchmarkDiff =
+    showBenchmark && point.benchmark != null
+      ? point.value - point.benchmark
       : null;
 
   return (
@@ -139,6 +149,24 @@ function CustomTooltip({ active, payload, pricesLastUpdated }: CustomTooltipProp
             {formatEur(point.pl)}
           </span>
         </div>
+        {showBenchmark && point.benchmark != null && (
+          <>
+            <div className="mt-1 border-t border-border pt-1">
+              <div className="flex justify-between gap-6">
+                <span className="text-text-tertiary">MSCI World</span>
+                <span className="font-mono text-text-secondary">{formatEur(point.benchmark)}</span>
+              </div>
+            </div>
+            {benchmarkDiff !== null && (
+              <div className="flex justify-between gap-6">
+                <span className="text-text-tertiary">vs benchmark</span>
+                <span className="font-mono font-medium" style={{ color: benchmarkDiff >= 0 ? C.green : C.red }}>
+                  {benchmarkDiff >= 0 ? "+" : ""}{formatEur(benchmarkDiff)}
+                </span>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
@@ -150,9 +178,10 @@ function CustomTooltip({ active, payload, pricesLastUpdated }: CustomTooltipProp
 
 interface EvolutionChartProps {
   height?: number;
+  showBenchmark?: boolean;
 }
 
-export function EvolutionChart({ height = 300 }: EvolutionChartProps) {
+export function EvolutionChart({ height = 300, showBenchmark = false }: EvolutionChartProps) {
   const uid = useId();
   const gradValue = `gradValue-${uid}`;
   const gradInvested = `gradInvested-${uid}`;
@@ -167,7 +196,7 @@ export function EvolutionChart({ height = 300 }: EvolutionChartProps) {
 
   const data: EvolutionPointExtended[] = useMemo(() => {
     const cutoff = getCutoffDate(period);
-    const filtered = snapshots
+    const base = snapshots
       .filter((s) => cutoff === null || s.snapshot_date >= cutoff)
       .map((s): EvolutionPointExtended => ({
         date: s.snapshot_date,
@@ -179,10 +208,10 @@ export function EvolutionChart({ height = 300 }: EvolutionChartProps) {
     // Append "today" point if we have a live price and it's not already in snapshots
     if (currentTRValue > 0) {
       const today = new Date().toISOString().substring(0, 10);
-      const lastSnapshot = filtered[filtered.length - 1];
+      const lastSnapshot = base[base.length - 1];
       if (!lastSnapshot || lastSnapshot.date !== today) {
         const lastInvested = lastSnapshot?.invested ?? 0;
-        filtered.push({
+        base.push({
           date: today,
           value: currentTRValue,
           invested: lastInvested,
@@ -192,8 +221,26 @@ export function EvolutionChart({ height = 300 }: EvolutionChartProps) {
       }
     }
 
-    return filtered;
-  }, [snapshots, period, currentTRValue]);
+    // Compute cash-flow-adjusted MSCI World benchmark
+    if (!showBenchmark || base.length === 0) return base;
+
+    return base.reduce<EvolutionPointExtended[]>((acc, point, i) => {
+      if (i === 0) {
+        acc.push({ ...point, benchmark: point.invested });
+        return acc;
+      }
+      const prev = acc[i - 1];
+      const prevPoint = base[i - 1];
+      const cashFlow = point.isToday ? 0 : point.invested - prevPoint.invested;
+      const daysBetween =
+        (new Date(point.date).getTime() - new Date(prev.date).getTime()) /
+        (365.25 * 24 * 60 * 60 * 1000);
+      const newBenchmark =
+        (prev.benchmark ?? point.invested) * Math.pow(1 + MSCI_WORLD_ANNUAL, daysBetween) + cashFlow;
+      acc.push({ ...point, benchmark: newBenchmark });
+      return acc;
+    }, []);
+  }, [snapshots, period, currentTRValue, showBenchmark]);
 
   if (data.length === 0) {
     return (
@@ -234,8 +281,27 @@ export function EvolutionChart({ height = 300 }: EvolutionChartProps) {
         })}
       </div>
 
+      {showBenchmark && (
+        <div className="mb-3 flex flex-wrap items-center gap-4 text-xs text-text-tertiary">
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-0.5 w-5 rounded-full" style={{ backgroundColor: C.green }} />
+            Tu cartera
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-0.5 w-5 rounded-full" style={{ backgroundColor: C.gray }} />
+            Capital invertido
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span
+              className="inline-block h-0.5 w-5 rounded-full"
+              style={{ backgroundColor: C.blue, borderTop: `2px dashed ${C.blue}` }}
+            />
+            MSCI World ~8.5%/año
+          </span>
+        </div>
+      )}
       <ResponsiveContainer width="100%" height={height}>
-        <AreaChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 4 }}>
+        <ComposedChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 4 }}>
           <defs>
             <linearGradient id={gradValue} x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor={C.green} stopOpacity={0.15} />
@@ -261,7 +327,7 @@ export function EvolutionChart({ height = 300 }: EvolutionChartProps) {
             tickLine={false}
             width={40}
           />
-          <Tooltip content={<CustomTooltip pricesLastUpdated={pricesLastUpdated} />} />
+          <Tooltip content={<CustomTooltip pricesLastUpdated={pricesLastUpdated} showBenchmark={showBenchmark} />} />
           <Area
             type="monotone"
             dataKey="invested"
@@ -270,6 +336,7 @@ export function EvolutionChart({ height = 300 }: EvolutionChartProps) {
             fill={`url(#${gradInvested})`}
             dot={false}
             activeDot={{ r: 4, fill: C.gray }}
+            legendType="none"
           />
           <Area
             type="monotone"
@@ -298,8 +365,21 @@ export function EvolutionChart({ height = 300 }: EvolutionChartProps) {
               );
             }}
             activeDot={{ r: 5, fill: C.green }}
+            legendType="none"
           />
-        </AreaChart>
+          {showBenchmark && (
+            <Line
+              type="monotone"
+              dataKey="benchmark"
+              stroke={C.blue}
+              strokeWidth={1.5}
+              strokeDasharray="5 3"
+              dot={false}
+              activeDot={{ r: 4, fill: C.blue }}
+              legendType="none"
+            />
+          )}
+        </ComposedChart>
       </ResponsiveContainer>
     </div>
   );

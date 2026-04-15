@@ -12,6 +12,8 @@ import { EvolutionChart } from "./EvolutionChart";
 import { MonthlyContributionChart } from "./MonthlyContributionChart";
 import { PositionTreemap } from "./PositionTreemap";
 import { FiscalidadPanel } from "./FiscalidadPanel";
+import { MetricasAvanzadasPanel } from "./MetricasAvanzadasPanel";
+import { SimuladorProyeccion } from "./SimuladorProyeccion";
 
 type Tab = "overview" | "cartera" | "plan" | "analisis" | "ingresos" | "fiscal";
 
@@ -216,7 +218,25 @@ export function TRDashboard() {
 
       {/* Tab: Análisis */}
       {activeTab === "analisis" && (
-        <div className="space-y-4">
+        <div className="space-y-5">
+          {/* F3 + F6 — Métricas avanzadas */}
+          <MetricasAvanzadasPanel />
+
+          {/* F3 — Evolución vs benchmark MSCI World */}
+          <div className="rounded-xl border border-border bg-card p-5">
+            <h3 className="mb-0.5 text-sm font-semibold text-foreground">
+              Evolución vs MSCI World
+            </h3>
+            <p className="mb-4 text-xs text-text-tertiary">
+              Benchmark: mismos flujos de capital al 8.5% anual estimado
+            </p>
+            <EvolutionChart height={300} showBenchmark />
+          </div>
+
+          {/* F6 — Simulador de proyección */}
+          <SimuladorProyeccion />
+
+          {/* Distribuciones (año) */}
           <div className="flex items-center justify-between">
             <p className="text-xs text-text-tertiary">Filtra los gráficos por año</p>
             <YearFilter />
