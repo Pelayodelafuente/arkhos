@@ -16,8 +16,11 @@ const formatEur = (value: number) =>
 
 const formatQty = (value: number) => {
   if (value === Math.floor(value)) return value.toLocaleString("es-ES");
-  return value.toLocaleString("es-ES", { maximumFractionDigits: 6 });
+  return value.toLocaleString("es-ES", { maximumFractionDigits: 2 });
 };
+
+const formatQtyFull = (value: number) =>
+  value.toLocaleString("es-ES", { maximumFractionDigits: 6 });
 
 type FilterTab = "all" | "etf" | "stock" | "commodity" | "bond" | "cash";
 type SortKey = "name" | "value" | "invested" | "pl_amount" | "pl_percentage";
@@ -139,10 +142,11 @@ interface CategoryGroupProps {
   assets: PortfolioAsset[];
   savingsPlanMap: Map<string, number>;
   priceChanges: Record<string, number | null>;
+  trCurrentValue: number;
   onAssetClick: (id: string) => void;
 }
 
-function CategoryGroup({ category, assets, savingsPlanMap, priceChanges, onAssetClick }: CategoryGroupProps) {
+function CategoryGroup({ category, assets, savingsPlanMap, priceChanges, trCurrentValue, onAssetClick }: CategoryGroupProps) {
   const [open, setOpen] = useState(true);
 
   const groupValue = assets.reduce((s, a) => s + (a.current_value ?? 0), 0);
@@ -185,6 +189,9 @@ function CategoryGroup({ category, assets, savingsPlanMap, priceChanges, onAsset
         <td className="px-3 py-2.5 text-right">
           <PLBadge amount={groupPL} percentage={groupPLPct} showPercentage />
         </td>
+        <td className="hidden px-3 py-2.5 text-right font-mono text-xs text-text-tertiary md:table-cell">
+          —
+        </td>
         <td className="hidden px-3 py-2.5 md:table-cell" />
         <td className="hidden px-4 py-2.5 md:table-cell" />
       </tr>
@@ -224,7 +231,9 @@ function CategoryGroup({ category, assets, savingsPlanMap, priceChanges, onAsset
                 </div>
               </td>
               <td className="hidden px-3 py-3 text-right font-mono text-xs text-text-secondary md:table-cell">
-                {formatQty(asset.current_quantity)}
+                <span title={`${formatQtyFull(asset.current_quantity)} participaciones`}>
+                  {formatQty(asset.current_quantity)}
+                </span>
               </td>
               <td className="hidden px-3 py-3 text-right md:table-cell">
                 <PriceCell
@@ -251,6 +260,11 @@ function CategoryGroup({ category, assets, savingsPlanMap, priceChanges, onAsset
                   <span className="text-xs text-text-tertiary">—</span>
                 )}
               </td>
+              <td className="hidden px-3 py-3 text-right font-mono text-xs text-text-secondary md:table-cell">
+                {trCurrentValue > 0
+                  ? `${(((asset.current_value ?? 0) / trCurrentValue) * 100).toFixed(1)}%`
+                  : "—"}
+              </td>
               <td className="hidden px-3 py-3 text-right font-mono text-xs md:table-cell">
                 {planAmount != null ? (
                   <span style={{ color: "var(--module-patrimonio)" }}>{formatEur(planAmount)}</span>
@@ -275,6 +289,8 @@ export function TRPositionsTable() {
   const platforms = usePatrimonioStore((s) => s.platforms);
   const savingsPlan = usePatrimonioStore((s) => s.savingsPlan);
   const priceChanges = usePatrimonioStore((s) => s.priceChanges);
+  const getTRCurrentValue = usePatrimonioStore((s) => s.getTRCurrentValue);
+  const trCurrentValue = getTRCurrentValue();
 
   const trAssets = useMemo(() => {
     const trPlatform = platforms.find((p) => p.slug === "trade-republic");
@@ -402,9 +418,10 @@ export function TRPositionsTable() {
       </div>
 
       {/* Table — desktop */}
-      <div className="hidden overflow-x-auto md:block">
+      <div className="hidden md:block">
+        <div className="max-h-[600px] overflow-auto">
         <table className="w-full">
-          <thead>
+          <thead className="sticky top-0 z-10" style={{ backgroundColor: "var(--bg-card)" }}>
             <tr className="border-b border-border">
               <th className="px-4 py-3 text-left">
                 <SortHeader
@@ -449,6 +466,9 @@ export function TRPositionsTable() {
                 />
               </th>
               <th className="px-3 py-3 text-right text-xs font-medium text-text-tertiary">
+                Peso %
+              </th>
+              <th className="px-3 py-3 text-right text-xs font-medium text-text-tertiary">
                 Plan/mes
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-text-tertiary">
@@ -464,12 +484,13 @@ export function TRPositionsTable() {
                 assets={assets}
                 savingsPlanMap={savingsPlanMap}
                 priceChanges={priceChanges}
+                trCurrentValue={trCurrentValue}
                 onAssetClick={setActiveDrawerAssetId}
               />
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={9} className="py-12 text-center text-sm text-text-tertiary">
+                <td colSpan={10} className="py-12 text-center text-sm text-text-tertiary">
                   No hay posiciones con esos filtros
                 </td>
               </tr>
@@ -490,11 +511,13 @@ export function TRPositionsTable() {
                 <td className="px-3 py-3 text-right">
                   <PLBadge amount={totalPL} percentage={totalPLPct} showAmount showPercentage />
                 </td>
+                <td />
                 <td colSpan={2} />
               </tr>
             </tfoot>
           )}
         </table>
+        </div>
       </div>
 
       {/* Mobile — cards view */}

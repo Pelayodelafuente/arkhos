@@ -3,7 +3,6 @@
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { AllocationDonut } from "./AllocationDonut";
 import { TRPLBarChart } from "./TRPLBarChart";
-import { EvolutionChart } from "./EvolutionChart";
 import { MonthlyContributionChart } from "./MonthlyContributionChart";
 import { RiskDistributionChart } from "./RiskDistributionChart";
 
@@ -32,10 +31,6 @@ export function TRChartsPanel() {
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-      <ChartCard title="Evolución del patrimonio">
-        <EvolutionChart />
-      </ChartCard>
-
       <ChartCard title="P&L por posición">
         <TRPLBarChart />
       </ChartCard>
