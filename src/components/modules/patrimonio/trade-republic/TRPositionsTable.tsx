@@ -137,16 +137,26 @@ function PriceCell({ asset, changePercent }: PriceCellProps) {
 
 // ---------------------------------------------------------------------------
 
+function computeAnnualizedPL(plPct: number, days: number): number | null {
+  if (days <= 0) return null;
+  const years = days / 365;
+  if (years < 0.05) return null; // < ~18 days: not meaningful
+  const factor = 1 + plPct / 100;
+  if (factor <= 0) return null;
+  return (Math.pow(factor, 1 / years) - 1) * 100;
+}
+
 interface CategoryGroupProps {
   category: AssetCategory;
   assets: PortfolioAsset[];
   savingsPlanMap: Map<string, number>;
   priceChanges: Record<string, number | null>;
   trCurrentValue: number;
+  firstBuyDateMap: Map<string, string>;
   onAssetClick: (id: string) => void;
 }
 
-function CategoryGroup({ category, assets, savingsPlanMap, priceChanges, trCurrentValue, onAssetClick }: CategoryGroupProps) {
+function CategoryGroup({ category, assets, savingsPlanMap, priceChanges, trCurrentValue, firstBuyDateMap, onAssetClick }: CategoryGroupProps) {
   const [open, setOpen] = useState(true);
 
   const groupValue = assets.reduce((s, a) => s + (a.current_value ?? 0), 0);
@@ -194,12 +204,21 @@ function CategoryGroup({ category, assets, savingsPlanMap, priceChanges, trCurre
         </td>
         <td className="hidden px-3 py-2.5 md:table-cell" />
         <td className="hidden px-4 py-2.5 md:table-cell" />
+        <td className="hidden px-4 py-2.5 md:table-cell" />
       </tr>
 
       {/* Asset rows */}
       {open &&
         assets.map((asset) => {
           const planAmount = savingsPlanMap.get(asset.id);
+          const firstBuyDate = firstBuyDateMap.get(asset.id);
+          const daysInPortfolio = firstBuyDate
+            ? Math.floor((Date.now() - new Date(firstBuyDate).getTime()) / (1000 * 60 * 60 * 24))
+            : null;
+          const plAnnualized =
+            asset.pl_percentage != null && daysInPortfolio != null
+              ? computeAnnualizedPL(asset.pl_percentage, daysInPortfolio)
+              : null;
           return (
             <tr
               key={asset.id}
@@ -228,6 +247,9 @@ function CategoryGroup({ category, assets, savingsPlanMap, priceChanges, trCurre
                       currentPrice={asset.current_price_eur}
                     />
                   )}
+                  <span className="font-mono text-[10px] text-text-tertiary" title="Precio medio de compra">
+                    P.medio {formatEur(asset.avg_buy_price)}
+                  </span>
                 </div>
               </td>
               <td className="hidden px-3 py-3 text-right font-mono text-xs text-text-secondary md:table-cell">
@@ -249,13 +271,25 @@ function CategoryGroup({ category, assets, savingsPlanMap, priceChanges, trCurre
               </td>
               <td className="px-3 py-3 text-right">
                 {asset.pl_amount != null && asset.pl_percentage != null ? (
-                  <PLBadge
-                    amount={asset.pl_amount}
-                    percentage={asset.pl_percentage}
-                    showAmount
-                    showPercentage
-                    size="sm"
-                  />
+                  <div className="flex flex-col items-end gap-0.5">
+                    <PLBadge
+                      amount={asset.pl_amount}
+                      percentage={asset.pl_percentage}
+                      showAmount
+                      showPercentage
+                      size="sm"
+                    />
+                    {plAnnualized != null && (
+                      <span
+                        className="font-mono text-[10px]"
+                        style={{ color: plAnnualized >= 0 ? "#2E7D6B" : "#A32D2D" }}
+                        title="P&L% anualizado (CAGR por posición)"
+                      >
+                        {plAnnualized >= 0 ? "+" : ""}
+                        {plAnnualized.toFixed(1)}%/año
+                      </span>
+                    )}
+                  </div>
                 ) : (
                   <span className="text-xs text-text-tertiary">—</span>
                 )}
@@ -277,6 +311,13 @@ function CategoryGroup({ category, assets, savingsPlanMap, priceChanges, trCurre
                   <span className="text-xs text-text-tertiary">{asset.geographic_region}</span>
                 )}
               </td>
+              <td className="hidden px-4 py-3 text-right md:table-cell">
+                {daysInPortfolio != null ? (
+                  <span className="font-mono text-xs text-text-tertiary">{daysInPortfolio}d</span>
+                ) : (
+                  <span className="text-xs text-text-tertiary">—</span>
+                )}
+              </td>
             </tr>
           );
         })}
@@ -288,6 +329,7 @@ export function TRPositionsTable() {
   const assets = usePatrimonioStore((s) => s.assets);
   const platforms = usePatrimonioStore((s) => s.platforms);
   const savingsPlan = usePatrimonioStore((s) => s.savingsPlan);
+  const transactions = usePatrimonioStore((s) => s.transactions);
   const priceChanges = usePatrimonioStore((s) => s.priceChanges);
   const getTRCurrentValue = usePatrimonioStore((s) => s.getTRCurrentValue);
   const trCurrentValue = getTRCurrentValue();
@@ -309,6 +351,19 @@ export function TRPositionsTable() {
     () => new Map(savingsPlan.map((item) => [item.asset_id, item.monthly_amount])),
     [savingsPlan]
   );
+
+  const firstBuyDateMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const t of transactions) {
+      if (!t.asset_id) continue;
+      if (t.type !== "buy" && t.type !== "savings_plan") continue;
+      const existing = map.get(t.asset_id);
+      if (!existing || t.transaction_date < existing) {
+        map.set(t.asset_id, t.transaction_date);
+      }
+    }
+    return map;
+  }, [transactions]);
 
   function handleSort(key: SortKey) {
     if (key === sortKey) {
@@ -474,6 +529,9 @@ export function TRPositionsTable() {
               <th className="px-4 py-3 text-left text-xs font-medium text-text-tertiary">
                 Region
               </th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-text-tertiary">
+                Días
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -485,12 +543,13 @@ export function TRPositionsTable() {
                 savingsPlanMap={savingsPlanMap}
                 priceChanges={priceChanges}
                 trCurrentValue={trCurrentValue}
+                firstBuyDateMap={firstBuyDateMap}
                 onAssetClick={setActiveDrawerAssetId}
               />
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={10} className="py-12 text-center text-sm text-text-tertiary">
+                <td colSpan={11} className="py-12 text-center text-sm text-text-tertiary">
                   No hay posiciones con esos filtros
                 </td>
               </tr>
@@ -500,7 +559,7 @@ export function TRPositionsTable() {
             <tfoot>
               <tr className="border-t-2 border-border bg-sand/30">
                 <td className="px-4 py-3 text-sm font-semibold text-foreground" colSpan={4}>
-                  Total ({filteredNonCash.length} posiciones)
+                  Total ({filteredNonCash.length} pos.)
                 </td>
                 <td className="px-3 py-3 text-right font-mono text-sm font-semibold text-foreground">
                   {formatEur(totalValue)}
@@ -512,7 +571,7 @@ export function TRPositionsTable() {
                   <PLBadge amount={totalPL} percentage={totalPLPct} showAmount showPercentage />
                 </td>
                 <td />
-                <td colSpan={2} />
+                <td colSpan={3} />
               </tr>
             </tfoot>
           )}

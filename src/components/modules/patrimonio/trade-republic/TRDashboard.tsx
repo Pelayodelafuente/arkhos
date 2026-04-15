@@ -10,8 +10,10 @@ import { TRPositionsTable } from "./TRPositionsTable";
 import { PassiveIncomePanel } from "./PassiveIncomePanel";
 import { EvolutionChart } from "./EvolutionChart";
 import { MonthlyContributionChart } from "./MonthlyContributionChart";
+import { PositionTreemap } from "./PositionTreemap";
+import { FiscalidadPanel } from "./FiscalidadPanel";
 
-type Tab = "overview" | "cartera" | "plan" | "analisis" | "ingresos";
+type Tab = "overview" | "cartera" | "plan" | "analisis" | "ingresos" | "fiscal";
 
 const TABS: { key: Tab; label: string }[] = [
   { key: "overview", label: "Overview" },
@@ -19,6 +21,7 @@ const TABS: { key: Tab; label: string }[] = [
   { key: "plan", label: "Plan de Ahorro" },
   { key: "analisis", label: "Análisis" },
   { key: "ingresos", label: "Ingresos Pasivos" },
+  { key: "fiscal", label: "Fiscalidad" },
 ];
 
 function YearFilter() {
@@ -27,7 +30,10 @@ function YearFilter() {
   const getAvailableYears = usePatrimonioStore((s) => s.getAvailableYears);
   const years = getAvailableYears();
 
-  const options = [{ value: "all", label: "Total" }, ...years.map((y) => ({ value: y, label: y }))];
+  const options = [
+    { value: "all", label: "Total" },
+    ...years.map((y) => ({ value: y, label: y })),
+  ];
 
   return (
     <div className="flex items-center gap-1.5">
@@ -168,11 +174,27 @@ export function TRDashboard() {
       {/* Tab: Overview */}
       {activeTab === "overview" && (
         <div className="space-y-5">
+          {/* Evolución chart */}
           <div className="rounded-xl border border-border bg-card p-5">
-            <h3 className="mb-4 text-sm font-semibold text-foreground">Evolución del patrimonio</h3>
-            <EvolutionChart height={420} />
+            <h3 className="mb-4 text-sm font-semibold text-foreground">
+              Evolución del patrimonio
+            </h3>
+            <EvolutionChart height={380} />
           </div>
-          <TopPerformers />
+
+          {/* Treemap + top performers */}
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <div className="rounded-xl border border-border bg-card p-5 lg:col-span-2">
+              <h3 className="mb-1 text-sm font-semibold text-foreground">Mapa de posiciones</h3>
+              <p className="mb-3 text-xs text-text-tertiary">
+                Tamaño = valor · color = P&L total
+              </p>
+              <PositionTreemap />
+            </div>
+            <div className="space-y-4">
+              <TopPerformers />
+            </div>
+          </div>
         </div>
       )}
 
@@ -205,6 +227,9 @@ export function TRDashboard() {
 
       {/* Tab: Ingresos Pasivos */}
       {activeTab === "ingresos" && <PassiveIncomePanel />}
+
+      {/* Tab: Fiscalidad */}
+      {activeTab === "fiscal" && <FiscalidadPanel />}
     </div>
   );
 }

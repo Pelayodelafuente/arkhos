@@ -71,6 +71,8 @@ interface PatrimonioStore {
   getAllocationByCategory: () => AllocationSlice[];
   getAllocationByGeography: () => AllocationSlice[];
   getAllocationByRisk: () => AllocationSlice[];
+  getAllocationByCurrency: () => AllocationSlice[];
+  getAllocationBySector: () => AllocationSlice[];
   getPLBarData: () => PLBarItem[];
   getTopGainers: (n?: number) => PortfolioAsset[];
   getTopLosers: (n?: number) => PortfolioAsset[];
@@ -78,6 +80,10 @@ interface PatrimonioStore {
   getPassiveIncomeByMonth: () => PassiveIncomeBarItem[];
   getTotalMonthlyPlan: () => number;
   getPassiveIncomeYTD: () => number;
+  getCAGR: () => number | null;
+  getMaxDrawdown: () => number | null;
+  getMonthlyKPIDeltas: () => { totalValue: number | null; capitalInvertido: number | null; passiveIncomeMonth: number | null };
+  getKPISparklines: () => { totalValue: number[]; capitalInvertido: number[]; plAmount: number[] };
 }
 
 export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
@@ -371,5 +377,113 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
     return get()
       .passiveIncome.filter((item) => item.income_date.startsWith(year))
       .reduce((sum, item) => sum + item.amount, 0);
+  },
+
+  getCAGR: () => {
+    const { snapshots } = get();
+    const trAssets = get().getTRAssets();
+    if (snapshots.length === 0) return null;
+    const sorted = [...snapshots].sort((a, b) => a.snapshot_date.localeCompare(b.snapshot_date));
+    const first = sorted[0];
+    const startValue = first.total_value - first.cash_value;
+    if (startValue <= 0) return null;
+    const currentCash = trAssets.filter((a) => a.category === 'cash').reduce((s, a) => s + (a.current_value ?? 0), 0);
+    const currentNonCash = trAssets.reduce((s, a) => s + (a.current_value ?? 0), 0) - currentCash;
+    if (currentNonCash <= 0) return null;
+    const startDate = new Date(first.snapshot_date);
+    const years = (Date.now() - startDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
+    if (years < 0.08) return null;
+    return Math.pow(currentNonCash / startValue, 1 / years) - 1;
+  },
+
+  getMaxDrawdown: () => {
+    const { snapshots } = get();
+    if (snapshots.length < 2) return null;
+    const sorted = [...snapshots].sort((a, b) => a.snapshot_date.localeCompare(b.snapshot_date));
+    let peak = sorted[0].total_value;
+    let maxDrawdown = 0;
+    for (const s of sorted) {
+      if (s.total_value > peak) peak = s.total_value;
+      const dd = peak > 0 ? (s.total_value - peak) / peak : 0;
+      if (dd < maxDrawdown) maxDrawdown = dd;
+    }
+    return maxDrawdown * 100; // percentage, negative
+  },
+
+  getMonthlyKPIDeltas: () => {
+    const { snapshots, passiveIncome } = get();
+    const trAssets = get().getTRAssets();
+    const now = new Date();
+    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const prevMonth = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
+    const sorted = [...snapshots].sort((a, b) => a.snapshot_date.localeCompare(b.snapshot_date));
+    const prevSnapshot = [...sorted].reverse().find((s) => s.snapshot_date.startsWith(prevMonth));
+    if (!prevSnapshot) return { totalValue: null, capitalInvertido: null, passiveIncomeMonth: null };
+    const currentTotal = trAssets.reduce((s, a) => s + (a.current_value ?? 0), 0);
+    const currentCash = trAssets.filter((a) => a.category === 'cash').reduce((s, a) => s + (a.current_value ?? 0), 0);
+    const currentCapital = currentTotal - currentCash;
+    const prevCapital = prevSnapshot.total_value - prevSnapshot.cash_value;
+    const incomeThis = passiveIncome.filter((i) => i.income_date.startsWith(currentMonth)).reduce((s, i) => s + i.amount, 0);
+    const incomePrev = passiveIncome.filter((i) => i.income_date.startsWith(prevMonth)).reduce((s, i) => s + i.amount, 0);
+    return {
+      totalValue: currentTotal - prevSnapshot.total_value,
+      capitalInvertido: currentCapital - prevCapital,
+      passiveIncomeMonth: incomeThis - incomePrev,
+    };
+  },
+
+  getKPISparklines: () => {
+    const { snapshots } = get();
+    const sorted = [...snapshots].sort((a, b) => a.snapshot_date.localeCompare(b.snapshot_date));
+    const last = sorted.slice(-12);
+    return {
+      totalValue: last.map((s) => s.total_value),
+      capitalInvertido: last.map((s) => s.total_value - s.cash_value),
+      plAmount: last.map((s) => s.pl_amount ?? 0),
+    };
+  },
+
+  getAllocationByCurrency: () => {
+    const trAssets = get().getTRAssets().filter((a) => a.category !== 'cash');
+    const totalValue = trAssets.reduce((sum, a) => sum + (a.current_value ?? 0), 0);
+    if (totalValue === 0) return [];
+    const currencyColors: Record<string, string> = {
+      EUR: '#2E7D6B', USD: '#3B78B0', GBP: '#7260C4', GBX: '#7260C4', HKD: '#E67E22',
+    };
+    const grouped = new Map<string, number>();
+    for (const asset of trAssets) {
+      const cur = asset.currency;
+      grouped.set(cur, (grouped.get(cur) ?? 0) + (asset.current_value ?? 0));
+    }
+    return Array.from(grouped.entries())
+      .map(([currency, value]) => ({
+        name: currency, value, percentage: (value / totalValue) * 100,
+        color: currencyColors[currency] ?? '#888780',
+      }))
+      .sort((a, b) => b.value - a.value);
+  },
+
+  getAllocationBySector: () => {
+    const trAssets = get().getTRAssets().filter((a) => a.category !== 'cash');
+    const totalValue = trAssets.reduce((sum, a) => sum + (a.current_value ?? 0), 0);
+    if (totalValue === 0) return [];
+    const sectorColors: Record<string, string> = {
+      Tecnología: '#3B78B0', Finanzas: '#2E7D6B', Salud: '#6DB33F',
+      Consumo: '#C4704A', Industria: '#7260C4', Energía: '#B07A3A',
+      Materiales: '#E67E22', Utilities: '#888780', 'Índice Global': '#5B8C6A',
+      Inmobiliario: '#9B7A4A', Otro: '#C0B8AE',
+    };
+    const grouped = new Map<string, number>();
+    for (const asset of trAssets) {
+      const sector = asset.sector ?? 'Otro';
+      grouped.set(sector, (grouped.get(sector) ?? 0) + (asset.current_value ?? 0));
+    }
+    return Array.from(grouped.entries())
+      .map(([sector, value]) => ({
+        name: sector, value, percentage: (value / totalValue) * 100,
+        color: sectorColors[sector] ?? '#888780',
+      }))
+      .sort((a, b) => b.value - a.value);
   },
 }));
