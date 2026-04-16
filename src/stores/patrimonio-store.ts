@@ -406,23 +406,35 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
     const firstDate = new Date(sorted[0].snapshot_date);
     const lastDate = new Date(sorted[sorted.length - 1].snapshot_date);
     const days = (lastDate.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24);
-    if (days < 30) return null;
-    return Math.pow(1 + twr, 365.25 / days) - 1;
+    // Require at least 90 days to produce a meaningful annualized figure
+    if (days < 90) return null;
+    const cagr = Math.pow(1 + twr, 365.25 / days) - 1;
+    // Cap at ±200% — anything beyond is a data artifact
+    if (!isFinite(cagr) || Math.abs(cagr) > 2) return null;
+    return cagr;
   },
 
   getMaxDrawdown: () => {
     const { snapshots } = get();
     if (snapshots.length < 2) return null;
     const sorted = [...snapshots].sort((a, b) => a.snapshot_date.localeCompare(b.snapshot_date));
-    let peak = sorted[0].total_value - sorted[0].cash_value;
+    // Use cashflow-adjusted values to avoid purchase-price revaluation inflating the "peak"
+    // We track the running invested amount and compare to investment value
+    let peak = 0;
     let maxDrawdown = 0;
     for (const s of sorted) {
+      // Use total_invested as the "cost basis" reference for the peak, since we don't have
+      // real market prices historically. Compare against invested to get meaningful drawdown.
       const invValue = s.total_value - s.cash_value;
       if (invValue > peak) peak = invValue;
-      const dd = peak > 0 ? (invValue - peak) / peak : 0;
-      if (dd < maxDrawdown) maxDrawdown = dd;
+      if (peak > 0) {
+        const dd = (invValue - peak) / peak;
+        if (dd < maxDrawdown) maxDrawdown = dd;
+      }
     }
-    return maxDrawdown * 100; // percentage, negative
+    const result = maxDrawdown * 100; // percentage, negative
+    if (!isFinite(result)) return null;
+    return result;
   },
 
   getTWR: () => {
@@ -430,6 +442,7 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
     if (snapshots.length < 2) return null;
     const sorted = [...snapshots].sort((a, b) => a.snapshot_date.localeCompare(b.snapshot_date));
     let twr = 1;
+    let validPeriods = 0;
     for (let i = 1; i < sorted.length; i++) {
       const prev = sorted[i - 1];
       const curr = sorted[i];
@@ -438,9 +451,17 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
       const cashFlow = curr.total_invested - prev.total_invested;
       const denominator = prevInv + cashFlow;
       if (denominator <= 0) continue;
-      twr *= currInv / denominator;
+      const periodReturn = currInv / denominator;
+      // Skip periods with >50% change — likely purchase-price revaluation artifact
+      // (snapshots generated from last-purchase-price revalue all units, creating fake gains/losses)
+      if (!isFinite(periodReturn) || Math.abs(periodReturn - 1) > 0.5) continue;
+      twr *= periodReturn;
+      validPeriods++;
     }
-    return twr - 1;
+    if (validPeriods === 0) return null;
+    const result = twr - 1;
+    if (!isFinite(result) || Math.abs(result) > 10) return null;
+    return result;
   },
 
   getAnnualizedVolatility: () => {
@@ -453,15 +474,22 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
       const curr = sorted[i];
       const prevInv = prev.total_value - prev.cash_value;
       const currInv = curr.total_value - curr.cash_value;
-      if (prevInv > 0) {
-        returns.push((currInv - prevInv) / prevInv);
-      }
+      if (prevInv <= 0) continue;
+      const cashFlow = curr.total_invested - prev.total_invested;
+      // Use cashflow-adjusted return to avoid inflating volatility with injected capital
+      const adjustedReturn = (currInv - cashFlow - prevInv) / prevInv;
+      if (!isFinite(adjustedReturn) || Math.abs(adjustedReturn) > 0.5) continue;
+      returns.push(adjustedReturn);
     }
-    if (returns.length < 2) return null;
+    // Need at least 3 valid periods for a meaningful standard deviation
+    if (returns.length < 3) return null;
     const mean = returns.reduce((a, b) => a + b, 0) / returns.length;
     const variance = returns.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) / (returns.length - 1);
     // Assume monthly snapshots — annualize with sqrt(12)
-    return Math.sqrt(variance) * Math.sqrt(12);
+    const vol = Math.sqrt(variance) * Math.sqrt(12);
+    // Guard: volatility is always non-negative; >500% annualized is a data artifact
+    if (!isFinite(vol) || isNaN(vol) || vol < 0 || vol > 5) return null;
+    return vol;
   },
 
   getSharpeRatio: () => {
@@ -469,7 +497,9 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
     const vol = get().getAnnualizedVolatility();
     if (cagr === null || vol === null || vol === 0) return null;
     const riskFreeRate = 0.03; // Euribor approx
-    return (cagr - riskFreeRate) / vol;
+    const sharpe = (cagr - riskFreeRate) / vol;
+    if (!isFinite(sharpe) || Math.abs(sharpe) > 10) return null;
+    return sharpe;
   },
 
   getMonthlyKPIDeltas: () => {
@@ -482,15 +512,29 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
     const sorted = [...snapshots].sort((a, b) => a.snapshot_date.localeCompare(b.snapshot_date));
     const prevSnapshot = [...sorted].reverse().find((s) => s.snapshot_date.startsWith(prevMonth));
     if (!prevSnapshot) return { totalValue: null, capitalInvertido: null, passiveIncomeMonth: null };
+
     const currentTotal = trAssets.reduce((s, a) => s + (a.current_value ?? 0), 0);
     const currentCash = trAssets.filter((a) => a.category === 'cash').reduce((s, a) => s + (a.current_value ?? 0), 0);
     const currentCapital = currentTotal - currentCash;
+
+    // Compare investment-only values on both sides.
+    // Historical snapshots (generated from transactions) store investment value without cash.
+    // Using currentTotal (which includes cash) vs prevSnapshot.total_value (no cash) would
+    // produce a false delta of ~+22.000€ (the entire cash balance appearing as a monthly gain).
     const prevCapital = prevSnapshot.total_value - prevSnapshot.cash_value;
+    const capitalDelta = currentCapital - prevCapital;
+
+    // Sanity guard: a delta larger than the total portfolio in a single month is a data artifact
+    const sanityLimit = Math.max(currentCapital, 1000);
+    const safeCapitalDelta = Math.abs(capitalDelta) > sanityLimit ? null : capitalDelta;
+
     const incomeThis = passiveIncome.filter((i) => i.income_date.startsWith(currentMonth)).reduce((s, i) => s + i.amount, 0);
     const incomePrev = passiveIncome.filter((i) => i.income_date.startsWith(prevMonth)).reduce((s, i) => s + i.amount, 0);
+
     return {
-      totalValue: currentTotal - prevSnapshot.total_value,
-      capitalInvertido: currentCapital - prevCapital,
+      // Both deltas use investment-only comparison (apples-to-apples with snapshot data)
+      totalValue: safeCapitalDelta,
+      capitalInvertido: safeCapitalDelta,
       passiveIncomeMonth: incomeThis - incomePrev,
     };
   },

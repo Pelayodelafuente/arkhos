@@ -100,7 +100,12 @@ export function MonthlyReturnHeatmap() {
     // Sort month keys
     const sortedKeys = Array.from(byMonth.keys()).sort();
 
-    // Build month-to-return map
+    // Build month-to-return map using cashflow-adjusted returns.
+    // Raw (unadjusted) returns include the effect of new money injected, making months with
+    // large new purchases appear as huge gains (e.g. +50%). The cashflow-adjusted formula
+    // (equivalent to one TWR period) removes the capital-injection effect:
+    //   adjustedReturn = (endValue - startValue - cashFlow) / startValue
+    // where cashFlow = change in total_invested (new money added that month).
     const returnByMonth = new Map<string, number>();
     for (let i = 1; i < sortedKeys.length; i++) {
       const prevKey = sortedKeys[i - 1];
@@ -111,7 +116,10 @@ export function MonthlyReturnHeatmap() {
       const prevVal = investmentValue(prev);
       const currVal = investmentValue(curr);
       if (prevVal <= 0) continue;
-      const pct = ((currVal - prevVal) / prevVal) * 100;
+      const cashFlow = curr.total_invested - prev.total_invested;
+      const pct = ((currVal - cashFlow - prevVal) / prevVal) * 100;
+      // Skip periods with impossible values (NaN, Infinity, or clearly wrong data)
+      if (!isFinite(pct) || isNaN(pct)) continue;
       returnByMonth.set(currKey, pct);
     }
 

@@ -21,8 +21,12 @@ export function PLBadge({
   showPercentage = true,
   size = "sm",
 }: PLBadgeProps) {
-  const isPositive = amount >= 0;
-  const isZero = amount === 0;
+  // Guard against NaN/Infinity from division-by-zero or data artifacts
+  const safeAmount = isFinite(amount) && !isNaN(amount) ? amount : 0;
+  const safePct = isFinite(percentage) && !isNaN(percentage) ? percentage : 0;
+
+  const isPositive = safeAmount >= 0;
+  const isZero = safeAmount === 0;
 
   const bg = isZero
     ? "rgba(176,122,58,0.12)"
@@ -45,8 +49,8 @@ export function PLBadge({
   const paddingClass = size === "sm" ? "px-2 py-0.5 text-xs" : "px-2.5 py-1 text-sm";
 
   const parts: string[] = [];
-  if (showAmount) parts.push(formatEur(amount));
-  if (showPercentage) parts.push(formatPct(percentage));
+  if (showAmount) parts.push(formatEur(safeAmount));
+  if (showPercentage) parts.push(formatPct(safePct));
 
   return (
     <span

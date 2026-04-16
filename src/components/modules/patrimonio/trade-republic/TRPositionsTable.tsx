@@ -146,7 +146,10 @@ function computeAnnualizedPL(plPct: number, days: number): number | null {
   if (years < 0.05) return null; // < ~18 days: not meaningful
   const factor = 1 + plPct / 100;
   if (factor <= 0) return null;
-  return (Math.pow(factor, 1 / years) - 1) * 100;
+  const annualized = (Math.pow(factor, 1 / years) - 1) * 100;
+  // Cap at ±1000%/year — beyond this the figure is not meaningful to display
+  if (!isFinite(annualized) || isNaN(annualized) || Math.abs(annualized) > 1000) return null;
+  return annualized;
 }
 
 interface CategoryGroupProps {
