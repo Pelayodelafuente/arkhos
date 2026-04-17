@@ -12,31 +12,30 @@ export const TICKER_CONFIG: Record<string, {
   'IE00B5BMR087': { ticker: 'SXR8.DE',  currency: 'EUR', source: 'yahoo' },
   'IE00B4L5Y983': { ticker: 'IWDA.AS',  currency: 'EUR', source: 'yahoo' },
   'IE00B53SZB19': { ticker: 'CNDX.AS',  currency: 'EUR', source: 'yahoo' },
-  // VFEM: VFEM.AS en Yahoo es producto distinto; VFEA.L (USD) da 71.19€ ≈ TR 70.59€
-  'IE00BK5BR733': { ticker: 'VFEA.L',   currency: 'USD', source: 'yahoo' },
+  // VFEA.DE (Xetra, EUR) — verificado 2026-04-17: precio 73.64€ ≈ TR 73.26€. ISIN IE00BK5BR733, WKN A2PLTC
+  'IE00BK5BR733': { ticker: 'VFEA.DE',  currency: 'EUR', source: 'yahoo' },
   'IE00B6R52259': { ticker: 'SSAC.AS',  currency: 'EUR', source: 'yahoo' },
   'IE00BGV5VN51': { ticker: 'XAIX.DE',  currency: 'EUR', source: 'yahoo' },
-  // ECOM: E61Z.DE (Xetra, EUR) — ticker verificado por ISIN IE00BMH5XY61, WKN A2QPBX
-  'IE00BMH5XY61': { ticker: 'E61Z.DE',         currency: 'EUR', source: 'yahoo' },
-  // AAKI.DE (Xetra, EUR) — ticker verificado por ISIN IE0003A512E4, WKN A408AX
-  'IE0003A512E4': { ticker: 'AAKI.DE',          currency: 'EUR', source: 'yahoo' },
-  // WDEF: WDEF.L EUR → EUDF.DE EUR (Xetra, mismo precio ~32.90€)
+  // E61Z.DE (Xetra, EUR) — ISIN IE00BMH5XY61, WKN A2QPBX
+  'IE00BMH5XY61': { ticker: 'E61Z.DE',  currency: 'EUR', source: 'yahoo' },
+  // AAKI.DE (Xetra, EUR) — ISIN IE0003A512E4, WKN A408AX
+  'IE0003A512E4': { ticker: 'AAKI.DE',  currency: 'EUR', source: 'yahoo' },
+  // EUDF.DE (Xetra, EUR) — WisdomTree Europe Defence UCITS ETF
   'IE0002Y8CX98': { ticker: 'EUDF.DE',  currency: 'EUR', source: 'yahoo' },
-  // ARK Innovation UCITS ETF — ticker verificado via Yahoo search por ISIN
+  // ARXK.DE (Xetra, EUR) — ARK Innovation UCITS ETF, ISIN IE000GA3D489, WKN A408AW
   'IE000GA3D489': { ticker: 'ARXK.DE',  currency: 'EUR', source: 'yahoo' },
-  // iShares Clean Energy Transition — Yahoo: INRA.AS (AMS, USD-priced ~27.96 → ~23€)
+  // INRA.AS (Euronext Amsterdam, USD) — iShares Global Clean Energy Transition
   'IE000U58J0M1': { ticker: 'INRA.AS',  currency: 'USD', source: 'yahoo' },
-
-  // ETFs Londres en GBX (peniques → /100 → GBP → EUR)
-  'LU0322253906': { ticker: 'XXSC.L',   currency: 'GBX', source: 'yahoo' },
+  // XXSC.DE (Xetra, EUR) — verificado 2026-04-17: precio 72.71€ ≈ TR 72.43€. Antes XXSC.L (GBX)
+  'LU0322253906': { ticker: 'XXSC.DE',  currency: 'EUR', source: 'yahoo' },
 
   // ETFs Londres en USD verificados via Yahoo Finance
   'IE00B4ND3602': { ticker: 'IGLN.L',   currency: 'USD', source: 'yahoo' },
   'IE00B4NCWG09': { ticker: 'ISLN.L',   currency: 'USD', source: 'yahoo' },
-  // Xtrackers World Industrials — ticker verificado via Yahoo search por ISIN (no XDWD.L que es MSCI World)
-  'IE00BM67HV82': { ticker: 'XDWI.L',   currency: 'USD', source: 'yahoo' },
+  // XDWI.DE (Xetra, EUR) — verificado 2026-04-17: precio 73.32€ ≈ TR 73.21€. Antes XDWI.L (USD)
+  'IE00BM67HV82': { ticker: 'XDWI.DE',  currency: 'EUR', source: 'yahoo' },
 
-  // VCDE.DE (Xetra, EUR) — ticker verificado por ISIN IE00BGYWSW13, WKN A3ES6A
+  // VCDE.DE (Xetra, EUR) — ISIN IE00BGYWSW13, WKN A3ES6A
   'IE00BGYWSW13': { ticker: 'VCDE.DE',  currency: 'EUR', source: 'yahoo' },
 
   // Acciones USA via Finnhub (USD → EUR)
