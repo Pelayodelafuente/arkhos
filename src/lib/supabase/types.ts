@@ -1267,6 +1267,45 @@ export type Database = {
           },
         ]
       }
+      portfolio_snapshots: {
+        Row: {
+          id: string
+          user_id: string
+          snapshot_date: string
+          platform_id: string | null
+          total_value: number
+          total_invested: number
+          cash_value: number
+          pl_amount: number
+          pl_percentage: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          snapshot_date: string
+          platform_id?: string | null
+          total_value: number
+          total_invested: number
+          cash_value?: number
+          pl_amount?: number
+          pl_percentage?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          snapshot_date?: string
+          platform_id?: string | null
+          total_value?: number
+          total_invested?: number
+          cash_value?: number
+          pl_amount?: number
+          pl_percentage?: number
+          created_at?: string
+        }
+        Relationships: []
+      }
       asset_price_history: {
         Row: {
           id: string

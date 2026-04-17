@@ -68,18 +68,24 @@ export function PriceStatusBanner() {
         assets_processed?: number;
         prices_inserted?: number;
         snapshots_regenerated?: boolean;
+        snapshots_count?: number;
+        snapshots_with_pl?: number;
         errors?: string[];
         error?: string;
       };
       if (!res.ok || json.error) {
-        toast.error("Error al cargar histórico de precios");
+        toast.error(`Error: ${json.error ?? "Error al cargar histórico"}`);
+        return;
+      }
+      if (json.errors && json.errors.length > 0) {
+        toast.error(`Errores: ${json.errors.slice(0, 2).join(" | ")}`);
         return;
       }
       toast.success(
-        `Histórico cargado: ${json.prices_inserted ?? 0} precios, ${json.assets_processed ?? 0} activos`
+        `Histórico cargado: ${json.prices_inserted ?? 0} precios · ${json.snapshots_with_pl ?? 0}/${json.snapshots_count ?? 0} snapshots con P&L`
       );
-      // Refrescar la página para que los Server Components recarguen los snapshots
-      router.refresh();
+      // Recarga completa para garantizar que los Server Components devuelven datos frescos
+      window.location.reload();
     } catch {
       toast.error("Error al cargar histórico de precios");
     } finally {

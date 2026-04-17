@@ -260,13 +260,27 @@ export async function POST(): Promise<Response> {
     });
 
     if (rpcError) {
-      errors.push(`generate_historical_snapshots: ${rpcError.message}`);
+      errors.push(`RPC generate_historical_snapshots: ${rpcError.message}`);
+    }
+
+    // 6. Verificar cuántos snapshots se generaron y si tienen P&L real
+    let snapshotsCount = 0;
+    let snapshotsWithPL = 0;
+    if (!rpcError) {
+      const { data: snaps } = await supabase
+        .from('portfolio_snapshots')
+        .select('pl_amount')
+        .eq('user_id', user.id);
+      snapshotsCount = snaps?.length ?? 0;
+      snapshotsWithPL = snaps?.filter(s => Math.abs(s.pl_amount ?? 0) > 0.01).length ?? 0;
     }
 
     return Response.json({
       assets_processed: assetsProcessed,
       prices_inserted: inserted,
       snapshots_regenerated: !rpcError,
+      snapshots_count: snapshotsCount,
+      snapshots_with_pl: snapshotsWithPL,
       errors,
     });
 

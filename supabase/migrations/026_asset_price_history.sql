@@ -169,4 +169,7 @@ BEGIN
   END LOOP;
 
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql;
+
+-- Dar permiso de ejecución al rol authenticated
+GRANT EXECUTE ON FUNCTION generate_historical_snapshots(UUID) TO authenticated;
