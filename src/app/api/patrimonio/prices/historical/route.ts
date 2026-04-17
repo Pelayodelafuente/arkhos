@@ -239,11 +239,21 @@ export async function POST(): Promise<Response> {
       );
     }
 
-    // 4. Upsert en asset_price_history (lotes de 500 para no exceder límites)
+    // 4. Deduplicar por (user_id, isin, price_date) — Yahoo puede devolver el mes
+    // actual dos veces (candle en progreso). ON CONFLICT falla si hay dupes en el batch.
+    const deduped = Array.from(
+      priceRows.reduce((map, row) => {
+        const key = `${row.isin}|${row.price_date}`;
+        map.set(key, row); // la última entrada gana
+        return map;
+      }, new Map<string, typeof priceRows[number]>()).values()
+    );
+
+    // Upsert en asset_price_history (lotes de 500 para no exceder límites)
     const BATCH = 500;
     let inserted = 0;
-    for (let i = 0; i < priceRows.length; i += BATCH) {
-      const batch = priceRows.slice(i, i + BATCH);
+    for (let i = 0; i < deduped.length; i += BATCH) {
+      const batch = deduped.slice(i, i + BATCH);
       const { error: upsertError } = await supabase
         .from('asset_price_history')
         .upsert(batch, { onConflict: 'user_id,isin,price_date' });
