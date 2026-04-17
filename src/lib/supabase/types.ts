@@ -1267,12 +1267,53 @@ export type Database = {
           },
         ]
       }
+      asset_price_history: {
+        Row: {
+          id: string
+          user_id: string
+          isin: string
+          price_date: string
+          price_eur: number
+          source: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          isin: string
+          price_date: string
+          price_eur: number
+          source?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          isin?: string
+          price_date?: string
+          price_eur?: number
+          source?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asset_price_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_historical_snapshots: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { RefreshCw, EyeOff, Eye } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { RefreshCw, EyeOff, Eye, CalendarClock } from "lucide-react";
 import { usePatrimonioPrices } from "@/lib/hooks/use-patrimonio-prices";
 import { useToast } from "@/stores/ui-store";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
@@ -19,10 +20,12 @@ const COOLDOWN_S = 60;
 export function PriceStatusBanner() {
   const { lastUpdated, refreshPrices, isRefreshing } = usePatrimonioPrices();
   const toast = useToast();
+  const router = useRouter();
   const privacyMode = usePatrimonioStore((s) => s.privacyMode);
   const togglePrivacyMode = usePatrimonioStore((s) => s.togglePrivacyMode);
 
   const [cooldown, setCooldown] = useState(0);
+  const [isLoadingHistorical, setIsLoadingHistorical] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isCounting = cooldown > 0;
 
@@ -55,6 +58,34 @@ export function PriceStatusBanner() {
       toast.error("Error al actualizar precios");
     }
   }, [cooldown, isRefreshing, refreshPrices, toast]);
+
+  const handleLoadHistorical = useCallback(async () => {
+    if (isLoadingHistorical) return;
+    setIsLoadingHistorical(true);
+    try {
+      const res = await fetch("/api/patrimonio/prices/historical", { method: "POST" });
+      const json = (await res.json()) as {
+        assets_processed?: number;
+        prices_inserted?: number;
+        snapshots_regenerated?: boolean;
+        errors?: string[];
+        error?: string;
+      };
+      if (!res.ok || json.error) {
+        toast.error("Error al cargar histórico de precios");
+        return;
+      }
+      toast.success(
+        `Histórico cargado: ${json.prices_inserted ?? 0} precios, ${json.assets_processed ?? 0} activos`
+      );
+      // Refrescar la página para que los Server Components recarguen los snapshots
+      router.refresh();
+    } catch {
+      toast.error("Error al cargar histórico de precios");
+    } finally {
+      setIsLoadingHistorical(false);
+    }
+  }, [isLoadingHistorical, router, toast]);
 
   const btnDisabled = isRefreshing || cooldown > 0;
   const btnLabel = isRefreshing
@@ -107,6 +138,31 @@ export function PriceStatusBanner() {
     </button>
   );
 
+  const historicalBtn = (
+    <button
+      type="button"
+      onClick={handleLoadHistorical}
+      disabled={isLoadingHistorical}
+      className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors"
+      style={{
+        backgroundColor: isLoadingHistorical ? "transparent" : "rgba(155,122,74,0.10)",
+        color: isLoadingHistorical ? "var(--text-tertiary)" : "var(--module-mercados)",
+        border: `1px solid ${isLoadingHistorical ? "var(--border)" : "rgba(155,122,74,0.25)"}`,
+        cursor: isLoadingHistorical ? "not-allowed" : "pointer",
+      }}
+      title="Cargar precios históricos mensuales (Nov 2024 → hoy) y regenerar snapshots"
+      aria-label="Cargar histórico de precios"
+    >
+      <CalendarClock
+        size={11}
+        strokeWidth={2}
+        className={isLoadingHistorical ? "animate-pulse" : ""}
+        aria-hidden="true"
+      />
+      {isLoadingHistorical ? "Cargando..." : "Cargar histórico"}
+    </button>
+  );
+
   // No prices yet in DB
   if (!lastUpdated) {
     return (
@@ -115,7 +171,7 @@ export function PriceStatusBanner() {
         style={{ backgroundColor: "var(--bg-sand)", border: "1px solid var(--border)" }}
       >
         <span className="text-text-tertiary">Sin precios</span>
-        <div className="ml-auto flex items-center gap-2">{privacyBtn}{refreshBtn}</div>
+        <div className="ml-auto flex items-center gap-2">{privacyBtn}{historicalBtn}{refreshBtn}</div>
       </div>
     );
   }
@@ -139,7 +195,7 @@ export function PriceStatusBanner() {
       <span className="text-text-secondary font-medium">
         Precios del {formatDateTime(lastUpdated)}
       </span>
-      <div className="ml-auto flex items-center gap-2">{privacyBtn}{refreshBtn}</div>
+      <div className="ml-auto flex items-center gap-2">{privacyBtn}{historicalBtn}{refreshBtn}</div>
     </div>
   );
 }
