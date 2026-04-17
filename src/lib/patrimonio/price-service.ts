@@ -36,8 +36,9 @@ export const TICKER_CONFIG: Record<string, {
   // Xtrackers World Industrials — ticker verificado via Yahoo search por ISIN (no XDWD.L que es MSCI World)
   'IE00BM67HV82': { ticker: 'XDWI.L',   currency: 'USD', source: 'yahoo' },
 
-  // ETFs Londres — Yahoo reporta USD para VDCP.L (verificado via meta.currency)
-  'IE00BGYWSW13': { ticker: 'VDCP.L',   currency: 'USD', source: 'yahoo' },
+  // VDCP.L cotiza en GBP en LSE — Yahoo reporta 'USD' en metadata pero el precio
+  // es en GBP (verificado: precio ~47 GBP × 1.17 = ~55€ ≈ avg_buy_price real de 55.21€)
+  'IE00BGYWSW13': { ticker: 'VDCP.L',   currency: 'GBP', source: 'yahoo' },
 
   // Acciones USA via Finnhub (USD → EUR)
   'US67066G1040': { ticker: 'NVDA',     currency: 'USD', source: 'finnhub' },
