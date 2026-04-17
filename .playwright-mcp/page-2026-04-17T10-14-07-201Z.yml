@@ -1,0 +1,294 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e6]:
+          - img [ref=e8]
+          - generic [ref=e11]:
+            - text: Arkhos
+            - emphasis [ref=e12]: .
+        - button "Colapsar sidebar" [ref=e13] [cursor=pointer]:
+          - img [ref=e14]
+      - generic [ref=e18] [cursor=pointer]:
+        - img [ref=e19]
+        - generic [ref=e22]: Buscar en Arkhos...
+        - generic [ref=e23]: ⌘K
+      - link "Dashboard" [ref=e26] [cursor=pointer]:
+        - /url: /
+        - img [ref=e27]
+        - generic [ref=e30]: Dashboard
+      - generic [ref=e34]: MÓDULOS
+      - navigation [ref=e36]:
+        - list [ref=e37]:
+          - listitem [ref=e38]:
+            - link "Proyectos 5" [ref=e39] [cursor=pointer]:
+              - /url: /proyectos
+              - generic [ref=e41]:
+                - img [ref=e42]
+                - text: Proyectos
+              - generic [ref=e44]: "5"
+          - listitem [ref=e45]:
+            - link "Notas 5" [ref=e46] [cursor=pointer]:
+              - /url: /notas
+              - generic [ref=e48]:
+                - img [ref=e49]
+                - text: Notas
+              - generic [ref=e52]: "5"
+          - listitem [ref=e53]:
+            - link "Mercados" [ref=e54] [cursor=pointer]:
+              - /url: /mercados
+              - generic [ref=e56]:
+                - img [ref=e57]
+                - text: Mercados
+          - listitem [ref=e60]:
+            - link "Patrimonio" [ref=e61] [cursor=pointer]:
+              - /url: /patrimonio
+              - generic [ref=e64]:
+                - img [ref=e65]
+                - text: Patrimonio
+          - listitem [ref=e68]:
+            - link "Gastos" [ref=e69] [cursor=pointer]:
+              - /url: /gastos
+              - generic [ref=e71]:
+                - img [ref=e72]
+                - text: Gastos
+      - link "Documentación" [ref=e76] [cursor=pointer]:
+        - /url: /docs
+        - img [ref=e78]
+        - text: Documentación
+      - link "Seguridad" [ref=e82] [cursor=pointer]:
+        - /url: /settings/security
+        - img [ref=e84]
+        - text: Seguridad
+      - generic [ref=e87]:
+        - generic [ref=e88]:
+          - generic [ref=e91]: DB
+          - generic [ref=e94]: CDN
+          - generic [ref=e97]: APIs
+        - generic [ref=e99]:
+          - generic [ref=e100]: P
+          - generic [ref=e101]:
+            - paragraph [ref=e102]: Pelayo de la Fuente
+            - paragraph [ref=e103]: workspace
+        - button "Cerrar sesión" [ref=e105] [cursor=pointer]
+    - main [ref=e107]:
+      - generic [ref=e108]:
+        - generic [ref=e109]:
+          - img "Icono Patrimonio" [ref=e111]
+          - heading "Patrimonio" [level=1] [ref=e115]
+          - generic [ref=e116]: 39.116,71 €
+        - generic [ref=e117]:
+          - generic [ref=e118]:
+            - generic [ref=e119]:
+              - generic [ref=e120]: Total patrimonio
+              - img [ref=e122]
+            - generic [ref=e125]:
+              - paragraph [ref=e126]: 39.116,71 €
+              - img [ref=e127]
+            - generic [ref=e130]: 3 plataformas · efectivo REDACTED €
+            - generic [ref=e132]: +1275,08 € vs mes ant.
+          - generic [ref=e133]:
+            - generic [ref=e134]:
+              - generic [ref=e135]: Capital invertido
+              - img [ref=e137]
+            - generic [ref=e140]:
+              - paragraph [ref=e141]: 16.857,99 €
+              - img [ref=e142]
+            - generic [ref=e144]: Sin contar efectivo en cuenta
+            - generic [ref=e146]: +1275,08 € vs mes ant.
+          - generic [ref=e147]:
+            - generic [ref=e148]:
+              - generic [ref=e149]: P&L sobre invertido
+              - img [ref=e151]
+            - generic [ref=e154]:
+              - paragraph [ref=e155]: 138,10 €
+              - img [ref=e156]
+            - generic [ref=e159]: +0.82%
+          - generic [ref=e160]:
+            - generic [ref=e161]:
+              - generic [ref=e162]: Ingresos pasivos
+              - img [ref=e164]
+            - paragraph [ref=e167]: 130,69 €
+            - generic [ref=e168]: Total histórico · todas las plataformas
+            - generic [ref=e170]: +2,30 € vs mes ant.
+          - generic [ref=e171]:
+            - generic [ref=e172]:
+              - generic [ref=e173]: Rentabilidad anualizada
+              - img [ref=e175]
+            - paragraph [ref=e177]: +3.79%
+            - generic [ref=e178]: TWR anualizado · sin efectivo
+        - button "Trade Republic" [ref=e180] [cursor=pointer]
+        - generic [ref=e181]:
+          - generic [ref=e182]:
+            - generic [ref=e314]: Precios del 17/4, 12:07
+            - generic [ref=e315]:
+              - button "Ocultar cifras" [ref=e316] [cursor=pointer]:
+                - img [ref=e317]
+                - text: Privacidad
+              - button "Cargar histórico de precios" [ref=e322] [cursor=pointer]:
+                - img [ref=e323]
+                - text: Cargar histórico
+              - button "Actualizar" [ref=e327] [cursor=pointer]:
+                - img [ref=e328]
+                - text: Actualizar
+          - generic [ref=e202]:
+            - button "Overview" [ref=e203] [cursor=pointer]
+            - button "Cartera" [ref=e204] [cursor=pointer]
+            - button "Plan de Ahorro" [active] [pressed] [ref=e205] [cursor=pointer]
+            - button "Análisis" [ref=e206] [cursor=pointer]
+            - button "Ingresos Pasivos" [ref=e207] [cursor=pointer]
+            - button "Fiscalidad" [ref=e208] [cursor=pointer]
+          - generic [ref=e613]:
+            - generic [ref=e614]:
+              - generic [ref=e615]:
+                - generic [ref=e616]:
+                  - img [ref=e617]
+                  - heading "Plan de Ahorro Activo" [level=3] [ref=e619]
+                - generic [ref=e620]:
+                  - generic [ref=e621]:
+                    - generic [ref=e623]: 800,00 €/mes
+                    - generic [ref=e624]: "Próxima aportación: 2 de mayo"
+                  - button "Registrar ejecución" [ref=e625] [cursor=pointer]:
+                    - img [ref=e626]
+                    - text: Registrar ejecución
+              - table [ref=e630]:
+                - rowgroup [ref=e631]:
+                  - row "Activo ISIN EUR/mes Inicio Estado" [ref=e632]:
+                    - columnheader "Activo" [ref=e633]
+                    - columnheader "ISIN" [ref=e634]
+                    - columnheader "EUR/mes" [ref=e635]
+                    - columnheader "Inicio" [ref=e636]
+                    - columnheader "Estado" [ref=e637]
+                - rowgroup [ref=e638]:
+                  - row "iShares Core S&P 500 UCITS ETF IE00B5BMR087 250,00 € nov 2024 Activo" [ref=e639]:
+                    - cell "iShares Core S&P 500 UCITS ETF" [ref=e640]:
+                      - paragraph [ref=e641]: iShares Core S&P 500 UCITS ETF
+                    - cell "IE00B5BMR087" [ref=e642]
+                    - cell "250,00 €" [ref=e643]:
+                      - button "250,00 €" [ref=e644] [cursor=pointer]
+                    - cell "nov 2024" [ref=e645]
+                    - cell "Activo" [ref=e646]:
+                      - generic [ref=e647]:
+                        - switch "Desactivar" [checked] [ref=e648] [cursor=pointer]
+                        - generic [ref=e650]: Activo
+                  - row "iShares NASDAQ 100 UCITS ETF IE00B53SZB19 100,00 € nov 2024 Activo" [ref=e651]:
+                    - cell "iShares NASDAQ 100 UCITS ETF" [ref=e652]:
+                      - paragraph [ref=e653]: iShares NASDAQ 100 UCITS ETF
+                    - cell "IE00B53SZB19" [ref=e654]
+                    - cell "100,00 €" [ref=e655]:
+                      - button "100,00 €" [ref=e656] [cursor=pointer]
+                    - cell "nov 2024" [ref=e657]
+                    - cell "Activo" [ref=e658]:
+                      - generic [ref=e659]:
+                        - switch "Desactivar" [checked] [ref=e660] [cursor=pointer]
+                        - generic [ref=e662]: Activo
+                  - row "Vanguard FTSE Emerging Markets UCITS ETF IE00BK5BR733 150,00 € abr 2025 Activo" [ref=e663]:
+                    - cell "Vanguard FTSE Emerging Markets UCITS ETF" [ref=e664]:
+                      - paragraph [ref=e665]: Vanguard FTSE Emerging Markets UCITS ETF
+                    - cell "IE00BK5BR733" [ref=e666]
+                    - cell "150,00 €" [ref=e667]:
+                      - button "150,00 €" [ref=e668] [cursor=pointer]
+                    - cell "abr 2025" [ref=e669]
+                    - cell "Activo" [ref=e670]:
+                      - generic [ref=e671]:
+                        - switch "Desactivar" [checked] [ref=e672] [cursor=pointer]
+                        - generic [ref=e674]: Activo
+                  - row "Xtrackers MSCI Europe Small Cap ETF LU0322253906 75,00 € may 2025 Activo" [ref=e675]:
+                    - cell "Xtrackers MSCI Europe Small Cap ETF" [ref=e676]:
+                      - paragraph [ref=e677]: Xtrackers MSCI Europe Small Cap ETF
+                    - cell "LU0322253906" [ref=e678]
+                    - cell "75,00 €" [ref=e679]:
+                      - button "75,00 €" [ref=e680] [cursor=pointer]
+                    - cell "may 2025" [ref=e681]
+                    - cell "Activo" [ref=e682]:
+                      - generic [ref=e683]:
+                        - switch "Desactivar" [checked] [ref=e684] [cursor=pointer]
+                        - generic [ref=e686]: Activo
+                  - row "WisdomTree Europe Defence UCITS ETF IE0002Y8CX98 75,00 € mar 2026 Activo" [ref=e687]:
+                    - cell "WisdomTree Europe Defence UCITS ETF" [ref=e688]:
+                      - paragraph [ref=e689]: WisdomTree Europe Defence UCITS ETF
+                    - cell "IE0002Y8CX98" [ref=e690]
+                    - cell "75,00 €" [ref=e691]:
+                      - button "75,00 €" [ref=e692] [cursor=pointer]
+                    - cell "mar 2026" [ref=e693]
+                    - cell "Activo" [ref=e694]:
+                      - generic [ref=e695]:
+                        - switch "Desactivar" [checked] [ref=e696] [cursor=pointer]
+                        - generic [ref=e698]: Activo
+                  - row "Xtrackers MSCI World Industrials ETF IE00BM67HV82 50,00 € mar 2026 Activo" [ref=e699]:
+                    - cell "Xtrackers MSCI World Industrials ETF" [ref=e700]:
+                      - paragraph [ref=e701]: Xtrackers MSCI World Industrials ETF
+                    - cell "IE00BM67HV82" [ref=e702]
+                    - cell "50,00 €" [ref=e703]:
+                      - button "50,00 €" [ref=e704] [cursor=pointer]
+                    - cell "mar 2026" [ref=e705]
+                    - cell "Activo" [ref=e706]:
+                      - generic [ref=e707]:
+                        - switch "Desactivar" [checked] [ref=e708] [cursor=pointer]
+                        - generic [ref=e710]: Activo
+                  - row "iShares Global Clean Energy Transition ETF IE000U58J0M1 50,00 € mar 2026 Activo" [ref=e711]:
+                    - cell "iShares Global Clean Energy Transition ETF" [ref=e712]:
+                      - paragraph [ref=e713]: iShares Global Clean Energy Transition ETF
+                    - cell "IE000U58J0M1" [ref=e714]
+                    - cell "50,00 €" [ref=e715]:
+                      - button "50,00 €" [ref=e716] [cursor=pointer]
+                    - cell "mar 2026" [ref=e717]
+                    - cell "Activo" [ref=e718]:
+                      - generic [ref=e719]:
+                        - switch "Desactivar" [checked] [ref=e720] [cursor=pointer]
+                        - generic [ref=e722]: Activo
+                  - row "iShares Physical Gold ETC IE00B4ND3602 25,00 € may 2025 Activo" [ref=e723]:
+                    - cell "iShares Physical Gold ETC" [ref=e724]:
+                      - paragraph [ref=e725]: iShares Physical Gold ETC
+                    - cell "IE00B4ND3602" [ref=e726]
+                    - cell "25,00 €" [ref=e727]:
+                      - button "25,00 €" [ref=e728] [cursor=pointer]
+                    - cell "may 2025" [ref=e729]
+                    - cell "Activo" [ref=e730]:
+                      - generic [ref=e731]:
+                        - switch "Desactivar" [checked] [ref=e732] [cursor=pointer]
+                        - generic [ref=e734]: Activo
+                  - row "iShares Physical Silver ETC IE00B4NCWG09 25,00 € may 2025 Activo" [ref=e735]:
+                    - cell "iShares Physical Silver ETC" [ref=e736]:
+                      - paragraph [ref=e737]: iShares Physical Silver ETC
+                    - cell "IE00B4NCWG09" [ref=e738]
+                    - cell "25,00 €" [ref=e739]:
+                      - button "25,00 €" [ref=e740] [cursor=pointer]
+                    - cell "may 2025" [ref=e741]
+                    - cell "Activo" [ref=e742]:
+                      - generic [ref=e743]:
+                        - switch "Desactivar" [checked] [ref=e744] [cursor=pointer]
+                        - generic [ref=e746]: Activo
+                - rowgroup [ref=e747]:
+                  - row "Total mensual 800,00 €" [ref=e748]:
+                    - cell "Total mensual" [ref=e749]
+                    - cell "800,00 €" [ref=e750]
+                    - cell [ref=e751]
+            - generic [ref=e752]:
+              - generic [ref=e753]:
+                - heading "Aportaciones mensuales al plan" [level=4] [ref=e754]
+                - generic [ref=e755]:
+                  - generic [ref=e756]: "Periodo:"
+                  - button "Total" [ref=e757] [cursor=pointer]
+                  - button "2024" [ref=e758] [cursor=pointer]
+                  - button "2025" [ref=e759] [cursor=pointer]
+                  - button "2026" [pressed] [ref=e760] [cursor=pointer]
+              - generic [ref=e761]:
+                - paragraph [ref=e762]: Contribución mensual — Plan de ahorro
+                - application [ref=e765] [cursor=pointer]:
+                  - generic [ref=e992]:
+                    - generic [ref=e993]:
+                      - generic [ref=e995]: ene 2026
+                      - generic [ref=e997]: feb 2026
+                      - generic [ref=e999]: mar 2026
+                      - generic [ref=e1001]: abr 2026
+                    - generic [ref=e1002]:
+                      - generic [ref=e1004]: 0€
+                      - generic [ref=e1006]: 200€
+                      - generic [ref=e1008]: 400€
+                      - generic [ref=e1010]: 600€
+                      - generic [ref=e1012]: 800€
+    - button "Captura rápida de nota" [ref=e310] [cursor=pointer]:
+      - img [ref=e311]
+  - alert [ref=e313]
+  - generic [ref=e612]: 0€

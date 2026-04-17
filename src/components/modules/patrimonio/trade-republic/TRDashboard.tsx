@@ -72,8 +72,8 @@ function TopPerformers() {
   const getTopGainers = usePatrimonioStore((s) => s.getTopGainers);
   const getTopLosers = usePatrimonioStore((s) => s.getTopLosers);
 
-  const gainers = getTopGainers(3);
-  const losers = getTopLosers(3);
+  const gainers = getTopGainers(5);
+  const losers = getTopLosers(5);
 
   if (gainers.length === 0 && losers.length === 0) return null;
 

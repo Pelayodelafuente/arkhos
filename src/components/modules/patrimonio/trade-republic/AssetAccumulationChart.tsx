@@ -157,9 +157,21 @@ export function AssetAccumulationChart({ transactions, assetName }: AssetAccumul
 
   return (
     <div>
-      <p className="mb-2 text-xs font-medium" style={{ color: "var(--text-secondary)" }}>
-        Acumulación — {assetName}
-      </p>
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>
+          Acumulación — {assetName}
+        </p>
+        <div className="flex items-center gap-4 text-xs" style={{ color: "var(--text-tertiary)" }}>
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-0.5 w-4 rounded-full" style={{ backgroundColor: C.blue }} />
+            Cantidad
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-0.5 w-4 rounded-full" style={{ backgroundColor: C.green }} />
+            Invertido €
+          </span>
+        </div>
+      </div>
       <ResponsiveContainer width="100%" height={200}>
         <AreaChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
           <defs>

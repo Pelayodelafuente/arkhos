@@ -36,11 +36,25 @@ interface ContentProps {
   pl_percentage?: number;
 }
 
+function truncate(text: string, maxChars: number): string {
+  if (text.length <= maxChars) return text;
+  return text.substring(0, maxChars - 1) + "…";
+}
+
 function CustomContent(props: ContentProps) {
-  const { x = 0, y = 0, width = 0, height = 0, ticker = "", pl_percentage = 0 } = props;
-  if (width < 36 || height < 28) return null;
+  const { x = 0, y = 0, width = 0, height = 0, name = "", ticker = "", pl_percentage = 0 } = props;
+  if (width < 40 || height < 30) return null;
   const color = getPLColor(pl_percentage);
   const sign = pl_percentage >= 0 ? "+" : "";
+
+  const maxChars = Math.max(4, Math.floor(width / 7));
+  const tickerFontSize = Math.min(13, Math.max(9, Math.floor(height / 5)));
+  const nameFontSize = Math.min(11, Math.max(9, tickerFontSize - 1));
+  const plFontSize = 9;
+
+  const showTicker = height > 30;
+  const showName = height > 48 && width > 60;
+  const showPL = height > 64;
 
   return (
     <g>
@@ -54,24 +68,35 @@ function CustomContent(props: ContentProps) {
         strokeWidth={2}
         rx={4}
       />
-      {height > 42 && (
+      {showTicker && (
         <text
           x={x + 8}
-          y={y + 18}
+          y={y + tickerFontSize + 4}
           fill="rgba(255,255,255,0.95)"
-          fontSize={10}
+          fontSize={tickerFontSize}
           fontWeight={600}
           fontFamily="var(--font-mono)"
         >
-          {ticker.length > 8 ? ticker.substring(0, 8) : ticker}
+          {truncate(ticker || name, maxChars)}
         </text>
       )}
-      {height > 58 && (
+      {showName && (
         <text
           x={x + 8}
-          y={y + 32}
+          y={y + tickerFontSize + nameFontSize + 6}
           fill="rgba(255,255,255,0.7)"
-          fontSize={9}
+          fontSize={nameFontSize}
+          fontFamily="var(--font-sans)"
+        >
+          {truncate(name, maxChars + 2)}
+        </text>
+      )}
+      {showPL && (
+        <text
+          x={x + 8}
+          y={y + height - 8}
+          fill="rgba(255,255,255,0.7)"
+          fontSize={plFontSize}
           fontFamily="var(--font-mono)"
         >
           {sign}

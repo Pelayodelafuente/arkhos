@@ -166,7 +166,6 @@ export function OverviewKPIs() {
         badge={
           <span className="text-xs text-text-tertiary">Sin contar efectivo en cuenta</span>
         }
-        delta={<DeltaBadge delta={deltas.capitalInvertido} />}
       />
 
       {/* 3. P&L */}
@@ -196,7 +195,6 @@ export function OverviewKPIs() {
         badge={
           <span className="text-xs text-text-tertiary">Total histórico · todas las plataformas</span>
         }
-        delta={<DeltaBadge delta={deltas.passiveIncomeMonth} />}
       />
 
       {/* 5. CAGR */}

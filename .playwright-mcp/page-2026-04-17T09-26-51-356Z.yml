@@ -1,0 +1,738 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e6]:
+          - img [ref=e8]
+          - generic [ref=e11]:
+            - text: Arkhos
+            - emphasis [ref=e12]: .
+        - button "Colapsar sidebar" [ref=e13] [cursor=pointer]:
+          - img [ref=e14]
+      - generic [ref=e18] [cursor=pointer]:
+        - img [ref=e19]
+        - generic [ref=e22]: Buscar en Arkhos...
+        - generic [ref=e23]: ⌘K
+      - link "Dashboard" [ref=e26] [cursor=pointer]:
+        - /url: /
+        - img [ref=e27]
+        - generic [ref=e30]: Dashboard
+      - generic [ref=e34]: MÓDULOS
+      - navigation [ref=e36]:
+        - list [ref=e37]:
+          - listitem [ref=e38]:
+            - link "Proyectos 5" [ref=e39] [cursor=pointer]:
+              - /url: /proyectos
+              - generic [ref=e41]:
+                - img [ref=e42]
+                - text: Proyectos
+              - generic [ref=e44]: "5"
+          - listitem [ref=e45]:
+            - link "Notas 5" [ref=e46] [cursor=pointer]:
+              - /url: /notas
+              - generic [ref=e48]:
+                - img [ref=e49]
+                - text: Notas
+              - generic [ref=e52]: "5"
+          - listitem [ref=e53]:
+            - link "Mercados" [ref=e54] [cursor=pointer]:
+              - /url: /mercados
+              - generic [ref=e56]:
+                - img [ref=e57]
+                - text: Mercados
+          - listitem [ref=e60]:
+            - link "Patrimonio" [ref=e61] [cursor=pointer]:
+              - /url: /patrimonio
+              - generic [ref=e64]:
+                - img [ref=e65]
+                - text: Patrimonio
+          - listitem [ref=e68]:
+            - link "Gastos" [ref=e69] [cursor=pointer]:
+              - /url: /gastos
+              - generic [ref=e71]:
+                - img [ref=e72]
+                - text: Gastos
+      - link "Documentación" [ref=e76] [cursor=pointer]:
+        - /url: /docs
+        - img [ref=e78]
+        - text: Documentación
+      - link "Seguridad" [ref=e82] [cursor=pointer]:
+        - /url: /settings/security
+        - img [ref=e84]
+        - text: Seguridad
+      - generic [ref=e87]:
+        - generic [ref=e88]:
+          - generic [ref=e91]: DB
+          - generic [ref=e94]: CDN
+          - generic [ref=e97]: APIs
+        - generic [ref=e99]:
+          - generic [ref=e100]: P
+          - generic [ref=e101]:
+            - paragraph [ref=e102]: Pelayo de la Fuente
+            - paragraph [ref=e103]: workspace
+        - button "Cerrar sesión" [ref=e105] [cursor=pointer]
+    - main [ref=e107]:
+      - generic [ref=e108]:
+        - generic [ref=e109]:
+          - img "Icono Patrimonio" [ref=e111]
+          - heading "Patrimonio" [level=1] [ref=e115]
+          - generic [ref=e116]: 40.304,45 €
+        - generic [ref=e117]:
+          - generic [ref=e118]:
+            - generic [ref=e119]:
+              - generic [ref=e120]: Total patrimonio
+              - img [ref=e122]
+            - generic [ref=e125]:
+              - paragraph [ref=e126]: 40.304,45 €
+              - img [ref=e127]
+            - generic [ref=e130]: 3 plataformas · efectivo REDACTED €
+            - generic [ref=e132]: +2462,82 € vs mes ant.
+          - generic [ref=e133]:
+            - generic [ref=e134]:
+              - generic [ref=e135]: Capital invertido
+              - img [ref=e137]
+            - generic [ref=e140]:
+              - paragraph [ref=e141]: 16.857,99 €
+              - img [ref=e142]
+            - generic [ref=e144]: Sin contar efectivo en cuenta
+            - generic [ref=e146]: +2462,82 € vs mes ant.
+          - generic [ref=e147]:
+            - generic [ref=e148]:
+              - generic [ref=e149]: P&L sobre invertido
+              - img [ref=e151]
+            - generic [ref=e154]:
+              - paragraph [ref=e155]: 1325,84 €
+              - img [ref=e156]
+            - generic [ref=e159]: +7.86%
+          - generic [ref=e160]:
+            - generic [ref=e161]:
+              - generic [ref=e162]: Ingresos pasivos
+              - img [ref=e164]
+            - paragraph [ref=e167]: 130,69 €
+            - generic [ref=e168]: Total histórico · todas las plataformas
+            - generic [ref=e170]: +2,30 € vs mes ant.
+          - generic [ref=e171]:
+            - generic [ref=e172]:
+              - generic [ref=e173]: Rentabilidad anualizada
+              - img [ref=e175]
+            - paragraph [ref=e177]: +3.79%
+            - generic [ref=e178]: TWR anualizado · sin efectivo
+        - button "Trade Republic" [ref=e180] [cursor=pointer]
+        - generic [ref=e181]:
+          - generic [ref=e182]:
+            - generic [ref=e184]: Precios del 16/4, 10:51
+            - generic [ref=e185]:
+              - button "Ocultar cifras" [ref=e186] [cursor=pointer]:
+                - img [ref=e187]
+                - text: Privacidad
+              - button "Cargar histórico de precios" [ref=e192] [cursor=pointer]:
+                - img [ref=e193]
+                - text: Cargar histórico
+              - button "Actualizar" [ref=e197] [cursor=pointer]:
+                - img [ref=e198]
+                - text: Actualizar
+          - generic [ref=e203]:
+            - button "Overview" [ref=e204] [cursor=pointer]
+            - button "Cartera" [ref=e205] [cursor=pointer]
+            - button "Plan de Ahorro" [ref=e206] [cursor=pointer]
+            - button "Análisis" [active] [pressed] [ref=e207] [cursor=pointer]
+            - button "Ingresos Pasivos" [ref=e208] [cursor=pointer]
+            - button "Fiscalidad" [ref=e209] [cursor=pointer]
+          - generic [ref=e617]:
+            - generic [ref=e618]:
+              - generic [ref=e620]:
+                - heading "Métricas avanzadas" [level=3] [ref=e621]
+                - paragraph [ref=e622]: "Rentabilidad ajustada al riesgo · Tasa libre de riesgo: 3% (Euribor)"
+              - generic [ref=e623]:
+                - generic [ref=e624]:
+                  - paragraph [ref=e625]: TWR total
+                  - paragraph [ref=e627]: +5.3%
+                  - paragraph [ref=e628]: Time-Weighted Return desde inicio
+                - generic [ref=e629]:
+                  - paragraph [ref=e630]: CAGR
+                  - paragraph [ref=e632]: +3.8%
+                  - paragraph [ref=e633]: Rentabilidad anualizada compuesta
+                - generic [ref=e634]:
+                  - paragraph [ref=e635]: Volatilidad
+                  - paragraph [ref=e637]: 23.3%
+                  - paragraph [ref=e638]: Desviación estándar anualizada
+                - generic [ref=e639]:
+                  - paragraph [ref=e640]: Sharpe
+                  - generic [ref=e641]:
+                    - paragraph [ref=e642]: "0.03"
+                    - generic [ref=e643]: Bajo
+                  - paragraph [ref=e644]: Retorno ajustado al riesgo vs 3% RF
+                - generic [ref=e645]:
+                  - paragraph [ref=e646]: Max Drawdown
+                  - paragraph [ref=e648]: 0.0%
+                  - paragraph [ref=e649]: Caída máxima desde pico histórico
+            - generic [ref=e650]:
+              - heading "Evolución vs MSCI World" [level=3] [ref=e651]
+              - paragraph [ref=e652]: "Benchmark: mismos flujos de capital al 8.5% anual estimado"
+              - generic [ref=e653]:
+                - generic [ref=e654]:
+                  - button "Mostrar patrimonio total" [ref=e655] [cursor=pointer]
+                  - generic [ref=e656]:
+                    - button "1M" [ref=e657] [cursor=pointer]
+                    - button "3M" [ref=e658] [cursor=pointer]
+                    - button "6M" [ref=e659] [cursor=pointer]
+                    - button "YTD" [ref=e660] [cursor=pointer]
+                    - button "1A" [ref=e661] [cursor=pointer]
+                    - button "Todo" [pressed] [ref=e662] [cursor=pointer]
+                - generic [ref=e663]:
+                  - generic [ref=e664]: Tu cartera
+                  - generic [ref=e666]: Capital invertido
+                  - generic [ref=e668]: MSCI World ~8.5%/año
+                - application [ref=e672] [cursor=pointer]:
+                  - generic [ref=e693]:
+                    - generic [ref=e694]:
+                      - generic [ref=e696]: nov 24
+                      - generic [ref=e698]: dic 24
+                      - generic [ref=e700]: ene 25
+                      - generic [ref=e702]: feb 25
+                      - generic [ref=e704]: mar 25
+                      - generic [ref=e706]: abr 25
+                      - generic [ref=e708]: may 25
+                      - generic [ref=e710]: jun 25
+                      - generic [ref=e712]: jul 25
+                      - generic [ref=e714]: ago 25
+                      - generic [ref=e716]: sept 25
+                      - generic [ref=e718]: oct 25
+                      - generic [ref=e720]: nov 25
+                      - generic [ref=e722]: dic 25
+                      - generic [ref=e724]: ene 26
+                      - generic [ref=e726]: feb 26
+                      - generic [ref=e728]: mar 26
+                      - generic [ref=e730]: abr 26
+                    - generic [ref=e731]:
+                      - generic [ref=e733]: "0"
+                      - generic [ref=e735]: 5k
+                      - generic [ref=e737]: 9k
+                      - generic [ref=e739]: 14k
+                      - generic [ref=e741]: 18k
+            - generic [ref=e742]:
+              - generic [ref=e743]:
+                - heading "Simulador de proyección" [level=3] [ref=e744]
+                - paragraph [ref=e745]: Interés compuesto con aportaciones mensuales · escenarios pesimista / base / optimista (±3%)
+              - generic [ref=e746]:
+                - generic [ref=e747]:
+                  - generic [ref=e748]: Capital inicial
+                  - generic [ref=e749]:
+                    - spinbutton [ref=e750]: "40304"
+                    - generic [ref=e751]: €
+                - generic [ref=e752]:
+                  - generic [ref=e753]: Aportación mensual
+                  - generic [ref=e754]:
+                    - spinbutton [ref=e755]: "800"
+                    - generic [ref=e756]: €/mes
+                - generic [ref=e757]:
+                  - generic [ref=e758]:
+                    - generic [ref=e759]: Rentabilidad base
+                    - generic [ref=e760]: 3.8%/año
+                  - slider "Rentabilidad anual base" [ref=e761] [cursor=pointer]: "4"
+                  - generic [ref=e762]:
+                    - button "5%" [ref=e763] [cursor=pointer]
+                    - button "7%" [ref=e764] [cursor=pointer]
+                    - button "8.5%" [ref=e765] [cursor=pointer]
+                    - button "10%" [ref=e766] [cursor=pointer]
+                    - button "15%" [ref=e767] [cursor=pointer]
+                - generic [ref=e768]:
+                  - paragraph [ref=e769]: Horizonte
+                  - generic [ref=e770]:
+                    - button "5a" [ref=e771] [cursor=pointer]
+                    - button "10a" [ref=e772] [cursor=pointer]
+                    - button "15a" [ref=e773] [cursor=pointer]
+                    - button "20a" [pressed] [ref=e774] [cursor=pointer]
+                    - button "30a" [ref=e775] [cursor=pointer]
+              - generic [ref=e776]:
+                - generic [ref=e777]: Optimista (6.8%/año)
+                - generic [ref=e779]: Base (3.8%/año)
+                - generic [ref=e781]: Pesimista (1.0%/año)
+              - application [ref=e785] [cursor=pointer]:
+                - generic [ref=e803]:
+                  - generic [ref=e804]:
+                    - generic [ref=e806]: 0a
+                    - generic [ref=e808]: 1a
+                    - generic [ref=e810]: 2a
+                    - generic [ref=e812]: 3a
+                    - generic [ref=e814]: 4a
+                    - generic [ref=e816]: 5a
+                    - generic [ref=e818]: 6a
+                    - generic [ref=e820]: 7a
+                    - generic [ref=e822]: 8a
+                    - generic [ref=e824]: 9a
+                    - generic [ref=e826]: 10a
+                    - generic [ref=e828]: 11a
+                    - generic [ref=e830]: 12a
+                    - generic [ref=e832]: 13a
+                    - generic [ref=e834]: 14a
+                    - generic [ref=e836]: 15a
+                    - generic [ref=e838]: 16a
+                    - generic [ref=e840]: 17a
+                    - generic [ref=e842]: 18a
+                    - generic [ref=e844]: 19a
+                    - generic [ref=e846]: 20a
+                  - generic [ref=e847]:
+                    - generic [ref=e849]: "0"
+                    - generic [ref=e851]: 150k
+                    - generic [ref=e853]: 300k
+                    - generic [ref=e855]: 450k
+                    - generic [ref=e857]: 600k
+              - generic [ref=e858]:
+                - paragraph [ref=e859]: Proyección a 20 años
+                - generic [ref=e860]:
+                  - generic [ref=e861]:
+                    - paragraph [ref=e862]: Aportado total
+                    - paragraph [ref=e863]: 232.304 €
+                  - generic [ref=e864]:
+                    - paragraph [ref=e865]: Pesimista
+                    - paragraph [ref=e866]: 261.672 €
+                  - generic [ref=e867]:
+                    - paragraph [ref=e868]: Base
+                    - paragraph [ref=e869]: 372.994 €
+                  - generic [ref=e870]:
+                    - paragraph [ref=e871]: Optimista
+                    - paragraph [ref=e872]: 563.197 €
+                  - generic [ref=e873]:
+                    - paragraph [ref=e874]: x ganado (base)
+                    - paragraph [ref=e875]: ×1.6
+            - generic [ref=e876]:
+              - heading "Seguimiento del rebalanceo" [level=3] [ref=e877]
+              - paragraph [ref=e878]: Peso actual vs objetivo del plan de ahorro activo. Alerta si la desviacion supera ±5 pp.
+              - generic [ref=e879]:
+                - generic [ref=e880]:
+                  - generic [ref=e881]: "7"
+                  - generic [ref=e882]: 7 activos con desviacion superior a ±5 pp
+                - generic [ref=e883]:
+                  - generic [ref=e884]:
+                    - generic [ref=e885]:
+                      - generic [ref=e886]:
+                        - paragraph [ref=e887]: iShares Core S&P 500 UCITS ETF
+                        - paragraph [ref=e888]: SXR8
+                      - generic [ref=e890]: Infraponderar
+                    - generic [ref=e894]:
+                      - generic [ref=e895]: "Actual: 17.98%"
+                      - generic [ref=e896]: "-13.27% desviacion"
+                      - generic [ref=e897]: "Objetivo: 31.25%"
+                  - generic [ref=e898]:
+                    - generic [ref=e899]:
+                      - generic [ref=e900]:
+                        - paragraph [ref=e901]: iShares NASDAQ 100 UCITS ETF
+                        - paragraph [ref=e902]: CNDX
+                      - generic [ref=e904]: Infraponderar
+                    - generic [ref=e908]:
+                      - generic [ref=e909]: "Actual: 6.06%"
+                      - generic [ref=e910]: "-6.44% desviacion"
+                      - generic [ref=e911]: "Objetivo: 12.50%"
+                  - generic [ref=e912]:
+                    - generic [ref=e913]:
+                      - generic [ref=e914]:
+                        - paragraph [ref=e915]: Vanguard FTSE Emerging Markets UCITS ETF
+                        - paragraph [ref=e916]: VFEM
+                      - generic [ref=e918]: Infraponderar
+                    - generic [ref=e922]:
+                      - generic [ref=e923]: "Actual: 5.59%"
+                      - generic [ref=e924]: "-13.16% desviacion"
+                      - generic [ref=e925]: "Objetivo: 18.75%"
+                  - generic [ref=e926]:
+                    - generic [ref=e927]:
+                      - generic [ref=e928]:
+                        - paragraph [ref=e929]: Xtrackers MSCI Europe Small Cap ETF
+                        - paragraph [ref=e930]: XXSC
+                      - generic [ref=e932]: Infraponderar
+                    - generic [ref=e936]:
+                      - generic [ref=e937]: "Actual: 2.35%"
+                      - generic [ref=e938]: "-7.03% desviacion"
+                      - generic [ref=e939]: "Objetivo: 9.38%"
+                  - generic [ref=e940]:
+                    - generic [ref=e941]:
+                      - generic [ref=e942]:
+                        - paragraph [ref=e943]: WisdomTree Europe Defence UCITS ETF
+                        - paragraph [ref=e944]: WDEF
+                      - generic [ref=e946]: Infraponderar
+                    - generic [ref=e950]:
+                      - generic [ref=e951]: "Actual: 0.81%"
+                      - generic [ref=e952]: "-8.56% desviacion"
+                      - generic [ref=e953]: "Objetivo: 9.38%"
+                  - generic [ref=e954]:
+                    - generic [ref=e955]:
+                      - generic [ref=e956]:
+                        - paragraph [ref=e957]: Xtrackers MSCI World Industrials ETF
+                        - paragraph [ref=e958]: XWIN
+                      - generic [ref=e960]: Infraponderar
+                    - generic [ref=e964]:
+                      - generic [ref=e965]: "Actual: 0.55%"
+                      - generic [ref=e966]: "-5.70% desviacion"
+                      - generic [ref=e967]: "Objetivo: 6.25%"
+                  - generic [ref=e968]:
+                    - generic [ref=e969]:
+                      - generic [ref=e970]:
+                        - paragraph [ref=e971]: iShares Global Clean Energy Transition ETF
+                        - paragraph [ref=e972]: STCE
+                      - generic [ref=e974]: Infraponderar
+                    - generic [ref=e978]:
+                      - generic [ref=e979]: "Actual: 0.59%"
+                      - generic [ref=e980]: "-5.66% desviacion"
+                      - generic [ref=e981]: "Objetivo: 6.25%"
+                  - generic [ref=e982]:
+                    - generic [ref=e984]:
+                      - paragraph [ref=e985]: iShares Physical Gold ETC
+                      - paragraph [ref=e986]: IGLN
+                    - generic [ref=e990]:
+                      - generic [ref=e991]: "Actual: 3.54%"
+                      - generic [ref=e992]: +0.41% desviacion
+                      - generic [ref=e993]: "Objetivo: 3.13%"
+                  - generic [ref=e994]:
+                    - generic [ref=e996]:
+                      - paragraph [ref=e997]: iShares Physical Silver ETC
+                      - paragraph [ref=e998]: ISLN
+                    - generic [ref=e1002]:
+                      - generic [ref=e1003]: "Actual: 3.38%"
+                      - generic [ref=e1004]: +0.25% desviacion
+                      - generic [ref=e1005]: "Objetivo: 3.13%"
+                - paragraph [ref=e1006]: El peso objetivo se calcula proporcionalmente al importe mensual del plan de ahorro activo. Se muestra alerta cuando la desviacion supera ±5 puntos porcentuales.
+            - generic [ref=e1007]:
+              - paragraph [ref=e1008]: Filtra los gráficos por año
+              - generic [ref=e1009]:
+                - generic [ref=e1010]: "Periodo:"
+                - button "Total" [ref=e1011] [cursor=pointer]
+                - button "2024" [ref=e1012] [cursor=pointer]
+                - button "2025" [ref=e1013] [cursor=pointer]
+                - button "2026" [pressed] [ref=e1014] [cursor=pointer]
+            - generic [ref=e1015]:
+              - generic [ref=e1016]:
+                - heading "P&L por posición" [level=4] [ref=e1017]
+                - application [ref=e1020] [cursor=pointer]:
+                  - generic [ref=e1076]:
+                    - generic [ref=e1077]:
+                      - generic [ref=e1079]: "-75,00 €"
+                      - generic [ref=e1081]: 0,00 €
+                      - generic [ref=e1083]: 75,00 €
+                      - generic [ref=e1085]: 150,00 €
+                      - generic [ref=e1087]: 225,00 €
+                    - generic [ref=e1088]:
+                      - generic [ref=e1090]: GOOGL
+                      - generic [ref=e1092]: ARKI
+                      - generic [ref=e1094]: TSM
+                      - generic [ref=e1096]: XAIX
+                      - generic [ref=e1098]: WDEF
+                      - generic [ref=e1100]: ECOM
+                      - generic [ref=e1102]: PYPL
+                      - generic [ref=e1104]: 1810.HK
+              - generic [ref=e1105]:
+                - heading "Distribución por categoría" [level=4] [ref=e1106]
+                - generic [ref=e1107]:
+                  - paragraph [ref=e1108]: Por tipo de activo
+                  - generic [ref=e1109]:
+                    - generic [ref=e1111]:
+                      - generic [ref=e1114]: ETF Índice
+                      - generic [ref=e1115]:
+                        - generic [ref=e1116]: 7160,68 €
+                        - generic [ref=e1117]: 39.4%
+                    - generic [ref=e1121]:
+                      - generic [ref=e1124]: ETF Bono
+                      - generic [ref=e1125]:
+                        - generic [ref=e1126]: 4968,10 €
+                        - generic [ref=e1127]: 27.3%
+                    - generic [ref=e1131]:
+                      - generic [ref=e1134]: Acción USA
+                      - generic [ref=e1135]:
+                        - generic [ref=e1136]: 2715,70 €
+                        - generic [ref=e1137]: 14.9%
+                    - generic [ref=e1141]:
+                      - generic [ref=e1144]: ETF Temático
+                      - generic [ref=e1145]:
+                        - generic [ref=e1146]: 1726,15 €
+                        - generic [ref=e1147]: 9.5%
+                    - generic [ref=e1151]:
+                      - generic [ref=e1154]: ETC Commodity
+                      - generic [ref=e1155]:
+                        - generic [ref=e1156]: 1257,81 €
+                        - generic [ref=e1157]: 6.9%
+                    - generic [ref=e1161]:
+                      - generic [ref=e1164]: Acción Asia
+                      - generic [ref=e1165]:
+                        - generic [ref=e1166]: 355,39 €
+                        - generic [ref=e1167]: 2.0%
+              - generic [ref=e1170]:
+                - heading "Distribución geográfica" [level=4] [ref=e1171]
+                - generic [ref=e1172]:
+                  - paragraph [ref=e1173]: Por región
+                  - generic [ref=e1174]:
+                    - generic [ref=e1176]:
+                      - generic [ref=e1179]: USA
+                      - generic [ref=e1180]:
+                        - generic [ref=e1181]: 12.297,50 €
+                        - generic [ref=e1182]: 67.6%
+                    - generic [ref=e1186]:
+                      - generic [ref=e1189]: Global
+                      - generic [ref=e1190]:
+                        - generic [ref=e1191]: 3789,63 €
+                        - generic [ref=e1192]: 20.8%
+                    - generic [ref=e1196]:
+                      - generic [ref=e1199]: Emergentes
+                      - generic [ref=e1200]:
+                        - generic [ref=e1201]: 1016,14 €
+                        - generic [ref=e1202]: 5.6%
+                    - generic [ref=e1206]:
+                      - generic [ref=e1209]: Europa
+                      - generic [ref=e1210]:
+                        - generic [ref=e1211]: 574,55 €
+                        - generic [ref=e1212]: 3.2%
+                    - generic [ref=e1216]:
+                      - generic [ref=e1219]: China
+                      - generic [ref=e1220]:
+                        - generic [ref=e1221]: 355,39 €
+                        - generic [ref=e1222]: 2.0%
+                    - generic [ref=e1226]:
+                      - generic [ref=e1229]: Taiwan
+                      - generic [ref=e1230]:
+                        - generic [ref=e1231]: 150,63 €
+                        - generic [ref=e1232]: 0.8%
+              - generic [ref=e1235]:
+                - heading "Distribución sectorial" [level=4] [ref=e1236]
+                - generic [ref=e1237]:
+                  - paragraph [ref=e1238]: Por sector
+                  - generic [ref=e1239]:
+                    - generic [ref=e1241]:
+                      - generic [ref=e1244]: Renta Variable
+                      - generic [ref=e1245]:
+                        - generic [ref=e1246]: 5632,56 €
+                        - generic [ref=e1247]: 31.0%
+                    - generic [ref=e1251]:
+                      - generic [ref=e1254]: Bonos Corporativos
+                      - generic [ref=e1255]:
+                        - generic [ref=e1256]: 4968,10 €
+                        - generic [ref=e1257]: 27.3%
+                    - generic [ref=e1261]:
+                      - generic [ref=e1264]: Tecnología
+                      - generic [ref=e1265]:
+                        - generic [ref=e1266]: 1204,07 €
+                        - generic [ref=e1267]: 6.6%
+                    - generic [ref=e1271]:
+                      - generic [ref=e1274]: Semiconductores / IA
+                      - generic [ref=e1275]:
+                        - generic [ref=e1276]: 822,50 €
+                        - generic [ref=e1277]: 4.5%
+                    - generic [ref=e1281]:
+                      - generic [ref=e1284]: Inteligencia Artificial
+                      - generic [ref=e1285]:
+                        - generic [ref=e1286]: 706,71 €
+                        - generic [ref=e1287]: 3.9%
+                    - generic [ref=e1291]:
+                      - generic [ref=e1294]: Vehículo Eléctrico
+                      - generic [ref=e1295]:
+                        - generic [ref=e1296]: 704,11 €
+                        - generic [ref=e1297]: 3.9%
+                    - generic [ref=e1301]:
+                      - generic [ref=e1304]: Oro Físico
+                      - generic [ref=e1305]:
+                        - generic [ref=e1306]: 643,55 €
+                        - generic [ref=e1307]: 3.5%
+                    - generic [ref=e1311]:
+                      - generic [ref=e1314]: Plata Física
+                      - generic [ref=e1315]:
+                        - generic [ref=e1316]: 614,25 €
+                        - generic [ref=e1317]: 3.4%
+                    - generic [ref=e1321]:
+                      - generic [ref=e1324]: Tecnología / Cloud
+                      - generic [ref=e1325]:
+                        - generic [ref=e1326]: 452,29 €
+                        - generic [ref=e1327]: 2.5%
+                    - generic [ref=e1331]:
+                      - generic [ref=e1334]: Small Cap
+                      - generic [ref=e1335]:
+                        - generic [ref=e1336]: 426,77 €
+                        - generic [ref=e1337]: 2.3%
+                    - generic [ref=e1341]:
+                      - generic [ref=e1344]: Innovación Disruptiva
+                      - generic [ref=e1345]:
+                        - generic [ref=e1346]: 386,29 €
+                        - generic [ref=e1347]: 2.1%
+                    - generic [ref=e1351]:
+                      - generic [ref=e1354]: E-Commerce
+                      - generic [ref=e1355]:
+                        - generic [ref=e1356]: 271,40 €
+                        - generic [ref=e1357]: 1.5%
+                    - generic [ref=e1361]:
+                      - generic [ref=e1364]: Redes Sociales / IA
+                      - generic [ref=e1365]:
+                        - generic [ref=e1366]: 265,69 €
+                        - generic [ref=e1367]: 1.5%
+                    - generic [ref=e1371]:
+                      - generic [ref=e1374]: E-Commerce / Cloud
+                      - generic [ref=e1375]:
+                        - generic [ref=e1376]: 178,84 €
+                        - generic [ref=e1377]: 1.0%
+                    - generic [ref=e1381]:
+                      - generic [ref=e1384]: Semiconductores
+                      - generic [ref=e1385]:
+                        - generic [ref=e1386]: 176,55 €
+                        - generic [ref=e1387]: 1.0%
+                    - generic [ref=e1391]:
+                      - generic [ref=e1394]: Movilidad / Plataformas
+                      - generic [ref=e1395]:
+                        - generic [ref=e1396]: 175,68 €
+                        - generic [ref=e1397]: 1.0%
+                    - generic [ref=e1401]:
+                      - generic [ref=e1404]: Defensa
+                      - generic [ref=e1405]:
+                        - generic [ref=e1406]: 147,78 €
+                        - generic [ref=e1407]: 0.8%
+                    - generic [ref=e1411]:
+                      - generic [ref=e1414]: Energía Limpia
+                      - generic [ref=e1415]:
+                        - generic [ref=e1416]: 106,82 €
+                        - generic [ref=e1417]: 0.6%
+                    - generic [ref=e1421]:
+                      - generic [ref=e1424]: Computación Cuántica
+                      - generic [ref=e1425]:
+                        - generic [ref=e1426]: 101,35 €
+                        - generic [ref=e1427]: 0.6%
+                    - generic [ref=e1431]:
+                      - generic [ref=e1434]: Industrial
+                      - generic [ref=e1435]:
+                        - generic [ref=e1436]: 100,72 €
+                        - generic [ref=e1437]: 0.6%
+                    - generic [ref=e1441]:
+                      - generic [ref=e1444]: Fintech / Pagos
+                      - generic [ref=e1445]:
+                        - generic [ref=e1446]: 64,05 €
+                        - generic [ref=e1447]: 0.4%
+                    - generic [ref=e1451]:
+                      - generic [ref=e1454]: Salud / Seguros
+                      - generic [ref=e1455]:
+                        - generic [ref=e1456]: 27,33 €
+                        - generic [ref=e1457]: 0.2%
+                    - generic [ref=e1461]:
+                      - generic [ref=e1464]: IA y Robótica
+                      - generic [ref=e1465]:
+                        - generic [ref=e1466]: 6,43 €
+                        - generic [ref=e1467]: 0.0%
+              - generic [ref=e1470]:
+                - heading "Exposición a divisa" [level=4] [ref=e1471]
+                - generic [ref=e1472]:
+                  - paragraph [ref=e1473]: Por moneda (valor actual)
+                  - generic [ref=e1476]:
+                    - generic [ref=e1479]: EUR
+                    - generic [ref=e1480]:
+                      - generic [ref=e1481]: 18.183,83 €
+                      - generic [ref=e1482]: 100.0%
+              - generic [ref=e1485]:
+                - heading "Distribución por nivel de riesgo" [level=4] [ref=e1486]
+                - generic [ref=e1487]:
+                  - paragraph [ref=e1488]: Por perfil de riesgo
+                  - generic [ref=e1489]:
+                    - generic [ref=e1491]:
+                      - generic [ref=e1494]: Muy bajo
+                      - generic [ref=e1495]:
+                        - generic [ref=e1496]: 4968,10 €
+                        - generic [ref=e1497]: 27.3%
+                    - generic [ref=e1501]:
+                      - generic [ref=e1504]: Bajo
+                      - generic [ref=e1505]:
+                        - generic [ref=e1506]: 5259,97 €
+                        - generic [ref=e1507]: 28.9%
+                    - generic [ref=e1511]:
+                      - generic [ref=e1514]: Medio
+                      - generic [ref=e1515]:
+                        - generic [ref=e1516]: 4065,48 €
+                        - generic [ref=e1517]: 22.4%
+                    - generic [ref=e1521]:
+                      - generic [ref=e1524]: Alto
+                      - generic [ref=e1525]:
+                        - generic [ref=e1526]: 2944,79 €
+                        - generic [ref=e1527]: 16.2%
+                    - generic [ref=e1531]:
+                      - generic [ref=e1534]: Muy alto
+                      - generic [ref=e1535]:
+                        - generic [ref=e1536]: 945,50 €
+                        - generic [ref=e1537]: 5.2%
+              - generic [ref=e1540]:
+                - heading "Aportaciones mensuales al plan" [level=4] [ref=e1541]
+                - generic [ref=e1542]:
+                  - paragraph [ref=e1543]: Contribución mensual — Plan de ahorro
+                  - application [ref=e1546] [cursor=pointer]:
+                    - generic [ref=e1773]:
+                      - generic [ref=e1774]:
+                        - generic [ref=e1776]: ene 2026
+                        - generic [ref=e1778]: feb 2026
+                        - generic [ref=e1780]: mar 2026
+                        - generic [ref=e1782]: abr 2026
+                      - generic [ref=e1783]:
+                        - generic [ref=e1785]: 0€
+                        - generic [ref=e1787]: 200€
+                        - generic [ref=e1789]: 400€
+                        - generic [ref=e1791]: 600€
+                        - generic [ref=e1793]: 800€
+            - generic [ref=e1794]:
+              - heading "Retorno mensual" [level=3] [ref=e1795]
+              - paragraph [ref=e1796]: Rendimiento de la cartera (sin efectivo) por mes
+              - generic [ref=e1797]:
+                - generic [ref=e1798]:
+                  - generic [ref=e1799]: Ene
+                  - generic [ref=e1800]: Feb
+                  - generic [ref=e1801]: Mar
+                  - generic [ref=e1802]: Abr
+                  - generic [ref=e1803]: May
+                  - generic [ref=e1804]: Jun
+                  - generic [ref=e1805]: Jul
+                  - generic [ref=e1806]: Ago
+                  - generic [ref=e1807]: Sep
+                  - generic [ref=e1808]: Oct
+                  - generic [ref=e1809]: Nov
+                  - generic [ref=e1810]: Dic
+                - generic [ref=e1811]:
+                  - generic [ref=e1812]:
+                    - generic [ref=e1813]: "2024"
+                    - 'generic "Ene 2024: sin datos" [ref=e1814]': —
+                    - 'generic "Feb 2024: sin datos" [ref=e1815]': —
+                    - 'generic "Mar 2024: sin datos" [ref=e1816]': —
+                    - 'generic "Abr 2024: sin datos" [ref=e1817]': —
+                    - 'generic "May 2024: sin datos" [ref=e1818]': —
+                    - 'generic "Jun 2024: sin datos" [ref=e1819]': —
+                    - 'generic "Jul 2024: sin datos" [ref=e1820]': —
+                    - 'generic "Ago 2024: sin datos" [ref=e1821]': —
+                    - 'generic "Sep 2024: sin datos" [ref=e1822]': —
+                    - 'generic "Oct 2024: sin datos" [ref=e1823]': —
+                    - 'generic "Nov 2024: sin datos" [ref=e1824]': —
+                    - 'generic "Dic 2024: 7.89%" [ref=e1825]': +7.9%
+                  - generic [ref=e1826]:
+                    - generic [ref=e1827]: "2025"
+                    - 'generic "Ene 2025: -3.59%" [ref=e1828]': "-3.6%"
+                    - 'generic "Feb 2025: -10.66%" [ref=e1829]': "-10.7%"
+                    - 'generic "Mar 2025: -9.64%" [ref=e1830]': "-9.6%"
+                    - 'generic "Abr 2025: 8.28%" [ref=e1831]': +8.3%
+                    - 'generic "May 2025: 6.29%" [ref=e1832]': +6.3%
+                    - 'generic "Jun 2025: 7.17%" [ref=e1833]': +7.2%
+                    - 'generic "Jul 2025: 0.04%" [ref=e1834]': +0.0%
+                    - 'generic "Ago 2025: 3.92%" [ref=e1835]': +3.9%
+                    - 'generic "Sep 2025: 7.06%" [ref=e1836]': +7.1%
+                    - 'generic "Oct 2025: -0.15%" [ref=e1837]': "-0.1%"
+                    - 'generic "Nov 2025: -1.45%" [ref=e1838]': "-1.4%"
+                    - 'generic "Dic 2025: -14.19%" [ref=e1839]': "-14.2%"
+                  - generic [ref=e1840]:
+                    - generic [ref=e1841]: "2026"
+                    - 'generic "Ene 2026: 1.12%" [ref=e1842]': +1.1%
+                    - 'generic "Feb 2026: -2.19%" [ref=e1843]': "-2.2%"
+                    - 'generic "Mar 2026: 0.77%" [ref=e1844]': +0.8%
+                    - 'generic "Abr 2026: 2.86%" [ref=e1845]': +2.9%
+                    - 'generic "May 2026: sin datos" [ref=e1846]': —
+                    - 'generic "Jun 2026: sin datos" [ref=e1847]': —
+                    - 'generic "Jul 2026: sin datos" [ref=e1848]': —
+                    - 'generic "Ago 2026: sin datos" [ref=e1849]': —
+                    - 'generic "Sep 2026: sin datos" [ref=e1850]': —
+                    - 'generic "Oct 2026: sin datos" [ref=e1851]': —
+                    - 'generic "Nov 2026: sin datos" [ref=e1852]': —
+                    - 'generic "Dic 2026: sin datos" [ref=e1853]': —
+                - generic [ref=e1854]:
+                  - generic [ref=e1855]: "Retorno:"
+                  - generic [ref=e1856]: ">+2%"
+                  - generic [ref=e1858]: +0.5% a +2%
+                  - generic [ref=e1860]: ±0.5%
+                  - generic [ref=e1862]: "-0.5% a -2%"
+                  - generic [ref=e1864]: <-2%
+    - button "Captura rápida de nota" [ref=e600] [cursor=pointer]:
+      - img [ref=e601]
+  - alert [ref=e603]
+  - generic [ref=e604]: 0€

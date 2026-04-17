@@ -100,6 +100,7 @@ export function MetricasAvanzadasPanel() {
   const getAnnualizedVolatility = usePatrimonioStore((s) => s.getAnnualizedVolatility);
   const getSharpeRatio = usePatrimonioStore((s) => s.getSharpeRatio);
   const getMaxDrawdown = usePatrimonioStore((s) => s.getMaxDrawdown);
+  const snapshots = usePatrimonioStore((s) => s.snapshots);
 
   const twr = getTWR();
   const cagr = getCAGR();
@@ -108,6 +109,18 @@ export function MetricasAvanzadasPanel() {
   const maxDrawdown = getMaxDrawdown();
 
   const sharpeMeta = sharpeLabel(sharpe);
+
+  const cagrPeriod = (() => {
+    if (snapshots.length < 2) return null;
+    const sorted = [...snapshots].sort((a, b) => a.snapshot_date.localeCompare(b.snapshot_date));
+    const first = new Date(sorted[0].snapshot_date);
+    const last = new Date(sorted[sorted.length - 1].snapshot_date);
+    const days = (last.getTime() - first.getTime()) / (1000 * 60 * 60 * 24);
+    const years = days / 365.25;
+    const firstLabel = first.toLocaleDateString("es-ES", { month: "short", year: "numeric" });
+    const lastLabel = last.toLocaleDateString("es-ES", { month: "short", year: "numeric" });
+    return `${firstLabel} → ${lastLabel} · ${years.toFixed(1)} años`;
+  })();
 
   return (
     <div className="rounded-xl border border-border bg-card p-5">
@@ -129,7 +142,7 @@ export function MetricasAvanzadasPanel() {
         <MetricCard
           label="CAGR"
           value={fmtPct(cagr)}
-          subtext="Rentabilidad anualizada compuesta"
+          subtext={cagrPeriod ?? "Rentabilidad anualizada compuesta"}
           accentColor={cagr !== null ? (cagr >= 0 ? C.green : C.red) : undefined}
         />
         <MetricCard

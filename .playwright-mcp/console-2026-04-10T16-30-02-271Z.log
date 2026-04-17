@@ -1,0 +1,134 @@
+[    2869ms] [WARNING] The width(-1) and height(-1) of chart should be greater than 0,
+       please check the style of container, or the props width(100%) and height(100%),
+       or add a minWidth(0) or minHeight(undefined) or use aspect(undefined) to control the
+       height and width. @ https://arkhos.pelayodelafuente.es/_next/static/chunks/c4382d094f6ff0af.js:0
+[    3124ms] [ERROR] Manifest: Line: 1, column: 1, Syntax error. @ https://arkhos.pelayodelafuente.es/manifest.json:0
+[  276523ms] TypeError: Failed to execute 'contains' on 'Node': parameter 1 is not of type 'Node'.
+    at onMouseLeave (https://arkhos.pelayodelafuente.es/_next/static/chunks/e4f0acbe9c1ad26d.js:1:56116)
+    at sY (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:161828)
+    at https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:167716
+    at tD (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:30323)
+    at s3 (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:163061)
+    at fC (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:199027)
+    at fN (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:198942)
+[  780369ms] TypeError: Failed to execute 'contains' on 'Node': parameter 1 is not of type 'Node'.
+    at onMouseLeave (https://arkhos.pelayodelafuente.es/_next/static/chunks/e4f0acbe9c1ad26d.js:1:56116)
+    at sY (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:161828)
+    at https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:167716
+    at tD (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:30323)
+    at s3 (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:163061)
+    at fC (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:199027)
+    at fN (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:198942)
+[  820768ms] TypeError: Failed to execute 'contains' on 'Node': parameter 1 is not of type 'Node'.
+    at onMouseLeave (https://arkhos.pelayodelafuente.es/_next/static/chunks/e4f0acbe9c1ad26d.js:1:56116)
+    at sY (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:161828)
+    at https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:167716
+    at tD (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:30323)
+    at s3 (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:163061)
+    at fC (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:199027)
+    at fN (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:198942)
+[  836913ms] TypeError: Failed to execute 'contains' on 'Node': parameter 1 is not of type 'Node'.
+    at onMouseLeave (https://arkhos.pelayodelafuente.es/_next/static/chunks/e4f0acbe9c1ad26d.js:1:56116)
+    at sY (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:161828)
+    at https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:167716
+    at tD (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:30323)
+    at s3 (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:163061)
+    at fC (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:199027)
+    at fN (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:198942)
+[  845528ms] TypeError: Failed to execute 'contains' on 'Node': parameter 1 is not of type 'Node'.
+    at onMouseLeave (https://arkhos.pelayodelafuente.es/_next/static/chunks/e4f0acbe9c1ad26d.js:1:56116)
+    at sY (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:161828)
+    at https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:167716
+    at tD (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:30323)
+    at s3 (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:163061)
+    at fC (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:199027)
+    at fN (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:198942)
+[  926389ms] TypeError: Failed to execute 'contains' on 'Node': parameter 1 is not of type 'Node'.
+    at onMouseLeave (https://arkhos.pelayodelafuente.es/_next/static/chunks/e4f0acbe9c1ad26d.js:1:56116)
+    at sY (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:161828)
+    at https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:167716
+    at tD (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:30323)
+    at s3 (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:163061)
+    at fC (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:199027)
+    at fN (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:198942)
+[  984279ms] TypeError: Failed to execute 'contains' on 'Node': parameter 1 is not of type 'Node'.
+    at onMouseLeave (https://arkhos.pelayodelafuente.es/_next/static/chunks/e4f0acbe9c1ad26d.js:1:56116)
+    at sY (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:161828)
+    at https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:167716
+    at tD (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:30323)
+    at s3 (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:163061)
+    at fC (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:199027)
+    at fN (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:198942)
+[  992767ms] [WARNING] The width(-1) and height(-1) of chart should be greater than 0,
+       please check the style of container, or the props width(100%) and height(100%),
+       or add a minWidth(0) or minHeight(undefined) or use aspect(undefined) to control the
+       height and width. @ https://arkhos.pelayodelafuente.es/_next/static/chunks/c4382d094f6ff0af.js:0
+[  992933ms] [ERROR] Manifest: Line: 1, column: 1, Syntax error. @ https://arkhos.pelayodelafuente.es/manifest.json:0
+[ 1104685ms] [ERROR] Manifest: Line: 1, column: 1, Syntax error. @ https://arkhos.pelayodelafuente.es/manifest.json:0
+[ 1105648ms] [WARNING] The width(-1) and height(-1) of chart should be greater than 0,
+       please check the style of container, or the props width(100%) and height(100%),
+       or add a minWidth(0) or minHeight(undefined) or use aspect(undefined) to control the
+       height and width. @ https://arkhos.pelayodelafuente.es/_next/static/chunks/c4382d094f6ff0af.js:0
+[ 1105649ms] [WARNING] The width(-1) and height(-1) of chart should be greater than 0,
+       please check the style of container, or the props width(100%) and height(100%),
+       or add a minWidth(0) or minHeight(undefined) or use aspect(undefined) to control the
+       height and width. @ https://arkhos.pelayodelafuente.es/_next/static/chunks/c4382d094f6ff0af.js:0
+[ 1109666ms] TypeError: Failed to execute 'contains' on 'Node': parameter 1 is not of type 'Node'.
+    at onMouseLeave (https://arkhos.pelayodelafuente.es/_next/static/chunks/e4f0acbe9c1ad26d.js:1:56116)
+    at sY (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:161828)
+    at https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:167716
+    at tD (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:30323)
+    at s3 (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:163061)
+    at fC (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:199027)
+    at fN (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:198942)
+[ 1110542ms] [ERROR] Manifest: Line: 1, column: 1, Syntax error. @ https://arkhos.pelayodelafuente.es/manifest.json:0
+[ 1112149ms] [WARNING] The width(-1) and height(-1) of chart should be greater than 0,
+       please check the style of container, or the props width(100%) and height(100%),
+       or add a minWidth(0) or minHeight(undefined) or use aspect(undefined) to control the
+       height and width. @ https://arkhos.pelayodelafuente.es/_next/static/chunks/c4382d094f6ff0af.js:0
+[ 1210554ms] TypeError: Failed to execute 'contains' on 'Node': parameter 1 is not of type 'Node'.
+    at onMouseLeave (https://arkhos.pelayodelafuente.es/_next/static/chunks/e4f0acbe9c1ad26d.js:1:56116)
+    at sY (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:161828)
+    at https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:167716
+    at tD (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:30323)
+    at s3 (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:163061)
+    at fC (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:199027)
+    at fN (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:198942)
+[ 1266598ms] TypeError: Failed to execute 'contains' on 'Node': parameter 1 is not of type 'Node'.
+    at onMouseLeave (https://arkhos.pelayodelafuente.es/_next/static/chunks/e4f0acbe9c1ad26d.js:1:56116)
+    at sY (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:161828)
+    at https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:167716
+    at tD (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:30323)
+    at s3 (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:163061)
+    at fC (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:199027)
+    at fN (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:198942)
+[ 1273020ms] TypeError: Failed to execute 'contains' on 'Node': parameter 1 is not of type 'Node'.
+    at onMouseLeave (https://arkhos.pelayodelafuente.es/_next/static/chunks/e4f0acbe9c1ad26d.js:1:56116)
+    at sY (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:161828)
+    at https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:167716
+    at tD (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:30323)
+    at s3 (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:163061)
+    at fC (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:199027)
+    at fN (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:198942)
+[ 1371161ms] TypeError: Failed to execute 'contains' on 'Node': parameter 1 is not of type 'Node'.
+    at onMouseLeave (https://arkhos.pelayodelafuente.es/_next/static/chunks/e4f0acbe9c1ad26d.js:1:56116)
+    at sY (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:161828)
+    at https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:167716
+    at tD (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:30323)
+    at s3 (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:163061)
+    at fC (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:199027)
+    at fN (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:198942)
+[ 1377335ms] [ERROR] Manifest: Line: 1, column: 1, Syntax error. @ https://arkhos.pelayodelafuente.es/manifest.json:0
+[ 1377494ms] [WARNING] The width(-1) and height(-1) of chart should be greater than 0,
+       please check the style of container, or the props width(100%) and height(100%),
+       or add a minWidth(0) or minHeight(undefined) or use aspect(undefined) to control the
+       height and width. @ https://arkhos.pelayodelafuente.es/_next/static/chunks/c4382d094f6ff0af.js:0
+[ 1377773ms] [ERROR] Manifest: Line: 1, column: 1, Syntax error. @ https://arkhos.pelayodelafuente.es/manifest.json:0
+[ 1684488ms] TypeError: Failed to execute 'contains' on 'Node': parameter 1 is not of type 'Node'.
+    at onMouseLeave (https://arkhos.pelayodelafuente.es/_next/static/chunks/e4f0acbe9c1ad26d.js:1:56116)
+    at sY (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:161828)
+    at https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:167716
+    at tD (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:30323)
+    at s3 (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:163061)
+    at fC (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:199027)
+    at fN (https://arkhos.pelayodelafuente.es/_next/static/chunks/8e262c9e9a55d3b7.js:1:198942)

@@ -95,7 +95,7 @@ export function PassiveIncomePanel() {
   }, [filteredIncome]);
 
   const recentIncome = useMemo(
-    () => [...filteredIncome].sort((a, b) => b.income_date.localeCompare(a.income_date)).slice(0, 5),
+    () => [...filteredIncome].sort((a, b) => b.income_date.localeCompare(a.income_date)),
     [filteredIncome]
   );
 
@@ -157,7 +157,7 @@ export function PassiveIncomePanel() {
       {/* Recent income list */}
       {recentIncome.length > 0 && (
         <div className="border-t border-border px-5 pb-5">
-          <p className="mb-3 pt-4 text-xs font-medium text-text-tertiary">Últimos ingresos</p>
+          <p className="mb-3 pt-4 text-xs font-medium text-text-tertiary">Todos los ingresos</p>
           <div className="space-y-2.5">
             {recentIncome.map((item) => {
               const asset = item.asset_id ? assetMap.get(item.asset_id) : null;
