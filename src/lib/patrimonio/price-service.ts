@@ -29,8 +29,9 @@ export const TICKER_CONFIG: Record<string, {
   // XXSC.DE (Xetra, EUR) — verificado 2026-04-17: precio 72.71€ ≈ TR 72.43€. Antes XXSC.L (GBX)
   'LU0322253906': { ticker: 'XXSC.DE',  currency: 'EUR', source: 'yahoo' },
 
-  // ETFs Londres en USD verificados via Yahoo Finance
-  'IE00B4ND3602': { ticker: 'IGLN.L',   currency: 'USD', source: 'yahoo' },
+  // PPFB.DE (Xetra, EUR) — iShares Physical Gold, ISIN IE00B4ND3602. Antes IGLN.L (USD)
+  'IE00B4ND3602': { ticker: 'PPFB.DE',  currency: 'EUR', source: 'yahoo' },
+  // ISLN.L (LSE, USD) — iShares Physical Silver, sin versión EUR en Yahoo
   'IE00B4NCWG09': { ticker: 'ISLN.L',   currency: 'USD', source: 'yahoo' },
   // XDWI.DE (Xetra, EUR) — verificado 2026-04-17: precio 73.32€ ≈ TR 73.21€. Antes XDWI.L (USD)
   'IE00BM67HV82': { ticker: 'XDWI.DE',  currency: 'EUR', source: 'yahoo' },
@@ -51,9 +52,10 @@ export const TICKER_CONFIG: Record<string, {
   'US91324P1021': { ticker: 'UNH',      currency: 'USD', source: 'finnhub' },
   'US0079031078': { ticker: 'AMD',      currency: 'USD', source: 'finnhub' },
 
-  // Acciones Hong Kong (HKD → EUR)
-  'CNE100000296': { ticker: '1211.HK',  currency: 'HKD', source: 'yahoo_hk' },
-  'KYG9830T1067': { ticker: '1810.HK',  currency: 'HKD', source: 'yahoo_hk' },
+  // BY6.F (Frankfurt, EUR) — BYD Co. Ltd., antes 1211.HK (HKD)
+  'CNE100000296': { ticker: 'BY6.F',    currency: 'EUR', source: 'yahoo' },
+  // 3CP.F (Frankfurt, EUR) — Xiaomi Corp., antes 1810.HK (HKD)
+  'KYG9830T1067': { ticker: '3CP.F',    currency: 'EUR', source: 'yahoo' },
 };
 
 // ---------------------------------------------------------------------------
