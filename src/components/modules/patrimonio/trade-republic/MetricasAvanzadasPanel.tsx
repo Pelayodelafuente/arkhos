@@ -85,13 +85,6 @@ function sharpeColor(s: number | null): string {
   return C.red;
 }
 
-function drawdownColor(dd: number | null): string {
-  if (dd === null) return C.gray;
-  if (dd > -5) return C.green;
-  if (dd > -15) return C.amber;
-  return C.red;
-}
-
 // ─── Panel ──────────────────────────────────────────────────────────────────
 
 export function MetricasAvanzadasPanel() {
@@ -99,14 +92,12 @@ export function MetricasAvanzadasPanel() {
   const getCAGR = usePatrimonioStore((s) => s.getCAGR);
   const getAnnualizedVolatility = usePatrimonioStore((s) => s.getAnnualizedVolatility);
   const getSharpeRatio = usePatrimonioStore((s) => s.getSharpeRatio);
-  const getMaxDrawdown = usePatrimonioStore((s) => s.getMaxDrawdown);
   const snapshots = usePatrimonioStore((s) => s.snapshots);
 
   const twr = getTWR();
   const cagr = getCAGR();
   const vol = getAnnualizedVolatility();
   const sharpe = getSharpeRatio();
-  const maxDrawdown = getMaxDrawdown();
 
   const sharpeMeta = sharpeLabel(sharpe);
 
@@ -132,7 +123,7 @@ export function MetricasAvanzadasPanel() {
           </p>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         <MetricCard
           label="TWR total"
           value={fmtPct(twr)}
@@ -158,12 +149,6 @@ export function MetricasAvanzadasPanel() {
           accentColor={sharpeColor(sharpe)}
           badge={sharpeMeta?.badge}
           badgeColor={sharpeMeta?.color}
-        />
-        <MetricCard
-          label="Max Drawdown"
-          value={maxDrawdown !== null ? `${maxDrawdown.toFixed(1)}%` : null}
-          subtext="Caída máxima desde pico histórico"
-          accentColor={drawdownColor(maxDrawdown)}
         />
       </div>
     </div>

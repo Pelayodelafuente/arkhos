@@ -418,22 +418,28 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
     const { snapshots } = get();
     if (snapshots.length < 2) return null;
     const sorted = [...snapshots].sort((a, b) => a.snapshot_date.localeCompare(b.snapshot_date));
-    // Use cashflow-adjusted values to avoid purchase-price revaluation inflating the "peak"
-    // We track the running invested amount and compare to investment value
-    let peak = 0;
+    // Build TWR curve (same logic as getTWR) then find max peak-to-trough on that curve.
+    // Using absolute value always rises with monthly contributions → always 0% drawdown.
+    let twr = 1;
+    let peak = 1;
     let maxDrawdown = 0;
-    for (const s of sorted) {
-      // Use total_invested as the "cost basis" reference for the peak, since we don't have
-      // real market prices historically. Compare against invested to get meaningful drawdown.
-      const invValue = s.total_value - s.cash_value;
-      if (invValue > peak) peak = invValue;
-      if (peak > 0) {
-        const dd = (invValue - peak) / peak;
-        if (dd < maxDrawdown) maxDrawdown = dd;
-      }
+    for (let i = 1; i < sorted.length; i++) {
+      const prev = sorted[i - 1];
+      const curr = sorted[i];
+      const prevInv = prev.total_value - prev.cash_value;
+      const currInv = curr.total_value - curr.cash_value;
+      const cashFlow = curr.total_invested - prev.total_invested;
+      const denominator = prevInv + cashFlow;
+      if (denominator <= 0) continue;
+      const periodReturn = currInv / denominator;
+      if (!isFinite(periodReturn) || Math.abs(periodReturn - 1) > 0.5) continue;
+      twr *= periodReturn;
+      if (twr > peak) peak = twr;
+      const dd = (twr - peak) / peak;
+      if (dd < maxDrawdown) maxDrawdown = dd;
     }
-    const result = maxDrawdown * 100; // percentage, negative
-    if (!isFinite(result)) return null;
+    const result = maxDrawdown * 100;
+    if (!isFinite(result) || result === 0) return result === 0 ? 0 : null;
     return result;
   },
 
