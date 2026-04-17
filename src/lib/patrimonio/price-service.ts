@@ -16,10 +16,10 @@ export const TICKER_CONFIG: Record<string, {
   'IE00BK5BR733': { ticker: 'VFEA.L',   currency: 'USD', source: 'yahoo' },
   'IE00B6R52259': { ticker: 'SSAC.AS',  currency: 'EUR', source: 'yahoo' },
   'IE00BGV5VN51': { ticker: 'XAIX.DE',  currency: 'EUR', source: 'yahoo' },
-  // ECOM: Stuttgart .SG sin histórico mensual; ECOM.L (LSE, USD) tiene 18 meses de histórico
-  'IE00BMH5XY61': { ticker: 'ECOM.L',          currency: 'USD', source: 'yahoo' },
-  // ARK AI: Stuttgart .SG sin histórico mensual; 2B76.DE (Xetra, EUR) tiene 18 meses de histórico
-  'IE0003A512E4': { ticker: '2B76.DE',          currency: 'EUR', source: 'yahoo' },
+  // ECOM: E61Z.DE (Xetra, EUR) — ticker verificado por ISIN IE00BMH5XY61, WKN A2QPBX
+  'IE00BMH5XY61': { ticker: 'E61Z.DE',         currency: 'EUR', source: 'yahoo' },
+  // AAKI.DE (Xetra, EUR) — ticker verificado por ISIN IE0003A512E4, WKN A408AX
+  'IE0003A512E4': { ticker: 'AAKI.DE',          currency: 'EUR', source: 'yahoo' },
   // WDEF: WDEF.L EUR → EUDF.DE EUR (Xetra, mismo precio ~32.90€)
   'IE0002Y8CX98': { ticker: 'EUDF.DE',  currency: 'EUR', source: 'yahoo' },
   // ARK Innovation UCITS ETF — ticker verificado via Yahoo search por ISIN
@@ -36,9 +36,8 @@ export const TICKER_CONFIG: Record<string, {
   // Xtrackers World Industrials — ticker verificado via Yahoo search por ISIN (no XDWD.L que es MSCI World)
   'IE00BM67HV82': { ticker: 'XDWI.L',   currency: 'USD', source: 'yahoo' },
 
-  // VDCP.L cotiza en GBP en LSE — Yahoo reporta 'USD' en metadata pero el precio
-  // es en GBP (verificado: precio ~47 GBP × 1.17 = ~55€ ≈ avg_buy_price real de 55.21€)
-  'IE00BGYWSW13': { ticker: 'VDCP.L',   currency: 'GBP', source: 'yahoo' },
+  // VCDE.DE (Xetra, EUR) — ticker verificado por ISIN IE00BGYWSW13, WKN A3ES6A
+  'IE00BGYWSW13': { ticker: 'VCDE.DE',  currency: 'EUR', source: 'yahoo' },
 
   // Acciones USA via Finnhub (USD → EUR)
   'US67066G1040': { ticker: 'NVDA',     currency: 'USD', source: 'finnhub' },

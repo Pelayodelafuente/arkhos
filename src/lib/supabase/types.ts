@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -45,6 +45,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "activity_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      asset_price_history: {
+        Row: {
+          created_at: string
+          id: string
+          isin: string
+          price_date: string
+          price_eur: number
+          source: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          isin: string
+          price_date: string
+          price_eur: number
+          source?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          isin?: string
+          price_date?: string
+          price_eur?: number
+          source?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asset_price_history_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -216,6 +254,53 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "expense_categories_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investment_platforms: {
+        Row: {
+          color: string
+          created_at: string | null
+          icon: string
+          id: string
+          is_active: boolean | null
+          name: string
+          notes: string | null
+          slug: string
+          sort_order: number | null
+          user_id: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string | null
+          icon?: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          notes?: string | null
+          slug: string
+          sort_order?: number | null
+          user_id: string
+        }
+        Update: {
+          color?: string
+          created_at?: string | null
+          icon?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          notes?: string | null
+          slug?: string
+          sort_order?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investment_platforms_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -466,6 +551,67 @@ export type Database = {
           },
         ]
       }
+      passive_income: {
+        Row: {
+          amount: number
+          asset_id: string | null
+          created_at: string | null
+          currency: string | null
+          id: string
+          income_date: string
+          notes: string | null
+          platform_id: string
+          type: Database["public"]["Enums"]["passive_income_type"]
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          asset_id?: string | null
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          income_date: string
+          notes?: string | null
+          platform_id: string
+          type: Database["public"]["Enums"]["passive_income_type"]
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          asset_id?: string | null
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          income_date?: string
+          notes?: string | null
+          platform_id?: string
+          type?: Database["public"]["Enums"]["passive_income_type"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "passive_income_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "portfolio_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "passive_income_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: false
+            referencedRelation: "investment_platforms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "passive_income_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       phase_tasks: {
         Row: {
           assigned_role: string | null
@@ -536,6 +682,223 @@ export type Database = {
             columns: ["phase_id"]
             isOneToOne: false
             referencedRelation: "project_phases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      portfolio_assets: {
+        Row: {
+          avg_buy_price: number | null
+          category: Database["public"]["Enums"]["asset_category"]
+          created_at: string | null
+          currency: string | null
+          current_price: number | null
+          current_price_eur: number | null
+          current_quantity: number | null
+          geographic_region: string | null
+          id: string
+          is_active: boolean | null
+          isin: string | null
+          name: string
+          notes: string | null
+          platform_id: string
+          price_updated_at: string | null
+          risk_level: Database["public"]["Enums"]["risk_level"] | null
+          sector: string | null
+          sort_order: number | null
+          ticker: string | null
+          total_invested: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          avg_buy_price?: number | null
+          category: Database["public"]["Enums"]["asset_category"]
+          created_at?: string | null
+          currency?: string | null
+          current_price?: number | null
+          current_price_eur?: number | null
+          current_quantity?: number | null
+          geographic_region?: string | null
+          id?: string
+          is_active?: boolean | null
+          isin?: string | null
+          name: string
+          notes?: string | null
+          platform_id: string
+          price_updated_at?: string | null
+          risk_level?: Database["public"]["Enums"]["risk_level"] | null
+          sector?: string | null
+          sort_order?: number | null
+          ticker?: string | null
+          total_invested?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          avg_buy_price?: number | null
+          category?: Database["public"]["Enums"]["asset_category"]
+          created_at?: string | null
+          currency?: string | null
+          current_price?: number | null
+          current_price_eur?: number | null
+          current_quantity?: number | null
+          geographic_region?: string | null
+          id?: string
+          is_active?: boolean | null
+          isin?: string | null
+          name?: string
+          notes?: string | null
+          platform_id?: string
+          price_updated_at?: string | null
+          risk_level?: Database["public"]["Enums"]["risk_level"] | null
+          sector?: string | null
+          sort_order?: number | null
+          ticker?: string | null
+          total_invested?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portfolio_assets_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: false
+            referencedRelation: "investment_platforms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portfolio_assets_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      portfolio_snapshots: {
+        Row: {
+          cash_value: number | null
+          created_at: string | null
+          id: string
+          pl_amount: number | null
+          pl_percentage: number | null
+          platform_id: string | null
+          snapshot_date: string
+          total_invested: number
+          total_value: number
+          user_id: string
+        }
+        Insert: {
+          cash_value?: number | null
+          created_at?: string | null
+          id?: string
+          pl_amount?: number | null
+          pl_percentage?: number | null
+          platform_id?: string | null
+          snapshot_date: string
+          total_invested: number
+          total_value: number
+          user_id: string
+        }
+        Update: {
+          cash_value?: number | null
+          created_at?: string | null
+          id?: string
+          pl_amount?: number | null
+          pl_percentage?: number | null
+          platform_id?: string | null
+          snapshot_date?: string
+          total_invested?: number
+          total_value?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portfolio_snapshots_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: false
+            referencedRelation: "investment_platforms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portfolio_snapshots_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      portfolio_transactions: {
+        Row: {
+          asset_id: string | null
+          created_at: string | null
+          currency: string | null
+          external_id: string | null
+          id: string
+          notes: string | null
+          platform_id: string
+          price_per_unit: number | null
+          quantity: number | null
+          source: string | null
+          total_amount: number
+          transaction_date: string
+          type: Database["public"]["Enums"]["transaction_type"]
+          user_id: string
+        }
+        Insert: {
+          asset_id?: string | null
+          created_at?: string | null
+          currency?: string | null
+          external_id?: string | null
+          id?: string
+          notes?: string | null
+          platform_id: string
+          price_per_unit?: number | null
+          quantity?: number | null
+          source?: string | null
+          total_amount: number
+          transaction_date: string
+          type: Database["public"]["Enums"]["transaction_type"]
+          user_id: string
+        }
+        Update: {
+          asset_id?: string | null
+          created_at?: string | null
+          currency?: string | null
+          external_id?: string | null
+          id?: string
+          notes?: string | null
+          platform_id?: string
+          price_per_unit?: number | null
+          quantity?: number | null
+          source?: string | null
+          total_amount?: number
+          transaction_date?: string
+          type?: Database["public"]["Enums"]["transaction_type"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portfolio_transactions_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "portfolio_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portfolio_transactions_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: false
+            referencedRelation: "investment_platforms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portfolio_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -895,6 +1258,66 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "projects_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      savings_plan_items: {
+        Row: {
+          asset_id: string
+          created_at: string | null
+          ended_at: string | null
+          execution_day: number | null
+          id: string
+          is_active: boolean | null
+          monthly_amount: number
+          notes: string | null
+          sort_order: number | null
+          started_at: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          asset_id: string
+          created_at?: string | null
+          ended_at?: string | null
+          execution_day?: number | null
+          id?: string
+          is_active?: boolean | null
+          monthly_amount: number
+          notes?: string | null
+          sort_order?: number | null
+          started_at?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          asset_id?: string
+          created_at?: string | null
+          ended_at?: string | null
+          execution_day?: number | null
+          id?: string
+          is_active?: boolean | null
+          monthly_amount?: number
+          notes?: string | null
+          sort_order?: number | null
+          started_at?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "savings_plan_items_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "portfolio_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "savings_plan_items_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -1267,83 +1690,6 @@ export type Database = {
           },
         ]
       }
-      portfolio_snapshots: {
-        Row: {
-          id: string
-          user_id: string
-          snapshot_date: string
-          platform_id: string | null
-          total_value: number
-          total_invested: number
-          cash_value: number
-          pl_amount: number
-          pl_percentage: number
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          snapshot_date: string
-          platform_id?: string | null
-          total_value: number
-          total_invested: number
-          cash_value?: number
-          pl_amount?: number
-          pl_percentage?: number
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          snapshot_date?: string
-          platform_id?: string | null
-          total_value?: number
-          total_invested?: number
-          cash_value?: number
-          pl_amount?: number
-          pl_percentage?: number
-          created_at?: string
-        }
-        Relationships: []
-      }
-      asset_price_history: {
-        Row: {
-          id: string
-          user_id: string
-          isin: string
-          price_date: string
-          price_eur: number
-          source: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          isin: string
-          price_date: string
-          price_eur: number
-          source?: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          isin?: string
-          price_date?: string
-          price_eur?: number
-          source?: string
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "asset_price_history_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Views: {
       [_ in never]: never
@@ -1353,9 +1699,40 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: undefined
       }
+      seed_patrimonio_for_user: { Args: { p_user_id: string }; Returns: Json }
+      seed_patrimonio_transactions: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
-      [_ in never]: never
+      asset_category:
+        | "etf_index"
+        | "etf_thematic"
+        | "etf_bond"
+        | "etf_commodity"
+        | "stock_us"
+        | "stock_eu"
+        | "stock_asia"
+        | "fund"
+        | "crypto"
+        | "p2p"
+        | "cash"
+      passive_income_type:
+        | "dividend"
+        | "interest"
+        | "saveback"
+        | "coupon"
+        | "other"
+      risk_level: "very_low" | "low" | "medium" | "high" | "very_high"
+      transaction_type:
+        | "buy"
+        | "sell"
+        | "savings_plan"
+        | "saveback"
+        | "dividend"
+        | "transfer_in"
+        | "transfer_out"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1482,6 +1859,37 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      asset_category: [
+        "etf_index",
+        "etf_thematic",
+        "etf_bond",
+        "etf_commodity",
+        "stock_us",
+        "stock_eu",
+        "stock_asia",
+        "fund",
+        "crypto",
+        "p2p",
+        "cash",
+      ],
+      passive_income_type: [
+        "dividend",
+        "interest",
+        "saveback",
+        "coupon",
+        "other",
+      ],
+      risk_level: ["very_low", "low", "medium", "high", "very_high"],
+      transaction_type: [
+        "buy",
+        "sell",
+        "savings_plan",
+        "saveback",
+        "dividend",
+        "transfer_in",
+        "transfer_out",
+      ],
+    },
   },
 } as const
