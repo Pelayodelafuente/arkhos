@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   BarChart,
   Bar,
@@ -94,10 +94,16 @@ export function PassiveIncomePanel() {
       .map(([month, { interest, dividend }]) => ({ month, interest, dividend, total: interest + dividend }));
   }, [filteredIncome]);
 
-  const recentIncome = useMemo(
+  const PAGE_SIZE = 10;
+  const [page, setPage] = useState(0);
+
+  const sortedIncome = useMemo(
     () => [...filteredIncome].sort((a, b) => b.income_date.localeCompare(a.income_date)),
     [filteredIncome]
   );
+
+  const totalPages = Math.ceil(sortedIncome.length / PAGE_SIZE);
+  const pagedIncome = sortedIncome.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   return (
     <div className="rounded-xl border border-border bg-card">
@@ -154,12 +160,37 @@ export function PassiveIncomePanel() {
         </div>
       )}
 
-      {/* Recent income list */}
-      {recentIncome.length > 0 && (
+      {/* Income list with pagination */}
+      {sortedIncome.length > 0 && (
         <div className="border-t border-border px-5 pb-5">
-          <p className="mb-3 pt-4 text-xs font-medium text-text-tertiary">Todos los ingresos</p>
+          <div className="flex items-center justify-between pt-4 pb-3">
+            <p className="text-xs font-medium text-text-tertiary">
+              Todos los ingresos · {sortedIncome.length} registros
+            </p>
+            {totalPages > 1 && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPage((p) => Math.max(0, p - 1))}
+                  disabled={page === 0}
+                  className="rounded-md px-2 py-1 text-xs text-text-secondary transition-colors hover:bg-bg-sand disabled:opacity-30"
+                >
+                  ‹ Ant
+                </button>
+                <span className="text-xs text-text-tertiary font-mono">
+                  {page + 1}/{totalPages}
+                </span>
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                  disabled={page === totalPages - 1}
+                  className="rounded-md px-2 py-1 text-xs text-text-secondary transition-colors hover:bg-bg-sand disabled:opacity-30"
+                >
+                  Sig ›
+                </button>
+              </div>
+            )}
+          </div>
           <div className="space-y-2.5">
-            {recentIncome.map((item) => {
+            {pagedIncome.map((item) => {
               const asset = item.asset_id ? assetMap.get(item.asset_id) : null;
               const typeLabel =
                 item.type === "interest"
