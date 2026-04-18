@@ -12,46 +12,35 @@ import {
 } from "recharts";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { useIndexaStore } from "@/stores/indexa-store";
-import type { EvolutionPoint } from "@/types/patrimonio";
 
 const formatEur = (value: number) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
 
 const formatEurShort = (value: number) => {
-  if (Math.abs(value) >= 1000) {
-    return `${(value / 1000).toFixed(1)}k€`;
-  }
+  if (Math.abs(value) >= 1000) return `${(value / 1000).toFixed(1)}k€`;
   return `${value.toFixed(0)}€`;
 };
 
-const formatDateShort = (dateStr: string) => {
-  const d = new Date(dateStr);
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const yy = String(d.getFullYear()).slice(-2);
-  return `${mm}/${yy}`;
-};
+const MONTHS_ES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
 
-// ---------------------------------------------------------------------------
-// Custom tooltip
-// ---------------------------------------------------------------------------
+// 'YYYY-MM-DD' o 'YYYY-MM' → 'YYYY-MM'
+function toMonthKey(s: string): string { return s.substring(0, 7); }
 
-interface TooltipPayloadEntry {
-  value: number;
-  name: string;
-  color: string;
+// 'YYYY-MM' → 'MM/YY'
+function monthKeyLabel(key: string): string {
+  const [y, m] = key.split("-");
+  return `${m}/${(y ?? "").slice(-2)}`;
 }
 
-interface CustomTooltipProps {
-  active?: boolean;
-  payload?: TooltipPayloadEntry[];
-  label?: string;
-}
+// ---------------------------------------------------------------------------
+// Tooltip
+// ---------------------------------------------------------------------------
+
+interface TooltipEntry { value: number; name: string; color: string }
+interface CustomTooltipProps { active?: boolean; payload?: TooltipEntry[]; label?: string }
 
 function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (!active || !payload?.length) return null;
-
-  const typedPayload = payload;
-
   return (
     <div
       className="rounded-xl p-3"
@@ -63,7 +52,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
       }}
     >
       <p className="text-xs text-muted-foreground mb-2">{label}</p>
-      {typedPayload.map((entry) => (
+      {payload.map((entry) => (
         <div key={entry.name} className="flex items-center justify-between gap-4">
           <span className="text-xs" style={{ color: entry.color }}>
             {entry.name === "value" ? "Patrimonio" : "Invertido"}
@@ -77,64 +66,104 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Empty state
-// ---------------------------------------------------------------------------
-
 function EmptyState() {
   return (
-    <div className="flex h-64 items-center justify-center rounded-xl" style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-stone, rgba(160,120,80,0.25))" }}>
+    <div className="flex h-64 items-center justify-center rounded-xl"
+      style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-stone, rgba(160,120,80,0.25))" }}>
       <p className="text-sm text-muted-foreground">Sin datos de evolución disponibles</p>
     </div>
   );
 }
 
 // ---------------------------------------------------------------------------
-// GlobalEvolutionChart
+// GlobalEvolutionChart — fusión TR + Indexa (preparado para más plataformas)
 // ---------------------------------------------------------------------------
 
-// Extrae clave 'YYYY-MM' de una fecha ISO o 'YYYY-MM-DD'
-function toMonthKey(dateStr: string): string {
-  return dateStr.substring(0, 7);
-}
-
 export function GlobalEvolutionChart() {
-  const getEvolutionData = usePatrimonioStore((s) => s.getEvolutionData);
-  const getIndexaEvolution = useIndexaStore((s) => s.getEvolutionData);
+  // ── TR (snapshots mensuales) ─────────────────────────────────────────────
+  const trSnapshots = usePatrimonioStore((s) => s.snapshots);
 
-  const rawTR = getEvolutionData();
-  const rawIndexa = getIndexaEvolution();
+  // ── Indexa — suscripción directa a los datos para forzar re-render ───────
+  const indexaTx = useIndexaStore((s) => s.transactions);
+  const indexaReturns = useIndexaStore((s) => s.monthlyReturns);
 
-  // Mapa mes → {value, cost} de Indexa para fusión
-  const indexaByMonth = useMemo(() => {
-    const map = new Map<string, { value: number; cost: number }>();
-    // rawIndexa usa labels tipo "Jun 2025" — necesitamos la key del mes
-    // La construimos desde los datos del indexa store directamente
-    for (const p of rawIndexa) {
-      // label = "Jun 2025" → no es ISO, usamos índice relativo desde jun 2025
-      // En su lugar accedemos al mapa por orden; mejor: re-creamos la key desde label
-      const [mon, yr] = p.label.split(' ');
-      const MONTHS_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-      const m = MONTHS_ES.indexOf(mon);
-      if (m === -1 || !yr) continue;
-      const key = `${yr}-${String(m + 1).padStart(2, '0')}`;
-      map.set(key, { value: p.value, cost: p.cost });
+  // ── Construir mapa mensual de TR: 'YYYY-MM' → {value, invested} ──────────
+  const trByMonth = useMemo(() => {
+    const map = new Map<string, { value: number; invested: number }>();
+    for (const s of trSnapshots) {
+      const key = toMonthKey(s.snapshot_date);
+      map.set(key, {
+        value: s.total_value - (s.cash_value ?? 0),
+        invested: s.total_invested ?? 0,
+      });
     }
     return map;
-  }, [rawIndexa]);
+  }, [trSnapshots]);
 
-  const data = useMemo((): (EvolutionPoint & { label: string })[] => {
-    return rawTR.map((p) => {
-      const key = toMonthKey(p.date);
+  // ── Construir evolución mensual de Indexa desde transacciones + retornos ─
+  // Solo subscriptions cuentan como dinero nuevo (transfer_in = rebalanceos)
+  const indexaByMonth = useMemo(() => {
+    if (!indexaTx.length && !indexaReturns.length) return new Map<string, { value: number; cost: number }>();
+
+    // Mapa de contribuciones mensuales reales (solo subscriptions)
+    const contribMap = new Map<string, number>();
+    for (const tx of indexaTx) {
+      if (tx.type !== "subscription") continue;
+      const key = toMonthKey(tx.transaction_date);
+      contribMap.set(key, (contribMap.get(key) ?? 0) + tx.amount);
+    }
+
+    // Mapa de retornos mensuales
+    const returnMap = new Map<string, number>();
+    for (const r of indexaReturns) {
+      const key = `${r.year}-${String(r.month).padStart(2, "0")}`;
+      returnMap.set(key, (r.return_pct ?? 0) / 100);
+    }
+
+    // Meses únicos cubiertos por Indexa (contribuciones o retornos)
+    const allKeys = [...new Set([...contribMap.keys(), ...returnMap.keys()])].sort();
+
+    const map = new Map<string, { value: number; cost: number }>();
+    let value = 0;
+    let cumCost = 0;
+
+    for (const key of allKeys) {
+      const contrib = contribMap.get(key) ?? 0;
+      const ret = returnMap.get(key) ?? 0;
+      cumCost += contrib;
+      value = (value + contrib) * (1 + ret);
+      map.set(key, { value: parseFloat(value.toFixed(2)), cost: parseFloat(cumCost.toFixed(2)) });
+    }
+
+    return map;
+  }, [indexaTx, indexaReturns]);
+
+  // ── Fusionar: todos los meses de TR + Indexa ────────────────────────────
+  // Para meses de Indexa anteriores al primer snapshot TR, el valor de TR = 0
+  // Para meses de TR anteriores al inicio de Indexa, el coste de Indexa = 0
+  const data = useMemo(() => {
+    // Unión de todas las claves de mes de ambas fuentes
+    const allKeys = [...new Set([...trByMonth.keys(), ...indexaByMonth.keys()])].sort();
+
+    // Indexa: arrastrar el último valor conocido hacia adelante
+    // (cuando hay snapshot TR de un mes posterior al último mes Indexa)
+    let lastIndexa = { value: 0, cost: 0 };
+
+    return allKeys.map((key) => {
+      const tr = trByMonth.get(key) ?? { value: 0, invested: 0 };
       const indexa = indexaByMonth.get(key);
+      if (indexa) lastIndexa = indexa;
+      // Solo añadir Indexa si ya ha empezado (cost > 0)
+      const idxValue = lastIndexa.cost > 0 ? lastIndexa.value : 0;
+      const idxCost = lastIndexa.cost > 0 ? lastIndexa.cost : 0;
       return {
-        ...p,
-        value: p.value + (indexa?.value ?? 0),
-        invested: p.invested + (indexa?.cost ?? 0),
-        label: formatDateShort(p.date),
+        key,
+        label: monthKeyLabel(key),
+        value: parseFloat((tr.value + idxValue).toFixed(2)),
+        invested: parseFloat((tr.invested + idxCost).toFixed(2)),
       };
     });
-  }, [rawTR, indexaByMonth]);
+  }, [trByMonth, indexaByMonth]);
 
   if (data.length === 0) return <EmptyState />;
 
@@ -177,10 +206,19 @@ export function GlobalEvolutionChart() {
             axisLine={false}
             tickLine={false}
             width={54}
+            domain={["auto", "auto"]}
             className="hidden sm:block"
           />
 
-          <Tooltip content={(props) => <CustomTooltip active={props.active} payload={props.payload as unknown as TooltipPayloadEntry[] | undefined} label={props.label as string | undefined} />} />
+          <Tooltip
+            content={(props) => (
+              <CustomTooltip
+                active={props.active}
+                payload={props.payload as TooltipEntry[] | undefined}
+                label={props.label as string | undefined}
+              />
+            )}
+          />
 
           <Area
             type="monotone"
