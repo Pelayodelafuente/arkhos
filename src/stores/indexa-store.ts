@@ -179,21 +179,9 @@ export const useIndexaStore = create<IndexaStore>((set, get) => ({
   },
 
   getLastMonthContribution: () => {
-    const transactions = get().transactions;
-    if (!transactions.length) return null;
-    const sorted = [...transactions].sort(
-      (a, b) => new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime()
-    );
-    const lastTx = sorted[0];
-    const lastDate = new Date(lastTx.transaction_date);
-    const lastMonthKey = `${lastDate.getFullYear()}-${String(lastDate.getMonth() + 1).padStart(2, '0')}`;
-    return transactions
-      .filter((tx) => {
-        if (tx.type !== 'subscription') return false;
-        const d = new Date(tx.transaction_date);
-        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-        return key === lastMonthKey;
-      })
-      .reduce((s, tx) => s + tx.amount, 0) || null;
+    // Use the plan's monthly amount as the Indexa contribution.
+    // Transaction subscription amounts reflect fund purchases (which may be partial
+    // when deposited cash isn't fully invested yet), not the actual bank deposit.
+    return get().plan?.monthly_amount ?? null;
   },
 }));

@@ -217,8 +217,7 @@ export function GlobalKPIs() {
     const trDelta = trDeltas.capitalInvertido ?? 0;
     const indexaDelta = indexaContrib ?? 0;
     const combined = trDelta + indexaDelta;
-    console.log('[GlobalKPIs] deltaCapital debug:', { trDelta, indexaDelta, combined });
-    if (combined === 0 && trDeltas.capitalInvertido === null) return null;
+if (combined === 0 && trDeltas.capitalInvertido === null) return null;
     return `${combined >= 0 ? "+" : ""}${formatEur(combined)} aportado este mes`;
   }, [trDeltas.capitalInvertido, indexaContrib]);
 

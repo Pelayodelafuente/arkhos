@@ -14,10 +14,11 @@ import {
   getIndexaOverview,
   getIndexaMonthlyReturns,
   getIndexaTransactions,
+  getIndexaMonthlyPlan,
 } from "@/lib/supabase/indexa";
 import { PatrimonioView } from "@/components/modules/patrimonio/PatrimonioView";
 import { PatrimonioOnboarding } from "@/components/modules/patrimonio/PatrimonioOnboarding";
-import type { IndexaOverview, IndexaMonthlyReturn, IndexaTransaction } from "@/types/indexa";
+import type { IndexaOverview, IndexaMonthlyReturn, IndexaTransaction, IndexaMonthlyPlan } from "@/types/indexa";
 
 export default async function PatrimonioPage() {
   const supabase = await createClient();
@@ -35,7 +36,7 @@ export default async function PatrimonioPage() {
 
   const [
     overview, assets, transactions, savingsPlan, snapshots, passiveIncome, platforms,
-    indexaOverview, indexaMonthlyReturns, indexaTransactions,
+    indexaOverview, indexaMonthlyReturns, indexaTransactions, indexaPlan,
   ] = await Promise.all([
     getPortfolioOverview(user.id),
     getAllAssets(user.id),
@@ -47,6 +48,7 @@ export default async function PatrimonioPage() {
     getIndexaOverview(user.id).catch(() => null as IndexaOverview | null),
     getIndexaMonthlyReturns(user.id).catch(() => [] as IndexaMonthlyReturn[]),
     getIndexaTransactions(user.id).catch(() => [] as IndexaTransaction[]),
+    getIndexaMonthlyPlan(user.id).catch(() => null as IndexaMonthlyPlan | null),
   ]);
 
   if (!overview) {
@@ -65,6 +67,7 @@ export default async function PatrimonioPage() {
       indexaOverview={indexaOverview}
       indexaMonthlyReturns={indexaMonthlyReturns}
       indexaTransactions={indexaTransactions}
+      indexaPlan={indexaPlan}
     />
   );
 }

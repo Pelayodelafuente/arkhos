@@ -13,7 +13,7 @@ import type {
   PassiveIncome,
   InvestmentPlatform,
 } from "@/types/patrimonio";
-import type { IndexaOverview, IndexaMonthlyReturn, IndexaTransaction } from "@/types/indexa";
+import type { IndexaOverview, IndexaMonthlyReturn, IndexaTransaction, IndexaMonthlyPlan } from "@/types/indexa";
 import { PatrimonioDashboard } from "@/components/modules/patrimonio/dashboard/PatrimonioDashboard";
 import { TRSection } from "@/components/modules/patrimonio/trade-republic/TRSection";
 import { IndexaSection } from "@/components/modules/patrimonio/indexa/IndexaSection";
@@ -32,6 +32,7 @@ interface PatrimonioViewProps {
   indexaOverview?: IndexaOverview | null;
   indexaMonthlyReturns?: IndexaMonthlyReturn[];
   indexaTransactions?: IndexaTransaction[];
+  indexaPlan?: IndexaMonthlyPlan | null;
 }
 
 const PAGE_TRANSITION = {
@@ -52,6 +53,7 @@ export function PatrimonioView({
   indexaOverview,
   indexaMonthlyReturns,
   indexaTransactions,
+  indexaPlan,
 }: PatrimonioViewProps) {
   const setOverview = usePatrimonioStore((s) => s.setOverview);
   const setAssets = usePatrimonioStore((s) => s.setAssets);
@@ -65,6 +67,7 @@ export function PatrimonioView({
   const setIndexaOverview = useIndexaStore((s) => s.setOverview);
   const setIndexaMonthlyReturns = useIndexaStore((s) => s.setMonthlyReturns);
   const setIndexaTransactions = useIndexaStore((s) => s.setTransactions);
+  const setIndexaPlan = useIndexaStore((s) => s.setPlan);
 
   useEffect(() => {
     setOverview(overview);
@@ -95,9 +98,10 @@ export function PatrimonioView({
     if (indexaOverview !== undefined) setIndexaOverview(indexaOverview ?? null);
     if (indexaMonthlyReturns) setIndexaMonthlyReturns(indexaMonthlyReturns);
     if (indexaTransactions) setIndexaTransactions(indexaTransactions);
+    if (indexaPlan !== undefined) setIndexaPlan(indexaPlan ?? null);
   }, [
-    indexaOverview, indexaMonthlyReturns, indexaTransactions,
-    setIndexaOverview, setIndexaMonthlyReturns, setIndexaTransactions,
+    indexaOverview, indexaMonthlyReturns, indexaTransactions, indexaPlan,
+    setIndexaOverview, setIndexaMonthlyReturns, setIndexaTransactions, setIndexaPlan,
   ]);
 
   return (
