@@ -509,7 +509,7 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
   },
 
   getMonthlyKPIDeltas: () => {
-    const { snapshots, passiveIncome } = get();
+    const { snapshots, passiveIncome, transactions } = get();
     const trAssets = get().getTRAssets();
     const now = new Date();
     const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -517,30 +517,34 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
     const prevMonth = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
     const sorted = [...snapshots].sort((a, b) => a.snapshot_date.localeCompare(b.snapshot_date));
     const prevSnapshot = [...sorted].reverse().find((s) => s.snapshot_date.startsWith(prevMonth));
-    if (!prevSnapshot) return { totalValue: null, capitalInvertido: null, passiveIncomeMonth: null };
 
-    const currentTotal = trAssets.reduce((s, a) => s + (a.current_value ?? 0), 0);
-    const currentCash = trAssets.filter((a) => a.category === 'cash').reduce((s, a) => s + (a.current_value ?? 0), 0);
-    const currentCapital = currentTotal - currentCash;
+    // totalValue delta: snapshot comparison (value change vs last month)
+    let totalValueDelta: number | null = null;
+    if (prevSnapshot) {
+      const currentTotal = trAssets.reduce((s, a) => s + (a.current_value ?? 0), 0);
+      const currentCash = trAssets.filter((a) => a.category === 'cash').reduce((s, a) => s + (a.current_value ?? 0), 0);
+      const currentCapital = currentTotal - currentCash;
+      const prevCapital = prevSnapshot.total_value - prevSnapshot.cash_value;
+      const capitalDelta = currentCapital - prevCapital;
+      const sanityLimit = Math.max(currentCapital, 1000);
+      totalValueDelta = Math.abs(capitalDelta) > sanityLimit ? null : capitalDelta;
+    }
 
-    // Compare investment-only values on both sides.
-    // Historical snapshots (generated from transactions) store investment value without cash.
-    // Using currentTotal (which includes cash) vs prevSnapshot.total_value (no cash) would
-    // produce a false delta of ~+22.000€ (the entire cash balance appearing as a monthly gain).
-    const prevCapital = prevSnapshot.total_value - prevSnapshot.cash_value;
-    const capitalDelta = currentCapital - prevCapital;
-
-    // Sanity guard: a delta larger than the total portfolio in a single month is a data artifact
-    const sanityLimit = Math.max(currentCapital, 1000);
-    const safeCapitalDelta = Math.abs(capitalDelta) > sanityLimit ? null : capitalDelta;
+    // capitalInvertido delta: real new money deployed this month (buy + savings_plan + saveback)
+    const CONTRIBUTION_TYPES = new Set(['buy', 'savings_plan', 'saveback']);
+    const capitalInvertido = transactions
+      .filter((tx) => {
+        if (!CONTRIBUTION_TYPES.has(tx.type)) return false;
+        return tx.transaction_date.startsWith(currentMonth);
+      })
+      .reduce((s, tx) => s + tx.total_amount, 0) || null;
 
     const incomeThis = passiveIncome.filter((i) => i.income_date.startsWith(currentMonth)).reduce((s, i) => s + i.amount, 0);
     const incomePrev = passiveIncome.filter((i) => i.income_date.startsWith(prevMonth)).reduce((s, i) => s + i.amount, 0);
 
     return {
-      // Both deltas use investment-only comparison (apples-to-apples with snapshot data)
-      totalValue: safeCapitalDelta,
-      capitalInvertido: safeCapitalDelta,
+      totalValue: totalValueDelta,
+      capitalInvertido,
       passiveIncomeMonth: incomeThis - incomePrev,
     };
   },
