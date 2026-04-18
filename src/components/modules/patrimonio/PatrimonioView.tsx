@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
+import { useIndexaStore } from "@/stores/indexa-store";
 import type {
   PortfolioOverview,
   PortfolioAsset,
@@ -12,6 +13,7 @@ import type {
   PassiveIncome,
   InvestmentPlatform,
 } from "@/types/patrimonio";
+import type { IndexaOverview } from "@/types/indexa";
 import { PatrimonioDashboard } from "@/components/modules/patrimonio/dashboard/PatrimonioDashboard";
 import { TRSection } from "@/components/modules/patrimonio/trade-republic/TRSection";
 import { IndexaSection } from "@/components/modules/patrimonio/indexa/IndexaSection";
@@ -27,6 +29,7 @@ interface PatrimonioViewProps {
   snapshots: PortfolioSnapshot[];
   passiveIncome: PassiveIncome[];
   platforms: InvestmentPlatform[];
+  indexaOverview?: IndexaOverview | null;
 }
 
 const PAGE_TRANSITION = {
@@ -44,6 +47,7 @@ export function PatrimonioView({
   snapshots,
   passiveIncome,
   platforms,
+  indexaOverview,
 }: PatrimonioViewProps) {
   const setOverview = usePatrimonioStore((s) => s.setOverview);
   const setAssets = usePatrimonioStore((s) => s.setAssets);
@@ -54,6 +58,7 @@ export function PatrimonioView({
   const setPlatforms = usePatrimonioStore((s) => s.setPlatforms);
   const activePlatform = usePatrimonioStore((s) => s.activePlatform);
   const privacyMode = usePatrimonioStore((s) => s.privacyMode);
+  const setIndexaOverview = useIndexaStore((s) => s.setOverview);
 
   useEffect(() => {
     setOverview(overview);
@@ -79,6 +84,12 @@ export function PatrimonioView({
     setPassiveIncome,
     setPlatforms,
   ]);
+
+  useEffect(() => {
+    if (indexaOverview !== undefined) {
+      setIndexaOverview(indexaOverview ?? null);
+    }
+  }, [indexaOverview, setIndexaOverview]);
 
   return (
     <div className={privacyMode ? "patrimonio-privacy" : undefined}>

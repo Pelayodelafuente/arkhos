@@ -12,6 +12,7 @@ import {
   Bitcoin,
 } from "lucide-react";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
+import { useIndexaStore } from "@/stores/indexa-store";
 import type { PlatformSlug } from "@/types/patrimonio";
 import { GlobalKPIs } from "@/components/modules/patrimonio/dashboard/GlobalKPIs";
 import { PlatformCard, type PlatformCardProps } from "@/components/modules/patrimonio/dashboard/PlatformCard";
@@ -85,6 +86,8 @@ export function PatrimonioDashboard() {
   const privacyMode = usePatrimonioStore((s) => s.privacyMode);
   const togglePrivacyMode = usePatrimonioStore((s) => s.togglePrivacyMode);
 
+  const indexaOverview = useIndexaStore((s) => s.overview);
+
   const totalValue = overview?.total_value ?? 0;
   const animatedTotal = useAnimatedCounter(totalValue);
 
@@ -139,10 +142,11 @@ export function PatrimonioDashboard() {
       color: "var(--platform-indexa)",
       colorHex: "#3B78B0",
       icon: <TrendingUp size={16} strokeWidth={1.75} aria-hidden="true" />,
-      currentValue: null,
-      totalInvested: null,
-      plAmount: null,
-      plPercentage: null,
+      currentValue: indexaOverview?.total_value ?? null,
+      totalInvested: indexaOverview?.total_cost ?? null,
+      plAmount: indexaOverview?.total_gain ?? null,
+      plPercentage: indexaOverview?.total_gain_pct ?? null,
+      positionsCount: indexaOverview?.positions_count,
       isActive: activePlatform === "indexa",
     },
     {
