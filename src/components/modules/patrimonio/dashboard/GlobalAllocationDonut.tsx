@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
+import { useIndexaStore } from "@/stores/indexa-store";
 
 const formatEur = (value: number) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
@@ -55,11 +56,17 @@ export function GlobalAllocationDonut() {
   const assets = usePatrimonioStore((s) => s.assets);
   const platforms = usePatrimonioStore((s) => s.platforms);
   const overview = usePatrimonioStore((s) => s.overview);
+  const indexaOverview = useIndexaStore((s) => s.overview);
 
-  const totalValue = overview?.total_value ?? 0;
+  const totalValue = (overview?.total_value ?? 0) + (indexaOverview?.total_value ?? 0);
 
   const segments = useMemo((): PlatformSegment[] => {
     return PLATFORM_CONFIG.map((cfg) => {
+      // Indexa tiene sus propias tablas, no está en portfolio_assets
+      if (cfg.slug === "indexa") {
+        const value = indexaOverview?.total_value ?? 0;
+        return { name: cfg.name, value, color: cfg.color };
+      }
       const platform = platforms.find((p) => p.slug === cfg.slug);
       if (!platform) return { name: cfg.name, value: 0, color: cfg.color };
       const value = assets
@@ -67,7 +74,7 @@ export function GlobalAllocationDonut() {
         .reduce((s, a) => s + (a.current_value ?? 0), 0);
       return { name: cfg.name, value, color: cfg.color };
     }).filter((s) => s.value > 0);
-  }, [assets, platforms]);
+  }, [assets, platforms, indexaOverview]);
 
   const hasData = segments.length > 0 && totalValue > 0;
 

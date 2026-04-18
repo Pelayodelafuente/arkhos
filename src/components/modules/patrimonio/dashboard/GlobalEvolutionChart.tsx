@@ -11,6 +11,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
+import { useIndexaStore } from "@/stores/indexa-store";
 import type { EvolutionPoint } from "@/types/patrimonio";
 
 const formatEur = (value: number) =>
@@ -92,17 +93,48 @@ function EmptyState() {
 // GlobalEvolutionChart
 // ---------------------------------------------------------------------------
 
+// Extrae clave 'YYYY-MM' de una fecha ISO o 'YYYY-MM-DD'
+function toMonthKey(dateStr: string): string {
+  return dateStr.substring(0, 7);
+}
+
 export function GlobalEvolutionChart() {
   const getEvolutionData = usePatrimonioStore((s) => s.getEvolutionData);
+  const getIndexaEvolution = useIndexaStore((s) => s.getEvolutionData);
 
-  const rawData = getEvolutionData();
+  const rawTR = getEvolutionData();
+  const rawIndexa = getIndexaEvolution();
+
+  // Mapa mes → {value, cost} de Indexa para fusión
+  const indexaByMonth = useMemo(() => {
+    const map = new Map<string, { value: number; cost: number }>();
+    // rawIndexa usa labels tipo "Jun 2025" — necesitamos la key del mes
+    // La construimos desde los datos del indexa store directamente
+    for (const p of rawIndexa) {
+      // label = "Jun 2025" → no es ISO, usamos índice relativo desde jun 2025
+      // En su lugar accedemos al mapa por orden; mejor: re-creamos la key desde label
+      const [mon, yr] = p.label.split(' ');
+      const MONTHS_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+      const m = MONTHS_ES.indexOf(mon);
+      if (m === -1 || !yr) continue;
+      const key = `${yr}-${String(m + 1).padStart(2, '0')}`;
+      map.set(key, { value: p.value, cost: p.cost });
+    }
+    return map;
+  }, [rawIndexa]);
 
   const data = useMemo((): (EvolutionPoint & { label: string })[] => {
-    return rawData.map((p) => ({
-      ...p,
-      label: formatDateShort(p.date),
-    }));
-  }, [rawData]);
+    return rawTR.map((p) => {
+      const key = toMonthKey(p.date);
+      const indexa = indexaByMonth.get(key);
+      return {
+        ...p,
+        value: p.value + (indexa?.value ?? 0),
+        invested: p.invested + (indexa?.cost ?? 0),
+        label: formatDateShort(p.date),
+      };
+    });
+  }, [rawTR, indexaByMonth]);
 
   if (data.length === 0) return <EmptyState />;
 
