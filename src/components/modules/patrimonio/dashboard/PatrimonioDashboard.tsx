@@ -76,8 +76,10 @@ export function PatrimonioDashboard() {
   const platforms = usePatrimonioStore((s) => s.platforms);
   const pricesLastUpdated = usePatrimonioStore((s) => s.pricesLastUpdated);
   const isLoadingPrices = usePatrimonioStore((s) => s.isLoadingPrices);
-  const sparklines = usePatrimonioStore((s) => s.getKPISparklines());
-  const deltas = usePatrimonioStore((s) => s.getMonthlyKPIDeltas());
+  const getKPISparklines = usePatrimonioStore((s) => s.getKPISparklines);
+  const getMonthlyKPIDeltas = usePatrimonioStore((s) => s.getMonthlyKPIDeltas);
+  const sparklines = getKPISparklines();
+  const deltas = getMonthlyKPIDeltas();
   const setActivePlatform = usePatrimonioStore((s) => s.setActivePlatform);
   const activePlatform = usePatrimonioStore((s) => s.activePlatform);
   const privacyMode = usePatrimonioStore((s) => s.privacyMode);

@@ -151,9 +151,13 @@ function KPICard({
 
 export function GlobalKPIs() {
   const overview = usePatrimonioStore((s) => s.overview);
-  const sparklines = usePatrimonioStore((s) => s.getKPISparklines());
-  const deltas = usePatrimonioStore((s) => s.getMonthlyKPIDeltas());
-  const cagrRaw = usePatrimonioStore((s) => s.getCAGR());
+  const getKPISparklines = usePatrimonioStore((s) => s.getKPISparklines);
+  const getMonthlyKPIDeltas = usePatrimonioStore((s) => s.getMonthlyKPIDeltas);
+  const getCAGR = usePatrimonioStore((s) => s.getCAGR);
+
+  const sparklines = getKPISparklines();
+  const deltas = getMonthlyKPIDeltas();
+  const cagrRaw = getCAGR();
 
   const totalValue = overview?.total_value ?? 0;
   const capitalInvertido = overview ? overview.total_invested - overview.total_cash : 0;
