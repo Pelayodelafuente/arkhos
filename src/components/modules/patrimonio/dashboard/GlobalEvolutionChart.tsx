@@ -37,7 +37,7 @@ function monthKeyLabel(key: string): string {
 // ---------------------------------------------------------------------------
 
 interface TooltipEntry { value: number; name: string; color: string }
-interface CustomTooltipProps { active?: boolean; payload?: TooltipEntry[]; label?: string }
+interface CustomTooltipProps { active?: boolean; payload?: readonly TooltipEntry[]; label?: string }
 
 function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (!active || !payload?.length) return null;
@@ -214,7 +214,7 @@ export function GlobalEvolutionChart() {
             content={(props) => (
               <CustomTooltip
                 active={props.active}
-                payload={props.payload as unknown as TooltipEntry[] | undefined}
+                payload={props.payload as readonly TooltipEntry[] | undefined}
                 label={props.label as string | undefined}
               />
             )}
