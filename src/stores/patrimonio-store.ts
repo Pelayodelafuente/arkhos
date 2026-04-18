@@ -530,8 +530,8 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
       totalValueDelta = Math.abs(capitalDelta) > sanityLimit ? null : capitalDelta;
     }
 
-    // capitalInvertido delta: real new money deployed this month (buy + savings_plan + saveback)
-    const CONTRIBUTION_TYPES = new Set(['buy', 'savings_plan', 'saveback']);
+    // capitalInvertido delta: real new money in this month (savings_plan + saveback only — buy uses existing cash)
+    const CONTRIBUTION_TYPES = new Set(['savings_plan', 'saveback']);
     const capitalInvertido = transactions
       .filter((tx) => {
         if (!CONTRIBUTION_TYPES.has(tx.type)) return false;
