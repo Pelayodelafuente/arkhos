@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { Wallet } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import type {
   PortfolioOverview,
@@ -11,13 +11,13 @@ import type {
   PortfolioSnapshot,
   PassiveIncome,
   InvestmentPlatform,
-  PlatformSlug,
 } from "@/types/patrimonio";
-import { OverviewKPIs } from "@/components/modules/patrimonio/dashboard/OverviewKPIs";
-import { TRDashboard } from "@/components/modules/patrimonio/trade-republic/TRDashboard";
-
-const formatEur = (value: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
+import { PatrimonioDashboard } from "@/components/modules/patrimonio/dashboard/PatrimonioDashboard";
+import { TRSection } from "@/components/modules/patrimonio/trade-republic/TRSection";
+import { IndexaSection } from "@/components/modules/patrimonio/indexa/IndexaSection";
+import { HorosSection } from "@/components/modules/patrimonio/horos/HorosSection";
+import { MintosSection } from "@/components/modules/patrimonio/mintos/MintosSection";
+import { CryptoSection } from "@/components/modules/patrimonio/crypto/CryptoSection";
 
 interface PatrimonioViewProps {
   overview: PortfolioOverview;
@@ -29,9 +29,12 @@ interface PatrimonioViewProps {
   platforms: InvestmentPlatform[];
 }
 
-const PLATFORM_TABS: { slug: PlatformSlug | "all"; label: string }[] = [
-  { slug: "trade-republic", label: "Trade Republic" },
-];
+const PAGE_TRANSITION = {
+  initial: { opacity: 0, y: 16 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -8 },
+  transition: { duration: 0.22, ease: [0.16, 1, 0.3, 1] as const },
+};
 
 export function PatrimonioView({
   overview,
@@ -50,10 +53,8 @@ export function PatrimonioView({
   const setPassiveIncome = usePatrimonioStore((s) => s.setPassiveIncome);
   const setPlatforms = usePatrimonioStore((s) => s.setPlatforms);
   const activePlatform = usePatrimonioStore((s) => s.activePlatform);
-  const setActivePlatform = usePatrimonioStore((s) => s.setActivePlatform);
   const privacyMode = usePatrimonioStore((s) => s.privacyMode);
 
-  // Sync server data into store on mount
   useEffect(() => {
     setOverview(overview);
     setAssets(assets);
@@ -79,68 +80,45 @@ export function PatrimonioView({
     setPlatforms,
   ]);
 
-  const availableTabs = PLATFORM_TABS;
-
   return (
-    <div className={`space-y-6${privacyMode ? " patrimonio-privacy" : ""}`}>
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <div
-          className="flex h-10 w-10 items-center justify-center rounded-lg"
-          style={{
-            backgroundColor: "rgba(46,125,107,0.12)",
-            border: "1px solid rgba(46,125,107,0.25)",
-          }}
-        >
-          <Wallet
-            size={18}
-            strokeWidth={1.75}
-            style={{ color: "var(--module-patrimonio)" }}
-            aria-label="Icono Patrimonio"
-          />
-        </div>
-        <div>
-          <h1 className="font-heading text-2xl text-foreground">Patrimonio</h1>
-        </div>
-        <div
-          className="ml-auto rounded-full px-3 py-1 font-mono text-sm font-semibold"
-          style={{
-            backgroundColor: "rgba(46,125,107,0.12)",
-            color: "var(--module-patrimonio)",
-            border: "1px solid rgba(46,125,107,0.25)",
-          }}
-        >
-          {formatEur(overview.total_value)}
-        </div>
-      </div>
-
-      {/* KPI Cards */}
-      <OverviewKPIs />
-
-      {/* Platform Tabs */}
-      <div className="flex overflow-x-auto gap-1.5 pb-1">
-        {availableTabs.map((tab) => {
-          const isActive = activePlatform === tab.slug;
-          return (
-            <button
-              key={tab.slug}
-              type="button"
-              onClick={() => setActivePlatform(tab.slug as PlatformSlug | "all")}
-              className="flex-shrink-0 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200"
-              style={{
-                backgroundColor: isActive ? "var(--module-patrimonio)" : "var(--bg-card)",
-                color: isActive ? "white" : "var(--text-secondary)",
-                border: `1px solid ${isActive ? "var(--module-patrimonio)" : "var(--border)"}`,
-              }}
-            >
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Tab content */}
-      <TRDashboard />
+    <div className={privacyMode ? "patrimonio-privacy" : undefined}>
+      <AnimatePresence mode="wait">
+        {activePlatform === "dashboard" && (
+          <motion.div key="dashboard" {...PAGE_TRANSITION}>
+            <PatrimonioDashboard />
+          </motion.div>
+        )}
+        {activePlatform === "trade-republic" && (
+          <motion.div key="tr" {...PAGE_TRANSITION}>
+            <TRSection />
+          </motion.div>
+        )}
+        {activePlatform === "indexa" && (
+          <motion.div key="indexa" {...PAGE_TRANSITION}>
+            <IndexaSection />
+          </motion.div>
+        )}
+        {activePlatform === "horos" && (
+          <motion.div key="horos" {...PAGE_TRANSITION}>
+            <HorosSection />
+          </motion.div>
+        )}
+        {activePlatform === "mintos" && (
+          <motion.div key="mintos" {...PAGE_TRANSITION}>
+            <MintosSection />
+          </motion.div>
+        )}
+        {activePlatform === "crypto" && (
+          <motion.div key="crypto" {...PAGE_TRANSITION}>
+            <CryptoSection />
+          </motion.div>
+        )}
+        {activePlatform === "all" && (
+          <motion.div key="all" {...PAGE_TRANSITION}>
+            <PatrimonioDashboard />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

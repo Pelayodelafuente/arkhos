@@ -38,7 +38,7 @@ interface PatrimonioStore {
   pricesLastUpdated: string | null;
 
   // Navigation
-  activePlatform: PlatformSlug | 'all';
+  activePlatform: PlatformSlug | 'all' | 'dashboard';
   activeAssetId: string | null;
 
   // Year filter
@@ -58,7 +58,7 @@ interface PatrimonioStore {
   setPassiveIncome: (income: PassiveIncome[]) => void;
   setIsLoading: (loading: boolean) => void;
   setIsLoadingPrices: (loading: boolean) => void;
-  setActivePlatform: (slug: PlatformSlug | 'all') => void;
+  setActivePlatform: (slug: PlatformSlug | 'all' | 'dashboard') => void;
   setActiveAsset: (id: string | null) => void;
   updateAssetPrice: (assetId: string, price: number, priceEur?: number) => void;
   updateAssetPriceByIsin: (isin: string, priceEur: number) => void;
@@ -106,7 +106,7 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
   isLoading: false,
   isLoadingPrices: false,
   pricesLastUpdated: null,
-  activePlatform: 'all',
+  activePlatform: 'dashboard',
   activeAssetId: null,
   selectedYear: new Date().getFullYear().toString(),
   privacyMode: false,
