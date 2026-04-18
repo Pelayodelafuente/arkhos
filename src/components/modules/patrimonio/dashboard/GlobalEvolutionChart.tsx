@@ -214,7 +214,7 @@ export function GlobalEvolutionChart() {
             content={(props) => (
               <CustomTooltip
                 active={props.active}
-                payload={props.payload as TooltipEntry[] | undefined}
+                payload={props.payload as unknown as TooltipEntry[] | undefined}
                 label={props.label as string | undefined}
               />
             )}
