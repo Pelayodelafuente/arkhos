@@ -10,10 +10,14 @@ import {
   getPassiveIncome,
   getPlatforms,
 } from "@/lib/supabase/patrimonio";
-import { getIndexaOverview } from "@/lib/supabase/indexa";
+import {
+  getIndexaOverview,
+  getIndexaMonthlyReturns,
+  getIndexaTransactions,
+} from "@/lib/supabase/indexa";
 import { PatrimonioView } from "@/components/modules/patrimonio/PatrimonioView";
 import { PatrimonioOnboarding } from "@/components/modules/patrimonio/PatrimonioOnboarding";
-import type { IndexaOverview } from "@/types/indexa";
+import type { IndexaOverview, IndexaMonthlyReturn, IndexaTransaction } from "@/types/indexa";
 
 export default async function PatrimonioPage() {
   const supabase = await createClient();
@@ -29,7 +33,10 @@ export default async function PatrimonioPage() {
     return <PatrimonioOnboarding />;
   }
 
-  const [overview, assets, transactions, savingsPlan, snapshots, passiveIncome, platforms, indexaOverview] = await Promise.all([
+  const [
+    overview, assets, transactions, savingsPlan, snapshots, passiveIncome, platforms,
+    indexaOverview, indexaMonthlyReturns, indexaTransactions,
+  ] = await Promise.all([
     getPortfolioOverview(user.id),
     getAllAssets(user.id),
     getAllTransactions(user.id, 500),
@@ -38,6 +45,8 @@ export default async function PatrimonioPage() {
     getPassiveIncome(user.id),
     getPlatforms(user.id),
     getIndexaOverview(user.id).catch(() => null as IndexaOverview | null),
+    getIndexaMonthlyReturns(user.id).catch(() => [] as IndexaMonthlyReturn[]),
+    getIndexaTransactions(user.id).catch(() => [] as IndexaTransaction[]),
   ]);
 
   if (!overview) {
@@ -54,6 +63,8 @@ export default async function PatrimonioPage() {
       passiveIncome={passiveIncome}
       platforms={platforms}
       indexaOverview={indexaOverview}
+      indexaMonthlyReturns={indexaMonthlyReturns}
+      indexaTransactions={indexaTransactions}
     />
   );
 }

@@ -13,7 +13,7 @@ import type {
   PassiveIncome,
   InvestmentPlatform,
 } from "@/types/patrimonio";
-import type { IndexaOverview } from "@/types/indexa";
+import type { IndexaOverview, IndexaMonthlyReturn, IndexaTransaction } from "@/types/indexa";
 import { PatrimonioDashboard } from "@/components/modules/patrimonio/dashboard/PatrimonioDashboard";
 import { TRSection } from "@/components/modules/patrimonio/trade-republic/TRSection";
 import { IndexaSection } from "@/components/modules/patrimonio/indexa/IndexaSection";
@@ -30,6 +30,8 @@ interface PatrimonioViewProps {
   passiveIncome: PassiveIncome[];
   platforms: InvestmentPlatform[];
   indexaOverview?: IndexaOverview | null;
+  indexaMonthlyReturns?: IndexaMonthlyReturn[];
+  indexaTransactions?: IndexaTransaction[];
 }
 
 const PAGE_TRANSITION = {
@@ -48,6 +50,8 @@ export function PatrimonioView({
   passiveIncome,
   platforms,
   indexaOverview,
+  indexaMonthlyReturns,
+  indexaTransactions,
 }: PatrimonioViewProps) {
   const setOverview = usePatrimonioStore((s) => s.setOverview);
   const setAssets = usePatrimonioStore((s) => s.setAssets);
@@ -59,6 +63,8 @@ export function PatrimonioView({
   const activePlatform = usePatrimonioStore((s) => s.activePlatform);
   const privacyMode = usePatrimonioStore((s) => s.privacyMode);
   const setIndexaOverview = useIndexaStore((s) => s.setOverview);
+  const setIndexaMonthlyReturns = useIndexaStore((s) => s.setMonthlyReturns);
+  const setIndexaTransactions = useIndexaStore((s) => s.setTransactions);
 
   useEffect(() => {
     setOverview(overview);
@@ -86,10 +92,13 @@ export function PatrimonioView({
   ]);
 
   useEffect(() => {
-    if (indexaOverview !== undefined) {
-      setIndexaOverview(indexaOverview ?? null);
-    }
-  }, [indexaOverview, setIndexaOverview]);
+    if (indexaOverview !== undefined) setIndexaOverview(indexaOverview ?? null);
+    if (indexaMonthlyReturns) setIndexaMonthlyReturns(indexaMonthlyReturns);
+    if (indexaTransactions) setIndexaTransactions(indexaTransactions);
+  }, [
+    indexaOverview, indexaMonthlyReturns, indexaTransactions,
+    setIndexaOverview, setIndexaMonthlyReturns, setIndexaTransactions,
+  ]);
 
   return (
     <div className={privacyMode ? "patrimonio-privacy" : undefined}>
