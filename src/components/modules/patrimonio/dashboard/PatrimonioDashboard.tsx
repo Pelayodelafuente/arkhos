@@ -88,7 +88,8 @@ export function PatrimonioDashboard() {
 
   const indexaOverview = useIndexaStore((s) => s.overview);
 
-  const totalValue = overview?.total_value ?? 0;
+  // Global total: TR + Indexa (other platforms pending)
+  const totalValue = (overview?.total_value ?? 0) + (indexaOverview?.total_value ?? 0);
   const animatedTotal = useAnimatedCounter(totalValue);
 
   const updatedTime = useMemo(() => {

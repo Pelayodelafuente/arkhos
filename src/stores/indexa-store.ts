@@ -99,42 +99,47 @@ export const useIndexaStore = create<IndexaStore>((set, get) => ({
 
   getEvolutionData: () => {
     const transactions = get().transactions;
+    const monthlyReturns = get().monthlyReturns;
     if (transactions.length === 0) return [];
 
-    // Build monthly evolution from transactions (sorted ascending)
-    const sorted = [...transactions].sort(
-      (a, b) =>
-        new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime()
-    );
+    // Only subscriptions are real new money — transfer_in are internal rebalances
+    const subscriptions = transactions.filter((tx) => tx.type === 'subscription');
 
-    const monthMap = new Map<string, { cost: number }>();
-    for (const tx of sorted) {
+    // Monthly new contributions map: 'YYYY-MM' → amount
+    const contribMap = new Map<string, number>();
+    for (const tx of subscriptions) {
       const d = new Date(tx.transaction_date);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      const isInflow = tx.type === 'subscription' || tx.type === 'transfer_in';
-      if (isInflow) {
-        const existing = monthMap.get(key) ?? { cost: 0 };
-        existing.cost += tx.amount;
-        monthMap.set(key, existing);
-      }
+      contribMap.set(key, (contribMap.get(key) ?? 0) + tx.amount);
     }
 
-    const positions = get().positions;
-    const currentValue = positions.reduce((s, p) => s + p.total_value, 0);
-    const currentCost = positions.reduce((s, p) => s + p.total_cost, 0);
+    // Build value series using monthly returns (TWR-based)
+    // For each month: value_end = (value_prev + new_contributions) × (1 + return%)
+    const returnMap = new Map<string, number>();
+    for (const r of monthlyReturns) {
+      const key = `${r.year}-${String(r.month).padStart(2, '0')}`;
+      returnMap.set(key, (r.return_pct ?? 0) / 100);
+    }
 
-    // Build cumulative cost per month and estimate value proportionally
-    const keys = [...monthMap.keys()].sort();
+    // Get sorted union of months from both maps
+    const allKeys = [...new Set([...contribMap.keys(), ...returnMap.keys()])].sort();
+
+    const MONTHS_SHORT = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    let value = 0;
     let cumCost = 0;
-    return keys.map((key, i) => {
-      cumCost += monthMap.get(key)?.cost ?? 0;
-      const fraction = currentCost > 0 ? cumCost / currentCost : 0;
-      const estValue = i < keys.length - 1 ? fraction * currentValue * 0.95 : currentValue;
+    const result: Array<{ label: string; value: number; cost: number }> = [];
+
+    for (const key of allKeys) {
+      const contrib = contribMap.get(key) ?? 0;
+      const ret = returnMap.get(key) ?? 0;
+      cumCost += contrib;
+      value = (value + contrib) * (1 + ret);
       const [y, m] = key.split('-');
-      const MONTHS_SHORT = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
       const label = `${MONTHS_SHORT[parseInt(m) - 1]} ${y}`;
-      return { label, value: parseFloat(estValue.toFixed(2)), cost: parseFloat(cumCost.toFixed(2)) };
-    });
+      result.push({ label, value: parseFloat(value.toFixed(2)), cost: parseFloat(cumCost.toFixed(2)) });
+    }
+
+    return result;
   },
 
   getProjection: (years: number, annualReturn: number, monthlyContrib: number) => {
