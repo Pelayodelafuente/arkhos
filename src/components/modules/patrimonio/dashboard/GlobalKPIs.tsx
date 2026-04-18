@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Wallet, TrendingUp, TrendingDown, BarChart2, Percent } from "lucide-react";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
+import { useIndexaStore } from "@/stores/indexa-store";
 
 const formatEur = (value: number) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
@@ -23,9 +24,7 @@ function useAnimatedCounter(target: number, duration = 1200): number {
       setValue(0);
       return;
     }
-
     const startTime = performance.now();
-
     const tick = (now: number) => {
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / duration, 1);
@@ -33,7 +32,6 @@ function useAnimatedCounter(target: number, duration = 1200): number {
       setValue(target * eased);
       if (progress < 1) requestAnimationFrame(tick);
     };
-
     const raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [target, duration]);
@@ -79,7 +77,6 @@ function MiniSparkline({ values, color }: { values: number[]; color: string }) {
 
 interface KPICardProps {
   label: string;
-  rawValue: number;
   displayValue: string;
   icon: React.ReactNode;
   accentColor: string;
@@ -131,7 +128,7 @@ function KPICard({
 
       <p
         className="font-mono text-2xl font-semibold tabular-nums"
-        style={{ color: accentColor !== "var(--platform-tr)" && accentColor !== "#3B78B0" && accentColor !== "#7260C4" ? accentColor : "var(--text-primary, var(--foreground))" }}
+        style={{ color: "var(--text-primary, var(--foreground))" }}
       >
         {displayValue}
       </p>
@@ -146,80 +143,129 @@ function KPICard({
 }
 
 // ---------------------------------------------------------------------------
-// GlobalKPIs
+// GlobalKPIs — suma todas las plataformas activas
+// Arquitectura: añadir nueva plataforma = sumar sus valores aquí
 // ---------------------------------------------------------------------------
 
 export function GlobalKPIs() {
-  const overview = usePatrimonioStore((s) => s.overview);
+  // ── Trade Republic ──────────────────────────────────────────────────────
+  const trOverview = usePatrimonioStore((s) => s.overview);
   const getKPISparklines = usePatrimonioStore((s) => s.getKPISparklines);
   const getMonthlyKPIDeltas = usePatrimonioStore((s) => s.getMonthlyKPIDeltas);
   const getCAGR = usePatrimonioStore((s) => s.getCAGR);
 
-  const sparklines = getKPISparklines();
-  const deltas = getMonthlyKPIDeltas();
-  const cagrRaw = getCAGR();
+  const trSparklines = getKPISparklines();
+  const trDeltas = getMonthlyKPIDeltas();
+  const trCAGR = getCAGR(); // decimal, e.g. 0.0997
 
-  const totalValue = overview?.total_value ?? 0;
-  const capitalInvertido = overview ? overview.total_invested - overview.total_cash : 0;
-  const plAmount = overview?.pl_amount ?? 0;
-  const cagrPct = cagrRaw !== null ? cagrRaw * 100 : null;
+  const trValue = trOverview?.total_value ?? 0;
+  const trInvested = trOverview ? trOverview.total_invested - trOverview.total_cash : 0;
+  const trPL = trOverview?.pl_amount ?? 0;
 
-  const animatedTotal = useAnimatedCounter(totalValue);
-  const animatedCapital = useAnimatedCounter(capitalInvertido);
-  const animatedPL = useAnimatedCounter(plAmount);
-  const animatedCAGR = useAnimatedCounter(cagrPct ?? 0);
+  // ── Indexa Capital ───────────────────────────────────────────────────────
+  const indexaOverview = useIndexaStore((s) => s.overview);
+  const getIndexaValueDelta = useIndexaStore((s) => s.getLastMonthValueDelta);
+  const getIndexaContrib = useIndexaStore((s) => s.getLastMonthContribution);
 
-  const plColor = plAmount >= 0 ? "var(--platform-tr)" : "#A32D2D";
+  const indexaValue = indexaOverview?.total_value ?? 0;
+  // total_cost includes cash (72€) — use total_cost minus non-invested cash
+  const indexaInvested = indexaOverview
+    ? indexaOverview.total_cost - Math.max(0, indexaOverview.total_value - indexaOverview.total_cost > 0
+        ? 0
+        : indexaOverview.total_cost - indexaOverview.total_value)
+    : 0;
+  // Simpler: just use total_cost as capital invested for Indexa
+  const indexaCost = indexaOverview?.total_cost ?? 0;
+  const indexaPL = indexaOverview?.total_gain ?? 0;
+  const indexaValueDelta = getIndexaValueDelta();
+  const indexaContrib = getIndexaContrib();
 
+  // ── Horos, Mintos, Cripto — añadir aquí cuando se implementen ───────────
+  // const horosValue = useHorosStore(s => s.overview?.total_value ?? 0);
+  // ...
+
+  // ── Combinados ───────────────────────────────────────────────────────────
+  const totalValue = trValue + indexaValue;
+  const totalInvested = trInvested + indexaCost;
+  const totalPL = trPL + indexaPL;
+
+  // Rentabilidad anualizada combinada: weighted avg de CAGR TR + TWR Indexa
+  const combinedReturnPct = useMemo(() => {
+    if (totalInvested <= 0) return null;
+    const trReturnPct = trCAGR !== null ? trCAGR * 100 : null;
+    const indexaReturnPct = indexaOverview?.twr_pct ?? null;
+
+    if (trReturnPct === null && indexaReturnPct === null) return null;
+    if (trReturnPct === null) return indexaReturnPct;
+    if (indexaReturnPct === null) return trReturnPct;
+
+    const trWeight = trInvested / totalInvested;
+    const indexaWeight = indexaCost / totalInvested;
+    return trReturnPct * trWeight + indexaReturnPct * indexaWeight;
+  }, [trCAGR, indexaOverview, trInvested, indexaCost, totalInvested]);
+
+  // Deltas vs mes anterior
   const deltaTotal = useMemo(() => {
-    if (deltas.totalValue === null) return null;
-    const sign = deltas.totalValue >= 0 ? "+" : "";
-    return `${sign}${formatEur(deltas.totalValue)} vs mes anterior`;
-  }, [deltas.totalValue]);
+    const trDelta = trDeltas.totalValue ?? 0;
+    const indexaDelta = indexaValueDelta ?? 0;
+    const combined = trDelta + indexaDelta;
+    if (combined === 0 && trDeltas.totalValue === null) return null;
+    return `${combined >= 0 ? "+" : ""}${formatEur(combined)} vs mes anterior`;
+  }, [trDeltas.totalValue, indexaValueDelta]);
 
   const deltaCapital = useMemo(() => {
-    if (deltas.capitalInvertido === null) return null;
-    const sign = deltas.capitalInvertido >= 0 ? "+" : "";
-    return `${sign}${formatEur(deltas.capitalInvertido)} aportado este mes`;
-  }, [deltas.capitalInvertido]);
+    const trDelta = trDeltas.capitalInvertido ?? 0;
+    const indexaDelta = indexaContrib ?? 0;
+    const combined = trDelta + indexaDelta;
+    if (combined === 0 && trDeltas.capitalInvertido === null) return null;
+    return `${combined >= 0 ? "+" : ""}${formatEur(combined)} aportado este mes`;
+  }, [trDeltas.capitalInvertido, indexaContrib]);
+
+  // Animated counters
+  const animatedTotal = useAnimatedCounter(totalValue);
+  const animatedCapital = useAnimatedCounter(totalInvested);
+  const animatedPL = useAnimatedCounter(totalPL);
+  const animatedReturn = useAnimatedCounter(combinedReturnPct ?? 0);
+
+  const plColor = totalPL >= 0 ? "var(--platform-tr)" : "#A32D2D";
 
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <KPICard
         label="Total patrimonio"
-        rawValue={totalValue}
         displayValue={formatEur(animatedTotal)}
         icon={<Wallet size={14} strokeWidth={1.75} />}
         accentColor="var(--platform-tr)"
         borderTopColor="var(--platform-tr)"
-        sparklineValues={sparklines.totalValue}
+        sparklineValues={trSparklines.totalValue}
         deltaLabel={deltaTotal}
-        deltaColor={deltas.totalValue !== null && deltas.totalValue >= 0 ? "var(--platform-tr)" : "#A32D2D"}
+        deltaColor={
+          (trDeltas.totalValue ?? 0) + (indexaValueDelta ?? 0) >= 0
+            ? "var(--platform-tr)"
+            : "#A32D2D"
+        }
       />
       <KPICard
         label="Capital invertido"
-        rawValue={capitalInvertido}
         displayValue={formatEur(animatedCapital)}
         icon={<BarChart2 size={14} strokeWidth={1.75} />}
         accentColor="#3B78B0"
         borderTopColor="#3B78B0"
-        sparklineValues={sparklines.capitalInvertido}
+        sparklineValues={trSparklines.capitalInvertido}
         deltaLabel={deltaCapital}
         deltaColor="#3B78B0"
       />
       <KPICard
         label="P&L total"
-        rawValue={plAmount}
-        displayValue={`${plAmount >= 0 ? "+" : ""}${formatEur(animatedPL)}`}
-        icon={plAmount >= 0 ? <TrendingUp size={14} strokeWidth={1.75} /> : <TrendingDown size={14} strokeWidth={1.75} />}
+        displayValue={`${totalPL >= 0 ? "+" : ""}${formatEur(animatedPL)}`}
+        icon={totalPL >= 0 ? <TrendingUp size={14} strokeWidth={1.75} /> : <TrendingDown size={14} strokeWidth={1.75} />}
         accentColor={plColor}
         borderTopColor={plColor}
-        sparklineValues={sparklines.plAmount}
+        sparklineValues={trSparklines.plAmount}
       />
       <KPICard
         label="Rentabilidad anualizada"
-        rawValue={cagrPct ?? 0}
-        displayValue={cagrPct !== null ? formatPct(animatedCAGR, true) : "—"}
+        displayValue={combinedReturnPct !== null ? formatPct(animatedReturn, true) : "—"}
         icon={<Percent size={14} strokeWidth={1.75} />}
         accentColor="#7260C4"
         borderTopColor="#7260C4"

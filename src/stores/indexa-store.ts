@@ -41,6 +41,10 @@ interface IndexaStore {
   getTWRChartData: () => Array<{ label: string; twr: number; benchmark: number | null }>;
   getEvolutionData: () => Array<{ label: string; value: number; cost: number }>;
   getMonthName: (month: number) => string;
+  /** Variación del valor en el último mes registrado (€) */
+  getLastMonthValueDelta: () => number | null;
+  /** Dinero nuevo aportado en el último mes registrado (€) */
+  getLastMonthContribution: () => number | null;
 }
 
 export const useIndexaStore = create<IndexaStore>((set, get) => ({
@@ -161,5 +165,35 @@ export const useIndexaStore = create<IndexaStore>((set, get) => ({
       });
     }
     return points;
+  },
+
+  getLastMonthValueDelta: () => {
+    const returns = get().monthlyReturns;
+    const overview = get().overview;
+    if (!returns.length || !overview) return null;
+    const last = returns[returns.length - 1];
+    if (last.return_pct === null) return null;
+    // Estimated previous month value = current / (1 + return%)
+    const prevValue = overview.total_value / (1 + last.return_pct / 100);
+    return parseFloat((overview.total_value - prevValue).toFixed(2));
+  },
+
+  getLastMonthContribution: () => {
+    const transactions = get().transactions;
+    if (!transactions.length) return null;
+    const sorted = [...transactions].sort(
+      (a, b) => new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime()
+    );
+    const lastTx = sorted[0];
+    const lastDate = new Date(lastTx.transaction_date);
+    const lastMonthKey = `${lastDate.getFullYear()}-${String(lastDate.getMonth() + 1).padStart(2, '0')}`;
+    return transactions
+      .filter((tx) => {
+        if (tx.type !== 'subscription') return false;
+        const d = new Date(tx.transaction_date);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        return key === lastMonthKey;
+      })
+      .reduce((s, tx) => s + tx.amount, 0) || null;
   },
 }));
