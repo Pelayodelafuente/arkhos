@@ -45,7 +45,8 @@ export async function getETHBalance(address: string): Promise<number | null> {
       return null;
     }
 
-    const url = new URL('https://api.etherscan.io/api');
+    const url = new URL('https://api.etherscan.io/v2/api');
+    url.searchParams.set('chainid', '1');
     url.searchParams.set('module', 'account');
     url.searchParams.set('action', 'balance');
     url.searchParams.set('address', address);
@@ -85,7 +86,8 @@ export async function getUSDCBalance(address: string): Promise<number | null> {
       return null;
     }
 
-    const url = new URL('https://api.etherscan.io/api');
+    const url = new URL('https://api.etherscan.io/v2/api');
+    url.searchParams.set('chainid', '1');
     url.searchParams.set('module', 'account');
     url.searchParams.set('action', 'tokenbalance');
     url.searchParams.set(
