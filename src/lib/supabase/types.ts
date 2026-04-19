@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -220,6 +220,292 @@ export type Database = {
           },
         ]
       }
+      crypto_assets: {
+        Row: {
+          avg_buy_price_eur: number | null
+          coingecko_id: string | null
+          color: string | null
+          created_at: string | null
+          current_balance: number | null
+          current_price_eur: number | null
+          id: string
+          is_active: boolean | null
+          name: string
+          network: string | null
+          notes: string | null
+          price_updated_at: string | null
+          sort_order: number | null
+          symbol: string
+          total_invested_eur: number | null
+          user_id: string
+          wallet_address: string | null
+          wallet_type: string | null
+        }
+        Insert: {
+          avg_buy_price_eur?: number | null
+          coingecko_id?: string | null
+          color?: string | null
+          created_at?: string | null
+          current_balance?: number | null
+          current_price_eur?: number | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          network?: string | null
+          notes?: string | null
+          price_updated_at?: string | null
+          sort_order?: number | null
+          symbol: string
+          total_invested_eur?: number | null
+          user_id: string
+          wallet_address?: string | null
+          wallet_type?: string | null
+        }
+        Update: {
+          avg_buy_price_eur?: number | null
+          coingecko_id?: string | null
+          color?: string | null
+          created_at?: string | null
+          current_balance?: number | null
+          current_price_eur?: number | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          network?: string | null
+          notes?: string | null
+          price_updated_at?: string | null
+          sort_order?: number | null
+          symbol?: string
+          total_invested_eur?: number | null
+          user_id?: string
+          wallet_address?: string | null
+          wallet_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crypto_assets_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crypto_defi_positions: {
+        Row: {
+          apy: number | null
+          asset_id: string | null
+          created_at: string | null
+          current_amount: number | null
+          deposited_amount: number | null
+          id: string
+          is_active: boolean | null
+          last_updated: string | null
+          network: string
+          protocol: string
+          user_id: string
+          wallet_address: string
+          yield_earned: number | null
+        }
+        Insert: {
+          apy?: number | null
+          asset_id?: string | null
+          created_at?: string | null
+          current_amount?: number | null
+          deposited_amount?: number | null
+          id?: string
+          is_active?: boolean | null
+          last_updated?: string | null
+          network: string
+          protocol: string
+          user_id: string
+          wallet_address: string
+          yield_earned?: number | null
+        }
+        Update: {
+          apy?: number | null
+          asset_id?: string | null
+          created_at?: string | null
+          current_amount?: number | null
+          deposited_amount?: number | null
+          id?: string
+          is_active?: boolean | null
+          last_updated?: string | null
+          network?: string
+          protocol?: string
+          user_id?: string
+          wallet_address?: string
+          yield_earned?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crypto_defi_positions_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "crypto_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crypto_defi_positions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crypto_monthly_plan: {
+        Row: {
+          asset_id: string | null
+          destination: string | null
+          id: string
+          is_active: boolean | null
+          monthly_amount_eur: number | null
+          notes: string | null
+          started_at: string | null
+          user_id: string
+        }
+        Insert: {
+          asset_id?: string | null
+          destination?: string | null
+          id?: string
+          is_active?: boolean | null
+          monthly_amount_eur?: number | null
+          notes?: string | null
+          started_at?: string | null
+          user_id: string
+        }
+        Update: {
+          asset_id?: string | null
+          destination?: string | null
+          id?: string
+          is_active?: boolean | null
+          monthly_amount_eur?: number | null
+          notes?: string | null
+          started_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crypto_monthly_plan_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "crypto_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crypto_monthly_plan_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crypto_price_history: {
+        Row: {
+          created_at: string | null
+          id: string
+          price_date: string
+          price_eur: number | null
+          symbol: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          price_date: string
+          price_eur?: number | null
+          symbol: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          price_date?: string
+          price_eur?: number | null
+          symbol?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crypto_price_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crypto_transactions: {
+        Row: {
+          amount_eur: number | null
+          asset_id: string | null
+          created_at: string | null
+          exchange: string | null
+          external_id: string | null
+          fee_eur: number | null
+          id: string
+          notes: string | null
+          price_eur: number | null
+          quantity: number | null
+          source: string | null
+          transaction_date: string
+          tx_hash: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount_eur?: number | null
+          asset_id?: string | null
+          created_at?: string | null
+          exchange?: string | null
+          external_id?: string | null
+          fee_eur?: number | null
+          id?: string
+          notes?: string | null
+          price_eur?: number | null
+          quantity?: number | null
+          source?: string | null
+          transaction_date: string
+          tx_hash?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount_eur?: number | null
+          asset_id?: string | null
+          created_at?: string | null
+          exchange?: string | null
+          external_id?: string | null
+          fee_eur?: number | null
+          id?: string
+          notes?: string | null
+          price_eur?: number | null
+          quantity?: number | null
+          source?: string | null
+          transaction_date?: string
+          tx_hash?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crypto_transactions_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "crypto_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crypto_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       expense_categories: {
         Row: {
           color: string
@@ -254,6 +540,531 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "expense_categories_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      horos_annual_costs: {
+        Row: {
+          created_at: string
+          custody_fee: number | null
+          id: string
+          management_fee: number | null
+          operation_costs: number | null
+          other_fees: number | null
+          total_costs: number | null
+          total_pct: number | null
+          user_id: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          custody_fee?: number | null
+          id?: string
+          management_fee?: number | null
+          operation_costs?: number | null
+          other_fees?: number | null
+          total_costs?: number | null
+          total_pct?: number | null
+          user_id: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          custody_fee?: number | null
+          id?: string
+          management_fee?: number | null
+          operation_costs?: number | null
+          other_fees?: number | null
+          total_costs?: number | null
+          total_pct?: number | null
+          user_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "horos_annual_costs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      horos_fund_distribution: {
+        Row: {
+          category: string
+          created_at: string
+          dimension: string
+          id: string
+          percentage: number
+          report_date: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          dimension: string
+          id?: string
+          percentage: number
+          report_date: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          dimension?: string
+          id?: string
+          percentage?: number
+          report_date?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "horos_fund_distribution_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      horos_monthly_plan: {
+        Row: {
+          created_at: string
+          execution_day: number
+          id: string
+          is_active: boolean
+          monthly_amount: number
+          notes: string | null
+          started_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          execution_day?: number
+          id?: string
+          is_active?: boolean
+          monthly_amount?: number
+          notes?: string | null
+          started_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          execution_day?: number
+          id?: string
+          is_active?: boolean
+          monthly_amount?: number
+          notes?: string | null
+          started_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "horos_monthly_plan_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      horos_nav_history: {
+        Row: {
+          created_at: string
+          id: string
+          nav_date: string
+          nav_price: number
+          portfolio_value: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nav_date: string
+          nav_price: number
+          portfolio_value?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nav_date?: string
+          nav_price?: number
+          portfolio_value?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "horos_nav_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      horos_position: {
+        Row: {
+          account_code: string | null
+          fund_name: string
+          id: string
+          isin: string
+          nav_date: string
+          nav_price: number
+          shares: number
+          total_cost: number
+          total_value: number
+          unrealized_gain: number | null
+          unrealized_gain_pct: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_code?: string | null
+          fund_name?: string
+          id?: string
+          isin?: string
+          nav_date: string
+          nav_price: number
+          shares: number
+          total_cost: number
+          total_value: number
+          unrealized_gain?: number | null
+          unrealized_gain_pct?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_code?: string | null
+          fund_name?: string
+          id?: string
+          isin?: string
+          nav_date?: string
+          nav_price?: number
+          shares?: number
+          total_cost?: number
+          total_value?: number
+          unrealized_gain?: number | null
+          unrealized_gain_pct?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "horos_position_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      horos_transactions: {
+        Row: {
+          amount: number
+          commission: number
+          created_at: string
+          id: string
+          nav_applied: number
+          notes: string | null
+          request_date: string
+          shares: number
+          source: string
+          type: string
+          user_id: string
+          value_date: string
+        }
+        Insert: {
+          amount: number
+          commission?: number
+          created_at?: string
+          id?: string
+          nav_applied: number
+          notes?: string | null
+          request_date: string
+          shares: number
+          source?: string
+          type: string
+          user_id: string
+          value_date: string
+        }
+        Update: {
+          amount?: number
+          commission?: number
+          created_at?: string
+          id?: string
+          nav_applied?: number
+          notes?: string | null
+          request_date?: string
+          shares?: number
+          source?: string
+          type?: string
+          user_id?: string
+          value_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "horos_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      indexa_funds: {
+        Row: {
+          annual_cost: number | null
+          benchmark: string | null
+          color: string | null
+          created_at: string
+          currency: string
+          fund_type: string
+          id: string
+          is_active: boolean
+          isin: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          annual_cost?: number | null
+          benchmark?: string | null
+          color?: string | null
+          created_at?: string
+          currency?: string
+          fund_type: string
+          id?: string
+          is_active?: boolean
+          isin: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          annual_cost?: number | null
+          benchmark?: string | null
+          color?: string | null
+          created_at?: string
+          currency?: string
+          fund_type?: string
+          id?: string
+          is_active?: boolean
+          isin?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "indexa_funds_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      indexa_monthly_plan: {
+        Row: {
+          created_at: string
+          execution_day: number
+          id: string
+          is_active: boolean
+          monthly_amount: number
+          notes: string | null
+          started_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          execution_day?: number
+          id?: string
+          is_active?: boolean
+          monthly_amount: number
+          notes?: string | null
+          started_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          execution_day?: number
+          id?: string
+          is_active?: boolean
+          monthly_amount?: number
+          notes?: string | null
+          started_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "indexa_monthly_plan_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      indexa_monthly_returns: {
+        Row: {
+          benchmark_pct: number | null
+          created_at: string
+          cumulative_twr: number | null
+          id: string
+          month: number
+          return_pct: number | null
+          user_id: string
+          year: number
+        }
+        Insert: {
+          benchmark_pct?: number | null
+          created_at?: string
+          cumulative_twr?: number | null
+          id?: string
+          month: number
+          return_pct?: number | null
+          user_id: string
+          year: number
+        }
+        Update: {
+          benchmark_pct?: number | null
+          created_at?: string
+          cumulative_twr?: number | null
+          id?: string
+          month?: number
+          return_pct?: number | null
+          user_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "indexa_monthly_returns_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      indexa_positions: {
+        Row: {
+          allocation_pct: number | null
+          fund_id: string | null
+          fund_type: string | null
+          id: string
+          price_per_share: number | null
+          shares: number | null
+          total_cost: number
+          total_value: number
+          unrealized_gain: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          allocation_pct?: number | null
+          fund_id?: string | null
+          fund_type?: string | null
+          id?: string
+          price_per_share?: number | null
+          shares?: number | null
+          total_cost?: number
+          total_value?: number
+          unrealized_gain?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          allocation_pct?: number | null
+          fund_id?: string | null
+          fund_type?: string | null
+          id?: string
+          price_per_share?: number | null
+          shares?: number | null
+          total_cost?: number
+          total_value?: number
+          unrealized_gain?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "indexa_positions_fund_id_fkey"
+            columns: ["fund_id"]
+            isOneToOne: false
+            referencedRelation: "indexa_funds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "indexa_positions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      indexa_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          fiscal_result: number
+          fund_id: string | null
+          id: string
+          notes: string | null
+          price_per_share: number | null
+          retention: number
+          shares: number | null
+          source: string
+          transaction_date: string
+          type: string
+          user_id: string
+          value_date: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          fiscal_result?: number
+          fund_id?: string | null
+          id?: string
+          notes?: string | null
+          price_per_share?: number | null
+          retention?: number
+          shares?: number | null
+          source?: string
+          transaction_date: string
+          type: string
+          user_id: string
+          value_date?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          fiscal_result?: number
+          fund_id?: string | null
+          id?: string
+          notes?: string | null
+          price_per_share?: number | null
+          retention?: number
+          shares?: number | null
+          source?: string
+          transaction_date?: string
+          type?: string
+          user_id?: string
+          value_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "indexa_transactions_fund_id_fkey"
+            columns: ["fund_id"]
+            isOneToOne: false
+            referencedRelation: "indexa_funds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "indexa_transactions_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -1699,6 +2510,9 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: undefined
       }
+      seed_crypto_for_user: { Args: { p_user_id: string }; Returns: undefined }
+      seed_horos_for_user: { Args: { p_user_id: string }; Returns: undefined }
+      seed_indexa_for_user: { Args: { p_user_id: string }; Returns: Json }
       seed_patrimonio_for_user: { Args: { p_user_id: string }; Returns: Json }
       seed_patrimonio_transactions: {
         Args: { p_user_id: string }
