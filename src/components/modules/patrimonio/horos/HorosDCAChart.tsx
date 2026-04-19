@@ -19,6 +19,12 @@ const GRANATE = "#8B1A2E";
 const fmt = (v: number) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(v);
 
+const fmtNav = (v: number) =>
+  new Intl.NumberFormat("es-ES", { minimumFractionDigits: 3, maximumFractionDigits: 3 }).format(v);
+
+const fmtShares = (v: number) =>
+  new Intl.NumberFormat("es-ES", { minimumFractionDigits: 6, maximumFractionDigits: 6 }).format(v);
+
 interface TooltipProps {
   active?: boolean;
   payload?: Array<{ payload: HorosDCAPoint }>;
@@ -45,11 +51,11 @@ function CustomTooltip({ active, payload }: TooltipProps) {
         </div>
         <div className="flex justify-between gap-4">
           <span style={{ color: "var(--text-muted)" }}>VL pagado</span>
-          <span style={{ color: HOROS_COLOR }}>{d.nav_applied.toFixed(3)}€</span>
+          <span style={{ color: HOROS_COLOR }}>{fmtNav(d.nav_applied)}€</span>
         </div>
         <div className="flex justify-between gap-4">
           <span style={{ color: "var(--text-muted)" }}>Participaciones</span>
-          <span>{d.shares.toFixed(6)}</span>
+          <span>{fmtShares(d.shares)}</span>
         </div>
       </div>
     </div>
@@ -83,11 +89,11 @@ export function HorosDCAChart({ data, currentNav, avgNav }: HorosDCAChartProps) 
         <div className="flex flex-col items-end gap-1">
           <div className="flex items-center gap-1.5 text-xs font-mono">
             <span className="h-0.5 w-4 rounded" style={{ backgroundColor: HOROS_COLOR }} />
-            <span style={{ color: "var(--text-muted)" }}>VL actual {currentNav.toFixed(3)}€</span>
+            <span style={{ color: "var(--text-muted)" }}>VL actual {fmtNav(currentNav)}€</span>
           </div>
           <div className="flex items-center gap-1.5 text-xs font-mono">
             <span className="h-0.5 w-4 rounded border-dashed border-t border-stone-400" style={{ borderTop: "2px dashed #888" }} />
-            <span style={{ color: "var(--text-muted)" }}>Precio medio {avgNav.toFixed(3)}€</span>
+            <span style={{ color: "var(--text-muted)" }}>Precio medio {fmtNav(avgNav)}€</span>
           </div>
         </div>
       </div>
@@ -115,7 +121,7 @@ export function HorosDCAChart({ data, currentNav, avgNav }: HorosDCAChartProps) 
             stroke={HOROS_COLOR}
             strokeWidth={2}
             label={{
-              value: `VL actual ${currentNav.toFixed(0)}€`,
+              value: `VL actual ${currentNav.toFixed(0)}€`,  // toFixed(0) OK here — chart label, not VL display
               position: "insideTopRight",
               fontSize: 9,
               fill: HOROS_COLOR,

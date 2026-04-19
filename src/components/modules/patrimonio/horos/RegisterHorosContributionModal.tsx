@@ -6,6 +6,9 @@ import { registerHorosContribution } from "@/app/actions/horos";
 
 const HOROS_COLOR = "#7260C4";
 
+const fmtShares = (v: number) =>
+  new Intl.NumberFormat("es-ES", { minimumFractionDigits: 6, maximumFractionDigits: 6 }).format(v);
+
 interface RegisterHorosContributionModalProps {
   defaultAmount?: number;
   onClose: () => void;
@@ -30,7 +33,7 @@ export function RegisterHorosContributionModal({
   const parsedAmount = parseFloat(amount.replace(",", "."));
   const sharesObtained =
     !isNaN(parsedNav) && parsedNav > 0 && !isNaN(parsedAmount)
-      ? (parsedAmount / parsedNav).toFixed(6)
+      ? fmtShares(parsedAmount / parsedNav)
       : null;
 
   async function handleSubmit(e: React.FormEvent) {

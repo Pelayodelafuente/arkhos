@@ -10,6 +10,9 @@ const GRANATE = "#8B1A2E";
 const fmt = (v: number) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(v);
 
+const fmtNav = (v: number) =>
+  new Intl.NumberFormat("es-ES", { minimumFractionDigits: 3, maximumFractionDigits: 3 }).format(v);
+
 const fmtPct = (v: number, signed = true) =>
   `${signed && v >= 0 ? "+" : ""}${v.toFixed(2)}%`;
 
@@ -81,7 +84,7 @@ export function HorosKPIs({ overview, isLoading }: HorosKPIsProps) {
       />
       <KPICard
         label="VL actual"
-        value={`${overview.nav_price.toFixed(3)}€`}
+        value={`${fmtNav(overview.nav_price)}€`}
         accent={HOROS_COLOR}
       />
     </motion.div>

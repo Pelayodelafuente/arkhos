@@ -14,6 +14,9 @@ import {
 const HOROS_COLOR = "#7260C4";
 const GRANATE = "#8B1A2E";
 
+const fmtNav = (v: number) =>
+  new Intl.NumberFormat("es-ES", { minimumFractionDigits: 3, maximumFractionDigits: 3 }).format(v);
+
 interface NAVPoint {
   date: string;
   nav: number;
@@ -48,7 +51,7 @@ function CustomTooltip({ active, payload, label }: TooltipProps) {
       <div className="space-y-1 font-mono">
         <div className="flex justify-between gap-4">
           <span style={{ color: "var(--text-muted)" }}>VL</span>
-          <span style={{ color: HOROS_COLOR }}>{nav.toFixed(3)}€</span>
+          <span style={{ color: HOROS_COLOR }}>{fmtNav(nav)}€</span>
         </div>
         {avg > 0 && (
           <div className="flex justify-between gap-4">
@@ -92,7 +95,7 @@ export function HorosNAVChart({ data, avgNav }: HorosNAVChartProps) {
               className="h-0.5 w-4 rounded"
               style={{ border: `1px dashed ${GRANATE}` }}
             />
-            <span style={{ color: "var(--text-muted)" }}>VL medio {avgNav.toFixed(3)}€</span>
+            <span style={{ color: "var(--text-muted)" }}>VL medio {fmtNav(avgNav)}€</span>
           </div>
         )}
       </div>

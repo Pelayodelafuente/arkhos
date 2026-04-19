@@ -10,6 +10,12 @@ const GRANATE = "#8B1A2E";
 const fmt = (v: number) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(v);
 
+const fmtNav = (v: number) =>
+  new Intl.NumberFormat("es-ES", { minimumFractionDigits: 3, maximumFractionDigits: 3 }).format(v);
+
+const fmtShares = (v: number) =>
+  new Intl.NumberFormat("es-ES", { minimumFractionDigits: 6, maximumFractionDigits: 6 }).format(v);
+
 const fmtPct = (v: number, signed = true) =>
   `${signed && v >= 0 ? "+" : ""}${v.toFixed(2)}%`;
 
@@ -73,18 +79,18 @@ export function HorosPositionCard({ overview, onUpdateNav }: HorosPositionCardPr
         }}
       >
         <span className="font-mono text-sm font-semibold" style={{ color: HOROS_COLOR }}>
-          VL {overview.nav_price.toFixed(3)}€
+          VL {fmtNav(overview.nav_price)}€
         </span>
         <span className="text-xs" style={{ color: "var(--text-muted)" }}>· {navDate}</span>
       </div>
 
       {/* Metrics grid */}
       <div className="grid grid-cols-2 gap-3">
-        <MetricRow label="Participaciones" value={overview.shares.toFixed(6)} mono />
-        <MetricRow label="VL medio de compra" value={`${overview.avg_nav.toFixed(3)}€`} mono />
+        <MetricRow label="Participaciones" value={fmtShares(overview.shares)} mono />
+        <MetricRow label="VL medio de compra" value={`${fmtNav(overview.avg_nav)}€`} mono />
         <MetricRow
           label="Diferencia VL"
-          value={`${overview.nav_gain_per_share >= 0 ? "+" : ""}${overview.nav_gain_per_share.toFixed(3)}€`}
+          value={`${overview.nav_gain_per_share >= 0 ? "+" : ""}${fmtNav(Math.abs(overview.nav_gain_per_share))}€`}
           color={navGainColor}
           mono
         />

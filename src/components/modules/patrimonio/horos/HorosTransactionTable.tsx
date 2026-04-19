@@ -9,6 +9,12 @@ const GRANATE = "#8B1A2E";
 const fmt = (v: number) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(v);
 
+const fmtNav = (v: number) =>
+  new Intl.NumberFormat("es-ES", { minimumFractionDigits: 3, maximumFractionDigits: 3 }).format(v);
+
+const fmtShares = (v: number) =>
+  new Intl.NumberFormat("es-ES", { minimumFractionDigits: 6, maximumFractionDigits: 6 }).format(v);
+
 const fmtDate = (d: string) =>
   new Date(d).toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit", year: "2-digit" });
 
@@ -67,10 +73,10 @@ export function HorosTransactionTable({ data }: HorosTransactionTableProps) {
                     {fmtDate(row.transaction.value_date)}
                   </td>
                   <td className="px-3 py-2.5 font-mono whitespace-nowrap" style={{ color: HOROS_COLOR }}>
-                    {row.transaction.nav_applied.toFixed(3)}€
+                    {fmtNav(row.transaction.nav_applied)}€
                   </td>
                   <td className="px-3 py-2.5 font-mono whitespace-nowrap" style={{ color: "var(--text-primary)" }}>
-                    {row.transaction.shares.toFixed(6)}
+                    {fmtShares(row.transaction.shares)}
                   </td>
                   <td className="px-3 py-2.5 font-mono whitespace-nowrap" style={{ color: "var(--text-primary)" }}>
                     {fmt(row.transaction.amount)}

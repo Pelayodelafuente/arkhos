@@ -9,6 +9,9 @@ const HOROS_COLOR = "#7260C4";
 const fmt = (v: number) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(v);
 
+const fmtNav6 = (v: number) =>
+  new Intl.NumberFormat("es-ES", { minimumFractionDigits: 6, maximumFractionDigits: 6 }).format(v);
+
 export function HorosFiscalPanel() {
   const [copied, setCopied] = useState(false);
 
@@ -33,7 +36,7 @@ Depositario: ${fiscalData.depositary}
 
 A 31/12/2025 (Modelo 714 — Patrimonio):
 • Participaciones: ${fiscalData.shares}
-• VL a 31/12/2025: ${fiscalData.nav.toFixed(6)}€
+• VL a 31/12/2025: ${fmtNav6(fiscalData.nav)}€
 • Valor efectivo: ${fmt(fiscalData.value)}
 • Coste: ${fmt(fiscalData.cost)}
 • Revalorización latente: +${fmt(fiscalData.unrealizedGain)} (+${((fiscalData.unrealizedGain / fiscalData.cost) * 100).toFixed(2)}%)
@@ -82,7 +85,7 @@ A 31/12/2025 (Modelo 714 — Patrimonio):
 
         <div className="grid grid-cols-2 gap-3 mb-4">
           <FiscalRow label="Participaciones a 31/12" value={fiscalData.shares.toString()} />
-          <FiscalRow label="VL a 31/12/2025" value={`${fiscalData.nav.toFixed(6)}€`} />
+          <FiscalRow label="VL a 31/12/2025" value={`${fmtNav6(fiscalData.nav)}€`} />
           <FiscalRow label="Valor efectivo" value={fmt(fiscalData.value)} />
           <FiscalRow label="Coste" value={fmt(fiscalData.cost)} />
           <FiscalRow

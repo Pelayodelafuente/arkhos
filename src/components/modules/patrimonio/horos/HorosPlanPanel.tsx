@@ -21,6 +21,12 @@ const GRANATE = "#8B1A2E";
 const fmt = (v: number) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(v);
 
+const fmtNav = (v: number) =>
+  new Intl.NumberFormat("es-ES", { minimumFractionDigits: 3, maximumFractionDigits: 3 }).format(v);
+
+const fmtShares = (v: number) =>
+  new Intl.NumberFormat("es-ES", { minimumFractionDigits: 4, maximumFractionDigits: 4 }).format(v);
+
 const fmtDate = (d: string) =>
   new Date(d).toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit", year: "numeric" });
 
@@ -168,13 +174,13 @@ export function HorosPlanPanel({ plan, transactions, getProjection }: HorosPlanP
                     {fmtDate(tx.value_date)}
                   </span>
                   <span style={{ color: HOROS_COLOR }} className="font-mono">
-                    VL {tx.nav_applied.toFixed(3)}€
+                    VL {fmtNav(tx.nav_applied)}€
                   </span>
                   <span className="font-mono font-medium" style={{ color: "var(--text-primary)" }}>
                     {fmt(tx.amount)}
                   </span>
                   <span className="font-mono text-right min-w-[80px]" style={{ color: "var(--text-muted)" }}>
-                    {cumPart.toFixed(4)} part.
+                    {fmtShares(cumPart)} part.
                   </span>
                 </div>
               );

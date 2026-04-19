@@ -7,6 +7,9 @@ import { useHorosStore } from "@/stores/horos-store";
 
 const HOROS_COLOR = "#7260C4";
 
+const fmtNav = (v: number) =>
+  new Intl.NumberFormat("es-ES", { minimumFractionDigits: 3, maximumFractionDigits: 3 }).format(v);
+
 interface UpdateNAVModalProps {
   currentNav: number;
   onClose: () => void;
@@ -72,7 +75,7 @@ export function UpdateNAVModal({ currentNav, onClose, onSuccess }: UpdateNAVModa
           <div>
             <h2 className="font-heading text-lg text-foreground">Actualizar VL</h2>
             <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
-              VL actual: {currentNav.toFixed(3)}€
+              VL actual: {fmtNav(currentNav)}€
             </p>
           </div>
           <button
