@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { useIndexaStore } from "@/stores/indexa-store";
+import { useHorosStore } from "@/stores/horos-store";
 import type { PlatformSlug } from "@/types/patrimonio";
 import { GlobalKPIs } from "@/components/modules/patrimonio/dashboard/GlobalKPIs";
 import { PlatformCard, type PlatformCardProps } from "@/components/modules/patrimonio/dashboard/PlatformCard";
@@ -87,9 +88,13 @@ export function PatrimonioDashboard() {
   const togglePrivacyMode = usePatrimonioStore((s) => s.togglePrivacyMode);
 
   const indexaOverview = useIndexaStore((s) => s.overview);
+  const horosPosition = useHorosStore((s) => s.position);
 
-  // Global total: TR + Indexa (other platforms pending)
-  const totalValue = (overview?.total_value ?? 0) + (indexaOverview?.total_value ?? 0);
+  // Global total: TR + Indexa + Horos
+  const totalValue =
+    (overview?.total_value ?? 0) +
+    (indexaOverview?.total_value ?? 0) +
+    (horosPosition?.total_value ?? 0);
   const animatedTotal = useAnimatedCounter(totalValue);
 
   const updatedTime = useMemo(() => {
@@ -157,10 +162,11 @@ export function PatrimonioDashboard() {
       color: "var(--platform-horos)",
       colorHex: "#7260C4",
       icon: <BarChart2 size={16} strokeWidth={1.75} aria-hidden="true" />,
-      currentValue: null,
-      totalInvested: null,
-      plAmount: null,
-      plPercentage: null,
+      currentValue: horosPosition?.total_value ?? null,
+      totalInvested: horosPosition?.total_cost ?? null,
+      plAmount: horosPosition?.unrealized_gain ?? null,
+      plPercentage: horosPosition?.unrealized_gain_pct ?? null,
+      positionsCount: horosPosition ? 1 : undefined,
       isActive: activePlatform === "horos",
     },
     {
