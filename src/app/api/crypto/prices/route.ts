@@ -67,11 +67,18 @@ export async function POST(): Promise<Response> {
     }
   }
 
+  // USDC total = aUSDC (in Aave) + regular USDC in wallet
+  const aUSDCAmount = aavePosition?.currentAmount ?? null;
+  const usdcTotalBalance =
+    aUSDCAmount !== null || usdcBalance !== null
+      ? (aUSDCAmount ?? 0) + (usdcBalance ?? 0)
+      : null;
+
   // Update on-chain balances
   const onChainBalances: Array<[string, number | null]> = [
     ['BTC', btcBalance],
     ['ETH', ethBalance],
-    ['USDC', usdcBalance],
+    ['USDC', usdcTotalBalance],
   ];
 
   for (const [symbol, balance] of onChainBalances) {
