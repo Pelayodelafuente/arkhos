@@ -137,18 +137,16 @@ export const useHorosStore = create<HorosStore>((set, get) => ({
     const navHistory = get().navHistory;
     if (transactions.length === 0 || navHistory.length === 0) return [];
 
-    let cumInvested = 0;
-    const txMap = new Map<string, number>();
-    for (const tx of transactions) {
-      txMap.set(tx.value_date, (txMap.get(tx.value_date) ?? 0) + tx.amount);
-    }
-
+    // Calculate portfolio_value as cumShares × nav_price — avoids inconsistencies
+    // in seeded portfolio_value data (e.g. pre-subscription vs post-subscription value)
     return navHistory.map((h) => {
-      const txOnDate = txMap.get(h.nav_date) ?? 0;
-      cumInvested += txOnDate;
+      const txsToDate = transactions.filter((tx) => tx.value_date <= h.nav_date);
+      const cumShares = txsToDate.reduce((s, tx) => s + tx.shares, 0);
+      const cumInvested = txsToDate.reduce((s, tx) => s + tx.amount, 0);
+      const portfolioValue = parseFloat((cumShares * h.nav_price).toFixed(2));
       return {
         label: new Date(h.nav_date).toLocaleDateString('es-ES', { month: 'short', day: 'numeric' }),
-        portfolio_value: h.portfolio_value,
+        portfolio_value: portfolioValue,
         cumulative_invested: cumInvested,
         nav_date: h.nav_date,
       };
