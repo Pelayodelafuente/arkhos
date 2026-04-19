@@ -84,8 +84,38 @@ export async function POST(): Promise<Response> {
       .eq('symbol', symbol);
   }
 
-  // Update Aave APY if available
-  if (aavePosition?.apy != null) {
+  // Update Aave position: current_amount + yield_earned + apy
+  if (aavePosition?.currentAmount != null) {
+    // Read deposited_amount from DB to compute yield
+    const { data: defiRow } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .from('crypto_defi_positions' as any)
+      .select('deposited_amount')
+      .eq('user_id', user.id)
+      .eq('protocol', 'aave')
+      .single();
+
+    const depositedAmount =
+      (defiRow as { deposited_amount: number | null } | null)?.deposited_amount ?? 0;
+    const yieldEarned = Math.max(0, aavePosition.currentAmount - depositedAmount);
+
+    await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .from('crypto_defi_positions' as any)
+      .update({
+        current_amount: aavePosition.currentAmount,
+        yield_earned: yieldEarned,
+        apy: aavePosition.apy,
+        last_updated: updatedAt,
+      })
+      .eq('user_id', user.id)
+      .eq('protocol', 'aave');
+
+    console.log(
+      `[aave] Updated: current=${aavePosition.currentAmount.toFixed(4)} deposited=${depositedAmount} yield=${yieldEarned.toFixed(4)} apy=${aavePosition.apy?.toFixed(2)}%`,
+    );
+  } else if (aavePosition?.apy != null) {
+    // At minimum update APY even if balance fetch failed
     await supabase
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('crypto_defi_positions' as any)
