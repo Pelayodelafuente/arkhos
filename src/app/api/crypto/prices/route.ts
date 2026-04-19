@@ -1,0 +1,105 @@
+import { createClient } from '@/lib/supabase/server';
+import { getCoinGeckoPrices } from '@/lib/crypto/coingecko';
+import { getBTCBalance, getETHBalance, getUSDCBalance } from '@/lib/crypto/blockchain';
+import { getAaveUSDCPosition } from '@/lib/crypto/aave';
+import type { CoinGeckoPrices } from '@/lib/crypto/coingecko';
+import type { AavePosition } from '@/lib/crypto/aave';
+
+const BTC_ADDRESS = 'bc1YOUR_BTC_ADDRESS';
+const ETH_ADDRESS = '0xYOUR_ETH_ADDRESS';
+const USDC_ADDRESS = '0xYOUR_WALLET_ADDRESS';
+
+const COINGECKO_ID_TO_SYMBOL: Record<string, string> = {
+  bitcoin: 'BTC',
+  ethereum: 'ETH',
+  'usd-coin': 'USDC',
+  'quant-network': 'QNT',
+  decentraland: 'MANA',
+  'fetch-ai': 'FET',
+  bittensor: 'TAO',
+};
+
+interface Balances {
+  BTC: number | null;
+  ETH: number | null;
+  USDC: number | null;
+}
+
+interface CryptoPricesResponse {
+  prices: CoinGeckoPrices | null;
+  balances: Balances;
+  aave: AavePosition | null;
+  updatedAt: string;
+}
+
+export async function POST(): Promise<Response> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const [prices, btcBalance, ethBalance, usdcBalance, aavePosition] = await Promise.all([
+    getCoinGeckoPrices(),
+    getBTCBalance(BTC_ADDRESS),
+    getETHBalance(ETH_ADDRESS),
+    getUSDCBalance(USDC_ADDRESS),
+    getAaveUSDCPosition(USDC_ADDRESS),
+  ]);
+
+  const updatedAt = new Date().toISOString();
+
+  // Update prices from CoinGecko
+  if (prices !== null) {
+    for (const [cgId, symbol] of Object.entries(COINGECKO_ID_TO_SYMBOL)) {
+      const priceData = prices[cgId];
+      if (!priceData) continue;
+      await supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from('crypto_assets' as any)
+        .update({
+          current_price_eur: priceData.eur,
+          price_updated_at: updatedAt,
+        })
+        .eq('user_id', user.id)
+        .eq('symbol', symbol);
+    }
+  }
+
+  // Update on-chain balances
+  const onChainBalances: Array<[string, number | null]> = [
+    ['BTC', btcBalance],
+    ['ETH', ethBalance],
+    ['USDC', usdcBalance],
+  ];
+
+  for (const [symbol, balance] of onChainBalances) {
+    if (balance === null) continue;
+    await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .from('crypto_assets' as any)
+      .update({ current_balance: balance, price_updated_at: updatedAt })
+      .eq('user_id', user.id)
+      .eq('symbol', symbol);
+  }
+
+  // Update Aave APY if available
+  if (aavePosition?.apy != null) {
+    await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .from('crypto_defi_positions' as any)
+      .update({ apy: aavePosition.apy, last_updated: updatedAt })
+      .eq('user_id', user.id)
+      .eq('protocol', 'aave');
+  }
+
+  const body: CryptoPricesResponse = {
+    prices,
+    balances: { BTC: btcBalance, ETH: ethBalance, USDC: usdcBalance },
+    aave: aavePosition,
+    updatedAt,
+  };
+
+  return Response.json(body);
+}

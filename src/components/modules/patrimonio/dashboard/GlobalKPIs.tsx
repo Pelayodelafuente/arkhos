@@ -6,6 +6,7 @@ import { Wallet, TrendingUp, TrendingDown, BarChart2, Percent } from "lucide-rea
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { useIndexaStore } from "@/stores/indexa-store";
 import { useHorosStore } from "@/stores/horos-store";
+import { useCryptoStore } from "@/stores/crypto-store";
 
 const formatEur = (value: number) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
@@ -190,10 +191,19 @@ export function GlobalKPIs() {
   const horosPL = horosPosition?.unrealized_gain ?? 0;
   const horosContrib = getHorosLastMonthContribution();
 
+  // ── Crypto ───────────────────────────────────────────────────────────────
+  const getCryptoOverview = useCryptoStore((s) => s.getOverview);
+  const cryptoOverview = getCryptoOverview();
+
+  const cryptoValue = cryptoOverview?.total_value_eur ?? 0;
+  const cryptoInvested = cryptoOverview?.total_invested_eur ?? 0;
+  const cryptoPL = cryptoOverview?.pl_eur ?? 0;
+  const cryptoMonthlyPlan = cryptoOverview?.monthly_plan_eur ?? 150;
+
   // ── Combinados ───────────────────────────────────────────────────────────
-  const totalValue = trValue + indexaValue + horosValue;
-  const totalInvested = trInvested + indexaCost + horosCost;
-  const totalPL = trPL + indexaPL + horosPL;
+  const totalValue = trValue + indexaValue + horosValue + cryptoValue;
+  const totalInvested = trInvested + indexaCost + horosCost + cryptoInvested;
+  const totalPL = trPL + indexaPL + horosPL + cryptoPL;
 
   // Rentabilidad anualizada combinada: weighted avg de CAGR TR + TWR Indexa
   const combinedReturnPct = useMemo(() => {
@@ -224,10 +234,11 @@ export function GlobalKPIs() {
     const trDelta = trDeltas.capitalInvertido ?? 0;
     const indexaDelta = indexaContrib ?? 0;
     const horosDelta = horosContrib ?? 0;
-    const combined = trDelta + indexaDelta + horosDelta;
+    const cryptoDelta = cryptoMonthlyPlan;
+    const combined = trDelta + indexaDelta + horosDelta + cryptoDelta;
     if (combined === 0 && trDeltas.capitalInvertido === null) return null;
     return `${combined >= 0 ? "+" : ""}${formatEur(combined)} aportado este mes`;
-  }, [trDeltas.capitalInvertido, indexaContrib, horosContrib]);
+  }, [trDeltas.capitalInvertido, indexaContrib, horosContrib, cryptoMonthlyPlan]);
 
   // Animated counters
   const animatedTotal = useAnimatedCounter(totalValue);

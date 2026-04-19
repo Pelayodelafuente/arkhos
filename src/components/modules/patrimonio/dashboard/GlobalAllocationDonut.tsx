@@ -5,6 +5,7 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { useIndexaStore } from "@/stores/indexa-store";
 import { useHorosStore } from "@/stores/horos-store";
+import { useCryptoStore } from "@/stores/crypto-store";
 
 const formatEur = (value: number) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
@@ -59,11 +60,14 @@ export function GlobalAllocationDonut() {
   const overview = usePatrimonioStore((s) => s.overview);
   const indexaOverview = useIndexaStore((s) => s.overview);
   const horosPosition = useHorosStore((s) => s.position);
+  const getCryptoOverview = useCryptoStore((s) => s.getOverview);
+  const cryptoOverview = getCryptoOverview();
 
   const totalValue =
     (overview?.total_value ?? 0) +
     (indexaOverview?.total_value ?? 0) +
-    (horosPosition?.total_value ?? 0);
+    (horosPosition?.total_value ?? 0) +
+    (cryptoOverview?.total_value_eur ?? 0);
 
   const segments = useMemo((): PlatformSegment[] => {
     return PLATFORM_CONFIG.map((cfg) => {
@@ -75,6 +79,10 @@ export function GlobalAllocationDonut() {
         const value = horosPosition?.total_value ?? 0;
         return { name: cfg.name, value, color: cfg.color };
       }
+      if (cfg.slug === "crypto") {
+        const value = cryptoOverview?.total_value_eur ?? 0;
+        return { name: cfg.name, value, color: cfg.color };
+      }
       const platform = platforms.find((p) => p.slug === cfg.slug);
       if (!platform) return { name: cfg.name, value: 0, color: cfg.color };
       const value = assets
@@ -82,7 +90,7 @@ export function GlobalAllocationDonut() {
         .reduce((s, a) => s + (a.current_value ?? 0), 0);
       return { name: cfg.name, value, color: cfg.color };
     }).filter((s) => s.value > 0);
-  }, [assets, platforms, indexaOverview, horosPosition]);
+  }, [assets, platforms, indexaOverview, horosPosition, cryptoOverview]);
 
   const hasData = segments.length > 0 && totalValue > 0;
 
