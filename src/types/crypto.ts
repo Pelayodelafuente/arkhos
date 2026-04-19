@@ -80,17 +80,19 @@ export interface CryptoMonthlyPlan {
 // ── Computed view models ──────────────────────────────────────────────────────
 
 export interface CryptoAssetWithPL extends CryptoAsset {
-  current_value_eur: number;  // current_balance × current_price_eur
-  pl_eur: number;             // current_value_eur - total_invested_eur
-  pl_pct: number;             // pl_eur / total_invested_eur × 100
-  weight_pct: number;         // % of total portfolio value
+  current_value_eur: number;   // current_balance × current_price_eur (or avg fallback)
+  pl_eur: number | null;       // null when current_price_eur is unknown
+  pl_pct: number | null;       // null when current_price_eur is unknown
+  weight_pct: number;          // % of total portfolio value
+  has_live_price: boolean;     // true when current_price_eur is not null
 }
 
 export interface CryptoOverview {
   total_value_eur: number;
   total_invested_eur: number;
-  pl_eur: number;
-  pl_pct: number;
+  pl_eur: number | null;       // null when no live prices available
+  pl_pct: number | null;       // null when no live prices available
+  has_live_prices: boolean;    // true when at least one asset has a live price
   aave_yield_eur: number;
   monthly_plan_eur: number;
 }

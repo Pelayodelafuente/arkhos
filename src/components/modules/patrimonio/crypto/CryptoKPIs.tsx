@@ -59,8 +59,9 @@ export function CryptoKPIs({ overview, isLoading }: CryptoKPIsProps) {
     );
   }
 
+  const hasPL = overview.has_live_prices && overview.pl_eur !== null && overview.pl_pct !== null;
   const plColor =
-    overview.pl_eur >= 0 ? "var(--platform-patrimonio, #2E7D6B)" : "#A32D2D";
+    hasPL && (overview.pl_eur as number) >= 0 ? "var(--platform-patrimonio, #2E7D6B)" : "#A32D2D";
 
   return (
     <motion.div
@@ -81,15 +82,21 @@ export function CryptoKPIs({ overview, isLoading }: CryptoKPIsProps) {
       <KPICard
         label="P&L total"
         value={
-          <span>
-            {overview.pl_eur >= 0 ? "+" : ""}
-            {formatEur(overview.pl_eur)}{" "}
-            <span className="text-sm opacity-75">
-              ({formatPct(overview.pl_pct)})
+          hasPL ? (
+            <span>
+              {(overview.pl_eur as number) >= 0 ? "+" : ""}
+              {formatEur(overview.pl_eur as number)}{" "}
+              <span className="text-sm opacity-75">
+                ({formatPct(overview.pl_pct as number)})
+              </span>
             </span>
-          </span>
+          ) : (
+            <span className="text-sm font-normal" style={{ color: "var(--text-muted)" }}>
+              — Actualiza precios
+            </span>
+          )
         }
-        accent={plColor}
+        accent={hasPL ? plColor : undefined}
       />
       <KPICard
         label="Intereses Aave"

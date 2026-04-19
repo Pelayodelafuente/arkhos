@@ -69,25 +69,29 @@ export const useCryptoStore = create<CryptoStore>((set, get) => ({
     const assets = get().assets;
     if (assets.length === 0) return [];
 
-    // First pass: calculate raw values
     const withValues = assets.map((asset) => {
+      const has_live_price = asset.current_price_eur !== null;
+      // Use avg_buy_price as fallback only for value estimation (weight), not P&L
       const price = asset.current_price_eur ?? asset.avg_buy_price_eur;
       const current_value_eur = asset.current_balance * price;
-      const pl_eur = current_value_eur - asset.total_invested_eur;
+      const pl_eur = has_live_price
+        ? current_value_eur - asset.total_invested_eur
+        : null;
       const pl_pct =
-        asset.total_invested_eur > 0
-          ? (pl_eur / asset.total_invested_eur) * 100
-          : 0;
-      return { asset, current_value_eur, pl_eur, pl_pct };
+        has_live_price && asset.total_invested_eur > 0
+          ? ((current_value_eur - asset.total_invested_eur) / asset.total_invested_eur) * 100
+          : null;
+      return { asset, current_value_eur, pl_eur, pl_pct, has_live_price };
     });
 
     const totalValue = withValues.reduce((sum, { current_value_eur }) => sum + current_value_eur, 0);
 
-    return withValues.map(({ asset, current_value_eur, pl_eur, pl_pct }) => ({
+    return withValues.map(({ asset, current_value_eur, pl_eur, pl_pct, has_live_price }) => ({
       ...asset,
       current_value_eur,
       pl_eur,
       pl_pct,
+      has_live_price,
       weight_pct: totalValue > 0 ? (current_value_eur / totalValue) * 100 : 0,
     }));
   },
@@ -98,8 +102,12 @@ export const useCryptoStore = create<CryptoStore>((set, get) => ({
 
     const total_value_eur = assetsWithPL.reduce((sum, a) => sum + a.current_value_eur, 0);
     const total_invested_eur = assetsWithPL.reduce((sum, a) => sum + a.total_invested_eur, 0);
-    const pl_eur = total_value_eur - total_invested_eur;
-    const pl_pct = total_invested_eur > 0 ? (pl_eur / total_invested_eur) * 100 : 0;
+    const has_live_prices = assetsWithPL.some((a) => a.has_live_price);
+    const pl_eur = has_live_prices ? total_value_eur - total_invested_eur : null;
+    const pl_pct =
+      has_live_prices && total_invested_eur > 0
+        ? ((total_value_eur - total_invested_eur) / total_invested_eur) * 100
+        : null;
 
     const defiPositions = get().defiPositions;
     const usdcAsset = get().assets.find((a) => a.symbol === 'USDC');
@@ -119,6 +127,7 @@ export const useCryptoStore = create<CryptoStore>((set, get) => ({
       total_invested_eur,
       pl_eur,
       pl_pct,
+      has_live_prices,
       aave_yield_eur,
       monthly_plan_eur,
     };
@@ -131,7 +140,7 @@ export const useCryptoStore = create<CryptoStore>((set, get) => ({
     const btcAsset = assets.find((a) => a.symbol === 'BTC');
     if (!btcAsset) return [];
 
-    const btcCurrentPrice = btcAsset.current_price_eur ?? btcAsset.avg_buy_price_eur;
+    const btcCurrentPrice = btcAsset.current_price_eur ?? 0;
 
     return transactions
       .filter((tx) => tx.asset_id === btcAsset.id && tx.type === 'buy')
@@ -159,9 +168,7 @@ export const useCryptoStore = create<CryptoStore>((set, get) => ({
 
     return transactions.map((tx): CryptoTransactionWithAsset => {
       const asset = tx.asset_id != null ? (assetMap.get(tx.asset_id) ?? null) : null;
-      const currentPrice = asset
-        ? (asset.current_price_eur ?? asset.avg_buy_price_eur)
-        : null;
+      const currentPrice = asset?.current_price_eur ?? null;
 
       const current_value_eur =
         currentPrice != null && tx.quantity != null

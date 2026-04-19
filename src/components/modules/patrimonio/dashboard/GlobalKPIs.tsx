@@ -197,13 +197,13 @@ export function GlobalKPIs() {
 
   const cryptoValue = cryptoOverview?.total_value_eur ?? 0;
   const cryptoInvested = cryptoOverview?.total_invested_eur ?? 0;
-  const cryptoPL = cryptoOverview?.pl_eur ?? 0;
+  const cryptoPL = cryptoOverview?.pl_eur ?? null;
   const cryptoMonthlyPlan = cryptoOverview?.monthly_plan_eur ?? 150;
 
   // ── Combinados ───────────────────────────────────────────────────────────
   const totalValue = trValue + indexaValue + horosValue + cryptoValue;
   const totalInvested = trInvested + indexaCost + horosCost + cryptoInvested;
-  const totalPL = trPL + indexaPL + horosPL + cryptoPL;
+  const totalPL = trPL + indexaPL + horosPL + (cryptoPL ?? 0);
 
   // Rentabilidad anualizada combinada: weighted avg de CAGR TR + TWR Indexa
   const combinedReturnPct = useMemo(() => {

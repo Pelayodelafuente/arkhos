@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, RefreshCw } from "lucide-react";
 import type { CryptoAssetWithPL } from "@/types/crypto";
 
 const formatEur = (v: number) =>
@@ -33,15 +33,17 @@ interface CryptoAssetCardProps {
 }
 
 export function CryptoAssetCard({ asset }: CryptoAssetCardProps) {
-  const isPositive = asset.pl_eur >= 0;
+  const hasPL = asset.has_live_price && asset.pl_eur !== null && asset.pl_pct !== null;
+  const isPositive = hasPL ? (asset.pl_eur as number) >= 0 : true;
   const plColor = isPositive ? "var(--platform-patrimonio, #2E7D6B)" : "#A32D2D";
   const assetColor = asset.color ?? "var(--platform-crypto)";
-  const currentPrice = asset.current_price_eur ?? asset.avg_buy_price_eur;
-  const showLossAlert = asset.pl_pct < -30;
+  const currentPrice = asset.current_price_eur;
+  const showLossAlert = hasPL && (asset.pl_pct as number) < -30;
 
-  const progressPct = asset.avg_buy_price_eur > 0
-    ? Math.min((currentPrice / asset.avg_buy_price_eur) * 100, 200)
-    : 100;
+  const progressPct =
+    currentPrice !== null && asset.avg_buy_price_eur > 0
+      ? Math.min((currentPrice / asset.avg_buy_price_eur) * 100, 200)
+      : null;
 
   return (
     <motion.div
@@ -102,29 +104,43 @@ export function CryptoAssetCard({ asset }: CryptoAssetCardProps) {
       </div>
 
       {/* P&L row */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <span
-          className="font-mono text-sm font-medium tabular-nums"
-          style={{ color: plColor }}
-        >
-          {asset.pl_eur >= 0 ? "+" : ""}
-          {formatEur(asset.pl_eur)}
-        </span>
-        <span
-          className="text-xs px-2 py-0.5 rounded-full font-mono"
+      {hasPL ? (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span
+            className="font-mono text-sm font-medium tabular-nums"
+            style={{ color: plColor }}
+          >
+            {(asset.pl_eur as number) >= 0 ? "+" : ""}
+            {formatEur(asset.pl_eur as number)}
+          </span>
+          <span
+            className="text-xs px-2 py-0.5 rounded-full font-mono"
+            style={{
+              backgroundColor: isPositive
+                ? "rgba(46,125,107,0.10)"
+                : "rgba(163,45,45,0.10)",
+              color: plColor,
+              border: isPositive
+                ? "1px solid rgba(46,125,107,0.20)"
+                : "1px solid rgba(163,45,45,0.20)",
+            }}
+          >
+            {formatPct(asset.pl_pct as number)}
+          </span>
+        </div>
+      ) : (
+        <div
+          className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs"
           style={{
-            backgroundColor: isPositive
-              ? "rgba(46,125,107,0.10)"
-              : "rgba(163,45,45,0.10)",
-            color: plColor,
-            border: isPositive
-              ? "1px solid rgba(46,125,107,0.20)"
-              : "1px solid rgba(163,45,45,0.20)",
+            backgroundColor: "rgba(160,120,80,0.06)",
+            color: "var(--text-muted)",
+            border: "1px solid rgba(160,120,80,0.18)",
           }}
         >
-          {formatPct(asset.pl_pct)}
-        </span>
-      </div>
+          <RefreshCw size={12} strokeWidth={2} aria-hidden="true" />
+          Sin precio en tiempo real — pulsa Actualizar
+        </div>
+      )}
 
       {/* Loss alert for deep losses */}
       {showLossAlert && (
@@ -146,25 +162,27 @@ export function CryptoAssetCard({ asset }: CryptoAssetCardProps) {
       <div className="space-y-1">
         <div className="flex justify-between text-xs font-mono" style={{ color: "var(--text-muted)" }}>
           <span>Precio medio: {formatEur(asset.avg_buy_price_eur)}</span>
-          <span>Actual: {formatEur(currentPrice)}</span>
+          <span>Actual: {currentPrice !== null ? formatEur(currentPrice) : "—"}</span>
         </div>
-        <div
-          className="h-1.5 rounded-full overflow-hidden"
-          style={{ backgroundColor: "var(--border, rgba(160,120,80,0.15))" }}
-          role="progressbar"
-          aria-valuenow={progressPct}
-          aria-valuemin={0}
-          aria-valuemax={200}
-          aria-label={`Precio actual vs precio medio: ${progressPct.toFixed(0)}%`}
-        >
+        {progressPct !== null && (
           <div
-            className="h-full rounded-full transition-all duration-500"
-            style={{
-              width: `${Math.min(progressPct, 100)}%`,
-              backgroundColor: isPositive ? "var(--platform-patrimonio, #2E7D6B)" : "#A32D2D",
-            }}
-          />
-        </div>
+            className="h-1.5 rounded-full overflow-hidden"
+            style={{ backgroundColor: "var(--border, rgba(160,120,80,0.15))" }}
+            role="progressbar"
+            aria-valuenow={progressPct}
+            aria-valuemin={0}
+            aria-valuemax={200}
+            aria-label={`Precio actual vs precio medio: ${progressPct.toFixed(0)}%`}
+          >
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{
+                width: `${Math.min(progressPct, 100)}%`,
+                backgroundColor: isPositive ? "var(--platform-patrimonio, #2E7D6B)" : "#A32D2D",
+              }}
+            />
+          </div>
+        )}
       </div>
 
       {/* Wallet address */}

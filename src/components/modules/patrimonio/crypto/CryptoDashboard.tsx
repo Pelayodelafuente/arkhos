@@ -67,7 +67,8 @@ function AltcoinsTable() {
           </thead>
           <tbody>
             {altcoins.map((a, i) => {
-              const plColor = a.pl_eur >= 0 ? "var(--platform-patrimonio, #2E7D6B)" : "#A32D2D";
+              const hasPL = a.has_live_price && a.pl_eur !== null && a.pl_pct !== null;
+              const plColor = hasPL && (a.pl_eur as number) >= 0 ? "var(--platform-patrimonio, #2E7D6B)" : "#A32D2D";
               return (
                 <tr
                   key={a.id}
@@ -109,17 +110,19 @@ function AltcoinsTable() {
                   </td>
                   <td
                     className="px-3 py-2.5 font-mono text-xs tabular-nums"
-                    style={{ color: plColor }}
+                    style={{ color: hasPL ? plColor : "var(--text-muted)" }}
                   >
-                    {a.pl_eur >= 0 ? "+" : ""}
-                    {formatEur(a.pl_eur)}
+                    {hasPL
+                      ? `${(a.pl_eur as number) >= 0 ? "+" : ""}${formatEur(a.pl_eur as number)}`
+                      : "—"}
                   </td>
                   <td
                     className="px-3 py-2.5 font-mono text-xs tabular-nums"
-                    style={{ color: plColor }}
+                    style={{ color: hasPL ? plColor : "var(--text-muted)" }}
                   >
-                    {a.pl_pct >= 0 ? "+" : ""}
-                    {a.pl_pct.toFixed(2)}%
+                    {hasPL
+                      ? `${(a.pl_pct as number) >= 0 ? "+" : ""}${(a.pl_pct as number).toFixed(2)}%`
+                      : "—"}
                   </td>
                   <td
                     className="px-3 py-2.5 font-mono text-xs tabular-nums"
