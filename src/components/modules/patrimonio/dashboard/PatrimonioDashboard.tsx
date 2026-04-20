@@ -14,6 +14,7 @@ import {
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { useIndexaStore } from "@/stores/indexa-store";
 import { useHorosStore } from "@/stores/horos-store";
+import { useCryptoStore } from "@/stores/crypto-store";
 import type { PlatformSlug } from "@/types/patrimonio";
 import { GlobalKPIs } from "@/components/modules/patrimonio/dashboard/GlobalKPIs";
 import { PlatformCard, type PlatformCardProps } from "@/components/modules/patrimonio/dashboard/PlatformCard";
@@ -89,12 +90,15 @@ export function PatrimonioDashboard() {
 
   const indexaOverview = useIndexaStore((s) => s.overview);
   const horosPosition = useHorosStore((s) => s.position);
+  const getCryptoOverview = useCryptoStore((s) => s.getOverview);
+  const cryptoOverview = getCryptoOverview();
 
-  // Global total: TR + Indexa + Horos
+  // Global total: TR + Indexa + Horos + Crypto
   const totalValue =
     (overview?.total_value ?? 0) +
     (indexaOverview?.total_value ?? 0) +
-    (horosPosition?.total_value ?? 0);
+    (horosPosition?.total_value ?? 0) +
+    (cryptoOverview?.total_value_eur ?? 0);
   const animatedTotal = useAnimatedCounter(totalValue);
 
   const updatedTime = useMemo(() => {
@@ -189,10 +193,10 @@ export function PatrimonioDashboard() {
       color: "var(--platform-crypto)",
       colorHex: "#B07A3A",
       icon: <Bitcoin size={16} strokeWidth={1.75} aria-hidden="true" />,
-      currentValue: null,
-      totalInvested: null,
-      plAmount: null,
-      plPercentage: null,
+      currentValue: cryptoOverview?.total_value_eur ?? null,
+      totalInvested: cryptoOverview?.total_invested_eur ?? null,
+      plAmount: cryptoOverview?.pl_eur ?? null,
+      plPercentage: cryptoOverview?.pl_pct ?? null,
       isActive: activePlatform === "crypto",
     },
   ];

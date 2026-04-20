@@ -170,13 +170,6 @@ export function GlobalKPIs() {
   const getIndexaContrib = useIndexaStore((s) => s.getLastMonthContribution);
 
   const indexaValue = indexaOverview?.total_value ?? 0;
-  // total_cost includes cash (72€) — use total_cost minus non-invested cash
-  const indexaInvested = indexaOverview
-    ? indexaOverview.total_cost - Math.max(0, indexaOverview.total_value - indexaOverview.total_cost > 0
-        ? 0
-        : indexaOverview.total_cost - indexaOverview.total_value)
-    : 0;
-  // Simpler: just use total_cost as capital invested for Indexa
   const indexaCost = indexaOverview?.total_cost ?? 0;
   const indexaPL = indexaOverview?.total_gain ?? 0;
   const indexaValueDelta = getIndexaValueDelta();
@@ -205,20 +198,29 @@ export function GlobalKPIs() {
   const totalInvested = trInvested + indexaCost + horosCost + cryptoInvested;
   const totalPL = trPL + indexaPL + horosPL + (cryptoPL ?? 0);
 
-  // Rentabilidad anualizada combinada: weighted avg de CAGR TR + TWR Indexa
   const combinedReturnPct = useMemo(() => {
     if (totalInvested <= 0) return null;
+
     const trReturnPct = trCAGR !== null ? trCAGR * 100 : null;
     const indexaReturnPct = indexaOverview?.twr_pct ?? null;
+    const horosReturnPct = horosPosition?.unrealized_gain_pct ?? null;
+    const cryptoReturnPct = (cryptoOverview?.pl_pct !== null && cryptoOverview?.pl_pct !== undefined)
+      ? cryptoOverview.pl_pct
+      : null;
 
-    if (trReturnPct === null && indexaReturnPct === null) return null;
-    if (trReturnPct === null) return indexaReturnPct;
-    if (indexaReturnPct === null) return trReturnPct;
+    const weightedReturns: Array<{ ret: number; weight: number }> = [];
+    if (trReturnPct !== null && trInvested > 0) weightedReturns.push({ ret: trReturnPct, weight: trInvested });
+    if (indexaReturnPct !== null && indexaCost > 0) weightedReturns.push({ ret: indexaReturnPct, weight: indexaCost });
+    if (horosReturnPct !== null && horosCost > 0) weightedReturns.push({ ret: horosReturnPct, weight: horosCost });
+    if (cryptoReturnPct !== null && cryptoInvested > 0) weightedReturns.push({ ret: cryptoReturnPct, weight: cryptoInvested });
 
-    const trWeight = trInvested / totalInvested;
-    const indexaWeight = indexaCost / totalInvested;
-    return trReturnPct * trWeight + indexaReturnPct * indexaWeight;
-  }, [trCAGR, indexaOverview, trInvested, indexaCost, totalInvested]);
+    if (weightedReturns.length === 0) return null;
+
+    const totalWeight = weightedReturns.reduce((s, w) => s + w.weight, 0);
+    if (totalWeight <= 0) return null;
+
+    return weightedReturns.reduce((s, w) => s + w.ret * (w.weight / totalWeight), 0);
+  }, [trCAGR, indexaOverview, horosPosition, cryptoOverview, trInvested, indexaCost, horosCost, cryptoInvested, totalInvested]);
 
   // Deltas vs mes anterior
   const deltaTotal = useMemo(() => {

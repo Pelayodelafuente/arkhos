@@ -12,6 +12,8 @@ import {
 } from "recharts";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { useIndexaStore } from "@/stores/indexa-store";
+import { useHorosStore } from "@/stores/horos-store";
+import { useCryptoStore } from "@/stores/crypto-store";
 
 const formatEur = (value: number) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
@@ -87,6 +89,15 @@ export function GlobalEvolutionChart() {
   const indexaTx = useIndexaStore((s) => s.transactions);
   const indexaReturns = useIndexaStore((s) => s.monthlyReturns);
 
+  // ── Horos — nav history + transactions para reconstruir valor mensual ────
+  const horosNavHistory = useHorosStore((s) => s.navHistory);
+  const horosTransactions = useHorosStore((s) => s.transactions);
+
+  // ── Crypto — transactions para evolución de capital invertido ────────────
+  const cryptoTransactions = useCryptoStore((s) => s.transactions);
+  const getCryptoOverview = useCryptoStore((s) => s.getOverview);
+  const cryptoOverview = getCryptoOverview();
+
   // ── Construir mapa mensual de TR: 'YYYY-MM' → {value, invested} ──────────
   const trByMonth = useMemo(() => {
     const map = new Map<string, { value: number; invested: number }>();
@@ -138,32 +149,92 @@ export function GlobalEvolutionChart() {
     return map;
   }, [indexaTx, indexaReturns]);
 
-  // ── Fusionar: todos los meses de TR + Indexa ────────────────────────────
-  // Para meses de Indexa anteriores al primer snapshot TR, el valor de TR = 0
-  // Para meses de TR anteriores al inicio de Indexa, el coste de Indexa = 0
+  // ── Construir mapa mensual de Horos: 'YYYY-MM' → {value, cost} ──────────
+  const horosByMonth = useMemo(() => {
+    if (horosNavHistory.length === 0 || horosTransactions.length === 0) {
+      return new Map<string, { value: number; cost: number }>();
+    }
+
+    const map = new Map<string, { value: number; cost: number }>();
+    for (const h of horosNavHistory) {
+      const key = toMonthKey(h.nav_date);
+      const txsToDate = horosTransactions.filter((tx) => tx.value_date <= h.nav_date);
+      const cumShares = txsToDate.reduce((s, tx) => s + tx.shares, 0);
+      const cumCost = txsToDate.reduce((s, tx) => s + tx.amount, 0);
+      if (cumShares > 0) {
+        const portfolioValue = parseFloat((cumShares * h.nav_price).toFixed(2));
+        const existing = map.get(key);
+        if (!existing || cumCost >= existing.cost) {
+          map.set(key, { value: portfolioValue, cost: cumCost });
+        }
+      }
+    }
+    return map;
+  }, [horosNavHistory, horosTransactions]);
+
+  // ── Construir mapa mensual de Crypto: 'YYYY-MM' → {cost} ────────────────
+  const cryptoByMonth = useMemo(() => {
+    if (cryptoTransactions.length === 0) {
+      return new Map<string, number>();
+    }
+    const map = new Map<string, number>();
+    let cumCost = 0;
+    const sorted = [...cryptoTransactions]
+      .filter((tx) => tx.type === "buy" && tx.amount_eur != null)
+      .sort((a, b) => a.transaction_date.localeCompare(b.transaction_date));
+
+    for (const tx of sorted) {
+      cumCost += tx.amount_eur ?? 0;
+      const key = toMonthKey(tx.transaction_date);
+      map.set(key, cumCost);
+    }
+    return map;
+  }, [cryptoTransactions]);
+
+  // ── Fusionar: todos los meses de TR + Indexa + Horos + Crypto ──────────
   const data = useMemo(() => {
-    // Unión de todas las claves de mes de ambas fuentes
-    const allKeys = [...new Set([...trByMonth.keys(), ...indexaByMonth.keys()])].sort();
+    const allKeys = [
+      ...new Set([
+        ...trByMonth.keys(),
+        ...indexaByMonth.keys(),
+        ...horosByMonth.keys(),
+        ...cryptoByMonth.keys(),
+      ]),
+    ].sort();
 
-    // Indexa: arrastrar el último valor conocido hacia adelante
-    // (cuando hay snapshot TR de un mes posterior al último mes Indexa)
     let lastIndexa = { value: 0, cost: 0 };
+    let lastHoros = { value: 0, cost: 0 };
+    let lastCryptoCost = 0;
 
-    return allKeys.map((key) => {
+    const cryptoCurrentValue = cryptoOverview?.total_value_eur ?? 0;
+
+    return allKeys.map((key, idx) => {
       const tr = trByMonth.get(key) ?? { value: 0, invested: 0 };
       const indexa = indexaByMonth.get(key);
       if (indexa) lastIndexa = indexa;
-      // Solo añadir Indexa si ya ha empezado (cost > 0)
+      const horos = horosByMonth.get(key);
+      if (horos) lastHoros = horos;
+      const cryptoCost = cryptoByMonth.get(key);
+      if (cryptoCost !== undefined) lastCryptoCost = cryptoCost;
+
       const idxValue = lastIndexa.cost > 0 ? lastIndexa.value : 0;
       const idxCost = lastIndexa.cost > 0 ? lastIndexa.cost : 0;
+      const horosValue = lastHoros.cost > 0 ? lastHoros.value : 0;
+      const horosCost = lastHoros.cost > 0 ? lastHoros.cost : 0;
+
+      const isLastPoint = idx === allKeys.length - 1;
+      const cryptoValue = lastCryptoCost > 0
+        ? (isLastPoint && cryptoCurrentValue > 0 ? cryptoCurrentValue : lastCryptoCost)
+        : 0;
+
       return {
         key,
         label: monthKeyLabel(key),
-        value: parseFloat((tr.value + idxValue).toFixed(2)),
-        invested: parseFloat((tr.invested + idxCost).toFixed(2)),
+        value: parseFloat((tr.value + idxValue + horosValue + cryptoValue).toFixed(2)),
+        invested: parseFloat((tr.invested + idxCost + horosCost + lastCryptoCost).toFixed(2)),
       };
     });
-  }, [trByMonth, indexaByMonth]);
+  }, [trByMonth, indexaByMonth, horosByMonth, cryptoByMonth, cryptoOverview]);
 
   if (data.length === 0) return <EmptyState />;
 
@@ -176,6 +247,7 @@ export function GlobalEvolutionChart() {
       }}
     >
       <p className="mb-4 text-sm font-medium text-foreground">Evolución del patrimonio</p>
+      <p className="mb-3 text-xs text-muted-foreground">TR · Indexa · Horos · Crypto — histórico acumulado</p>
 
       <ResponsiveContainer width="100%" height={280}>
         <AreaChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
