@@ -260,13 +260,11 @@ export async function updateIndexaPrices(
 
   for (const u of updates) {
     const totalValue = u.shares * u.pricePerShare;
-    const unrealizedGain = totalValue - u.totalCost;
     const { error } = await supabase
       .from('indexa_positions')
       .update({
         price_per_share: u.pricePerShare,
         total_value: totalValue,
-        unrealized_gain: unrealizedGain,
         updated_at: now,
       })
       .eq('id', u.positionId)
