@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
+import { RefreshCw } from "lucide-react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { Skeleton } from "@/components/ui";
 import { useIndexaStore } from "@/stores/indexa-store";
@@ -13,6 +15,7 @@ import { IndexaRiskMetrics } from "./IndexaRiskMetrics";
 import { IndexaPlanPanel } from "./IndexaPlanPanel";
 import { IndexaProjectionSimulator } from "./IndexaProjectionSimulator";
 import { IndexaFiscalPanel } from "./IndexaFiscalPanel";
+import { UpdateIndexaPricesModal } from "./UpdateIndexaPricesModal";
 
 const TABS = [
   { id: "dashboard" as const, label: "Resumen" },
@@ -66,6 +69,8 @@ function DonutTooltip({ active, payload }: DonutTooltipProps) {
 type ActiveTab = "dashboard" | "performance" | "plan" | "fiscal";
 
 export function IndexaDashboard() {
+  const [showPricesModal, setShowPricesModal] = useState(false);
+
   const activeTab = useIndexaStore((s) => s.activeTab);
   const setActiveTab = useIndexaStore((s) => s.setActiveTab);
   const overview = useIndexaStore((s) => s.overview);
@@ -129,6 +134,37 @@ export function IndexaDashboard() {
             {tab.label}
           </button>
         ))}
+      </div>
+
+      {/* Update prices button */}
+      <div className="flex items-center justify-between gap-3">
+        {overview?.last_updated ? (
+          <p className="font-mono text-xs text-muted-foreground">
+            Precios actualizados:{" "}
+            {new Date(overview.last_updated).toLocaleDateString("es-ES", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </p>
+        ) : (
+          <p className="font-mono text-xs text-muted-foreground">Sin actualización reciente</p>
+        )}
+        <button
+          type="button"
+          onClick={() => setShowPricesModal(true)}
+          className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all"
+          style={{
+            backgroundColor: "rgba(59,120,176,0.10)",
+            color: "#3B78B0",
+            border: "1px solid rgba(59,120,176,0.20)",
+          }}
+        >
+          <RefreshCw size={12} strokeWidth={2} />
+          Actualizar precios
+        </button>
       </div>
 
       {/* Tab content */}
@@ -251,6 +287,11 @@ export function IndexaDashboard() {
           />
         )}
       </motion.div>
+
+      {/* Modal */}
+      {showPricesModal && (
+        <UpdateIndexaPricesModal onClose={() => setShowPricesModal(false)} />
+      )}
     </div>
   );
 }

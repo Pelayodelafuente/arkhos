@@ -241,6 +241,44 @@ export async function importIndexaCSV(
   return { ok: true, imported: count ?? rows.length };
 }
 
+// ── Update fund prices manually ─────────────────────────────────────────────
+
+export interface UpdateIndexaPriceInput {
+  positionId: string;
+  pricePerShare: number;
+  shares: number;
+  totalCost: number;
+}
+
+export async function updateIndexaPrices(
+  updates: UpdateIndexaPriceInput[]
+): Promise<{ ok: boolean; error?: string }> {
+  const { supabase, user } = await getAuthUser();
+  if (!user) return { ok: false, error: 'No autenticado' };
+
+  const now = new Date().toISOString();
+
+  for (const u of updates) {
+    const totalValue = u.shares * u.pricePerShare;
+    const unrealizedGain = totalValue - u.totalCost;
+    const { error } = await supabase
+      .from('indexa_positions')
+      .update({
+        price_per_share: u.pricePerShare,
+        total_value: totalValue,
+        unrealized_gain: unrealizedGain,
+        updated_at: now,
+      })
+      .eq('id', u.positionId)
+      .eq('user_id', user.id);
+
+    if (error) return { ok: false, error: error.message };
+  }
+
+  revalidatePath('/patrimonio');
+  return { ok: true };
+}
+
 // ── Seed for onboarding ─────────────────────────────────────────────────────
 
 export async function seedIndexaDataAction(): Promise<{ ok: boolean; error?: string }> {
