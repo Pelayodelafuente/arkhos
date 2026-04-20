@@ -185,8 +185,11 @@ export function GlobalKPIs() {
   const horosContrib = getHorosLastMonthContribution();
 
   // ── Crypto ───────────────────────────────────────────────────────────────
+  const cryptoRawAssets = useCryptoStore((s) => s.assets);
+  const cryptoRawDefi = useCryptoStore((s) => s.defiPositions);
+  const cryptoRawPlan = useCryptoStore((s) => s.monthlyPlan);
   const getCryptoOverview = useCryptoStore((s) => s.getOverview);
-  const cryptoOverview = getCryptoOverview();
+  const cryptoOverview = useMemo(() => getCryptoOverview(), [cryptoRawAssets, cryptoRawDefi, cryptoRawPlan, getCryptoOverview]);
 
   const cryptoValue = cryptoOverview?.total_value_eur ?? 0;
   const cryptoInvested = cryptoOverview?.total_invested_eur ?? 0;

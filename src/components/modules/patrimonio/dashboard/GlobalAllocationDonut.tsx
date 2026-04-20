@@ -60,8 +60,10 @@ export function GlobalAllocationDonut() {
   const overview = usePatrimonioStore((s) => s.overview);
   const indexaOverview = useIndexaStore((s) => s.overview);
   const horosPosition = useHorosStore((s) => s.position);
+  const cryptoAssets = useCryptoStore((s) => s.assets);
+  const cryptoDefi = useCryptoStore((s) => s.defiPositions);
   const getCryptoOverview = useCryptoStore((s) => s.getOverview);
-  const cryptoOverview = getCryptoOverview();
+  const cryptoOverview = useMemo(() => getCryptoOverview(), [cryptoAssets, cryptoDefi, getCryptoOverview]);
 
   const totalValue =
     (overview?.total_value ?? 0) +

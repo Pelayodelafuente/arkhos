@@ -95,8 +95,10 @@ export function GlobalEvolutionChart() {
 
   // ── Crypto — transactions para evolución de capital invertido ────────────
   const cryptoTransactions = useCryptoStore((s) => s.transactions);
+  const cryptoAssets = useCryptoStore((s) => s.assets);
+  const cryptoDefi = useCryptoStore((s) => s.defiPositions);
   const getCryptoOverview = useCryptoStore((s) => s.getOverview);
-  const cryptoOverview = getCryptoOverview();
+  const cryptoOverview = useMemo(() => getCryptoOverview(), [cryptoAssets, cryptoDefi, getCryptoOverview]);
 
   // ── Construir mapa mensual de TR: 'YYYY-MM' → {value, invested} ──────────
   const trByMonth = useMemo(() => {

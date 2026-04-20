@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { Skeleton } from "@/components/ui";
 import { useCryptoStore } from "@/stores/crypto-store";
 import { CryptoKPIs } from "./CryptoKPIs";
@@ -28,8 +29,9 @@ const formatEur = (v: number) =>
 // ── Altcoins table ────────────────────────────────────────────────────────────
 
 function AltcoinsTable() {
+  const assets = useCryptoStore((s) => s.assets);
   const getAltcoins = useCryptoStore((s) => s.getAltcoins);
-  const altcoins = getAltcoins();
+  const altcoins = useMemo(() => getAltcoins(), [assets, getAltcoins]);
 
   if (altcoins.length === 0) return null;
 
@@ -249,11 +251,14 @@ export function CryptoDashboard() {
   const isLoading = useCryptoStore((s) => s.isLoading);
   const activeTab = useCryptoStore((s) => s.activeTab);
   const setActiveTab = useCryptoStore((s) => s.setActiveTab);
+  const assets = useCryptoStore((s) => s.assets);
+  const defiPositions = useCryptoStore((s) => s.defiPositions);
+  const monthlyPlan = useCryptoStore((s) => s.monthlyPlan);
   const getOverview = useCryptoStore((s) => s.getOverview);
   const getAssetsWithPL = useCryptoStore((s) => s.getAssetsWithPL);
 
-  const overview = getOverview();
-  const assetsWithPL = getAssetsWithPL();
+  const overview = useMemo(() => getOverview(), [assets, defiPositions, monthlyPlan, getOverview]);
+  const assetsWithPL = useMemo(() => getAssetsWithPL(), [assets, getAssetsWithPL]);
 
   if (isLoading) {
     return (

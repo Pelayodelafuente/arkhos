@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { Skeleton } from "@/components/ui";
 import { useCryptoStore } from "@/stores/crypto-store";
@@ -51,9 +52,10 @@ function DonutTooltip({ active, payload }: DonutTooltipProps) {
 
 export function CryptoDistributionDonut() {
   const isLoading = useCryptoStore((s) => s.isLoading);
+  const rawAssets = useCryptoStore((s) => s.assets);
   const getAssetsWithPL = useCryptoStore((s) => s.getAssetsWithPL);
 
-  const assets = getAssetsWithPL();
+  const assets = useMemo(() => getAssetsWithPL(), [rawAssets, getAssetsWithPL]);
 
   if (isLoading) {
     return <Skeleton className="h-64 rounded-xl" />;

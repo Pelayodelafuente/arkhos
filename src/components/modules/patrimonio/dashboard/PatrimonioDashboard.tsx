@@ -90,8 +90,11 @@ export function PatrimonioDashboard() {
 
   const indexaOverview = useIndexaStore((s) => s.overview);
   const horosPosition = useHorosStore((s) => s.position);
+  const cryptoAssets = useCryptoStore((s) => s.assets);
+  const cryptoDefi = useCryptoStore((s) => s.defiPositions);
+  const cryptoMonthlyPlan = useCryptoStore((s) => s.monthlyPlan);
   const getCryptoOverview = useCryptoStore((s) => s.getOverview);
-  const cryptoOverview = getCryptoOverview();
+  const cryptoOverview = useMemo(() => getCryptoOverview(), [cryptoAssets, cryptoDefi, cryptoMonthlyPlan, getCryptoOverview]);
 
   // Global total: TR + Indexa + Horos + Crypto
   const totalValue =
