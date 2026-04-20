@@ -190,6 +190,7 @@ export function IndexaPlanPanel({
             </p>
           </div>
         ) : (
+          <>
           <div className="divide-y" style={{ borderColor: "var(--border-stone, rgba(160,120,80,0.15))" }}>
             {subscriptions.map((tx) => {
               const color = TX_TYPE_ACCENT[tx.type] ?? "var(--text-muted)";
@@ -217,6 +218,7 @@ export function IndexaPlanPanel({
                     <span
                       className="truncate max-w-[100px] px-1.5 py-0.5 rounded text-xs font-semibold"
                       style={{ backgroundColor: `${fundColor}20`, color: fundColor }}
+                      title={fundName}
                     >
                       {fundName}
                     </span>
@@ -230,7 +232,7 @@ export function IndexaPlanPanel({
                   <div className="flex items-center gap-3 flex-shrink-0 font-mono">
                     {tx.shares !== null && (
                       <span style={{ color: "var(--text-muted)" }}>
-                        {tx.shares.toFixed(4)} part.
+                        {new Intl.NumberFormat("es-ES", { minimumFractionDigits: 4, maximumFractionDigits: 4 }).format(tx.shares)} part.
                       </span>
                     )}
                     <span className="font-semibold" style={{ color: "var(--text-primary)" }}>
@@ -241,6 +243,19 @@ export function IndexaPlanPanel({
               );
             })}
           </div>
+          <div
+            className="flex items-center justify-end px-4 py-2 text-xs font-mono"
+            style={{
+              borderTop: "1px solid var(--border-stone, rgba(160,120,80,0.15))",
+              color: "var(--text-muted)",
+            }}
+          >
+            Total aportado:&nbsp;
+            <span className="font-semibold" style={{ color: "var(--text-primary)" }}>
+              {formatEur(subscriptions.reduce((sum, tx) => sum + tx.amount, 0))}
+            </span>
+          </div>
+          </>
         )}
       </motion.div>
 

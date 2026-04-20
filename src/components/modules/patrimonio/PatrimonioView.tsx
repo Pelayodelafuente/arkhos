@@ -1,9 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { useIndexaStore } from "@/stores/indexa-store";
+import { useHorosStore } from "@/stores/horos-store";
+import { useCryptoStore } from "@/stores/crypto-store";
+import { loadIndexaData } from "@/app/actions/indexa";
+import { loadHorosData } from "@/app/actions/horos";
+import { loadCryptoData } from "@/app/actions/crypto";
 import type {
   PortfolioOverview,
   PortfolioAsset,
@@ -14,6 +19,8 @@ import type {
   InvestmentPlatform,
 } from "@/types/patrimonio";
 import type { IndexaOverview, IndexaMonthlyReturn, IndexaTransaction, IndexaMonthlyPlan } from "@/types/indexa";
+import type { HorosPosition } from "@/types/horos";
+import type { CryptoAsset } from "@/types/crypto";
 import { PatrimonioDashboard } from "@/components/modules/patrimonio/dashboard/PatrimonioDashboard";
 import { TRSection } from "@/components/modules/patrimonio/trade-republic/TRSection";
 import { IndexaSection } from "@/components/modules/patrimonio/indexa/IndexaSection";
@@ -33,6 +40,8 @@ interface PatrimonioViewProps {
   indexaMonthlyReturns?: IndexaMonthlyReturn[];
   indexaTransactions?: IndexaTransaction[];
   indexaPlan?: IndexaMonthlyPlan | null;
+  horosPosition?: HorosPosition | null;
+  cryptoAssets?: CryptoAsset[];
 }
 
 const PAGE_TRANSITION = {
@@ -54,6 +63,8 @@ export function PatrimonioView({
   indexaMonthlyReturns,
   indexaTransactions,
   indexaPlan,
+  horosPosition,
+  cryptoAssets,
 }: PatrimonioViewProps) {
   const setOverview = usePatrimonioStore((s) => s.setOverview);
   const setAssets = usePatrimonioStore((s) => s.setAssets);
@@ -64,11 +75,30 @@ export function PatrimonioView({
   const setPlatforms = usePatrimonioStore((s) => s.setPlatforms);
   const activePlatform = usePatrimonioStore((s) => s.activePlatform);
   const privacyMode = usePatrimonioStore((s) => s.privacyMode);
+
   const setIndexaOverview = useIndexaStore((s) => s.setOverview);
   const setIndexaMonthlyReturns = useIndexaStore((s) => s.setMonthlyReturns);
   const setIndexaTransactions = useIndexaStore((s) => s.setTransactions);
   const setIndexaPlan = useIndexaStore((s) => s.setPlan);
+  const setIndexaFunds = useIndexaStore((s) => s.setFunds);
+  const setIndexaPositions = useIndexaStore((s) => s.setPositions);
 
+  const setHorosPosition = useHorosStore((s) => s.setPosition);
+  const setHorosTransactions = useHorosStore((s) => s.setTransactions);
+  const setHorosNavHistory = useHorosStore((s) => s.setNavHistory);
+  const setHorosDistribution = useHorosStore((s) => s.setDistribution);
+  const setHorosCosts = useHorosStore((s) => s.setCosts);
+  const setHorosPlan = useHorosStore((s) => s.setPlan);
+
+  const setCryptoAssets = useCryptoStore((s) => s.setAssets);
+  const setCryptoTransactions = useCryptoStore((s) => s.setTransactions);
+  const setCryptoDefiPositions = useCryptoStore((s) => s.setDefiPositions);
+  const setCryptoMonthlyPlan = useCryptoStore((s) => s.setMonthlyPlan);
+
+  // Ref to prevent full data re-load on every navigation
+  const fullDataLoaded = useRef(false);
+
+  // ── Initialize stores from SSR props (runs after first render, no network) ──
   useEffect(() => {
     setOverview(overview);
     setAssets(assets);
@@ -78,20 +108,8 @@ export function PatrimonioView({
     setPassiveIncome(passiveIncome);
     setPlatforms(platforms);
   }, [
-    overview,
-    assets,
-    transactions,
-    savingsPlan,
-    snapshots,
-    passiveIncome,
-    platforms,
-    setOverview,
-    setAssets,
-    setTransactions,
-    setSavingsPlan,
-    setSnapshots,
-    setPassiveIncome,
-    setPlatforms,
+    overview, assets, transactions, savingsPlan, snapshots, passiveIncome, platforms,
+    setOverview, setAssets, setTransactions, setSavingsPlan, setSnapshots, setPassiveIncome, setPlatforms,
   ]);
 
   useEffect(() => {
@@ -102,6 +120,60 @@ export function PatrimonioView({
   }, [
     indexaOverview, indexaMonthlyReturns, indexaTransactions, indexaPlan,
     setIndexaOverview, setIndexaMonthlyReturns, setIndexaTransactions, setIndexaPlan,
+  ]);
+
+  // Initialize Horos and Crypto card data from SSR props (no network round trip)
+  useEffect(() => {
+    if (horosPosition !== undefined) setHorosPosition(horosPosition ?? null);
+  }, [horosPosition, setHorosPosition]);
+
+  useEffect(() => {
+    if (cryptoAssets?.length) setCryptoAssets(cryptoAssets);
+  }, [cryptoAssets, setCryptoAssets]);
+
+  // Load full platform data lazily (transactions, nav history, charts, etc.)
+  // Runs once on mount; card data is already covered by SSR props above
+  useEffect(() => {
+    if (fullDataLoaded.current) return;
+    fullDataLoaded.current = true;
+
+    // Refresh Indexa overview (bypasses potential Next.js Router Cache staleness)
+    // and loads positions/funds needed for price update modal
+    loadIndexaData().then((data) => {
+      if (!data) return;
+      setIndexaFunds(data.funds);
+      setIndexaPositions(data.positions);
+      setIndexaOverview(data.overview);
+      setIndexaMonthlyReturns(data.monthlyReturns);
+      setIndexaTransactions(data.transactions);
+      setIndexaPlan(data.plan);
+    });
+
+    // Load full Horos data (transactions, nav history, distribution, costs, plan)
+    loadHorosData().then((data) => {
+      if (!data) return;
+      setHorosPosition(data.position);
+      setHorosTransactions(data.transactions);
+      setHorosNavHistory(data.navHistory);
+      setHorosDistribution(data.distribution);
+      setHorosCosts(data.costs);
+      setHorosPlan(data.plan);
+    });
+
+    // Load full Crypto data (transactions, defi positions, monthly plan)
+    loadCryptoData().then((data) => {
+      if (!data) return;
+      setCryptoAssets(data.assets);
+      setCryptoTransactions(data.transactions);
+      setCryptoDefiPositions(data.defiPositions);
+      setCryptoMonthlyPlan(data.monthlyPlan);
+    });
+  }, [
+    setIndexaFunds, setIndexaPositions, setIndexaOverview, setIndexaMonthlyReturns,
+    setIndexaTransactions, setIndexaPlan,
+    setHorosPosition, setHorosTransactions, setHorosNavHistory, setHorosDistribution,
+    setHorosCosts, setHorosPlan,
+    setCryptoAssets, setCryptoTransactions, setCryptoDefiPositions, setCryptoMonthlyPlan,
   ]);
 
   return (
