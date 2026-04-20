@@ -141,6 +141,10 @@ export function UpdateIndexaPricesModal({ onClose }: UpdateIndexaPricesModalProp
   const positions = useIndexaStore((s) => s.positions);
   const setOverview = useIndexaStore((s) => s.setOverview);
   const setPositions = useIndexaStore((s) => s.setPositions);
+  const setFunds = useIndexaStore((s) => s.setFunds);
+  const setTransactions = useIndexaStore((s) => s.setTransactions);
+  const setMonthlyReturns = useIndexaStore((s) => s.setMonthlyReturns);
+  const setPlan = useIndexaStore((s) => s.setPlan);
 
   const fundPositions = positions.filter(
     (p) => p.fund_type !== "cash" && p.shares !== null && (p.shares ?? 0) > 0
@@ -185,7 +189,11 @@ export function UpdateIndexaPricesModal({ onClose }: UpdateIndexaPricesModalProp
     // Reload fresh data into store
     const fresh = await loadIndexaData();
     if (fresh) {
+      setFunds(fresh.funds);
       setPositions(fresh.positions);
+      setTransactions(fresh.transactions);
+      setMonthlyReturns(fresh.monthlyReturns);
+      setPlan(fresh.plan);
       setOverview(fresh.overview);
     }
 

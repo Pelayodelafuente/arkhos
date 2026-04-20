@@ -169,11 +169,12 @@ function computeOverview(
 // ── Register contribution ────────────────────────────────────────────────────
 
 export interface RegisterContributionInput {
-  fundId: string | null;
+  fundId: string;
   date: string;
+  valueDate: string | null;
   amount: number;
-  shares: number | null;
-  pricePerShare: number | null;
+  shares: number;
+  pricePerShare: number;
   notes: string;
 }
 
@@ -183,10 +184,12 @@ export async function registerIndexaContribution(
   const { supabase, user } = await getAuthUser();
   if (!user) return { ok: false, error: 'No autenticado' };
 
-  const { error } = await supabase.from('indexa_transactions').insert({
+  // 1. Insert transaction
+  const { error: txError } = await supabase.from('indexa_transactions').insert({
     user_id: user.id,
     fund_id: input.fundId,
     transaction_date: input.date,
+    value_date: input.valueDate ?? null,
     type: 'subscription',
     shares: input.shares,
     price_per_share: input.pricePerShare,
@@ -194,8 +197,18 @@ export async function registerIndexaContribution(
     notes: input.notes || null,
     source: 'manual',
   });
+  if (txError) return { ok: false, error: txError.message };
 
-  if (error) return { ok: false, error: error.message };
+  // 2. Update position via RPC (avoids PostgREST GENERATED ALWAYS bug)
+  const { error: rpcError } = await supabase.rpc('apply_indexa_contribution', {
+    p_user_id: user.id,
+    p_fund_id: input.fundId,
+    p_shares: input.shares,
+    p_amount: input.amount,
+    p_current_price: input.pricePerShare,
+  });
+  if (rpcError) return { ok: false, error: rpcError.message };
+
   revalidatePath('/patrimonio');
   return { ok: true };
 }
@@ -287,4 +300,75 @@ export async function seedIndexaDataAction(): Promise<{ ok: boolean; error?: str
   if (error) return { ok: false, error: error.message };
   revalidatePath('/patrimonio');
   return { ok: true };
+}
+
+// ── Add / edit monthly return ────────────────────────────────────────────────
+
+export interface AddMonthlyReturnInput {
+  year: number;
+  month: number;
+  returnPct: number;
+  benchmarkPct: number | null;
+}
+
+export async function addIndexaMonthlyReturn(
+  input: AddMonthlyReturnInput
+): Promise<{ ok: boolean; error?: string; newCumulative?: number }> {
+  const { supabase, user } = await getAuthUser();
+  if (!user) return { ok: false, error: 'No autenticado' };
+
+  // 1. Upsert the new record (cumulative_twr placeholder, recalculated below)
+  const { error: upsertErr } = await supabase
+    .from('indexa_monthly_returns')
+    .upsert(
+      {
+        user_id: user.id,
+        year: input.year,
+        month: input.month,
+        return_pct: input.returnPct,
+        benchmark_pct: input.benchmarkPct,
+        cumulative_twr: 0,
+      },
+      { onConflict: 'user_id,year,month' }
+    );
+  if (upsertErr) return { ok: false, error: upsertErr.message };
+
+  // 2. Fetch all returns sorted to recalculate cumulative TWR chain
+  const { data: all, error: fetchErr } = await supabase
+    .from('indexa_monthly_returns')
+    .select('year, month, return_pct')
+    .eq('user_id', user.id)
+    .order('year', { ascending: true })
+    .order('month', { ascending: true });
+  if (fetchErr || !all) return { ok: false, error: fetchErr?.message ?? 'Error al leer datos' };
+
+  // 3. Recalculate cumulative TWR from scratch
+  let cumulative = 0;
+  const updates: Array<{ year: number; month: number; cumulative_twr: number }> = [];
+  for (let i = 0; i < all.length; i++) {
+    const ret = all[i].return_pct ?? 0;
+    cumulative =
+      i === 0
+        ? ret
+        : parseFloat(((1 + cumulative / 100) * (1 + ret / 100) * 100 - 100).toFixed(4));
+    updates.push({ year: all[i].year, month: all[i].month, cumulative_twr: cumulative });
+  }
+
+  // 4. Persist recalculated cumulative for all records
+  for (const u of updates) {
+    const { error } = await supabase
+      .from('indexa_monthly_returns')
+      .update({ cumulative_twr: u.cumulative_twr })
+      .eq('user_id', user.id)
+      .eq('year', u.year)
+      .eq('month', u.month);
+    if (error) return { ok: false, error: error.message };
+  }
+
+  const newCumulative = updates.find(
+    (u) => u.year === input.year && u.month === input.month
+  )?.cumulative_twr;
+
+  revalidatePath('/patrimonio');
+  return { ok: true, newCumulative };
 }

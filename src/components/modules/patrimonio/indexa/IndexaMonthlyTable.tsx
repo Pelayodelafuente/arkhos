@@ -27,9 +27,10 @@ function formatPct(v: number | null): string {
 interface IndexaMonthlyTableProps {
   rows: IndexaMonthlyTableRow[];
   isLoading: boolean;
+  onAdd?: () => void;
 }
 
-export function IndexaMonthlyTable({ rows, isLoading }: IndexaMonthlyTableProps) {
+export function IndexaMonthlyTable({ rows, isLoading, onAdd }: IndexaMonthlyTableProps) {
   if (isLoading) {
     return <Skeleton className="h-40 rounded-xl" />;
   }
@@ -64,15 +65,34 @@ export function IndexaMonthlyTable({ rows, isLoading }: IndexaMonthlyTableProps)
         <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
           Rentabilidades mensuales
         </p>
-        <span
-          className="text-xs px-2 py-0.5 rounded"
-          style={{
-            backgroundColor: "var(--platform-indexa, #3B78B0)20",
-            color: "var(--platform-indexa, #3B78B0)",
-          }}
-        >
-          En %
-        </span>
+        <div className="flex items-center gap-2">
+          {onAdd && (
+            <button
+              type="button"
+              onClick={onAdd}
+              className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium transition-all"
+              style={{
+                backgroundColor: "rgba(59,120,176,0.10)",
+                color: "#3B78B0",
+                border: "1px solid rgba(59,120,176,0.20)",
+              }}
+            >
+              <svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                <path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/>
+              </svg>
+              Añadir mes
+            </button>
+          )}
+          <span
+            className="text-xs px-2 py-0.5 rounded"
+            style={{
+              backgroundColor: "var(--platform-indexa, #3B78B0)20",
+              color: "var(--platform-indexa, #3B78B0)",
+            }}
+          >
+            En %
+          </span>
+        </div>
       </div>
 
       <div className="overflow-x-auto pb-1">

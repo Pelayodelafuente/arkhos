@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Calendar, Clock, PlusCircle, ArrowDownToLine } from "lucide-react";
 import { Button, Skeleton } from "@/components/ui";
 import { RegisterContributionModal } from "./RegisterContributionModal";
+import type { ContributionFormData } from "./RegisterContributionModal";
 import type { IndexaMonthlyPlan, IndexaTransaction, IndexaFund } from "@/types/indexa";
 
 const formatEur = (v: number) =>
@@ -29,14 +30,7 @@ interface IndexaPlanPanelProps {
   transactions: IndexaTransaction[];
   funds: IndexaFund[];
   isLoading: boolean;
-  onContributionConfirm: (data: {
-    fundId: string;
-    date: string;
-    amount: number;
-    shares: number | null;
-    pricePerShare: number | null;
-    notes: string;
-  }) => Promise<void>;
+  onContributionConfirm: (data: ContributionFormData) => Promise<void>;
 }
 
 export function IndexaPlanPanel({

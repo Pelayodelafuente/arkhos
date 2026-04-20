@@ -6,6 +6,8 @@ import { RefreshCw } from "lucide-react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { Skeleton } from "@/components/ui";
 import { useIndexaStore } from "@/stores/indexa-store";
+import { registerIndexaContribution, loadIndexaData } from "@/app/actions/indexa";
+import type { ContributionFormData } from "./RegisterContributionModal";
 import { IndexaKPIs } from "./IndexaKPIs";
 import { IndexaPositionsCards } from "./IndexaPositionsCards";
 import { IndexaMonthlyTable } from "./IndexaMonthlyTable";
@@ -16,6 +18,7 @@ import { IndexaPlanPanel } from "./IndexaPlanPanel";
 import { IndexaProjectionSimulator } from "./IndexaProjectionSimulator";
 import { IndexaFiscalPanel } from "./IndexaFiscalPanel";
 import { UpdateIndexaPricesModal } from "./UpdateIndexaPricesModal";
+import { AddMonthlyReturnModal } from "./AddMonthlyReturnModal";
 
 const TABS = [
   { id: "dashboard" as const, label: "Resumen" },
@@ -70,6 +73,7 @@ type ActiveTab = "dashboard" | "performance" | "plan" | "fiscal";
 
 export function IndexaDashboard() {
   const [showPricesModal, setShowPricesModal] = useState(false);
+  const [showAddReturnModal, setShowAddReturnModal] = useState(false);
 
   const activeTab = useIndexaStore((s) => s.activeTab);
   const setActiveTab = useIndexaStore((s) => s.setActiveTab);
@@ -83,6 +87,12 @@ export function IndexaDashboard() {
   const getTWRChartData = useIndexaStore((s) => s.getTWRChartData);
   const getEvolutionData = useIndexaStore((s) => s.getEvolutionData);
   const getProjection = useIndexaStore((s) => s.getProjection);
+  const setFunds = useIndexaStore((s) => s.setFunds);
+  const setPositions = useIndexaStore((s) => s.setPositions);
+  const setTransactions = useIndexaStore((s) => s.setTransactions);
+  const setMonthlyReturns = useIndexaStore((s) => s.setMonthlyReturns);
+  const setPlan = useIndexaStore((s) => s.setPlan);
+  const setOverview = useIndexaStore((s) => s.setOverview);
 
   // Build donut data from positions
   const donutData = positions
@@ -93,17 +103,18 @@ export function IndexaDashboard() {
       fill: FUND_TYPE_COLOR[p.fund_type ?? "equity"] ?? "#888780",
     }));
 
-  // Placeholder contribution handler — will be wired to real API later
-  const handleContributionConfirm = async (data: {
-    fundId: string;
-    date: string;
-    amount: number;
-    shares: number | null;
-    pricePerShare: number | null;
-    notes: string;
-  }) => {
-    console.log("[IndexaDashboard] Contribution to register:", data);
-    // TODO: call server action / API route
+  const handleContributionConfirm = async (data: ContributionFormData) => {
+    const result = await registerIndexaContribution(data);
+    if (!result.ok) throw new Error(result.error ?? "Error al registrar la aportación");
+    const fresh = await loadIndexaData();
+    if (fresh) {
+      setFunds(fresh.funds);
+      setPositions(fresh.positions);
+      setTransactions(fresh.transactions);
+      setMonthlyReturns(fresh.monthlyReturns);
+      setPlan(fresh.plan);
+      setOverview(fresh.overview);
+    }
   };
 
   return (
@@ -253,7 +264,7 @@ export function IndexaDashboard() {
         {/* RENDIMIENTO */}
         {activeTab === "performance" && (
           <div className="space-y-5">
-            <IndexaMonthlyTable rows={getMonthlyReturnsTable()} isLoading={isLoading} />
+            <IndexaMonthlyTable rows={getMonthlyReturnsTable()} isLoading={isLoading} onAdd={() => setShowAddReturnModal(true)} />
             <IndexaEvolutionChart data={getEvolutionData()} isLoading={isLoading} />
             <IndexaTWRChart data={getTWRChartData()} isLoading={isLoading} />
             <IndexaRiskMetrics overview={overview} isLoading={isLoading} />
@@ -288,9 +299,12 @@ export function IndexaDashboard() {
         )}
       </motion.div>
 
-      {/* Modal */}
+      {/* Modals */}
       {showPricesModal && (
         <UpdateIndexaPricesModal onClose={() => setShowPricesModal(false)} />
+      )}
+      {showAddReturnModal && (
+        <AddMonthlyReturnModal onClose={() => setShowAddReturnModal(false)} />
       )}
     </div>
   );
