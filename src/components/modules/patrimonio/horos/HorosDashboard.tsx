@@ -125,7 +125,7 @@ export function HorosDashboard() {
         <HorosTransactionTable data={txPerformance} />
       )}
 
-      {activeTab === "costs" && <HorosCostPanel costs={costs} />}
+      {activeTab === "costs" && <HorosCostPanel costs={costs} currentValue={overview?.total_value ?? 0} />}
 
       {activeTab === "plan" && (
         <HorosPlanPanel

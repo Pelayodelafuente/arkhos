@@ -11,18 +11,16 @@ const fmt = (v: number | null) =>
 
 interface HorosCostPanelProps {
   costs: HorosAnnualCosts[];
+  currentValue: number;
 }
 
-export function HorosCostPanel({ costs }: HorosCostPanelProps) {
+export function HorosCostPanel({ costs, currentValue }: HorosCostPanelProps) {
   const latest = costs[0];
   if (!latest) return null;
 
   const horosPct = latest.total_pct ?? 0.84;
   const indexaPct = 0.11;
   const maxPct = Math.max(horosPct, indexaPct, 1);
-
-  // Impact projection (simplified: cost drag over 10y on 6351€)
-  const currentValue = 6351.34;
   const years = 10;
   const withHoros = currentValue * Math.pow(1 + 0.06 - horosPct / 100, years);
   const withIndexa = currentValue * Math.pow(1 + 0.06 - indexaPct / 100, years);
@@ -46,9 +44,9 @@ export function HorosCostPanel({ costs }: HorosCostPanelProps) {
         </h3>
 
         <div className="space-y-2.5">
-          <CostRow label="Comisión de gestión" value={fmt(latest.management_fee)} pct="1,80%" />
-          <CostRow label="Comisión depositaría" value={fmt(latest.custody_fee)} pct="0,06%" />
-          <CostRow label="Otros recurrentes" value={fmt(latest.other_fees)} pct="0,06%" />
+          <CostRow label="Comisión de gestión" value={fmt(latest.management_fee)} pct="0,72%" />
+          <CostRow label="Comisión depositaría" value={fmt(latest.custody_fee)} pct="0,03%" />
+          <CostRow label="Otros recurrentes" value={fmt(latest.other_fees)} pct="0,09%" />
           <CostRow label="Costes operaciones" value={fmt(latest.operation_costs)} pct="—" />
           <div
             className="pt-2.5 border-t"

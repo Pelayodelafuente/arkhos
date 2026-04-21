@@ -209,6 +209,18 @@ export async function registerHorosContribution(
         updated_at: new Date().toISOString(),
       })
       .eq('user_id', user.id);
+
+    // Also record a nav_history point on the value date so the portfolio chart updates
+    const portfolioValueOnValueDate = parseFloat((newShares * input.navApplied).toFixed(2));
+    await supabase.from('horos_nav_history').upsert(
+      {
+        user_id: user.id,
+        nav_date: input.valueDate,
+        nav_price: input.navApplied,
+        portfolio_value: portfolioValueOnValueDate,
+      },
+      { onConflict: 'user_id,nav_date' }
+    );
   }
 
   revalidatePath('/patrimonio');
