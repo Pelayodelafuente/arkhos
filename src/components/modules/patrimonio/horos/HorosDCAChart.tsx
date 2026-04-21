@@ -111,7 +111,10 @@ export function HorosDCAChart({ data, currentNav, avgNav }: HorosDCAChartProps) 
             tick={{ fontSize: 10, fill: "var(--text-muted, #888780)" }}
             tickLine={false}
             axisLine={false}
-            domain={["auto", "auto"]}
+            domain={[
+              (dataMin: number) => Math.floor(dataMin * 0.99),
+              () => Math.ceil(currentNav * 1.02),
+            ]}
             tickFormatter={(v: number) => `${v.toFixed(0)}€`}
             width={52}
           />
