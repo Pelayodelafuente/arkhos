@@ -49,8 +49,9 @@ function CustomTooltip({ active, payload, label }: TooltipProps) {
         {payload.length === 2 && payload[0].value != null && payload[1].value != null && (
           <div className="flex justify-between gap-4 pt-1 border-t border-stone-200">
             <span style={{ color: "var(--text-muted)" }}>Ganancia</span>
-            <span style={{ color: payload[0].value >= payload[1].value ? "var(--platform-tr, #2E7D6B)" : GRANATE }}>
-              {fmt(payload[0].value - payload[1].value)}
+            <span style={{ color: payload[1].value >= payload[0].value ? "var(--platform-tr, #2E7D6B)" : GRANATE }}>
+              {payload[1].value >= payload[0].value ? "+" : ""}
+              {fmt(payload[1].value - payload[0].value)}
             </span>
           </div>
         )}
