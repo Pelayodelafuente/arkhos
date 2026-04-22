@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   Upload,
@@ -10,7 +10,11 @@ import {
   FileSpreadsheet,
   ArrowRight,
   X,
+  Info,
+  RefreshCw,
+  Sparkles,
 } from "lucide-react";
+import { useMintosStore } from "@/stores/mintos-store";
 import type { MintosImportResult } from "@/types/mintos";
 import type { MintosParseResult } from "@/lib/mintos/parse-excel";
 
@@ -22,7 +26,106 @@ const formatEur = (v: number) =>
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit", year: "numeric" });
 
+// ── Conflict analysis ────────────────────────────────────────────────────────
+
+interface MonthConflict {
+  month: string;
+  isNew: boolean;
+}
+
+interface DepositConflict {
+  date: string;
+  amount: number;
+  isDuplicate: boolean;
+}
+
+interface ConflictInfo {
+  monthStatuses: MonthConflict[];
+  depositStatuses: DepositConflict[];
+  newMonths: number;
+  updatedMonths: number;
+  newDeposits: number;
+  duplicateDeposits: number;
+  hasNoNewData: boolean;
+  storeEmpty: boolean;
+}
+
+function computeConflicts(
+  preview: MintosParseResult,
+  existingMonths: Array<{ year: number; month: number }>,
+  existingDeposits: Array<{ deposit_date: string; amount: number }>
+): ConflictInfo {
+  const storeEmpty = existingMonths.length === 0 && existingDeposits.length === 0;
+
+  const existingMonthKeys = new Set(
+    existingMonths.map((s) => `${s.year}-${String(s.month).padStart(2, "0")}`)
+  );
+  const existingDepositKeys = new Set(
+    existingDeposits.map((d) => `${d.deposit_date}_${Number(d.amount).toFixed(4)}`)
+  );
+
+  const monthStatuses = preview.months.map((m) => ({
+    month: m,
+    isNew: !existingMonthKeys.has(m),
+  }));
+
+  const depositStatuses = preview.deposits.map((d) => ({
+    date: d.date,
+    amount: d.amount,
+    isDuplicate: existingDepositKeys.has(`${d.date}_${d.amount.toFixed(4)}`),
+  }));
+
+  const newMonths = monthStatuses.filter((m) => m.isNew).length;
+  const updatedMonths = monthStatuses.filter((m) => !m.isNew).length;
+  const newDeposits = depositStatuses.filter((d) => !d.isDuplicate).length;
+  const duplicateDeposits = depositStatuses.filter((d) => d.isDuplicate).length;
+
+  return {
+    monthStatuses,
+    depositStatuses,
+    newMonths,
+    updatedMonths,
+    newDeposits,
+    duplicateDeposits,
+    hasNoNewData: !storeEmpty && newMonths === 0 && newDeposits === 0,
+    storeEmpty,
+  };
+}
+
 // ── helpers ──────────────────────────────────────────────────────────────────
+
+function StatusBadge({ isNew }: { isNew: boolean }) {
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-xs font-medium flex-shrink-0"
+      style={{
+        backgroundColor: isNew
+          ? "color-mix(in srgb, #3B7A57 12%, transparent)"
+          : "color-mix(in srgb, #C8A84B 12%, transparent)",
+        color: isNew ? "#3B7A57" : "#7A6220",
+      }}
+    >
+      {isNew ? <Sparkles size={9} strokeWidth={2.5} /> : <RefreshCw size={9} strokeWidth={2.5} />}
+      {isNew ? "Nuevo" : "Actualiza"}
+    </span>
+  );
+}
+
+function DuplicateBadge({ isDuplicate }: { isDuplicate: boolean }) {
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-xs font-medium flex-shrink-0"
+      style={{
+        backgroundColor: isDuplicate
+          ? "color-mix(in srgb, var(--text-muted) 10%, transparent)"
+          : "color-mix(in srgb, #3B7A57 12%, transparent)",
+        color: isDuplicate ? "var(--text-muted)" : "#3B7A57",
+      }}
+    >
+      {isDuplicate ? "Ya existe" : "Nuevo"}
+    </span>
+  );
+}
 
 function Badge({ ok, text }: { ok: boolean; text: string }) {
   return (
@@ -55,12 +158,14 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 function ImportPreview({
   preview,
   fileName,
+  conflict,
   onConfirm,
   onCancel,
   isProcessing,
 }: {
   preview: MintosParseResult;
   fileName: string;
+  conflict: ConflictInfo;
   onConfirm: () => void;
   onCancel: () => void;
   isProcessing: boolean;
@@ -68,9 +173,10 @@ function ImportPreview({
   const [showTypes, setShowTypes] = useState(false);
 
   const hasWarnings = preview.unknownTypes.length > 0;
+  const monthStatusMap = new Map(conflict.monthStatuses.map((m) => [m.month, m.isNew]));
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {/* Header */}
       <div
         className="rounded-xl p-4 space-y-3"
@@ -105,9 +211,12 @@ function ImportPreview({
           {[
             { label: "Transacciones", value: preview.totalRows.toLocaleString("es-ES") },
             { label: "Meses", value: String(preview.months.length) },
-            { label: "Período", value: preview.months.length > 0
-              ? `${preview.periodStart.slice(0, 7)} → ${preview.periodEnd.slice(0, 7)}`
-              : "—"
+            {
+              label: "Período",
+              value:
+                preview.months.length > 0
+                  ? `${preview.periodStart} → ${preview.periodEnd}`
+                  : "—",
             },
           ].map((s) => (
             <div
@@ -122,9 +231,72 @@ function ImportPreview({
             </div>
           ))}
         </div>
+
+        {/* Conflict summary bar */}
+        {!conflict.storeEmpty && (
+          <div
+            className="rounded-lg px-3 py-2 flex items-center gap-2 flex-wrap"
+            style={{ backgroundColor: "var(--bg-subtle, rgba(160,120,80,0.05))" }}
+          >
+            <Info size={13} strokeWidth={1.75} style={{ color: "var(--text-muted)" }} aria-hidden="true" />
+            <span className="text-xs" style={{ color: "var(--text-secondary)" }}>
+              {conflict.newMonths > 0 && (
+                <span style={{ color: "#3B7A57" }}>
+                  {conflict.newMonths} {conflict.newMonths === 1 ? "mes nuevo" : "meses nuevos"}
+                </span>
+              )}
+              {conflict.newMonths > 0 && conflict.updatedMonths > 0 && (
+                <span style={{ color: "var(--text-muted)" }}> · </span>
+              )}
+              {conflict.updatedMonths > 0 && (
+                <span style={{ color: "#7A6220" }}>
+                  {conflict.updatedMonths} {conflict.updatedMonths === 1 ? "mes se actualizará" : "meses se actualizarán"}
+                </span>
+              )}
+              {(conflict.newMonths > 0 || conflict.updatedMonths > 0) && conflict.depositStatuses.length > 0 && (
+                <span style={{ color: "var(--text-muted)" }}> · </span>
+              )}
+              {conflict.newDeposits > 0 && (
+                <span style={{ color: "#3B7A57" }}>
+                  {conflict.newDeposits} {conflict.newDeposits === 1 ? "depósito nuevo" : "depósitos nuevos"}
+                </span>
+              )}
+              {conflict.duplicateDeposits > 0 && (
+                <>
+                  {conflict.newDeposits > 0 && <span style={{ color: "var(--text-muted)" }}> · </span>}
+                  <span style={{ color: "var(--text-muted)" }}>
+                    {conflict.duplicateDeposits} {conflict.duplicateDeposits === 1 ? "duplicado se omitirá" : "duplicados se omitirán"}
+                  </span>
+                </>
+              )}
+            </span>
+          </div>
+        )}
       </div>
 
-      {/* Deposits — crítico verificar */}
+      {/* No new data warning */}
+      {conflict.hasNoNewData && (
+        <div
+          className="rounded-xl p-4 flex items-start gap-3"
+          style={{
+            backgroundColor: "color-mix(in srgb, #C8A84B 8%, transparent)",
+            border: "1px solid rgba(200,168,75,0.35)",
+          }}
+        >
+          <AlertTriangle size={16} strokeWidth={1.75} style={{ color: "#C8A84B", flexShrink: 0 }} aria-hidden="true" />
+          <div>
+            <p className="text-sm font-semibold" style={{ color: "#7A6220" }}>
+              Sin datos nuevos
+            </p>
+            <p className="text-xs mt-0.5" style={{ color: "var(--text-secondary)" }}>
+              Todos los meses y depósitos de este extracto ya están registrados. Confirmar la importación
+              sobreescribirá los snapshots mensuales con los mismos valores — los depósitos no se duplicarán.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Deposits */}
       <div
         className="rounded-xl p-4 space-y-3"
         style={{
@@ -134,7 +306,19 @@ function ImportPreview({
       >
         <div className="flex items-center justify-between">
           <SectionTitle>Depósitos detectados</SectionTitle>
-          <Badge ok={preview.deposits.length > 0} text={`${preview.deposits.length} encontrados`} />
+          <div className="flex items-center gap-2">
+            {conflict.newDeposits > 0 && (
+              <span className="text-xs" style={{ color: "#3B7A57" }}>
+                {conflict.newDeposits} nuevos
+              </span>
+            )}
+            {conflict.duplicateDeposits > 0 && (
+              <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+                {conflict.duplicateDeposits} ya existentes
+              </span>
+            )}
+            <Badge ok={preview.deposits.length > 0} text={`${preview.deposits.length} encontrados`} />
+          </div>
         </div>
 
         {preview.deposits.length === 0 ? (
@@ -143,21 +327,32 @@ function ImportPreview({
           </p>
         ) : (
           <div className="space-y-1">
-            {preview.deposits.map((d, i) => (
+            {conflict.depositStatuses.map((d, i) => (
               <div
                 key={i}
-                className="flex items-center justify-between rounded-lg px-3 py-2"
-                style={{ backgroundColor: "color-mix(in srgb, #3B7A57 5%, transparent)" }}
+                className="flex items-center justify-between rounded-lg px-3 py-2 gap-3"
+                style={{
+                  backgroundColor: d.isDuplicate
+                    ? "color-mix(in srgb, var(--text-muted) 5%, transparent)"
+                    : "color-mix(in srgb, #3B7A57 5%, transparent)",
+                  opacity: d.isDuplicate ? 0.7 : 1,
+                }}
               >
-                <span className="font-mono text-sm" style={{ color: "var(--text-secondary)" }}>
+                <span
+                  className="font-mono text-sm"
+                  style={{ color: d.isDuplicate ? "var(--text-muted)" : "var(--text-secondary)" }}
+                >
                   {formatDate(d.date)}
                 </span>
-                <span
-                  className="font-mono text-sm font-semibold"
-                  style={{ color: "#3B7A57" }}
-                >
-                  +{formatEur(d.amount)}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span
+                    className="font-mono text-sm font-semibold"
+                    style={{ color: d.isDuplicate ? "var(--text-muted)" : "#3B7A57" }}
+                  >
+                    +{formatEur(d.amount)}
+                  </span>
+                  <DuplicateBadge isDuplicate={d.isDuplicate} />
+                </div>
               </div>
             ))}
             <div
@@ -201,34 +396,43 @@ function ImportPreview({
               </tr>
             </thead>
             <tbody>
-              {preview.monthlyBreakdown.map((m) => (
-                <tr
-                  key={m.month}
-                  style={{ borderBottom: "1px solid var(--border-stone, rgba(160,120,80,0.08))" }}
-                >
-                  <td className="py-2 font-medium" style={{ color: "var(--text-primary)" }}>
-                    {m.label}
-                  </td>
-                  <td className="py-2 text-right font-mono tabular-nums" style={{ color: "var(--text-secondary)" }}>
-                    {formatEur(m.interest_income)}
-                  </td>
-                  <td className="py-2 text-right font-mono tabular-nums" style={{ color: "var(--text-secondary)" }}>
-                    {formatEur(m.buyback_interest + m.late_interest)}
-                  </td>
-                  <td className="py-2 text-right font-mono tabular-nums" style={{ color: "#A32D2D" }}>
-                    -{formatEur(m.taxes_withheld)}
-                  </td>
-                  <td className="py-2 text-right font-mono tabular-nums" style={{ color: "#A32D2D" }}>
-                    -{formatEur(m.commissions)}
-                  </td>
-                  <td
-                    className="py-2 text-right font-mono tabular-nums font-semibold"
-                    style={{ color: m.net_interest >= 0 ? "#3B7A57" : "#A32D2D" }}
+              {preview.monthlyBreakdown.map((m) => {
+                const isNew = monthStatusMap.get(m.month) ?? true;
+                return (
+                  <tr
+                    key={m.month}
+                    style={{ borderBottom: "1px solid var(--border-stone, rgba(160,120,80,0.08))" }}
                   >
-                    {m.net_interest >= 0 ? "+" : ""}{formatEur(m.net_interest)}
-                  </td>
-                </tr>
-              ))}
+                    <td className="py-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-medium" style={{ color: "var(--text-primary)" }}>
+                          {m.label}
+                        </span>
+                        {!conflict.storeEmpty && <StatusBadge isNew={isNew} />}
+                      </div>
+                    </td>
+                    <td className="py-2 text-right font-mono tabular-nums" style={{ color: "var(--text-secondary)" }}>
+                      {formatEur(m.interest_income)}
+                    </td>
+                    <td className="py-2 text-right font-mono tabular-nums" style={{ color: "var(--text-secondary)" }}>
+                      {formatEur(m.buyback_interest + m.late_interest)}
+                    </td>
+                    <td className="py-2 text-right font-mono tabular-nums" style={{ color: "#A32D2D" }}>
+                      -{formatEur(m.taxes_withheld)}
+                    </td>
+                    <td className="py-2 text-right font-mono tabular-nums" style={{ color: "#A32D2D" }}>
+                      -{formatEur(m.commissions)}
+                    </td>
+                    <td
+                      className="py-2 text-right font-mono tabular-nums font-semibold"
+                      style={{ color: m.net_interest >= 0 ? "#3B7A57" : "#A32D2D" }}
+                    >
+                      {m.net_interest >= 0 ? "+" : ""}
+                      {formatEur(m.net_interest)}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
             <tfoot>
               <tr>
@@ -240,7 +444,8 @@ function ImportPreview({
                   className="pt-2 text-right font-mono text-sm font-bold"
                   style={{ color: preview.totalNetInterest >= 0 ? "#3B7A57" : "#A32D2D" }}
                 >
-                  {preview.totalNetInterest >= 0 ? "+" : ""}{formatEur(preview.totalNetInterest)}
+                  {preview.totalNetInterest >= 0 ? "+" : ""}
+                  {formatEur(preview.totalNetInterest)}
                 </td>
               </tr>
             </tfoot>
@@ -279,9 +484,7 @@ function ImportPreview({
       {/* Transaction type breakdown (collapsible) */}
       <div
         className="rounded-xl overflow-hidden"
-        style={{
-          border: "1px solid var(--border-stone, rgba(160,120,80,0.25))",
-        }}
+        style={{ border: "1px solid var(--border-stone, rgba(160,120,80,0.25))" }}
       >
         <button
           type="button"
@@ -304,10 +507,7 @@ function ImportPreview({
           />
         </button>
         {showTypes && (
-          <div
-            className="px-4 pb-4 space-y-1.5"
-            style={{ backgroundColor: "var(--bg-card)" }}
-          >
+          <div className="px-4 pb-4 space-y-1.5" style={{ backgroundColor: "var(--bg-card)" }}>
             {Object.entries(preview.typeSummary)
               .sort((a, b) => b[1] - a[1])
               .map(([tipo, count]) => (
@@ -386,6 +586,16 @@ export function MintosImporter() {
   const [result, setResult] = useState<MintosImportResult | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
+
+  // Store data for conflict detection
+  const existingSnapshots = useMintosStore((s) => s.monthlySnapshots);
+  const existingDeposits = useMintosStore((s) => s.deposits);
+
+  // Compute conflict info whenever preview or store changes
+  const conflictInfo = useMemo<ConflictInfo | null>(() => {
+    if (!preview) return null;
+    return computeConflicts(preview, existingSnapshots, existingDeposits);
+  }, [preview, existingSnapshots, existingDeposits]);
 
   // ── Parse client-side for preview ──────────────────────────────────────────
   const parseForPreview = useCallback(async (f: File) => {
@@ -519,9 +729,12 @@ export function MintosImporter() {
           onClick={() => status === "idle" && inputRef.current?.click()}
           onKeyDown={(e) => e.key === "Enter" && status === "idle" && inputRef.current?.click()}
           onDrop={handleDrop}
-          onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setIsDragOver(true);
+          }}
           onDragLeave={() => setIsDragOver(false)}
-          className="rounded-xl p-8 text-center cursor-pointer transition-all duration-150 space-y-3"
+          className="rounded-xl p-8 text-center transition-all duration-150 space-y-3"
           style={{
             backgroundColor: isDragOver
               ? "color-mix(in srgb, var(--platform-mintos) 8%, transparent)"
@@ -587,24 +800,14 @@ export function MintosImporter() {
       )}
 
       {/* Preview */}
-      {status === "preview" && preview && file && (
+      {(status === "preview" || status === "processing") && preview && file && conflictInfo && (
         <ImportPreview
           preview={preview}
           fileName={file.name}
+          conflict={conflictInfo}
           onConfirm={handleConfirm}
           onCancel={handleReset}
-          isProcessing={false}
-        />
-      )}
-
-      {/* Processing (preview confirm in progress) */}
-      {status === "processing" && preview && file && (
-        <ImportPreview
-          preview={preview}
-          fileName={file.name}
-          onConfirm={handleConfirm}
-          onCancel={handleReset}
-          isProcessing={true}
+          isProcessing={status === "processing"}
         />
       )}
 
@@ -628,7 +831,7 @@ export function MintosImporter() {
             {[
               { label: "Transacciones", value: result.totalRows.toLocaleString("es-ES"), color: "#3B7A57" },
               { label: "Meses actualizados", value: String(result.monthsProcessed.length), color: "var(--platform-mintos)" },
-              { label: "Depósitos", value: String(result.depositsFound), color: "var(--platform-mintos)" },
+              { label: "Depósitos nuevos", value: String(result.depositsFound), color: "var(--platform-mintos)" },
             ].map((s) => (
               <div
                 key={s.label}
