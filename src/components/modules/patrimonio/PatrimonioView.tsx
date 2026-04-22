@@ -6,9 +6,11 @@ import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { useIndexaStore } from "@/stores/indexa-store";
 import { useHorosStore } from "@/stores/horos-store";
 import { useCryptoStore } from "@/stores/crypto-store";
+import { useMintosStore } from "@/stores/mintos-store";
 import { loadIndexaData } from "@/app/actions/indexa";
 import { loadHorosData } from "@/app/actions/horos";
 import { loadCryptoData } from "@/app/actions/crypto";
+import { loadMintosData } from "@/app/actions/mintos";
 import type {
   PortfolioOverview,
   PortfolioAsset,
@@ -21,6 +23,7 @@ import type {
 import type { IndexaOverview, IndexaMonthlyReturn, IndexaTransaction, IndexaMonthlyPlan } from "@/types/indexa";
 import type { HorosPosition } from "@/types/horos";
 import type { CryptoAsset } from "@/types/crypto";
+import type { MintosOverview } from "@/types/mintos";
 import { PatrimonioDashboard } from "@/components/modules/patrimonio/dashboard/PatrimonioDashboard";
 import { TRSection } from "@/components/modules/patrimonio/trade-republic/TRSection";
 import { IndexaSection } from "@/components/modules/patrimonio/indexa/IndexaSection";
@@ -42,6 +45,7 @@ interface PatrimonioViewProps {
   indexaPlan?: IndexaMonthlyPlan | null;
   horosPosition?: HorosPosition | null;
   cryptoAssets?: CryptoAsset[];
+  mintosOverview?: MintosOverview | null;
 }
 
 const PAGE_TRANSITION = {
@@ -65,6 +69,7 @@ export function PatrimonioView({
   indexaPlan,
   horosPosition,
   cryptoAssets,
+  mintosOverview,
 }: PatrimonioViewProps) {
   const setOverview = usePatrimonioStore((s) => s.setOverview);
   const setAssets = usePatrimonioStore((s) => s.setAssets);
@@ -95,6 +100,13 @@ export function PatrimonioView({
   const setCryptoDefiPositions = useCryptoStore((s) => s.setDefiPositions);
   const setCryptoMonthlyPlan = useCryptoStore((s) => s.setMonthlyPlan);
 
+  const setMintosOverview = useMintosStore((s) => s.setOverview);
+  const setMintosDeposits = useMintosStore((s) => s.setDeposits);
+  const setMintosMonthlySnapshots = useMintosStore((s) => s.setMonthlySnapshots);
+  const setMintosPortfolioHealth = useMintosStore((s) => s.setPortfolioHealth);
+  const setMintosDistributions = useMintosStore((s) => s.setDistributions);
+  const setMintosPlan = useMintosStore((s) => s.setPlan);
+
   // Ref to prevent full data re-load on every navigation
   const fullDataLoaded = useRef(false);
 
@@ -122,7 +134,7 @@ export function PatrimonioView({
     setIndexaOverview, setIndexaMonthlyReturns, setIndexaTransactions, setIndexaPlan,
   ]);
 
-  // Initialize Horos and Crypto card data from SSR props (no network round trip)
+  // Initialize Horos, Crypto and Mintos card data from SSR props (no network round trip)
   useEffect(() => {
     if (horosPosition !== undefined) setHorosPosition(horosPosition ?? null);
   }, [horosPosition, setHorosPosition]);
@@ -130,6 +142,10 @@ export function PatrimonioView({
   useEffect(() => {
     if (cryptoAssets?.length) setCryptoAssets(cryptoAssets);
   }, [cryptoAssets, setCryptoAssets]);
+
+  useEffect(() => {
+    if (mintosOverview !== undefined) setMintosOverview(mintosOverview ?? null);
+  }, [mintosOverview, setMintosOverview]);
 
   // Load full platform data lazily (transactions, nav history, charts, etc.)
   // Runs once on mount; card data is already covered by SSR props above
@@ -168,12 +184,25 @@ export function PatrimonioView({
       setCryptoDefiPositions(data.defiPositions);
       setCryptoMonthlyPlan(data.monthlyPlan);
     });
+
+    // Load full Mintos data (snapshots, deposits, health, distributions, plan)
+    loadMintosData().then((data) => {
+      if (!data) return;
+      setMintosOverview(data.overview);
+      setMintosDeposits(data.deposits);
+      setMintosMonthlySnapshots(data.monthlySnapshots);
+      setMintosPortfolioHealth(data.portfolioHealth);
+      setMintosDistributions(data.distributions);
+      setMintosPlan(data.plan);
+    });
   }, [
     setIndexaFunds, setIndexaPositions, setIndexaOverview, setIndexaMonthlyReturns,
     setIndexaTransactions, setIndexaPlan,
     setHorosPosition, setHorosTransactions, setHorosNavHistory, setHorosDistribution,
     setHorosCosts, setHorosPlan,
     setCryptoAssets, setCryptoTransactions, setCryptoDefiPositions, setCryptoMonthlyPlan,
+    setMintosOverview, setMintosDeposits, setMintosMonthlySnapshots,
+    setMintosPortfolioHealth, setMintosDistributions, setMintosPlan,
   ]);
 
   return (

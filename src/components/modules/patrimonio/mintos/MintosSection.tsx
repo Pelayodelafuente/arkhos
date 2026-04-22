@@ -1,10 +1,40 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { Coins } from "lucide-react";
 import { PlatformLayout } from "@/components/modules/patrimonio/shared/PlatformLayout";
-import { ComingSoonBody } from "@/components/modules/patrimonio/shared/ComingSoonBody";
+import { useMintosStore } from "@/stores/mintos-store";
+import { loadMintosData } from "@/app/actions/mintos";
+import { MintosDashboard } from "./MintosDashboard";
 
 export function MintosSection() {
+  const setOverview = useMintosStore((s) => s.setOverview);
+  const setDeposits = useMintosStore((s) => s.setDeposits);
+  const setMonthlySnapshots = useMintosStore((s) => s.setMonthlySnapshots);
+  const setPortfolioHealth = useMintosStore((s) => s.setPortfolioHealth);
+  const setDistributions = useMintosStore((s) => s.setDistributions);
+  const setPlan = useMintosStore((s) => s.setPlan);
+  const setIsLoading = useMintosStore((s) => s.setIsLoading);
+  const hasLoaded = useRef(false);
+
+  useEffect(() => {
+    if (hasLoaded.current) return;
+    hasLoaded.current = true;
+
+    setIsLoading(true);
+    loadMintosData()
+      .then((data) => {
+        if (!data) return;
+        setOverview(data.overview);
+        setDeposits(data.deposits);
+        setMonthlySnapshots(data.monthlySnapshots);
+        setPortfolioHealth(data.portfolioHealth);
+        setDistributions(data.distributions);
+        setPlan(data.plan);
+      })
+      .finally(() => setIsLoading(false));
+  }, [setOverview, setDeposits, setMonthlySnapshots, setPortfolioHealth, setDistributions, setPlan, setIsLoading]);
+
   return (
     <PlatformLayout
       slug="mintos"
@@ -12,20 +42,7 @@ export function MintosSection() {
       name="Mintos"
       icon={<Coins size={18} strokeWidth={1.5} aria-hidden="true" />}
     >
-      <ComingSoonBody
-        platformName="Mintos"
-        color="var(--platform-mintos)"
-        colorHex="#C4704A"
-        type="P2P Lending"
-        progress={10}
-        features={[
-          "Saldo invertido y disponible",
-          "Intereses acumulados por mes",
-          "Distribución por originadores y países",
-          "Tasa de rendimiento neto (TIN)",
-          "Historial de pagos e impagos",
-        ]}
-      />
+      <MintosDashboard />
     </PlatformLayout>
   );
 }

@@ -18,11 +18,13 @@ import {
 } from "@/lib/supabase/indexa";
 import { getHorosPosition } from "@/lib/supabase/horos";
 import { getCryptoAssets } from "@/lib/supabase/crypto";
+import { getMintosOverview } from "@/lib/supabase/mintos";
 import { PatrimonioView } from "@/components/modules/patrimonio/PatrimonioView";
 import { PatrimonioOnboarding } from "@/components/modules/patrimonio/PatrimonioOnboarding";
 import type { IndexaOverview, IndexaMonthlyReturn, IndexaTransaction, IndexaMonthlyPlan } from "@/types/indexa";
 import type { HorosPosition } from "@/types/horos";
 import type { CryptoAsset } from "@/types/crypto";
+import type { MintosOverview } from "@/types/mintos";
 
 export default async function PatrimonioPage() {
   const supabase = await createClient();
@@ -41,7 +43,7 @@ export default async function PatrimonioPage() {
   const [
     overview, assets, transactions, savingsPlan, snapshots, passiveIncome, platforms,
     indexaOverview, indexaMonthlyReturns, indexaTransactions, indexaPlan,
-    horosPosition, cryptoAssets,
+    horosPosition, cryptoAssets, mintosOverview,
   ] = await Promise.all([
     getPortfolioOverview(user.id),
     getAllAssets(user.id),
@@ -56,6 +58,7 @@ export default async function PatrimonioPage() {
     getIndexaMonthlyPlan(user.id).catch(() => null as IndexaMonthlyPlan | null),
     getHorosPosition(user.id).catch(() => null as HorosPosition | null),
     getCryptoAssets(user.id).catch(() => [] as CryptoAsset[]),
+    getMintosOverview(user.id).catch(() => null as MintosOverview | null),
   ]);
 
   if (!overview) {
@@ -77,6 +80,7 @@ export default async function PatrimonioPage() {
       indexaPlan={indexaPlan}
       horosPosition={horosPosition}
       cryptoAssets={cryptoAssets}
+      mintosOverview={mintosOverview}
     />
   );
 }

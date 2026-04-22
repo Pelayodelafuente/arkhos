@@ -7,6 +7,7 @@ import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { useIndexaStore } from "@/stores/indexa-store";
 import { useHorosStore } from "@/stores/horos-store";
 import { useCryptoStore } from "@/stores/crypto-store";
+import { useMintosStore } from "@/stores/mintos-store";
 
 const formatEur = (value: number) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
@@ -196,10 +197,20 @@ export function GlobalKPIs() {
   const cryptoPL = cryptoOverview?.pl_eur ?? null;
   const cryptoMonthlyPlan = cryptoOverview?.monthly_plan_eur ?? 150;
 
+  // ── Mintos ───────────────────────────────────────────────────────────────
+  const mintosOverview = useMintosStore((s) => s.overview);
+  const mintosDeposits = useMintosStore((s) => s.deposits);
+  const getMintosLastMonthContrib = useMintosStore((s) => s.getLastMonthContribution);
+
+  const mintosValue = mintosOverview?.total_value ?? 0;
+  const mintosInvested = mintosDeposits.reduce((s, d) => s + d.amount, 0);
+  const mintosPL = mintosOverview?.net_gain ?? 0;
+  const mintosContrib = getMintosLastMonthContrib();
+
   // ── Combinados ───────────────────────────────────────────────────────────
-  const totalValue = trValue + indexaValue + horosValue + cryptoValue;
-  const totalInvested = trInvested + indexaCost + horosCost + cryptoInvested;
-  const totalPL = trPL + indexaPL + horosPL + (cryptoPL ?? 0);
+  const totalValue = trValue + indexaValue + horosValue + cryptoValue + mintosValue;
+  const totalInvested = trInvested + indexaCost + horosCost + cryptoInvested + mintosInvested;
+  const totalPL = trPL + indexaPL + horosPL + (cryptoPL ?? 0) + mintosPL;
 
   const combinedReturnPct = useMemo(() => {
     if (totalInvested <= 0) return null;
@@ -240,10 +251,11 @@ export function GlobalKPIs() {
     const indexaDelta = indexaContrib ?? 0;
     const horosDelta = horosContrib ?? 0;
     const cryptoDelta = cryptoMonthlyPlan;
-    const combined = trDelta + indexaDelta + horosDelta + cryptoDelta;
+    const mintosDelta = mintosContrib ?? 0;
+    const combined = trDelta + indexaDelta + horosDelta + cryptoDelta + mintosDelta;
     if (combined === 0 && trDeltas.capitalInvertido === null) return null;
     return `${combined >= 0 ? "+" : ""}${formatEur(combined)} aportado este mes`;
-  }, [trDeltas.capitalInvertido, indexaContrib, horosContrib, cryptoMonthlyPlan]);
+  }, [trDeltas.capitalInvertido, indexaContrib, horosContrib, cryptoMonthlyPlan, mintosContrib]);
 
   // Animated counters
   const animatedTotal = useAnimatedCounter(totalValue);

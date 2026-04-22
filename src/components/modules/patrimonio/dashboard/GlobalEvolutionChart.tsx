@@ -14,6 +14,7 @@ import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { useIndexaStore } from "@/stores/indexa-store";
 import { useHorosStore } from "@/stores/horos-store";
 import { useCryptoStore } from "@/stores/crypto-store";
+import { useMintosStore } from "@/stores/mintos-store";
 
 const formatEur = (value: number) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
@@ -99,6 +100,10 @@ export function GlobalEvolutionChart() {
   const cryptoDefi = useCryptoStore((s) => s.defiPositions);
   const getCryptoOverview = useCryptoStore((s) => s.getOverview);
   const cryptoOverview = useMemo(() => getCryptoOverview(), [cryptoAssets, cryptoDefi, getCryptoOverview]);
+
+  // ── Mintos — snapshots mensuales con valor estimado ──────────────────────
+  const mintosSnapshots = useMintosStore((s) => s.monthlySnapshots);
+  const mintosOverview = useMintosStore((s) => s.overview);
 
   // ── Construir mapa mensual de TR: 'YYYY-MM' → {value, invested} ──────────
   const trByMonth = useMemo(() => {
@@ -193,7 +198,21 @@ export function GlobalEvolutionChart() {
     return map;
   }, [cryptoTransactions]);
 
-  // ── Fusionar: todos los meses de TR + Indexa + Horos + Crypto ──────────
+  // ── Construir mapa mensual de Mintos: 'YYYY-MM' → {value, deposited} ────
+  const mintosByMonth = useMemo(() => {
+    if (mintosSnapshots.length === 0) return new Map<string, { value: number; deposited: number }>();
+    const map = new Map<string, { value: number; deposited: number }>();
+    for (const s of mintosSnapshots) {
+      const key = `${s.year}-${String(s.month).padStart(2, '0')}`;
+      map.set(key, {
+        value: s.total_value ?? s.total_deposited,
+        deposited: s.total_deposited,
+      });
+    }
+    return map;
+  }, [mintosSnapshots]);
+
+  // ── Fusionar: todos los meses de TR + Indexa + Horos + Crypto + Mintos ──
   const data = useMemo(() => {
     const allKeys = [
       ...new Set([
@@ -201,14 +220,17 @@ export function GlobalEvolutionChart() {
         ...indexaByMonth.keys(),
         ...horosByMonth.keys(),
         ...cryptoByMonth.keys(),
+        ...mintosByMonth.keys(),
       ]),
     ].sort();
 
     let lastIndexa = { value: 0, cost: 0 };
     let lastHoros = { value: 0, cost: 0 };
     let lastCryptoCost = 0;
+    let lastMintos = { value: 0, deposited: 0 };
 
     const cryptoCurrentValue = cryptoOverview?.total_value_eur ?? 0;
+    const mintosCurrentValue = mintosOverview?.total_value ?? 0;
 
     return allKeys.map((key, idx) => {
       const tr = trByMonth.get(key) ?? { value: 0, invested: 0 };
@@ -218,6 +240,8 @@ export function GlobalEvolutionChart() {
       if (horos) lastHoros = horos;
       const cryptoCost = cryptoByMonth.get(key);
       if (cryptoCost !== undefined) lastCryptoCost = cryptoCost;
+      const mintos = mintosByMonth.get(key);
+      if (mintos) lastMintos = mintos;
 
       const idxValue = lastIndexa.cost > 0 ? lastIndexa.value : 0;
       const idxCost = lastIndexa.cost > 0 ? lastIndexa.cost : 0;
@@ -228,15 +252,18 @@ export function GlobalEvolutionChart() {
       const cryptoValue = lastCryptoCost > 0
         ? (isLastPoint && cryptoCurrentValue > 0 ? cryptoCurrentValue : lastCryptoCost)
         : 0;
+      const mintosValue = lastMintos.deposited > 0
+        ? (isLastPoint && mintosCurrentValue > 0 ? mintosCurrentValue : lastMintos.value)
+        : 0;
 
       return {
         key,
         label: monthKeyLabel(key),
-        value: parseFloat((tr.value + idxValue + horosValue + cryptoValue).toFixed(2)),
-        invested: parseFloat((tr.invested + idxCost + horosCost + lastCryptoCost).toFixed(2)),
+        value: parseFloat((tr.value + idxValue + horosValue + cryptoValue + mintosValue).toFixed(2)),
+        invested: parseFloat((tr.invested + idxCost + horosCost + lastCryptoCost + lastMintos.deposited).toFixed(2)),
       };
     });
-  }, [trByMonth, indexaByMonth, horosByMonth, cryptoByMonth, cryptoOverview]);
+  }, [trByMonth, indexaByMonth, horosByMonth, cryptoByMonth, mintosByMonth, cryptoOverview, mintosOverview]);
 
   if (data.length === 0) return <EmptyState />;
 
@@ -249,7 +276,7 @@ export function GlobalEvolutionChart() {
       }}
     >
       <p className="mb-4 text-sm font-medium text-foreground">Evolución del patrimonio</p>
-      <p className="mb-3 text-xs text-muted-foreground">TR · Indexa · Horos · Crypto — histórico acumulado</p>
+      <p className="mb-3 text-xs text-muted-foreground">TR · Indexa · Horos · Mintos · Crypto — histórico acumulado</p>
 
       <ResponsiveContainer width="100%" height={280}>
         <AreaChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
