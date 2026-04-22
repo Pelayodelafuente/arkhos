@@ -15,6 +15,7 @@ import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { useIndexaStore } from "@/stores/indexa-store";
 import { useHorosStore } from "@/stores/horos-store";
 import { useCryptoStore } from "@/stores/crypto-store";
+import { useMintosStore } from "@/stores/mintos-store";
 import type { PlatformSlug } from "@/types/patrimonio";
 import { GlobalKPIs } from "@/components/modules/patrimonio/dashboard/GlobalKPIs";
 import { PlatformCard, type PlatformCardProps } from "@/components/modules/patrimonio/dashboard/PlatformCard";
@@ -96,11 +97,16 @@ export function PatrimonioDashboard() {
   const getCryptoOverview = useCryptoStore((s) => s.getOverview);
   const cryptoOverview = useMemo(() => getCryptoOverview(), [cryptoAssets, cryptoDefi, cryptoMonthlyPlan, getCryptoOverview]);
 
-  // Global total: TR + Indexa + Horos + Crypto
+  const mintosOverview = useMintosStore((s) => s.overview);
+  const mintosDeposits = useMintosStore((s) => s.deposits);
+  const mintosInvested = mintosDeposits.reduce((s, d) => s + d.amount, 0);
+
+  // Global total: TR + Indexa + Horos + Mintos + Crypto
   const totalValue =
     (overview?.total_value ?? 0) +
     (indexaOverview?.total_value ?? 0) +
     (horosPosition?.total_value ?? 0) +
+    (mintosOverview?.total_value ?? 0) +
     (cryptoOverview?.total_value_eur ?? 0);
   const animatedTotal = useAnimatedCounter(totalValue);
 
@@ -183,10 +189,12 @@ export function PatrimonioDashboard() {
       color: "var(--platform-mintos)",
       colorHex: "#C4704A",
       icon: <Coins size={16} strokeWidth={1.75} aria-hidden="true" />,
-      currentValue: null,
-      totalInvested: null,
-      plAmount: null,
-      plPercentage: null,
+      currentValue: mintosOverview?.total_value ?? null,
+      totalInvested: mintosInvested > 0 ? mintosInvested : null,
+      plAmount: mintosOverview?.net_gain ?? null,
+      plPercentage: mintosInvested > 0 && mintosOverview
+        ? parseFloat(((mintosOverview.net_gain / mintosInvested) * 100).toFixed(2))
+        : null,
       isActive: activePlatform === "mintos",
     },
     {
