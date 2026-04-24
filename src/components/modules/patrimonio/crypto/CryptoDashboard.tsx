@@ -266,9 +266,10 @@ export function CryptoDashboard() {
       {/* KPIs */}
       <CryptoKPIs overview={overview} isLoading={isLoading} />
 
-      {/* Tabs */}
-      <div className="flex gap-1 overflow-x-auto pb-0.5">
-        {TABS.map((tab) => (
+      {/* Tabs + update button */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex gap-1 overflow-x-auto pb-0.5">
+          {TABS.map((tab) => (
           <button
             key={tab.id}
             type="button"
@@ -287,6 +288,10 @@ export function CryptoDashboard() {
             {tab.label}
           </button>
         ))}
+        </div>
+        <div className="flex-shrink-0">
+          <UpdateOnChainBalancesButton compact />
+        </div>
       </div>
 
       {/* Tab: dashboard */}
@@ -309,11 +314,6 @@ export function CryptoDashboard() {
 
           {/* Evolution chart */}
           <CryptoEvolutionChart />
-
-          {/* Update button */}
-          <div className="flex justify-end">
-            <UpdateOnChainBalancesButton />
-          </div>
         </div>
       )}
 

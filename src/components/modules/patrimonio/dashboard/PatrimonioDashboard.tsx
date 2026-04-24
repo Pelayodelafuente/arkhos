@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   Eye,
@@ -10,12 +10,18 @@ import {
   BarChart2,
   Coins,
   Bitcoin,
+  RefreshCw,
+  CheckCircle2,
+  AlertCircle,
+  Info,
 } from "lucide-react";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { useIndexaStore } from "@/stores/indexa-store";
 import { useHorosStore } from "@/stores/horos-store";
 import { useCryptoStore } from "@/stores/crypto-store";
 import { useMintosStore } from "@/stores/mintos-store";
+import { usePatrimonioPrices } from "@/lib/hooks/use-patrimonio-prices";
+import { loadCryptoData } from "@/app/actions/crypto";
 import type { PlatformSlug } from "@/types/patrimonio";
 import { GlobalKPIs } from "@/components/modules/patrimonio/dashboard/GlobalKPIs";
 import { PlatformCard, type PlatformCardProps } from "@/components/modules/patrimonio/dashboard/PlatformCard";
@@ -69,6 +75,236 @@ const cardVariants = {
     transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] as const },
   },
 };
+
+// ---------------------------------------------------------------------------
+// SyncPlatformsPanel
+// ---------------------------------------------------------------------------
+
+type SyncStatus = "idle" | "loading" | "success" | "error";
+
+function TRSyncButton() {
+  const { refreshPrices, isRefreshing } = usePatrimonioPrices();
+  const [status, setStatus] = useState<SyncStatus>("idle");
+
+  const handleRefresh = useCallback(async () => {
+    if (status === "loading" || isRefreshing) return;
+    setStatus("loading");
+    try {
+      await refreshPrices();
+      setStatus("success");
+      setTimeout(() => setStatus("idle"), 3000);
+    } catch {
+      setStatus("error");
+      setTimeout(() => setStatus("idle"), 4000);
+    }
+  }, [status, isRefreshing, refreshPrices]);
+
+  const isLoading = status === "loading" || isRefreshing;
+  const label = isLoading ? "Actualizando…" : status === "success" ? "Actualizado" : status === "error" ? "Error" : "Actualizar";
+  const color = status === "success" ? "#2E7D6B" : status === "error" ? "#A32D2D" : "var(--platform-tr)";
+
+  return (
+    <button
+      type="button"
+      onClick={handleRefresh}
+      disabled={isLoading}
+      className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-150 disabled:opacity-50"
+      style={{
+        backgroundColor: `color-mix(in srgb, ${color} 10%, transparent)`,
+        color,
+        border: `1px solid color-mix(in srgb, ${color} 20%, transparent)`,
+      }}
+    >
+      {status === "success" ? (
+        <CheckCircle2 size={13} strokeWidth={2} aria-hidden="true" />
+      ) : status === "error" ? (
+        <AlertCircle size={13} strokeWidth={2} aria-hidden="true" />
+      ) : (
+        <RefreshCw size={13} strokeWidth={2} className={isLoading ? "animate-spin" : ""} aria-hidden="true" />
+      )}
+      {label}
+    </button>
+  );
+}
+
+function CryptoSyncButton() {
+  const setAssets = useCryptoStore((s) => s.setAssets);
+  const setTransactions = useCryptoStore((s) => s.setTransactions);
+  const setDefiPositions = useCryptoStore((s) => s.setDefiPositions);
+  const setMonthlyPlan = useCryptoStore((s) => s.setMonthlyPlan);
+  const [status, setStatus] = useState<SyncStatus>("idle");
+
+  const handleUpdate = useCallback(async () => {
+    if (status === "loading") return;
+    setStatus("loading");
+    try {
+      const res = await fetch("/api/crypto/prices", { method: "POST" });
+      if (!res.ok) throw new Error("API error");
+      const data = await loadCryptoData();
+      if (data) {
+        setAssets(data.assets);
+        setTransactions(data.transactions);
+        setDefiPositions(data.defiPositions);
+        setMonthlyPlan(data.monthlyPlan);
+      }
+      setStatus("success");
+      setTimeout(() => setStatus("idle"), 3000);
+    } catch {
+      setStatus("error");
+      setTimeout(() => setStatus("idle"), 4000);
+    }
+  }, [status, setAssets, setTransactions, setDefiPositions, setMonthlyPlan]);
+
+  const isLoading = status === "loading";
+  const label = isLoading ? "Actualizando…" : status === "success" ? "Actualizado" : status === "error" ? "Error" : "Actualizar";
+  const color = status === "success" ? "#2E7D6B" : status === "error" ? "#A32D2D" : "var(--platform-crypto)";
+
+  return (
+    <button
+      type="button"
+      onClick={handleUpdate}
+      disabled={isLoading}
+      className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-150 disabled:opacity-50"
+      style={{
+        backgroundColor: `color-mix(in srgb, ${color} 10%, transparent)`,
+        color,
+        border: `1px solid color-mix(in srgb, ${color} 20%, transparent)`,
+      }}
+    >
+      {status === "success" ? (
+        <CheckCircle2 size={13} strokeWidth={2} aria-hidden="true" />
+      ) : status === "error" ? (
+        <AlertCircle size={13} strokeWidth={2} aria-hidden="true" />
+      ) : (
+        <RefreshCw size={13} strokeWidth={2} className={isLoading ? "animate-spin" : ""} aria-hidden="true" />
+      )}
+      {label}
+    </button>
+  );
+}
+
+interface SyncRowProps {
+  icon: React.ReactNode;
+  color: string;
+  name: string;
+  description: string;
+  action: React.ReactNode;
+}
+
+function SyncRow({ icon, color, name, description, action }: SyncRowProps) {
+  return (
+    <div className="flex items-center justify-between gap-3 py-3"
+      style={{ borderBottom: "1px solid var(--border-stone, rgba(160,120,80,0.08))" }}
+    >
+      <div className="flex items-center gap-3 min-w-0">
+        <span
+          className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg"
+          style={{ backgroundColor: `color-mix(in srgb, ${color} 12%, transparent)`, color }}
+          aria-hidden="true"
+        >
+          {icon}
+        </span>
+        <div className="min-w-0">
+          <p className="text-sm font-medium truncate" style={{ color: "var(--text-primary)" }}>{name}</p>
+          <p className="text-xs truncate" style={{ color: "var(--text-muted)" }}>{description}</p>
+        </div>
+      </div>
+      <div className="flex-shrink-0">{action}</div>
+    </div>
+  );
+}
+
+function ManualBadge({ tooltip }: { tooltip: string }) {
+  return (
+    <span
+      className="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs"
+      style={{
+        backgroundColor: "rgba(136,135,128,0.08)",
+        color: "var(--text-muted)",
+        border: "1px solid rgba(136,135,128,0.15)",
+      }}
+      title={tooltip}
+    >
+      <Info size={11} strokeWidth={2} aria-hidden="true" />
+      Manual
+    </span>
+  );
+}
+
+function SyncPlatformsPanel() {
+  return (
+    <div
+      className="rounded-xl overflow-hidden"
+      style={{
+        backgroundColor: "var(--bg-card)",
+        border: "1px solid var(--border-stone, rgba(160,120,80,0.25))",
+      }}
+    >
+      <div
+        className="px-5 py-3.5"
+        style={{ borderBottom: "1px solid var(--border-stone, rgba(160,120,80,0.15))" }}
+      >
+        <p className="font-heading text-base" style={{ color: "var(--text-primary)" }}>
+          Sincronizar plataformas
+        </p>
+        <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
+          Actualiza los saldos y precios de cada plataforma
+        </p>
+      </div>
+
+      <div className="px-5">
+        <SyncRow
+          icon={<Landmark size={14} strokeWidth={1.75} />}
+          color="var(--platform-tr)"
+          name="Trade Republic"
+          description="Precios de mercado en tiempo real (Alpha Vantage)"
+          action={<TRSyncButton />}
+        />
+        <SyncRow
+          icon={<Bitcoin size={14} strokeWidth={1.75} />}
+          color="var(--platform-crypto)"
+          name="Cripto"
+          description="Saldos on-chain + precios BTC/ETH/USDC (CoinGecko)"
+          action={<CryptoSyncButton />}
+        />
+        <SyncRow
+          icon={<TrendingUp size={14} strokeWidth={1.75} />}
+          color="var(--platform-indexa)"
+          name="Indexa Capital"
+          description="Importa el CSV mensual desde tu área de cliente"
+          action={<ManualBadge tooltip="Actualiza el CSV desde app.indexacapital.com" />}
+        />
+        <SyncRow
+          icon={<BarChart2 size={14} strokeWidth={1.75} />}
+          color="var(--platform-horos)"
+          name="Horos"
+          description="Actualiza el VL manualmente desde la ficha del fondo"
+          action={<ManualBadge tooltip="Consulta el VL en horos.es o en tu bróker" />}
+        />
+        <div className="py-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <span
+                className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg"
+                style={{ backgroundColor: "color-mix(in srgb, var(--platform-mintos) 12%, transparent)", color: "var(--platform-mintos)" }}
+                aria-hidden="true"
+              >
+                <Coins size={14} strokeWidth={1.75} />
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm font-medium truncate" style={{ color: "var(--text-primary)" }}>Mintos</p>
+                <p className="text-xs truncate" style={{ color: "var(--text-muted)" }}>Importa el extracto mensual desde el módulo P2P</p>
+              </div>
+            </div>
+            <div className="flex-shrink-0">
+              <ManualBadge tooltip="Usa el importador de Mintos en la sección P2P" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ---------------------------------------------------------------------------
 // PatrimonioDashboard
@@ -313,6 +549,9 @@ export function PatrimonioDashboard() {
           <GlobalAllocationDonut />
         </div>
       </div>
+
+      {/* ── SYNC ────────────────────────────────────────────────────────── */}
+      <SyncPlatformsPanel />
     </div>
   );
 }
