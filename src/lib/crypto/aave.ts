@@ -8,48 +8,41 @@ export interface AavePosition {
   version: 'v2' | 'v3' | null;
 }
 
-interface AaveReserve {
-  symbol: string;
-  liquidityRate: string;
+// DeFiLlama pool IDs for Aave V3 USDC on Ethereum mainnet
+// aa70268e: main USDC pool (~7.35% APY, $80M TVL) — matches Aave interface
+// 27296bf9: smaller variant (~2.85% APY, $4M TVL)
+const DEFI_LLAMA_POOLS = [
+  'aa70268e-4b52-42bf-a116-608b370f9501',
+  '27296bf9-617a-46e4-9d6d-eefc71e9e0b6',
+];
+
+interface DefiLlamaPool {
+  pool: string;
+  apy: number;
   [key: string]: unknown;
 }
 
-async function fetchAaveAPY(version: 'v2' | 'v3'): Promise<number | null> {
-  const poolId =
-    version === 'v3'
-      ? '0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2' // Aave V3 Ethereum
-      : '0xb53c1a33016b2dc2ff3653530bff1848a515c8c5'; // Aave V2 Ethereum
+interface DefiLlamaResponse {
+  status: string;
+  data: DefiLlamaPool;
+}
 
-  const url =
-    version === 'v3'
-      ? `https://aave-api-v3.aave.com/data/liquidity/v3?poolId=${poolId}`
-      : `https://aave-api-v2.aave.com/data/liquidity/v2?poolId=${poolId}`;
-
-  try {
-    const response = await fetch(url, {
-      headers: { Accept: 'application/json' },
-      next: { revalidate: 0 },
-    });
-
-    if (!response.ok) return null;
-
-    const data = (await response.json()) as unknown;
-    const reserves = Array.isArray(data)
-      ? (data as AaveReserve[])
-      : ((data as { reserves?: AaveReserve[] }).reserves ?? []);
-
-    const usdcReserve = reserves.find((r) => r.symbol === 'USDC');
-    if (!usdcReserve) return null;
-
-    const liquidityRateRay = parseFloat(usdcReserve.liquidityRate);
-    if (isNaN(liquidityRateRay) || liquidityRateRay <= 0) return null;
-
-    // Convert ray (1e27) → APY %
-    const apyDecimal = (1 + liquidityRateRay / 1e27 / 31_536_000) ** 31_536_000 - 1;
-    return apyDecimal * 100;
-  } catch {
-    return null;
+async function fetchAaveAPY(_version: 'v2' | 'v3'): Promise<number | null> {
+  for (const poolId of DEFI_LLAMA_POOLS) {
+    try {
+      const response = await fetch(`https://yields.llama.fi/pool/${poolId}`, {
+        headers: { Accept: 'application/json' },
+        next: { revalidate: 3600 }, // cache 1h
+      });
+      if (!response.ok) continue;
+      const json = (await response.json()) as DefiLlamaResponse;
+      const apy = json?.data?.apy;
+      if (typeof apy === 'number' && apy > 0) return apy;
+    } catch {
+      continue;
+    }
   }
+  return null;
 }
 
 export async function getAaveUSDCPosition(
@@ -67,11 +60,9 @@ export async function getAaveUSDCPosition(
       );
     }
 
-    // 2. Fetch APY for the detected version (or try both)
+    // 2. Fetch current APY from DeFiLlama (Aave V3 USDC Ethereum)
     const version = aBalance?.version ?? 'v3';
-    let apy = await fetchAaveAPY(version);
-    if (apy === null && version === 'v3') apy = await fetchAaveAPY('v2');
-    if (apy === null && version === 'v2') apy = await fetchAaveAPY('v3');
+    const apy = await fetchAaveAPY(version);
 
     return {
       depositedAmount: null, // resolved from DB in route.ts

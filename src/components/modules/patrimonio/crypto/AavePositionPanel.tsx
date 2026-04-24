@@ -4,6 +4,7 @@ import { useState } from "react";
 import { RefreshCw, ExternalLink } from "lucide-react";
 import { Skeleton } from "@/components/ui";
 import { useCryptoStore } from "@/stores/crypto-store";
+import { loadCryptoData } from "@/app/actions/crypto";
 
 const formatEur = (v: number) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(v);
@@ -19,12 +20,12 @@ function abbreviateAddress(addr: string): string {
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 }
 
-interface AavePositionPanelProps {
-  onUpdateSuccess?: () => void;
-}
-
-export function AavePositionPanel({ onUpdateSuccess }: AavePositionPanelProps) {
+export function AavePositionPanel() {
   const defiPositions = useCryptoStore((s) => s.defiPositions);
+  const setAssets = useCryptoStore((s) => s.setAssets);
+  const setTransactions = useCryptoStore((s) => s.setTransactions);
+  const setDefiPositions = useCryptoStore((s) => s.setDefiPositions);
+  const setMonthlyPlan = useCryptoStore((s) => s.setMonthlyPlan);
   const isLoading = useCryptoStore((s) => s.isLoading);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -35,10 +36,15 @@ export function AavePositionPanel({ onUpdateSuccess }: AavePositionPanelProps) {
     setIsRefreshing(true);
     try {
       const res = await fetch("/api/crypto/prices", { method: "POST" });
-      if (res.ok) {
-        setLastUpdated(new Date());
-        onUpdateSuccess?.();
+      if (!res.ok) return;
+      const data = await loadCryptoData();
+      if (data) {
+        setAssets(data.assets);
+        setTransactions(data.transactions);
+        setDefiPositions(data.defiPositions);
+        setMonthlyPlan(data.monthlyPlan);
       }
+      setLastUpdated(new Date());
     } catch {
       // silent fail — UI will retain stale data
     } finally {
@@ -92,7 +98,7 @@ export function AavePositionPanel({ onUpdateSuccess }: AavePositionPanelProps) {
         <div className="flex items-start justify-between">
           <div>
             <p className="font-heading text-base" style={{ color: "var(--text-primary)" }}>
-              Aave V2 — USDC
+              Aave V3 — USDC
             </p>
             <p className="text-xs" style={{ color: "var(--text-muted)" }}>
               Ethereum mainnet · DeFi yield
