@@ -110,9 +110,10 @@ export function GlobalEvolutionChart() {
     const map = new Map<string, { value: number; invested: number }>();
     for (const s of trSnapshots) {
       const key = toMonthKey(s.snapshot_date);
+      const cash = s.cash_value ?? 0;
       map.set(key, {
-        value: s.total_value - (s.cash_value ?? 0),
-        invested: s.total_invested ?? 0,
+        value: s.total_value - cash,
+        invested: (s.total_invested ?? 0) - cash,
       });
     }
     return map;

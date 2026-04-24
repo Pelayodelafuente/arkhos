@@ -6,6 +6,7 @@ import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { useIndexaStore } from "@/stores/indexa-store";
 import { useHorosStore } from "@/stores/horos-store";
 import { useCryptoStore } from "@/stores/crypto-store";
+import { useMintosStore } from "@/stores/mintos-store";
 
 const formatEur = (value: number) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
@@ -57,44 +58,42 @@ function CustomTooltip({ active, payload }: RechartsTooltipProps) {
 export function GlobalAllocationDonut() {
   const assets = usePatrimonioStore((s) => s.assets);
   const platforms = usePatrimonioStore((s) => s.platforms);
-  const overview = usePatrimonioStore((s) => s.overview);
   const indexaOverview = useIndexaStore((s) => s.overview);
   const horosPosition = useHorosStore((s) => s.position);
   const cryptoAssets = useCryptoStore((s) => s.assets);
   const cryptoDefi = useCryptoStore((s) => s.defiPositions);
   const getCryptoOverview = useCryptoStore((s) => s.getOverview);
   const cryptoOverview = useMemo(() => getCryptoOverview(), [cryptoAssets, cryptoDefi, getCryptoOverview]);
-
-  const totalValue =
-    (overview?.total_value ?? 0) +
-    (indexaOverview?.total_value ?? 0) +
-    (horosPosition?.total_value ?? 0) +
-    (cryptoOverview?.total_value_eur ?? 0);
+  const mintosOverview = useMintosStore((s) => s.overview);
 
   const segments = useMemo((): PlatformSegment[] => {
     return PLATFORM_CONFIG.map((cfg) => {
       if (cfg.slug === "indexa") {
-        const value = indexaOverview?.total_value ?? 0;
-        return { name: cfg.name, value, color: cfg.color };
+        return { name: cfg.name, value: indexaOverview?.total_value ?? 0, color: cfg.color };
       }
       if (cfg.slug === "horos") {
-        const value = horosPosition?.total_value ?? 0;
-        return { name: cfg.name, value, color: cfg.color };
+        return { name: cfg.name, value: horosPosition?.total_value ?? 0, color: cfg.color };
       }
       if (cfg.slug === "crypto") {
-        const value = cryptoOverview?.total_value_eur ?? 0;
-        return { name: cfg.name, value, color: cfg.color };
+        return { name: cfg.name, value: cryptoOverview?.total_value_eur ?? 0, color: cfg.color };
       }
+      if (cfg.slug === "mintos") {
+        return { name: cfg.name, value: mintosOverview?.total_value ?? 0, color: cfg.color };
+      }
+      // trade-republic: exclude cash (cash only appears in total patrimonio header)
       const platform = platforms.find((p) => p.slug === cfg.slug);
       if (!platform) return { name: cfg.name, value: 0, color: cfg.color };
       const value = assets
-        .filter((a) => a.platform_id === platform.id)
+        .filter((a) => a.platform_id === platform.id && a.category !== "cash")
         .reduce((s, a) => s + (a.current_value ?? 0), 0);
       return { name: cfg.name, value, color: cfg.color };
     }).filter((s) => s.value > 0);
-  }, [assets, platforms, indexaOverview, horosPosition, cryptoOverview]);
+  }, [assets, platforms, indexaOverview, horosPosition, cryptoOverview, mintosOverview]);
+
+  const totalValue = useMemo(() => segments.reduce((s, seg) => s + seg.value, 0), [segments]);
 
   const hasData = segments.length > 0 && totalValue > 0;
+
 
   if (!hasData) {
     return (

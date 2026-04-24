@@ -206,6 +206,7 @@ export function GlobalKPIs() {
   const mintosInvested = mintosDeposits.reduce((s, d) => s + d.amount, 0);
   const mintosPL = mintosOverview?.net_gain ?? 0;
   const mintosContrib = getMintosLastMonthContrib();
+  const mintosXirr = mintosOverview?.xirr ?? null;
 
   // ── Combinados ───────────────────────────────────────────────────────────
   const totalValue = trValue + indexaValue + horosValue + cryptoValue + mintosValue;
@@ -227,6 +228,7 @@ export function GlobalKPIs() {
     if (indexaReturnPct !== null && indexaCost > 0) weightedReturns.push({ ret: indexaReturnPct, weight: indexaCost });
     if (horosReturnPct !== null && horosCost > 0) weightedReturns.push({ ret: horosReturnPct, weight: horosCost });
     if (cryptoReturnPct !== null && cryptoInvested > 0) weightedReturns.push({ ret: cryptoReturnPct, weight: cryptoInvested });
+    if (mintosXirr !== null && mintosInvested > 0) weightedReturns.push({ ret: mintosXirr, weight: mintosInvested });
 
     if (weightedReturns.length === 0) return null;
 
@@ -234,7 +236,7 @@ export function GlobalKPIs() {
     if (totalWeight <= 0) return null;
 
     return weightedReturns.reduce((s, w) => s + w.ret * (w.weight / totalWeight), 0);
-  }, [trCAGR, indexaOverview, horosPosition, cryptoOverview, trInvested, indexaCost, horosCost, cryptoInvested, totalInvested]);
+  }, [trCAGR, indexaOverview, horosPosition, cryptoOverview, mintosXirr, trInvested, indexaCost, horosCost, cryptoInvested, mintosInvested, totalInvested]);
 
   // Deltas vs mes anterior
   const deltaTotal = useMemo(() => {
