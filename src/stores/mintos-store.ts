@@ -88,6 +88,7 @@ interface MintosStore {
   getComputedXIRR: () => number | null;
   getTotalDeposited: () => number;
   getLastMonthContribution: () => number | null;
+  getLastMonthValueDelta: () => number | null;
   getFiscalData: () => {
     gross_interest: number;
     taxes_withheld: number;
@@ -276,6 +277,23 @@ export const useMintosStore = create<MintosStore>((set, get) => ({
   getTotalDeposited: () => get().deposits.reduce((s, d) => s + d.amount, 0),
 
   getLastMonthContribution: () => get().plan?.monthly_amount ?? null,
+
+  getLastMonthValueDelta: () => {
+    const { monthlySnapshots } = get();
+    // Si hay snapshots, comparar los dos últimos
+    if (monthlySnapshots.length >= 2) {
+      const sorted = [...monthlySnapshots].sort((a, b) =>
+        a.year !== b.year ? a.year - b.year : a.month - b.month
+      );
+      const last = sorted[sorted.length - 1];
+      const prev = sorted[sorted.length - 2];
+      const lastVal = last.total_value ?? last.total_deposited;
+      const prevVal = prev.total_value ?? prev.total_deposited;
+      return parseFloat((lastVal - prevVal).toFixed(2));
+    }
+    // Sin histórico suficiente
+    return null;
+  },
 
   getFiscalData: () => {
     const snapshots = get().monthlySnapshots;

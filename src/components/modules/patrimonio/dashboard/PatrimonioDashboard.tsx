@@ -326,6 +326,8 @@ export function PatrimonioDashboard() {
   const togglePrivacyMode = usePatrimonioStore((s) => s.togglePrivacyMode);
 
   const indexaOverview = useIndexaStore((s) => s.overview);
+  const getIndexaValueDelta = useIndexaStore((s) => s.getLastMonthValueDelta);
+  const indexaHeaderDelta = getIndexaValueDelta();
   const horosPosition = useHorosStore((s) => s.position);
   const cryptoAssets = useCryptoStore((s) => s.assets);
   const cryptoDefi = useCryptoStore((s) => s.defiPositions);
@@ -470,14 +472,18 @@ export function PatrimonioDashboard() {
           </div>
 
           {/* Monthly delta */}
-          {deltas.totalValue !== null && (
-            <p
-              className="mt-1 font-mono text-sm"
-              style={{ color: deltas.totalValue >= 0 ? "var(--platform-tr)" : "#A32D2D" }}
-            >
-              {deltas.totalValue >= 0 ? "+" : ""}{formatEur(deltas.totalValue)} este mes
-            </p>
-          )}
+          {(() => {
+            const combined = (deltas.totalValue ?? 0) + (indexaHeaderDelta ?? 0);
+            if (deltas.totalValue === null && indexaHeaderDelta === null) return null;
+            return (
+              <p
+                className="mt-1 font-mono text-sm"
+                style={{ color: combined >= 0 ? "var(--platform-tr)" : "#A32D2D" }}
+              >
+                {combined >= 0 ? "+" : ""}{formatEur(combined)} este mes
+              </p>
+            );
+          })()}
         </div>
 
         {/* Right side controls */}

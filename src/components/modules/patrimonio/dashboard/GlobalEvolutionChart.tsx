@@ -119,6 +119,16 @@ export function GlobalEvolutionChart() {
     return trInv + idxCost + horosCost + cryptoInv + mintosInv;
   }, [trOverview, indexaOverview, horosPosition, cryptoOverview, mintosDeposits]);
 
+  // ── Total valor live (misma fórmula que header/KPI, excluyendo cash TR) ──────
+  const liveTotalValue = useMemo(() => {
+    const trVal = (trOverview?.total_value ?? 0) - (trOverview?.total_cash ?? 0);
+    const idxVal = indexaOverview?.total_value ?? 0;
+    const horosVal = horosPosition?.total_value ?? 0;
+    const cryptoVal = cryptoOverview?.total_value_eur ?? 0;
+    const mintosVal = mintosOverview?.total_value ?? 0;
+    return trVal + idxVal + horosVal + cryptoVal + mintosVal;
+  }, [trOverview, indexaOverview, horosPosition, cryptoOverview, mintosOverview]);
+
   // ── Construir mapa mensual de TR: 'YYYY-MM' → {value, invested} ──────────
   const trByMonth = useMemo(() => {
     const map = new Map<string, { value: number; invested: number }>();
@@ -229,15 +239,21 @@ export function GlobalEvolutionChart() {
 
   // ── Fusionar: todos los meses de TR + Indexa + Horos + Crypto + Mintos ──
   const data = useMemo(() => {
-    const allKeys = [
-      ...new Set([
-        ...trByMonth.keys(),
-        ...indexaByMonth.keys(),
-        ...horosByMonth.keys(),
-        ...cryptoByMonth.keys(),
-        ...mintosByMonth.keys(),
-      ]),
-    ].sort();
+    const now = new Date();
+    const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+    const keySet = new Set([
+      ...trByMonth.keys(),
+      ...indexaByMonth.keys(),
+      ...horosByMonth.keys(),
+      ...cryptoByMonth.keys(),
+      ...mintosByMonth.keys(),
+    ]);
+
+    // Garantizar que el mes actual siempre aparece como último punto
+    if (liveTotalValue > 0) keySet.add(currentMonthKey);
+
+    const allKeys = [...keySet].sort();
 
     let lastIndexa = { value: 0, cost: 0 };
     let lastHoros = { value: 0, cost: 0 };
@@ -271,18 +287,22 @@ export function GlobalEvolutionChart() {
         ? (isLastPoint && mintosCurrentValue > 0 ? mintosCurrentValue : lastMintos.value)
         : 0;
 
+      const historicalValue = tr.value + idxValue + horosValue + cryptoValue + mintosValue;
       const historicalInvested = tr.invested + idxCost + horosCost + lastCryptoCost + lastMintos.deposited;
 
       return {
         key,
         label: monthKeyLabel(key),
-        value: parseFloat((tr.value + idxValue + horosValue + cryptoValue + mintosValue).toFixed(2)),
+        // Último punto siempre usa datos live para coincidir con KPI cards
+        value: parseFloat(
+          (isLastPoint && liveTotalValue > 0 ? liveTotalValue : historicalValue).toFixed(2)
+        ),
         invested: parseFloat(
           (isLastPoint && liveInvested > 0 ? liveInvested : historicalInvested).toFixed(2)
         ),
       };
     });
-  }, [trByMonth, indexaByMonth, horosByMonth, cryptoByMonth, mintosByMonth, cryptoOverview, mintosOverview, liveInvested]);
+  }, [trByMonth, indexaByMonth, horosByMonth, cryptoByMonth, mintosByMonth, cryptoOverview, mintosOverview, liveInvested, liveTotalValue]);
 
   if (data.length === 0) return <EmptyState />;
 

@@ -202,6 +202,9 @@ export function GlobalKPIs() {
   const mintosDeposits = useMintosStore((s) => s.deposits);
   const getMintosLastMonthContrib = useMintosStore((s) => s.getLastMonthContribution);
 
+  const getMintosValueDelta = useMintosStore((s) => s.getLastMonthValueDelta);
+  const mintosValueDelta = getMintosValueDelta();
+
   const mintosValue = mintosOverview?.total_value ?? 0;
   const mintosInvested = mintosDeposits.reduce((s, d) => s + d.amount, 0);
   const mintosPL = mintosOverview?.net_gain ?? 0;
@@ -242,10 +245,11 @@ export function GlobalKPIs() {
   const deltaTotal = useMemo(() => {
     const trDelta = trDeltas.totalValue ?? 0;
     const indexaDelta = indexaValueDelta ?? 0;
-    const combined = trDelta + indexaDelta;
-    if (combined === 0 && trDeltas.totalValue === null) return null;
+    const mintosDelta = mintosValueDelta ?? 0;
+    const combined = trDelta + indexaDelta + mintosDelta;
+    if (combined === 0 && trDeltas.totalValue === null && indexaValueDelta === null && mintosValueDelta === null) return null;
     return `${combined >= 0 ? "+" : ""}${formatEur(combined)} vs mes anterior`;
-  }, [trDeltas.totalValue, indexaValueDelta]);
+  }, [trDeltas.totalValue, indexaValueDelta, mintosValueDelta]);
 
 
   const deltaCapital = useMemo(() => {
@@ -278,7 +282,7 @@ export function GlobalKPIs() {
         sparklineValues={trSparklines.totalValue}
         deltaLabel={deltaTotal}
         deltaColor={
-          (trDeltas.totalValue ?? 0) + (indexaValueDelta ?? 0) >= 0
+          (trDeltas.totalValue ?? 0) + (indexaValueDelta ?? 0) + (mintosValueDelta ?? 0) >= 0
             ? "var(--platform-tr)"
             : "#A32D2D"
         }
