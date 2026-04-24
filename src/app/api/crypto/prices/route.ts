@@ -13,10 +13,6 @@ const COINGECKO_ID_TO_SYMBOL: Record<string, string> = {
   bitcoin: 'BTC',
   ethereum: 'ETH',
   'usd-coin': 'USDC',
-  'quant-network': 'QNT',
-  decentraland: 'MANA',
-  'fetch-ai': 'FET',
-  bittensor: 'TAO',
 };
 
 interface Balances {

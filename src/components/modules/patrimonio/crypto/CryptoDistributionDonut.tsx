@@ -8,13 +8,10 @@ import { useCryptoStore } from "@/stores/crypto-store";
 const formatEur = (v: number) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(v);
 
-const CORE_SYMBOLS = new Set(["BTC", "ETH", "USDC"]);
-
 const DEFAULT_COLORS: Record<string, string> = {
   BTC: "#F7931A",
   ETH: "#627EEA",
   USDC: "#2775CA",
-  Altcoins: "#8D8D8D",
 };
 
 interface SliceItem {
@@ -79,32 +76,12 @@ export function CryptoDistributionDonut() {
 
   const totalValue = assets.reduce((s, a) => s + a.current_value_eur, 0);
 
-  const coreSlices: SliceItem[] = assets
-    .filter((a) => CORE_SYMBOLS.has(a.symbol))
-    .map((a) => ({
-      name: a.symbol,
-      value: a.current_value_eur,
-      pct: totalValue > 0 ? (a.current_value_eur / totalValue) * 100 : 0,
-      color: a.color ?? DEFAULT_COLORS[a.symbol] ?? "var(--platform-crypto)",
-    }));
-
-  const altcoinsValue = assets
-    .filter((a) => !CORE_SYMBOLS.has(a.symbol))
-    .reduce((s, a) => s + a.current_value_eur, 0);
-
-  const slices: SliceItem[] = [
-    ...coreSlices,
-    ...(altcoinsValue > 0
-      ? [
-          {
-            name: "Altcoins",
-            value: altcoinsValue,
-            pct: totalValue > 0 ? (altcoinsValue / totalValue) * 100 : 0,
-            color: DEFAULT_COLORS["Altcoins"],
-          },
-        ]
-      : []),
-  ];
+  const slices: SliceItem[] = assets.map((a) => ({
+    name: a.symbol,
+    value: a.current_value_eur,
+    pct: totalValue > 0 ? (a.current_value_eur / totalValue) * 100 : 0,
+    color: a.color ?? DEFAULT_COLORS[a.symbol] ?? "var(--platform-crypto)",
+  }));
 
   return (
     <div

@@ -7,10 +7,6 @@ const COINGECKO_IDS = [
   'bitcoin',
   'ethereum',
   'usd-coin',
-  'quant-network',
-  'decentraland',
-  'fetch-ai',
-  'bittensor',
 ];
 
 export async function getCoinGeckoPrices(): Promise<CoinGeckoPrices | null> {

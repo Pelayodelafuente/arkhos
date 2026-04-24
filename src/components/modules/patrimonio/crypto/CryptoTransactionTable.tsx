@@ -52,17 +52,14 @@ const TX_TYPE_COLORS: Record<CryptoTransactionType, { bg: string; color: string;
   },
 };
 
-type ActiveFilter = "all" | "BTC" | "ETH" | "USDC" | "altcoins";
+type ActiveFilter = "all" | "BTC" | "ETH" | "USDC";
 
 const FILTERS: { id: ActiveFilter; label: string }[] = [
   { id: "all", label: "Todo" },
   { id: "BTC", label: "BTC" },
   { id: "ETH", label: "ETH" },
   { id: "USDC", label: "USDC" },
-  { id: "altcoins", label: "Altcoins" },
 ];
-
-const CORE_SYMBOLS = new Set(["BTC", "ETH", "USDC"]);
 
 export function CryptoTransactionTable() {
   const isLoading = useCryptoStore((s) => s.isLoading);
@@ -75,7 +72,6 @@ export function CryptoTransactionTable() {
   const filtered = allTxs.filter((tx) => {
     const symbol = tx.asset?.symbol ?? "";
     if (activeFilter === "all") return true;
-    if (activeFilter === "altcoins") return symbol !== "" && !CORE_SYMBOLS.has(symbol);
     return symbol === activeFilter;
   });
 

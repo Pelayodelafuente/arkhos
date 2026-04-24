@@ -99,7 +99,12 @@ export function PatrimonioDashboard() {
 
   const mintosOverview = useMintosStore((s) => s.overview);
   const mintosDeposits = useMintosStore((s) => s.deposits);
-  const mintosInvested = mintosDeposits.reduce((s, d) => s + d.amount, 0);
+  // Fall back to total_value - net_gain when deposits haven't loaded yet (SSR fast path)
+  const mintosInvested = mintosDeposits.length > 0
+    ? mintosDeposits.reduce((s, d) => s + d.amount, 0)
+    : mintosOverview
+      ? mintosOverview.total_value - mintosOverview.net_gain
+      : 0;
 
   // Global total: TR + Indexa + Horos + Mintos + Crypto
   const totalValue =

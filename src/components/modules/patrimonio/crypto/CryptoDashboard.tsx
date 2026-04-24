@@ -26,122 +26,6 @@ const TABS = [
 const formatEur = (v: number) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(v);
 
-// ── Altcoins table ────────────────────────────────────────────────────────────
-
-function AltcoinsTable() {
-  const assets = useCryptoStore((s) => s.assets);
-  const getAltcoins = useCryptoStore((s) => s.getAltcoins);
-  const altcoins = useMemo(() => getAltcoins(), [assets, getAltcoins]);
-
-  if (altcoins.length === 0) return null;
-
-  return (
-    <div
-      className="rounded-xl overflow-hidden"
-      style={{
-        backgroundColor: "var(--bg-card)",
-        border: "1px solid var(--border-stone, rgba(160,120,80,0.25))",
-      }}
-    >
-      <div
-        className="px-4 py-3"
-        style={{ borderBottom: "1px solid var(--border-stone, rgba(160,120,80,0.15))" }}
-      >
-        <p className="font-heading text-base" style={{ color: "var(--text-primary)" }}>
-          Altcoins
-        </p>
-      </div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm" role="table">
-          <thead>
-            <tr style={{ borderBottom: "1px solid var(--border-stone, rgba(160,120,80,0.10))" }}>
-              {["Activo", "Balance", "Valor", "P&L €", "P&L %", "% Cartera"].map((col) => (
-                <th
-                  key={col}
-                  scope="col"
-                  className="px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wide"
-                  style={{ color: "var(--text-muted)", backgroundColor: "var(--bg-card)" }}
-                >
-                  {col}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {altcoins.map((a, i) => {
-              const hasPL = a.has_live_price && a.pl_eur !== null && a.pl_pct !== null;
-              const plColor = hasPL && (a.pl_eur as number) >= 0 ? "var(--platform-patrimonio, #2E7D6B)" : "#A32D2D";
-              return (
-                <tr
-                  key={a.id}
-                  style={{
-                    borderBottom:
-                      i < altcoins.length - 1
-                        ? "1px solid var(--border-stone, rgba(160,120,80,0.08))"
-                        : "none",
-                  }}
-                >
-                  <td className="px-3 py-2.5">
-                    <div className="flex items-center gap-2">
-                      {a.color && (
-                        <span
-                          className="h-2 w-2 rounded-full flex-shrink-0"
-                          style={{ backgroundColor: a.color }}
-                          aria-hidden="true"
-                        />
-                      )}
-                      <span className="font-mono text-xs font-medium" style={{ color: "var(--text-primary)" }}>
-                        {a.symbol}
-                      </span>
-                      <span className="text-xs" style={{ color: "var(--text-muted)" }}>
-                        {a.name}
-                      </span>
-                    </div>
-                  </td>
-                  <td
-                    className="px-3 py-2.5 font-mono text-xs tabular-nums"
-                    style={{ color: "var(--text-primary)" }}
-                  >
-                    {a.current_balance.toFixed(4)}
-                  </td>
-                  <td
-                    className="px-3 py-2.5 font-mono text-xs tabular-nums"
-                    style={{ color: "var(--text-primary)" }}
-                  >
-                    {formatEur(a.current_value_eur)}
-                  </td>
-                  <td
-                    className="px-3 py-2.5 font-mono text-xs tabular-nums"
-                    style={{ color: hasPL ? plColor : "var(--text-muted)" }}
-                  >
-                    {hasPL
-                      ? `${(a.pl_eur as number) >= 0 ? "+" : ""}${formatEur(a.pl_eur as number)}`
-                      : "—"}
-                  </td>
-                  <td
-                    className="px-3 py-2.5 font-mono text-xs tabular-nums"
-                    style={{ color: hasPL ? plColor : "var(--text-muted)" }}
-                  >
-                    {hasPL
-                      ? `${(a.pl_pct as number) >= 0 ? "+" : ""}${(a.pl_pct as number).toFixed(2)}%`
-                      : "—"}
-                  </td>
-                  <td
-                    className="px-3 py-2.5 font-mono text-xs tabular-nums"
-                    style={{ color: "var(--text-muted)" }}
-                  >
-                    {a.weight_pct.toFixed(1)}%
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
 // ── Costs panel ───────────────────────────────────────────────────────────────
 
 function CostBreakdownPanel() {
@@ -317,9 +201,6 @@ export function CryptoDashboard() {
               ))}
             </div>
           )}
-
-          {/* Altcoins table */}
-          <AltcoinsTable />
 
           {/* Charts row */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

@@ -14,7 +14,7 @@ import type {
 } from '@/types/crypto';
 
 type ActiveTab = 'dashboard' | 'transactions' | 'defi' | 'plan' | 'costs';
-type ActiveFilter = 'all' | 'BTC' | 'ETH' | 'USDC' | 'altcoins';
+type ActiveFilter = 'all' | 'BTC' | 'ETH' | 'USDC';
 
 interface CryptoStore {
   // State
@@ -40,7 +40,6 @@ interface CryptoStore {
   getOverview: () => CryptoOverview | null;
   getBTCDCAChart: () => CryptoDCAPoint[];
   getTransactionsWithAsset: () => CryptoTransactionWithAsset[];
-  getAltcoins: () => CryptoAssetWithPL[];
   getMonthlyPlanWithAssets: () => CryptoMonthlyPlanWithAsset[];
   getTotalFees: () => number;
 }
@@ -198,11 +197,6 @@ export const useCryptoStore = create<CryptoStore>((set, get) => ({
         pl_since_buy_pct,
       };
     });
-  },
-
-  getAltcoins: () => {
-    const CORE_SYMBOLS = new Set(['BTC', 'ETH', 'USDC']);
-    return get().getAssetsWithPL().filter((a) => !CORE_SYMBOLS.has(a.symbol));
   },
 
   getMonthlyPlanWithAssets: () => {
