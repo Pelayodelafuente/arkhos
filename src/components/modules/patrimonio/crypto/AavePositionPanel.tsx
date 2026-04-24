@@ -22,11 +22,14 @@ function abbreviateAddress(addr: string): string {
 
 export function AavePositionPanel() {
   const defiPositions = useCryptoStore((s) => s.defiPositions);
+  const assets = useCryptoStore((s) => s.assets);
   const setAssets = useCryptoStore((s) => s.setAssets);
   const setTransactions = useCryptoStore((s) => s.setTransactions);
   const setDefiPositions = useCryptoStore((s) => s.setDefiPositions);
   const setMonthlyPlan = useCryptoStore((s) => s.setMonthlyPlan);
   const isLoading = useCryptoStore((s) => s.isLoading);
+
+  const usdcPriceEur = assets.find((a) => a.symbol === "USDC")?.current_price_eur ?? null;
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
@@ -82,6 +85,13 @@ export function AavePositionPanel() {
   const yieldEarned = position.yield_earned ?? current - deposited;
   const projectedYearlyUsdc = current * (apy / 100);
 
+  // EUR equivalents using live USDC price (not 1:1)
+  const hasEurRate = usdcPriceEur !== null;
+  const eurRate = usdcPriceEur ?? 1;
+  const currentEur = current * eurRate;
+  const yieldEur = yieldEarned * eurRate;
+  const projectedEur = projectedYearlyUsdc * eurRate;
+
   return (
     <div className="space-y-4">
       {/* Main position card */}
@@ -120,7 +130,7 @@ export function AavePositionPanel() {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <p className="text-xs uppercase tracking-wide mb-1" style={{ color: "var(--text-muted)" }}>
-              USDC depositado
+              Depositado
             </p>
             <p className="font-mono text-lg font-semibold tabular-nums" style={{ color: "var(--text-primary)" }}>
               {formatUsdc(deposited)}{" "}
@@ -129,7 +139,7 @@ export function AavePositionPanel() {
           </div>
           <div>
             <p className="text-xs uppercase tracking-wide mb-1" style={{ color: "var(--text-muted)" }}>
-              USDC actual
+              Balance actual
             </p>
             <p
               className="font-mono text-lg font-semibold tabular-nums"
@@ -138,6 +148,11 @@ export function AavePositionPanel() {
               {formatUsdc(current)}{" "}
               <span className="text-sm font-normal opacity-60">USDC</span>
             </p>
+            {hasEurRate && (
+              <p className="font-mono text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
+                ≈ {formatEur(currentEur)}
+              </p>
+            )}
           </div>
           <div>
             <p className="text-xs uppercase tracking-wide mb-1" style={{ color: "var(--text-muted)" }}>
@@ -150,14 +165,25 @@ export function AavePositionPanel() {
               +{formatUsdc(yieldEarned)}{" "}
               <span className="text-sm font-normal opacity-60">USDC</span>
             </p>
+            {hasEurRate && (
+              <p className="font-mono text-xs mt-0.5" style={{ color: "var(--platform-patrimonio, #2E7D6B)" }}>
+                ≈ +{formatEur(yieldEur)}
+              </p>
+            )}
           </div>
           <div>
             <p className="text-xs uppercase tracking-wide mb-1" style={{ color: "var(--text-muted)" }}>
-              Equiv. EUR (aprox.)
+              Tipo cambio
             </p>
             <p className="font-mono text-lg font-semibold tabular-nums" style={{ color: "var(--text-primary)" }}>
-              {formatEur(current)}
+              {hasEurRate ? formatEur(eurRate) : "—"}
+              <span className="text-sm font-normal opacity-60"> /USDC</span>
             </p>
+            {hasEurRate && (
+              <p className="font-mono text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
+                Total: {formatEur(currentEur)}
+              </p>
+            )}
           </div>
         </div>
 
@@ -187,7 +213,7 @@ export function AavePositionPanel() {
           +{formatUsdc(projectedYearlyUsdc)} USDC
         </p>
         <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
-          ≈ {formatEur(projectedYearlyUsdc)} · a {apy.toFixed(2)}% APY
+          ≈ {hasEurRate ? formatEur(projectedEur) : `${formatUsdc(projectedYearlyUsdc)} USDC`} · a {apy.toFixed(2)}% APY
         </p>
 
         {lastUpdated && (

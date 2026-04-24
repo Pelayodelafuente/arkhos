@@ -127,6 +127,18 @@ export function CryptoAssetCard({ asset }: CryptoAssetCardProps) {
           >
             {formatPct(asset.pl_pct as number)}
           </span>
+          {asset.symbol === "USDC" && (
+            <span
+              className="text-xs px-1.5 py-0.5 rounded font-mono"
+              style={{
+                backgroundColor: "rgba(160,120,80,0.08)",
+                color: "var(--text-muted)",
+                border: "1px solid rgba(160,120,80,0.18)",
+              }}
+            >
+              FX EUR/USD
+            </span>
+          )}
         </div>
       ) : (
         <div
