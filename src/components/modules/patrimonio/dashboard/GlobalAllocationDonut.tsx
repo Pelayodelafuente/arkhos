@@ -80,11 +80,11 @@ export function GlobalAllocationDonut() {
       if (cfg.slug === "mintos") {
         return { name: cfg.name, value: mintosOverview?.total_value ?? 0, color: cfg.color };
       }
-      // trade-republic: exclude cash (cash only appears in total patrimonio header)
+      // trade-republic: include cash so the donut center matches the total patrimonio header
       const platform = platforms.find((p) => p.slug === cfg.slug);
       if (!platform) return { name: cfg.name, value: 0, color: cfg.color };
       const value = assets
-        .filter((a) => a.platform_id === platform.id && a.category !== "cash")
+        .filter((a) => a.platform_id === platform.id)
         .reduce((s, a) => s + (a.current_value ?? 0), 0);
       return { name: cfg.name, value, color: cfg.color };
     }).filter((s) => s.value > 0);

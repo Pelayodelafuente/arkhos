@@ -85,14 +85,17 @@ function EmptyState() {
 export function GlobalEvolutionChart() {
   // ── TR (snapshots mensuales) ─────────────────────────────────────────────
   const trSnapshots = usePatrimonioStore((s) => s.snapshots);
+  const trOverview = usePatrimonioStore((s) => s.overview);
 
   // ── Indexa — suscripción directa a los datos para forzar re-render ───────
   const indexaTx = useIndexaStore((s) => s.transactions);
   const indexaReturns = useIndexaStore((s) => s.monthlyReturns);
+  const indexaOverview = useIndexaStore((s) => s.overview);
 
   // ── Horos — nav history + transactions para reconstruir valor mensual ────
   const horosNavHistory = useHorosStore((s) => s.navHistory);
   const horosTransactions = useHorosStore((s) => s.transactions);
+  const horosPosition = useHorosStore((s) => s.position);
 
   // ── Crypto — transactions para evolución de capital invertido ────────────
   const cryptoTransactions = useCryptoStore((s) => s.transactions);
@@ -104,6 +107,17 @@ export function GlobalEvolutionChart() {
   // ── Mintos — snapshots mensuales con valor estimado ──────────────────────
   const mintosSnapshots = useMintosStore((s) => s.monthlySnapshots);
   const mintosOverview = useMintosStore((s) => s.overview);
+  const mintosDeposits = useMintosStore((s) => s.deposits);
+
+  // ── Total invertido live (misma fórmula que GlobalKPIs card) ─────────────
+  const liveInvested = useMemo(() => {
+    const trInv = trOverview ? trOverview.total_invested - trOverview.total_cash : 0;
+    const idxCost = indexaOverview?.total_cost ?? 0;
+    const horosCost = horosPosition?.total_cost ?? 0;
+    const cryptoInv = cryptoOverview?.total_invested_eur ?? 0;
+    const mintosInv = mintosDeposits.reduce((s, d) => s + d.amount, 0);
+    return trInv + idxCost + horosCost + cryptoInv + mintosInv;
+  }, [trOverview, indexaOverview, horosPosition, cryptoOverview, mintosDeposits]);
 
   // ── Construir mapa mensual de TR: 'YYYY-MM' → {value, invested} ──────────
   const trByMonth = useMemo(() => {
@@ -257,14 +271,18 @@ export function GlobalEvolutionChart() {
         ? (isLastPoint && mintosCurrentValue > 0 ? mintosCurrentValue : lastMintos.value)
         : 0;
 
+      const historicalInvested = tr.invested + idxCost + horosCost + lastCryptoCost + lastMintos.deposited;
+
       return {
         key,
         label: monthKeyLabel(key),
         value: parseFloat((tr.value + idxValue + horosValue + cryptoValue + mintosValue).toFixed(2)),
-        invested: parseFloat((tr.invested + idxCost + horosCost + lastCryptoCost + lastMintos.deposited).toFixed(2)),
+        invested: parseFloat(
+          (isLastPoint && liveInvested > 0 ? liveInvested : historicalInvested).toFixed(2)
+        ),
       };
     });
-  }, [trByMonth, indexaByMonth, horosByMonth, cryptoByMonth, mintosByMonth, cryptoOverview, mintosOverview]);
+  }, [trByMonth, indexaByMonth, horosByMonth, cryptoByMonth, mintosByMonth, cryptoOverview, mintosOverview, liveInvested]);
 
   if (data.length === 0) return <EmptyState />;
 
