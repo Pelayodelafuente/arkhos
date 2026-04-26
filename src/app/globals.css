@@ -61,6 +61,25 @@
   --platform-horos:   #7260C4;
   --platform-mintos:  #C4704A;
   --platform-crypto:  #B07A3A;
+
+  /* FINANCIERO — estados de ganancia/pérdida */
+  --color-gain:          #2E7D6B;
+  --color-gain-subtle:   rgba(46, 125, 107, 0.12);
+  --color-gain-border:   rgba(46, 125, 107, 0.25);
+  --color-loss:          #A32D2D;
+  --color-loss-subtle:   rgba(163, 45, 45, 0.12);
+  --color-loss-border:   rgba(163, 45, 45, 0.25);
+  --color-neutral-fin:   #B07A3A;
+  --color-neutral-subtle: rgba(176, 122, 58, 0.12);
+  --color-neutral-border: rgba(176, 122, 58, 0.25);
+
+  /* MORA P2P */
+  --mora-current: #2E7D6B;
+  --mora-grace:   #B07A3A;
+  --mora-1-30:    #C4704A;
+  --mora-31-60:   rgba(163, 45, 45, 0.5);
+  --mora-60plus:  #A32D2D;
+
   --module-gastos:     #3B78B0;
   --module-notas:      #B07A3A;
 
@@ -794,6 +813,18 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .live-dot {
   animation: livePulse 2s ease-in-out infinite;
   display: inline-block;
+}
+
+/* Clase para todos los valores monetarios y porcentajes */
+.financial-number {
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ─── Privacy mode — blur all mono-font values (amounts, prices, %) ──────── */

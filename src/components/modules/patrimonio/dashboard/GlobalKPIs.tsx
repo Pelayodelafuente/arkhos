@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { Wallet, TrendingUp, TrendingDown, BarChart2, Percent } from "lucide-react";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
@@ -8,39 +8,13 @@ import { useIndexaStore } from "@/stores/indexa-store";
 import { useHorosStore } from "@/stores/horos-store";
 import { useCryptoStore } from "@/stores/crypto-store";
 import { useMintosStore } from "@/stores/mintos-store";
+import { useAnimatedCounter } from "@/lib/hooks/use-animated-counter";
 
 const formatEur = (value: number) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
 
 const formatPct = (value: number, signed = false) =>
   `${signed && value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
-
-// ---------------------------------------------------------------------------
-// Animated counter
-// ---------------------------------------------------------------------------
-
-function useAnimatedCounter(target: number, duration = 1200): number {
-  const [value, setValue] = useState(0);
-
-  useEffect(() => {
-    if (target === 0) {
-      setValue(0);
-      return;
-    }
-    const startTime = performance.now();
-    const tick = (now: number) => {
-      const elapsed = now - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setValue(target * eased);
-      if (progress < 1) requestAnimationFrame(tick);
-    };
-    const raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [target, duration]);
-
-  return value;
-}
 
 // ---------------------------------------------------------------------------
 // Mini sparkline

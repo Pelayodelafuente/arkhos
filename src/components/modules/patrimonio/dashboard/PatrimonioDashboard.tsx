@@ -1,10 +1,8 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
-  Eye,
-  EyeOff,
   Landmark,
   TrendingUp,
   BarChart2,
@@ -23,40 +21,13 @@ import { useMintosStore } from "@/stores/mintos-store";
 import { usePatrimonioPrices } from "@/lib/hooks/use-patrimonio-prices";
 import { loadCryptoData } from "@/app/actions/crypto";
 import type { PlatformSlug } from "@/types/patrimonio";
-import { GlobalKPIs } from "@/components/modules/patrimonio/dashboard/GlobalKPIs";
 import { PlatformCard, type PlatformCardProps } from "@/components/modules/patrimonio/dashboard/PlatformCard";
 import { GlobalEvolutionChart } from "@/components/modules/patrimonio/dashboard/GlobalEvolutionChart";
-import { GlobalAllocationDonut } from "@/components/modules/patrimonio/dashboard/GlobalAllocationDonut";
+import { PatrimonioHero } from "@/components/modules/patrimonio/dashboard/PatrimonioHero";
+import { PlatformDistributionBar } from "@/components/modules/patrimonio/dashboard/PlatformDistributionBar";
 
 const formatEur = (value: number) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
-
-// ---------------------------------------------------------------------------
-// Animated counter hook
-// ---------------------------------------------------------------------------
-
-function useAnimatedCounter(target: number, duration = 1200): number {
-  const [value, setValue] = useState(0);
-
-  useEffect(() => {
-    if (target === 0) {
-      setValue(0);
-      return;
-    }
-    const startTime = performance.now();
-    const tick = (now: number) => {
-      const elapsed = now - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setValue(target * eased);
-      if (progress < 1) requestAnimationFrame(tick);
-    };
-    const raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [target, duration]);
-
-  return value;
-}
 
 // ---------------------------------------------------------------------------
 // Stagger variants
@@ -311,29 +282,24 @@ function SyncPlatformsPanel() {
 // ---------------------------------------------------------------------------
 
 export function PatrimonioDashboard() {
-  const overview = usePatrimonioStore((s) => s.overview);
   const assets = usePatrimonioStore((s) => s.assets);
   const platforms = usePatrimonioStore((s) => s.platforms);
   const pricesLastUpdated = usePatrimonioStore((s) => s.pricesLastUpdated);
-  const isLoadingPrices = usePatrimonioStore((s) => s.isLoadingPrices);
   const getKPISparklines = usePatrimonioStore((s) => s.getKPISparklines);
-  const getMonthlyKPIDeltas = usePatrimonioStore((s) => s.getMonthlyKPIDeltas);
   const sparklines = getKPISparklines();
-  const deltas = getMonthlyKPIDeltas();
   const setActivePlatform = usePatrimonioStore((s) => s.setActivePlatform);
   const activePlatform = usePatrimonioStore((s) => s.activePlatform);
-  const privacyMode = usePatrimonioStore((s) => s.privacyMode);
-  const togglePrivacyMode = usePatrimonioStore((s) => s.togglePrivacyMode);
 
   const indexaOverview = useIndexaStore((s) => s.overview);
-  const getIndexaValueDelta = useIndexaStore((s) => s.getLastMonthValueDelta);
-  const indexaHeaderDelta = getIndexaValueDelta();
   const horosPosition = useHorosStore((s) => s.position);
   const cryptoAssets = useCryptoStore((s) => s.assets);
   const cryptoDefi = useCryptoStore((s) => s.defiPositions);
   const cryptoMonthlyPlan = useCryptoStore((s) => s.monthlyPlan);
   const getCryptoOverview = useCryptoStore((s) => s.getOverview);
-  const cryptoOverview = useMemo(() => getCryptoOverview(), [cryptoAssets, cryptoDefi, cryptoMonthlyPlan, getCryptoOverview]);
+  const cryptoOverview = useMemo(
+    () => getCryptoOverview(),
+    [cryptoAssets, cryptoDefi, cryptoMonthlyPlan, getCryptoOverview]
+  );
 
   const mintosOverview = useMintosStore((s) => s.overview);
   const mintosDeposits = useMintosStore((s) => s.deposits);
@@ -343,23 +309,6 @@ export function PatrimonioDashboard() {
     : mintosOverview
       ? mintosOverview.total_value - mintosOverview.net_gain
       : 0;
-
-  // Global total: TR + Indexa + Horos + Mintos + Crypto
-  const totalValue =
-    (overview?.total_value ?? 0) +
-    (indexaOverview?.total_value ?? 0) +
-    (horosPosition?.total_value ?? 0) +
-    (mintosOverview?.total_value ?? 0) +
-    (cryptoOverview?.total_value_eur ?? 0);
-  const animatedTotal = useAnimatedCounter(totalValue);
-
-  const updatedTime = useMemo(() => {
-    if (!pricesLastUpdated) return null;
-    return new Date(pricesLastUpdated).toLocaleTimeString("es-ES", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  }, [pricesLastUpdated]);
 
   // Build TR data
   const { trValue, trInvested, trPL, trPLPct, trPositions } = useMemo(() => {
@@ -457,74 +406,8 @@ export function PatrimonioDashboard() {
 
   return (
     <div className="space-y-7">
-      {/* ── HEADER ──────────────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="font-heading text-3xl text-foreground">Patrimonio</h1>
-          <div className="mt-1 flex items-center gap-2 flex-wrap">
-            <p
-              className="font-heading text-5xl font-semibold tabular-nums"
-              style={{ color: "var(--module-patrimonio)" }}
-              aria-label={`Total patrimonio: ${formatEur(totalValue)}`}
-            >
-              {formatEur(animatedTotal)}
-            </p>
-          </div>
-
-          {/* Monthly delta */}
-          {(() => {
-            const combined = (deltas.totalValue ?? 0) + (indexaHeaderDelta ?? 0);
-            if (deltas.totalValue === null && indexaHeaderDelta === null) return null;
-            return (
-              <p
-                className="mt-1 font-mono text-sm"
-                style={{ color: combined >= 0 ? "var(--platform-tr)" : "#A32D2D" }}
-              >
-                {combined >= 0 ? "+" : ""}{formatEur(combined)} este mes
-              </p>
-            );
-          })()}
-        </div>
-
-        {/* Right side controls */}
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {/* Updated indicator */}
-          {isLoadingPrices ? (
-            <span className="animate-pulse rounded-full px-3 py-1 text-xs" style={{ backgroundColor: "rgba(46,125,107,0.1)", color: "var(--platform-tr)" }}>
-              Actualizando...
-            </span>
-          ) : updatedTime ? (
-            <div
-              className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs"
-              style={{ backgroundColor: "rgba(46,125,107,0.1)", color: "var(--platform-tr)" }}
-            >
-              <span
-                className="h-1.5 w-1.5 rounded-full animate-pulse"
-                style={{ backgroundColor: "var(--platform-tr)" }}
-                aria-hidden="true"
-              />
-              <span className="font-mono">Actualizado {updatedTime}</span>
-            </div>
-          ) : null}
-
-          {/* Privacy toggle */}
-          <button
-            type="button"
-            onClick={togglePrivacyMode}
-            className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm transition-colors duration-150 hover:bg-card"
-            style={{ color: "var(--text-secondary)" }}
-            aria-label={privacyMode ? "Mostrar valores" : "Ocultar valores"}
-          >
-            {privacyMode
-              ? <EyeOff size={16} strokeWidth={1.75} aria-hidden="true" />
-              : <Eye size={16} strokeWidth={1.75} aria-hidden="true" />}
-            <span className="hidden sm:inline text-xs">{privacyMode ? "Mostrar" : "Privacidad"}</span>
-          </button>
-        </div>
-      </div>
-
-      {/* ── GLOBAL KPIs ─────────────────────────────────────────────────── */}
-      <GlobalKPIs />
+      {/* ── HERO ────────────────────────────────────────────────────────── */}
+      <PatrimonioHero />
 
       {/* ── PLATAFORMAS ─────────────────────────────────────────────────── */}
       <div>
@@ -552,7 +435,7 @@ export function PatrimonioDashboard() {
           <GlobalEvolutionChart />
         </div>
         <div className="lg:col-span-1">
-          <GlobalAllocationDonut />
+          <PlatformDistributionBar />
         </div>
       </div>
 
