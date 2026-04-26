@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   AreaChart,
   Area,
@@ -9,6 +9,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Brush,
 } from "recharts";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { useIndexaStore } from "@/stores/indexa-store";
@@ -83,6 +84,7 @@ function EmptyState() {
 // ---------------------------------------------------------------------------
 
 export function GlobalEvolutionChart() {
+  const [period, setPeriod] = useState<"3M" | "6M" | "1A" | "Todo">("Todo");
   // ── TR (snapshots mensuales) ─────────────────────────────────────────────
   const trSnapshots = usePatrimonioStore((s) => s.snapshots);
   const trOverview = usePatrimonioStore((s) => s.overview);
@@ -304,6 +306,21 @@ export function GlobalEvolutionChart() {
     });
   }, [trByMonth, indexaByMonth, horosByMonth, cryptoByMonth, mintosByMonth, cryptoOverview, mintosOverview, liveInvested, liveTotalValue]);
 
+  const cutoffDate = useMemo(() => {
+    const now = new Date();
+    switch (period) {
+      case "3M": { const d = new Date(now); d.setDate(d.getDate() - 90); return d.toISOString().substring(0, 7); }
+      case "6M": { const d = new Date(now); d.setDate(d.getDate() - 180); return d.toISOString().substring(0, 7); }
+      case "1A": { const d = new Date(now); d.setFullYear(d.getFullYear() - 1); return d.toISOString().substring(0, 7); }
+      default: return null;
+    }
+  }, [period]);
+
+  const filteredData = useMemo(() => {
+    if (!cutoffDate) return data;
+    return data.filter(p => p.key >= cutoffDate);
+  }, [data, cutoffDate]);
+
   if (data.length === 0) return <EmptyState />;
 
   return (
@@ -314,11 +331,37 @@ export function GlobalEvolutionChart() {
         border: "1px solid var(--border-stone, rgba(160,120,80,0.25))",
       }}
     >
-      <p className="mb-4 text-sm font-medium text-foreground">Evolución del patrimonio</p>
-      <p className="mb-3 text-xs text-muted-foreground">TR · Indexa · Horos · Mintos · Crypto — histórico acumulado</p>
+      <div className="mb-3 flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+            Evolución del patrimonio
+          </p>
+          <p className="mt-0.5 text-xs" style={{ color: "var(--text-tertiary)" }}>
+            TR · Indexa · Horos · Mintos · Crypto — histórico acumulado
+          </p>
+        </div>
+        <div className="flex gap-1">
+          {(["3M", "6M", "1A", "Todo"] as const).map((p) => (
+            <button
+              key={p}
+              type="button"
+              onClick={() => setPeriod(p)}
+              className="rounded-md px-2.5 py-1 font-mono text-xs font-medium transition-colors"
+              style={{
+                backgroundColor: period === p ? "var(--module-patrimonio)" : "var(--bg-sand)",
+                color: period === p ? "#fff" : "var(--text-tertiary)",
+                border: `1px solid ${period === p ? "var(--module-patrimonio)" : "var(--border)"}`,
+              }}
+              aria-pressed={period === p}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+      </div>
 
-      <ResponsiveContainer width="100%" height={280}>
-        <AreaChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+      <ResponsiveContainer width="100%" height={310}>
+        <AreaChart data={filteredData} margin={{ top: 4, right: 4, left: 0, bottom: 8 }}>
           <defs>
             <linearGradient id="gradValue" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#2E7D6B" stopOpacity={0.25} />
@@ -380,6 +423,13 @@ export function GlobalEvolutionChart() {
             dot={false}
             activeDot={{ r: 4, fill: "#2E7D6B" }}
             name="value"
+          />
+          <Brush
+            dataKey="label"
+            height={20}
+            stroke="var(--border)"
+            fill="var(--bg-sand, var(--bg-card))"
+            travellerWidth={6}
           />
         </AreaChart>
       </ResponsiveContainer>

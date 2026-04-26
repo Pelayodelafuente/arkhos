@@ -11,6 +11,8 @@ import {
   Tooltip,
   ResponsiveContainer,
   Dot,
+  Brush,
+  ReferenceLine,
 } from "recharts";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { C } from "@/lib/patrimonio/chart-colors";
@@ -372,8 +374,8 @@ export function EvolutionChart({ height = 300, showBenchmark = false, showTotal:
           </span>
         </div>
       )}
-      <ResponsiveContainer width="100%" height={height}>
-        <ComposedChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 4 }}>
+      <ResponsiveContainer width="100%" height={height + 30}>
+        <ComposedChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
           <defs>
             <linearGradient id={gradValue} x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor={C.green} stopOpacity={0.15} />
@@ -465,6 +467,33 @@ export function EvolutionChart({ height = 300, showBenchmark = false, showTotal:
               legendType="none"
             />
           )}
+          {period !== "YTD" && (() => {
+            const ytdDate = `${new Date().getFullYear()}-01-01`;
+            const hasYtd = data.some(p => p.date >= ytdDate);
+            if (!hasYtd) return null;
+            return (
+              <ReferenceLine
+                x={ytdDate}
+                stroke="var(--text-tertiary)"
+                strokeDasharray="3 3"
+                strokeOpacity={0.5}
+                label={{
+                  value: "YTD",
+                  position: "insideTopLeft",
+                  fontSize: 10,
+                  fill: "var(--text-tertiary)",
+                }}
+              />
+            );
+          })()}
+          <Brush
+            dataKey="date"
+            height={20}
+            stroke="var(--border)"
+            fill="var(--bg-sand, var(--bg-card))"
+            travellerWidth={6}
+            tickFormatter={formatMonthYear}
+          />
         </ComposedChart>
       </ResponsiveContainer>
     </div>
