@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useRef, useEffect } from "react";
 import { ChevronDown, ChevronRight, Search, ArrowUpDown, ArrowUp, ArrowDown, Plus } from "lucide-react";
+import { motion } from "framer-motion";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { PLBadge } from "@/components/modules/patrimonio/shared/PLBadge";
 import { PriceProgressBar } from "@/components/modules/patrimonio/shared/PriceProgressBar";
@@ -46,6 +47,47 @@ function matchesFilter(asset: PortfolioAsset, filter: FilterTab): boolean {
   if (filter === "cash") return asset.category === "cash";
   return true;
 }
+
+// ---------------------------------------------------------------------------
+// InlineSparkline — SVG sparkline 60x24px
+// ---------------------------------------------------------------------------
+
+function InlineSparkline({ data, isPositive }: { data: number[]; isPositive: boolean }) {
+  if (!data || data.length < 2) return null;
+
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min;
+
+  const points = data
+    .map((v, i) => {
+      const x = (i / (data.length - 1)) * 56 + 2;
+      const y = range === 0 ? 12 : 22 - ((v - min) / range) * 18 + 2;
+      return `${x},${y}`;
+    })
+    .join(" ");
+
+  return (
+    <svg
+      width={60}
+      height={24}
+      viewBox="0 0 60 24"
+      aria-hidden="true"
+      style={{ display: "block" }}
+    >
+      <polyline
+        points={points}
+        stroke={isPositive ? "var(--color-gain)" : "var(--color-loss)"}
+        strokeWidth={1.5}
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+// ---------------------------------------------------------------------------
 
 interface SortHeaderProps {
   label: string;
@@ -160,9 +202,21 @@ interface CategoryGroupProps {
   trCurrentValue: number;
   firstBuyDateMap: Map<string, string>;
   onAssetClick: (id: string) => void;
+  selectedISINs: Set<string>;
+  onToggleSelect: (isin: string) => void;
 }
 
-function CategoryGroup({ category, assets, savingsPlanMap, priceChanges, trCurrentValue, firstBuyDateMap, onAssetClick }: CategoryGroupProps) {
+function CategoryGroup({
+  category,
+  assets,
+  savingsPlanMap,
+  priceChanges,
+  trCurrentValue,
+  firstBuyDateMap,
+  onAssetClick,
+  selectedISINs,
+  onToggleSelect,
+}: CategoryGroupProps) {
   const [open, setOpen] = useState(true);
 
   const groupValue = assets.reduce((s, a) => s + (a.current_value ?? 0), 0);
@@ -209,6 +263,7 @@ function CategoryGroup({ category, assets, savingsPlanMap, priceChanges, trCurre
           —
         </td>
         <td className="hidden px-3 py-2.5 md:table-cell" />
+        <td className="hidden px-3 py-2.5 md:table-cell" />
         <td className="hidden px-4 py-2.5 md:table-cell" />
         <td className="hidden px-4 py-2.5 md:table-cell" />
       </tr>
@@ -225,16 +280,41 @@ function CategoryGroup({ category, assets, savingsPlanMap, priceChanges, trCurre
             asset.pl_percentage != null && daysInPortfolio != null
               ? computeAnnualizedPL(asset.pl_percentage, daysInPortfolio)
               : null;
+
+          const isin = asset.isin ?? "";
+          const isSelected = isin !== "" && selectedISINs.has(isin);
+          // price_history is not in the type — gracefully fallback to empty array
+          const priceHistory: number[] = [];
+          const isPositive = (asset.pl_amount ?? 0) >= 0;
+
           return (
             <tr
               key={asset.id}
               className="border-b border-border/50 transition-colors hover:bg-sand/30"
+              style={
+                isSelected
+                  ? {
+                      outline: "1px solid var(--color-gain)",
+                      backgroundColor: "rgba(46,125,107,0.06)",
+                    }
+                  : undefined
+              }
+              onClick={(e) => {
+                // Only toggle if not clicking on the name button
+                const target = e.target as HTMLElement;
+                if (target.closest("button[data-name-btn]")) return;
+                if (isin) onToggleSelect(isin);
+              }}
             >
               <td className="px-4 py-3 pl-10">
                 <button
                   type="button"
+                  data-name-btn="true"
                   className="text-left hover:underline"
-                  onClick={() => onAssetClick(asset.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAssetClick(asset.id);
+                  }}
                 >
                   <p className="text-sm font-medium text-foreground">{asset.name}</p>
                   {asset.sector && (
@@ -300,10 +380,14 @@ function CategoryGroup({ category, assets, savingsPlanMap, priceChanges, trCurre
                   <span className="text-xs text-text-tertiary">—</span>
                 )}
               </td>
-              <td className="hidden px-3 py-3 text-right font-mono text-xs text-text-secondary md:table-cell">
+              <td className="hidden px-3 py-3 text-right font-mono text-xs text-text-tertiary md:table-cell">
                 {trCurrentValue > 0
                   ? `${(((asset.current_value ?? 0) / trCurrentValue) * 100).toFixed(1)}%`
                   : "—"}
+              </td>
+              {/* Sparkline cell */}
+              <td className="hidden px-3 py-3 md:table-cell">
+                <InlineSparkline data={priceHistory} isPositive={isPositive} />
               </td>
               <td className="hidden px-3 py-3 text-right font-mono text-xs md:table-cell">
                 {planAmount != null ? (
@@ -331,7 +415,11 @@ function CategoryGroup({ category, assets, savingsPlanMap, priceChanges, trCurre
   );
 }
 
-export function TRPositionsTable() {
+export interface TRPositionsTableProps {
+  onCompare?: (isins: string[]) => void;
+}
+
+export function TRPositionsTable({ onCompare }: TRPositionsTableProps) {
   const assets = usePatrimonioStore((s) => s.assets);
   const platforms = usePatrimonioStore((s) => s.platforms);
   const savingsPlan = usePatrimonioStore((s) => s.savingsPlan);
@@ -352,6 +440,7 @@ export function TRPositionsTable() {
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [activeDrawerAssetId, setActiveDrawerAssetId] = useState<string | null>(null);
   const [showAssetModal, setShowAssetModal] = useState(false);
+  const [selectedISINs, setSelectedISINs] = useState<Set<string>>(new Set());
 
   const savingsPlanMap = useMemo(
     () => new Map(savingsPlan.map((item) => [item.asset_id, item.monthly_amount])),
@@ -378,6 +467,18 @@ export function TRPositionsTable() {
       setSortKey(key);
       setSortDir("desc");
     }
+  }
+
+  function handleToggleSelect(isin: string) {
+    setSelectedISINs((prev) => {
+      const next = new Set(prev);
+      if (next.has(isin)) {
+        next.delete(isin);
+      } else {
+        next.add(isin);
+      }
+      return next;
+    });
   }
 
   const filtered = useMemo(() => {
@@ -425,6 +526,8 @@ export function TRPositionsTable() {
   const totalInvested = filteredNonCash.reduce((s, a) => s + a.total_invested, 0);
   const totalPL = totalValue - totalInvested;
   const totalPLPct = totalInvested > 0 ? (totalPL / totalInvested) * 100 : 0;
+
+  const selectedCount = selectedISINs.size;
 
   return (
     <div className="rounded-xl border border-border bg-card">
@@ -529,6 +632,9 @@ export function TRPositionsTable() {
               <th className="px-3 py-3 text-right text-xs font-medium text-text-tertiary">
                 Peso %
               </th>
+              <th className="px-3 py-3 text-left text-xs font-medium text-text-tertiary">
+                Sparkline
+              </th>
               <th className="px-3 py-3 text-right text-xs font-medium text-text-tertiary">
                 Plan/mes
               </th>
@@ -544,23 +650,25 @@ export function TRPositionsTable() {
             {/* Investment positions first (non-cash) */}
             {Array.from(groups.entries())
               .filter(([cat]) => cat !== "cash")
-              .map(([category, assets]) => (
+              .map(([category, groupAssets]) => (
                 <CategoryGroup
                   key={category}
                   category={category}
-                  assets={assets}
+                  assets={groupAssets}
                   savingsPlanMap={savingsPlanMap}
                   priceChanges={priceChanges}
                   trCurrentValue={trCurrentValue}
                   firstBuyDateMap={firstBuyDateMap}
                   onAssetClick={setActiveDrawerAssetId}
+                  selectedISINs={selectedISINs}
+                  onToggleSelect={handleToggleSelect}
                 />
               ))}
             {/* Cash separator + group — always last */}
             {groups.has("cash") && (
               <>
                 <tr>
-                  <td colSpan={11} className="px-4 py-2">
+                  <td colSpan={12} className="px-4 py-2">
                     <div className="flex items-center gap-3">
                       <span className="h-px flex-1" style={{ backgroundColor: "var(--border)" }} />
                       <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "var(--text-tertiary)" }}>
@@ -579,12 +687,14 @@ export function TRPositionsTable() {
                   trCurrentValue={trCurrentValue}
                   firstBuyDateMap={firstBuyDateMap}
                   onAssetClick={setActiveDrawerAssetId}
+                  selectedISINs={selectedISINs}
+                  onToggleSelect={handleToggleSelect}
                 />
               </>
             )}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={11} className="py-12 text-center text-sm text-text-tertiary">
+                <td colSpan={12} className="py-12 text-center text-sm text-text-tertiary">
                   No hay posiciones con esos filtros
                 </td>
               </tr>
@@ -606,7 +716,7 @@ export function TRPositionsTable() {
                   <PLBadge amount={totalPL} percentage={totalPLPct} showAmount showPercentage />
                 </td>
                 <td />
-                <td colSpan={3} />
+                <td colSpan={4} />
               </tr>
             </tfoot>
           )}
@@ -624,11 +734,11 @@ export function TRPositionsTable() {
           <div className="divide-y divide-border">
             {Array.from(groups.entries())
               .filter(([cat]) => cat !== "cash")
-              .map(([category, assets]) => (
+              .map(([category, groupAssets]) => (
                 <MobileCategoryGroup
                   key={category}
                   category={category}
-                  assets={assets}
+                  assets={groupAssets}
                   savingsPlanMap={savingsPlanMap}
                   onAssetClick={setActiveDrawerAssetId}
                 />
@@ -662,6 +772,45 @@ export function TRPositionsTable() {
         isOpen={showAssetModal}
         onClose={() => setShowAssetModal(false)}
       />
+
+      {/* Multi-select floating bar */}
+      {selectedCount >= 2 && (
+        <motion.div
+          initial={{ y: 60, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-full px-4 py-2.5 shadow-lg"
+          style={{
+            background: "var(--bg-card)",
+            border: "1px solid var(--border-stone)",
+          }}
+        >
+          <span className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+            {selectedCount} activos seleccionados
+          </span>
+          <button
+            type="button"
+            className="rounded-full px-3 py-1 text-xs font-semibold transition-colors"
+            style={{
+              background: "var(--module-patrimonio)",
+              color: "var(--card)",
+            }}
+            onClick={() => {
+              if (onCompare) onCompare(Array.from(selectedISINs));
+            }}
+          >
+            Comparar
+          </button>
+          <button
+            type="button"
+            className="flex h-6 w-6 items-center justify-center rounded-full text-xs transition-colors"
+            style={{ color: "var(--text-secondary)" }}
+            aria-label="Limpiar selección"
+            onClick={() => setSelectedISINs(new Set())}
+          >
+            ✕
+          </button>
+        </motion.div>
+      )}
     </div>
   );
 }
