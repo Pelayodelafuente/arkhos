@@ -26,6 +26,7 @@ import { GlobalEvolutionChart } from "@/components/modules/patrimonio/dashboard/
 import { PatrimonioHero } from "@/components/modules/patrimonio/dashboard/PatrimonioHero";
 import { PlatformDistributionBar } from "@/components/modules/patrimonio/dashboard/PlatformDistributionBar";
 import { SankeyDiagram } from "@/components/modules/patrimonio/dashboard/SankeyDiagram";
+import { FiscalidadPanel } from "@/components/modules/patrimonio/trade-republic/FiscalidadPanel";
 
 const formatEur = (value: number) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
@@ -442,6 +443,12 @@ export function PatrimonioDashboard() {
 
       {/* ── SANKEY ──────────────────────────────────────────────────────── */}
       <SankeyDiagram />
+
+      {/* ── FISCALIDAD ──────────────────────────────────────────────────── */}
+      <section>
+        <h2 className="text-lg font-medium mb-4" style={{ color: "var(--text-primary)" }}>Fiscalidad</h2>
+        <FiscalidadPanel />
+      </section>
 
       {/* ── SYNC ────────────────────────────────────────────────────────── */}
       <SyncPlatformsPanel />

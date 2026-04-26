@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { useIndexaStore } from "@/stores/indexa-store";
@@ -30,6 +30,7 @@ import { IndexaSection } from "@/components/modules/patrimonio/indexa/IndexaSect
 import { HorosSection } from "@/components/modules/patrimonio/horos/HorosSection";
 import { MintosSection } from "@/components/modules/patrimonio/mintos/MintosSection";
 import { CryptoSection } from "@/components/modules/patrimonio/crypto/CryptoSection";
+import { UniversalSearch } from "@/components/modules/patrimonio/shared/UniversalSearch";
 
 interface PatrimonioViewProps {
   overview: PortfolioOverview;
@@ -71,6 +72,20 @@ export function PatrimonioView({
   cryptoAssets,
   mintosOverview,
 }: PatrimonioViewProps) {
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  // Ctrl+K / Cmd+K global shortcut
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
   const setOverview = usePatrimonioStore((s) => s.setOverview);
   const setAssets = usePatrimonioStore((s) => s.setAssets);
   const setTransactions = usePatrimonioStore((s) => s.setTransactions);
@@ -244,6 +259,9 @@ export function PatrimonioView({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Universal search modal (Ctrl+K / Cmd+K) */}
+      <UniversalSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </div>
   );
 }
