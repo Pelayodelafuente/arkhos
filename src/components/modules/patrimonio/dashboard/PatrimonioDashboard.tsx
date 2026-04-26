@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Landmark,
@@ -27,6 +27,7 @@ import { PatrimonioHero } from "@/components/modules/patrimonio/dashboard/Patrim
 import { PlatformDistributionBar } from "@/components/modules/patrimonio/dashboard/PlatformDistributionBar";
 import { SankeyDiagram } from "@/components/modules/patrimonio/dashboard/SankeyDiagram";
 import { FiscalidadPanel } from "@/components/modules/patrimonio/trade-republic/FiscalidadPanel";
+import { PatrimonioAlerts } from "@/components/modules/patrimonio/shared/PatrimonioAlerts";
 
 const formatEur = (value: number) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
@@ -284,6 +285,16 @@ function SyncPlatformsPanel() {
 // ---------------------------------------------------------------------------
 
 export function PatrimonioDashboard() {
+  const [viewMode, setViewMode] = useState<"quick" | "detailed">(() => {
+    if (typeof window === "undefined") return "detailed";
+    const stored = localStorage.getItem("patrimonio-view-mode");
+    return stored === "quick" || stored === "detailed" ? stored : "detailed";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("patrimonio-view-mode", viewMode);
+  }, [viewMode]);
+
   const assets = usePatrimonioStore((s) => s.assets);
   const platforms = usePatrimonioStore((s) => s.platforms);
   const pricesLastUpdated = usePatrimonioStore((s) => s.pricesLastUpdated);
@@ -408,8 +419,38 @@ export function PatrimonioDashboard() {
 
   return (
     <div className="space-y-7">
+      {/* ── CABECERA CON TOGGLE ─────────────────────────────────────────── */}
+      <div className="flex items-center justify-end">
+        <div
+          className="flex items-center gap-0.5 rounded-lg p-0.5"
+          style={{ backgroundColor: "var(--bg-surface)", border: "1px solid var(--border-stone)" }}
+          role="group"
+          aria-label="Modo de vista"
+        >
+          {(["quick", "detailed"] as const).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              onClick={() => setViewMode(mode)}
+              className="rounded-md px-3 py-1 text-xs font-medium transition-all duration-150"
+              style={
+                viewMode === mode
+                  ? { backgroundColor: "var(--module-patrimonio)", color: "#fff" }
+                  : { backgroundColor: "transparent", color: "var(--text-tertiary)" }
+              }
+              aria-pressed={viewMode === mode}
+            >
+              {mode === "quick" ? "Vista rápida" : "Vista detallada"}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* ── HERO ────────────────────────────────────────────────────────── */}
       <PatrimonioHero />
+
+      {/* ── ALERTAS ─────────────────────────────────────────────────────── */}
+      <PatrimonioAlerts />
 
       {/* ── PLATAFORMAS ─────────────────────────────────────────────────── */}
       <div>
@@ -431,24 +472,28 @@ export function PatrimonioDashboard() {
         </motion.div>
       </div>
 
-      {/* ── CHARTS ──────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <GlobalEvolutionChart />
-        </div>
-        <div className="lg:col-span-1">
-          <PlatformDistributionBar />
-        </div>
-      </div>
+      {viewMode === "detailed" && (
+        <>
+          {/* ── CHARTS ────────────────────────────────────────────────────── */}
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              <GlobalEvolutionChart />
+            </div>
+            <div className="lg:col-span-1">
+              <PlatformDistributionBar />
+            </div>
+          </div>
 
-      {/* ── SANKEY ──────────────────────────────────────────────────────── */}
-      <SankeyDiagram />
+          {/* ── SANKEY ────────────────────────────────────────────────────── */}
+          <SankeyDiagram />
 
-      {/* ── FISCALIDAD ──────────────────────────────────────────────────── */}
-      <section>
-        <h2 className="text-lg font-medium mb-4" style={{ color: "var(--text-primary)" }}>Fiscalidad</h2>
-        <FiscalidadPanel />
-      </section>
+          {/* ── FISCALIDAD ────────────────────────────────────────────────── */}
+          <section>
+            <h2 className="text-lg font-medium mb-4" style={{ color: "var(--text-primary)" }}>Fiscalidad</h2>
+            <FiscalidadPanel />
+          </section>
+        </>
+      )}
 
       {/* ── SYNC ────────────────────────────────────────────────────────── */}
       <SyncPlatformsPanel />

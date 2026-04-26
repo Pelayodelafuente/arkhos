@@ -29,22 +29,22 @@ export function PLBadge({
   const isZero = safeAmount === 0;
 
   const bg = isZero
-    ? "rgba(176,122,58,0.12)"
+    ? "var(--color-neutral-subtle)"
     : isPositive
-      ? "rgba(46,125,107,0.12)"
-      : "rgba(163,45,45,0.12)";
+      ? "var(--color-gain-subtle)"
+      : "var(--color-loss-subtle)";
 
   const color = isZero
-    ? "#B07A3A"
+    ? "var(--color-neutral-fin)"
     : isPositive
-      ? "var(--module-patrimonio)"
-      : "#A32D2D";
+      ? "var(--color-gain)"
+      : "var(--color-loss)";
 
   const border = isZero
-    ? "1px solid rgba(176,122,58,0.25)"
+    ? "1px solid var(--color-neutral-border)"
     : isPositive
-      ? "1px solid rgba(46,125,107,0.25)"
-      : "1px solid rgba(163,45,45,0.25)";
+      ? "1px solid var(--color-gain-border)"
+      : "1px solid var(--color-loss-border)";
 
   const paddingClass = size === "sm" ? "px-2 py-0.5 text-xs" : "px-2.5 py-1 text-sm";
 

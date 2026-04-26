@@ -86,6 +86,7 @@ export function PatrimonioHero() {
   const getCAGR = usePatrimonioStore((s) => s.getCAGR);
   const pricesLastUpdated = usePatrimonioStore((s) => s.pricesLastUpdated);
   const isLoadingPrices = usePatrimonioStore((s) => s.isLoadingPrices);
+  const isLoading = usePatrimonioStore((s) => s.isLoading);
   const privacyMode = usePatrimonioStore((s) => s.privacyMode);
   const togglePrivacyMode = usePatrimonioStore((s) => s.togglePrivacyMode);
 
@@ -260,6 +261,49 @@ export function PatrimonioHero() {
       : combinedReturnPct >= 0
       ? "var(--color-gain)"
       : "var(--color-loss)";
+
+  if (isLoading) {
+    return (
+      <div
+        className="rounded-xl overflow-hidden"
+        style={{
+          backgroundColor: "var(--bg-card)",
+          border: "1px solid var(--border-stone, rgba(160,120,80,0.25))",
+        }}
+      >
+        <div className="animate-pulse px-5 pt-5 pb-4">
+          <div
+            className="h-3 w-28 rounded-md mb-3"
+            style={{ backgroundColor: "var(--border-stone)" }}
+          />
+          <div
+            className="h-14 w-48 rounded-md mb-4"
+            style={{ backgroundColor: "var(--border-stone)" }}
+          />
+          <div className="flex gap-6">
+            <div
+              className="h-8 w-32 rounded-md"
+              style={{ backgroundColor: "var(--border-stone)" }}
+            />
+            <div
+              className="h-8 w-32 rounded-md"
+              style={{ backgroundColor: "var(--border-stone)" }}
+            />
+            <div
+              className="h-8 w-32 rounded-md"
+              style={{ backgroundColor: "var(--border-stone)" }}
+            />
+          </div>
+        </div>
+        <div style={{ borderTop: "1px solid var(--border-stone, rgba(160,120,80,0.12))" }} />
+        <div className="animate-pulse grid grid-cols-3 px-5 py-4 gap-6">
+          <div className="h-10 rounded-md" style={{ backgroundColor: "var(--border-stone)" }} />
+          <div className="h-10 rounded-md" style={{ backgroundColor: "var(--border-stone)" }} />
+          <div className="h-10 rounded-md" style={{ backgroundColor: "var(--border-stone)" }} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
