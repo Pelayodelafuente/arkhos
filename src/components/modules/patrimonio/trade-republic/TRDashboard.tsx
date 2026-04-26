@@ -15,7 +15,9 @@ import { FiscalidadPanel } from "./FiscalidadPanel";
 import { MetricasAvanzadasPanel } from "./MetricasAvanzadasPanel";
 import { SimuladorProyeccion } from "./SimuladorProyeccion";
 import { CapitalVsReturnChart } from "./CapitalVsReturnChart";
-import { MonthlyReturnHeatmap } from "./MonthlyReturnHeatmap";
+import { ReturnHeatmap } from "./ReturnHeatmap";
+import { PLWaterfall } from "./PLWaterfall";
+import { RiskReturnScatter } from "./RiskReturnScatter";
 import { RebalanceoPanel } from "./RebalanceoPanel";
 
 type Tab = "overview" | "cartera" | "plan" | "analisis" | "ingresos" | "fiscal";
@@ -237,6 +239,20 @@ export function TRDashboard() {
           {/* F3 + F6 — Métricas avanzadas */}
           <MetricasAvanzadasPanel />
 
+          {/* P&L Waterfall */}
+          <div className="rounded-xl border border-border bg-card p-5">
+            <h3 className="mb-1 text-sm font-semibold text-foreground">Cascada de P&amp;L</h3>
+            <p className="mb-4 text-xs text-text-tertiary">Contribución de cada activo al resultado total</p>
+            <PLWaterfall />
+          </div>
+
+          {/* Riesgo/Rentabilidad Scatter */}
+          <div className="rounded-xl border border-border bg-card p-5">
+            <h3 className="mb-1 text-sm font-semibold text-foreground">Riesgo vs Rentabilidad</h3>
+            <p className="mb-4 text-xs text-text-tertiary">Cada punto = un activo. Tamaño = peso en cartera</p>
+            <RiskReturnScatter />
+          </div>
+
           {/* F3 — Evolución vs benchmark MSCI World */}
           <div className="rounded-xl border border-border bg-card p-5">
             <h3 className="mb-0.5 text-sm font-semibold text-foreground">
@@ -277,7 +293,7 @@ export function TRDashboard() {
             <p className="mb-4 text-xs text-text-tertiary">
               Rendimiento de la cartera (sin efectivo) por mes
             </p>
-            <MonthlyReturnHeatmap />
+            <ReturnHeatmap />
           </div>
         </div>
       )}

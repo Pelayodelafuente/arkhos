@@ -25,6 +25,7 @@ import { PlatformCard, type PlatformCardProps } from "@/components/modules/patri
 import { GlobalEvolutionChart } from "@/components/modules/patrimonio/dashboard/GlobalEvolutionChart";
 import { PatrimonioHero } from "@/components/modules/patrimonio/dashboard/PatrimonioHero";
 import { PlatformDistributionBar } from "@/components/modules/patrimonio/dashboard/PlatformDistributionBar";
+import { SankeyDiagram } from "@/components/modules/patrimonio/dashboard/SankeyDiagram";
 
 const formatEur = (value: number) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
@@ -438,6 +439,9 @@ export function PatrimonioDashboard() {
           <PlatformDistributionBar />
         </div>
       </div>
+
+      {/* ── SANKEY ──────────────────────────────────────────────────────── */}
+      <SankeyDiagram />
 
       {/* ── SYNC ────────────────────────────────────────────────────────── */}
       <SyncPlatformsPanel />
