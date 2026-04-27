@@ -277,10 +277,10 @@ CREATE POLICY "asset_price_history_owner" ON asset_price_history
   WITH CHECK (user_id = (SELECT auth.uid()));
 
 -- ---------------------------------------------------------------------------
--- gastos_settings
+-- user_gastos_settings
 -- ---------------------------------------------------------------------------
-DROP POLICY IF EXISTS "Users manage own gastos settings" ON gastos_settings;
-CREATE POLICY "Users manage own gastos settings" ON gastos_settings
+DROP POLICY IF EXISTS "Users manage own gastos settings" ON user_gastos_settings;
+CREATE POLICY "Users manage own gastos settings" ON user_gastos_settings
   FOR ALL
   USING (user_id = (SELECT auth.uid()))
   WITH CHECK (user_id = (SELECT auth.uid()));
