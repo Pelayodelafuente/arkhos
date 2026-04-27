@@ -99,7 +99,7 @@ export async function getNoteById(id: string): Promise<Note | null> {
   const client = createClient()
   const { data, error } = await client
     .from('notes')
-    .select('*')
+    .select(`${NOTE_LIST_FIELDS}, content`)
     .eq('id', id)
     .single()
 
@@ -245,10 +245,11 @@ export async function getNotesByTag(userId: string, tag: string): Promise<Note[]
   const client = createClient()
   const { data, error } = await client
     .from('notes')
-    .select('*')
+    .select(NOTE_LIST_FIELDS)
     .eq('user_id', userId)
     .contains('tags', [tag])
     .order('updated_at', { ascending: false })
+    .limit(100)
 
   if (error) throw new NotesError('Error fetching notes by tag', error.message)
   return (data ?? []) as Note[]
@@ -264,7 +265,7 @@ export async function getOrCreateDefaultCanvas(userId: string): Promise<NoteCanv
   // Try to find existing default
   const { data: existing } = await client
     .from('note_canvases')
-    .select('*')
+    .select('id, user_id, name, description, is_default, created_at, updated_at')
     .eq('user_id', userId)
     .eq('is_default', true)
     .single()
@@ -289,9 +290,9 @@ export async function getCanvasWithNodes(
   const client = createClient()
 
   const [canvasRes, nodesRes, edgesRes] = await Promise.all([
-    client.from('note_canvases').select('*').eq('id', canvasId).single(),
-    client.from('canvas_nodes').select('*, note:notes(*)').eq('canvas_id', canvasId).order('z_index'),
-    client.from('canvas_edges').select('*').eq('canvas_id', canvasId),
+    client.from('note_canvases').select('id, user_id, name, description, is_default, created_at, updated_at').eq('id', canvasId).single(),
+    client.from('canvas_nodes').select(`id, canvas_id, note_id, node_type, pos_x, pos_y, width, height, color, content, label, url, z_index, locked, group_id, created_at, updated_at, note:notes(${NOTE_LIST_FIELDS}, content)`).eq('canvas_id', canvasId).order('z_index'),
+    client.from('canvas_edges').select('id, canvas_id, from_node_id, to_node_id, label, color, style, from_side, to_side, created_at').eq('canvas_id', canvasId),
   ])
 
   if (canvasRes.error) throw new NotesError('Error fetching canvas', canvasRes.error.message)
@@ -329,12 +330,13 @@ export async function getNotesWithoutCanvasNode(
   // Get all user's active notes (no archivadas ni en papelera)
   const { data: allNotes, error } = await client
     .from('notes')
-    .select('*')
+    .select(NOTE_LIST_FIELDS)
     .eq('user_id', userId)
     .eq('archived', false)
     .is('deleted_at', null)
     .order('is_pinned', { ascending: false })
     .order('updated_at', { ascending: false })
+    .limit(500)
 
   if (error) throw new NotesError('Error fetching notes for sync', error.message)
 
@@ -718,9 +720,10 @@ export async function getFolders(userId: string): Promise<NoteFolder[]> {
   const supabase = createClient()
   const { data, error } = await supabase
     .from('note_folders')
-    .select('*')
+    .select('id, user_id, name, icon, color, sort_order, created_at')
     .eq('user_id', userId)
     .order('sort_order', { ascending: true })
+    .limit(200)
   if (error) throw new NotesError('Error fetching folders', error.message)
   return (data ?? []) as NoteFolder[]
 }
@@ -832,9 +835,10 @@ export async function getNoteVersions(noteId: string): Promise<NoteVersion[]> {
   const supabase = createClient()
   const { data, error } = await supabase
     .from('note_versions')
-    .select('*')
+    .select('id, note_id, user_id, title, content, version_number, created_at')
     .eq('note_id', noteId)
     .order('version_number', { ascending: false })
+    .limit(20)
   if (error) throw new NotesError('Error fetching note versions', error.message)
   return (data ?? []) as NoteVersion[]
 }
@@ -914,11 +918,12 @@ export async function getNotesByProject(userId: string, projectId: string): Prom
   const supabase = createClient()
   const { data, error } = await supabase
     .from('notes')
-    .select('*')
+    .select(NOTE_LIST_FIELDS)
     .eq('user_id', userId)
     .eq('project_id', projectId)
     .is('deleted_at', null)
     .order('updated_at', { ascending: false })
+    .limit(100)
   if (error) throw new NotesError('Error fetching notes by project', error.message)
   return (data ?? []) as Note[]
 }
@@ -928,11 +933,12 @@ export async function getNotesBySubscription(userId: string, subscriptionId: str
   const supabase = createClient()
   const { data, error } = await supabase
     .from('notes')
-    .select('*')
+    .select(NOTE_LIST_FIELDS)
     .eq('user_id', userId)
     .eq('subscription_id', subscriptionId)
     .is('deleted_at', null)
     .order('updated_at', { ascending: false })
+    .limit(100)
   if (error) throw new NotesError('Error fetching notes by subscription', error.message)
   return (data ?? []) as Note[]
 }
@@ -967,7 +973,7 @@ export async function buildNoteContext(
 ): Promise<{ note: Note; references: Note[]; backlinks: Note[] } | null> {
   const supabase = createClient()
   const [noteRes, references, backlinks] = await Promise.all([
-    supabase.from('notes').select('*').eq('id', noteId).single(),
+    supabase.from('notes').select(`${NOTE_LIST_FIELDS}, content`).eq('id', noteId).single(),
     getNoteReferences(noteId),
     getNoteBacklinks(noteId),
   ])

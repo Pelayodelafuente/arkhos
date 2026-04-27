@@ -7,8 +7,16 @@ import { Button } from "@/components/ui"
 import { useExpensesStore } from "@/stores/expenses-store"
 import { KPICards } from "./KPICards"
 import { BudgetRing } from "./BudgetRing"
-import { MiniDistributionChart } from "./MiniDistributionChart"
-import { SpendingTrend } from "./SpendingTrend"
+import dynamic from "next/dynamic"
+
+const MiniDistributionChart = dynamic(() => import("./MiniDistributionChart").then(m => ({ default: m.MiniDistributionChart })), {
+  ssr: false,
+  loading: () => <div className="h-20 animate-pulse rounded-md bg-border/30" />,
+})
+const SpendingTrend = dynamic(() => import("./SpendingTrend").then(m => ({ default: m.SpendingTrend })), {
+  ssr: false,
+  loading: () => <div className="h-20 animate-pulse rounded-md bg-border/30" />,
+})
 import { AlertBanner } from "./AlertBanner"
 import { AlertSettings } from "./AlertSettings"
 import { ExpenseCalendar } from "./ExpenseCalendar"

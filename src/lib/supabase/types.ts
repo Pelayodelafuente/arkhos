@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -1118,6 +1118,279 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      mintos_deposits: {
+        Row: {
+          amount: number
+          created_at: string
+          deposit_date: string
+          id: string
+          notes: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          deposit_date: string
+          id?: string
+          notes?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          deposit_date?: string
+          id?: string
+          notes?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      mintos_distributions: {
+        Row: {
+          amount: number
+          category: string
+          dimension: string
+          display_order: number
+          id: string
+          loan_count: number | null
+          percentage: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          category: string
+          dimension: string
+          display_order?: number
+          id?: string
+          loan_count?: number | null
+          percentage?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          dimension?: string
+          display_order?: number
+          id?: string
+          loan_count?: number | null
+          percentage?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      mintos_monthly_snapshots: {
+        Row: {
+          buyback_interest: number
+          buyback_principal: number
+          capital_received: number
+          commissions: number
+          created_at: string
+          deposits: number
+          id: string
+          interest_income: number
+          investments: number
+          late_interest: number
+          month: number
+          secondary_market: number
+          taxes_withheld: number
+          total_deposited: number
+          total_value: number | null
+          updated_at: string
+          user_id: string
+          year: number
+        }
+        Insert: {
+          buyback_interest?: number
+          buyback_principal?: number
+          capital_received?: number
+          commissions?: number
+          created_at?: string
+          deposits?: number
+          id?: string
+          interest_income?: number
+          investments?: number
+          late_interest?: number
+          month: number
+          secondary_market?: number
+          taxes_withheld?: number
+          total_deposited?: number
+          total_value?: number | null
+          updated_at?: string
+          user_id: string
+          year: number
+        }
+        Update: {
+          buyback_interest?: number
+          buyback_principal?: number
+          capital_received?: number
+          commissions?: number
+          created_at?: string
+          deposits?: number
+          id?: string
+          interest_income?: number
+          investments?: number
+          late_interest?: number
+          month?: number
+          secondary_market?: number
+          taxes_withheld?: number
+          total_deposited?: number
+          total_value?: number | null
+          updated_at?: string
+          user_id?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      mintos_overview: {
+        Row: {
+          active_loans_count: number
+          avg_interest_rate: number | null
+          cash_balance: number
+          countries_count: number
+          id: string
+          invested_in_loans: number
+          net_gain: number
+          originators_count: number
+          pending_payments: number
+          snapshot_date: string
+          total_value: number
+          updated_at: string
+          user_id: string
+          xirr: number | null
+        }
+        Insert: {
+          active_loans_count?: number
+          avg_interest_rate?: number | null
+          cash_balance?: number
+          countries_count?: number
+          id?: string
+          invested_in_loans?: number
+          net_gain?: number
+          originators_count?: number
+          pending_payments?: number
+          snapshot_date?: string
+          total_value?: number
+          updated_at?: string
+          user_id: string
+          xirr?: number | null
+        }
+        Update: {
+          active_loans_count?: number
+          avg_interest_rate?: number | null
+          cash_balance?: number
+          countries_count?: number
+          id?: string
+          invested_in_loans?: number
+          net_gain?: number
+          originators_count?: number
+          pending_payments?: number
+          snapshot_date?: string
+          total_value?: number
+          updated_at?: string
+          user_id?: string
+          xirr?: number | null
+        }
+        Relationships: []
+      }
+      mintos_plan: {
+        Row: {
+          created_at: string
+          execution_day: number
+          id: string
+          is_active: boolean
+          monthly_amount: number
+          next_date: string | null
+          notes: string | null
+          started_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          execution_day?: number
+          id?: string
+          is_active?: boolean
+          monthly_amount?: number
+          next_date?: string | null
+          notes?: string | null
+          started_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          execution_day?: number
+          id?: string
+          is_active?: boolean
+          monthly_amount?: number
+          next_date?: string | null
+          notes?: string | null
+          started_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      mintos_portfolio_health: {
+        Row: {
+          default_amount: number
+          default_count: number
+          grace_period_amount: number
+          grace_period_count: number
+          id: string
+          late_1_15_amount: number
+          late_1_15_count: number
+          late_16_30_amount: number
+          late_16_30_count: number
+          late_31_60_amount: number
+          late_31_60_count: number
+          on_track_amount: number
+          on_track_count: number
+          snapshot_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          default_amount?: number
+          default_count?: number
+          grace_period_amount?: number
+          grace_period_count?: number
+          id?: string
+          late_1_15_amount?: number
+          late_1_15_count?: number
+          late_16_30_amount?: number
+          late_16_30_count?: number
+          late_31_60_amount?: number
+          late_31_60_count?: number
+          on_track_amount?: number
+          on_track_count?: number
+          snapshot_date?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          default_amount?: number
+          default_count?: number
+          grace_period_amount?: number
+          grace_period_count?: number
+          id?: string
+          late_1_15_amount?: number
+          late_1_15_count?: number
+          late_16_30_amount?: number
+          late_16_30_count?: number
+          late_31_60_amount?: number
+          late_31_60_count?: number
+          on_track_amount?: number
+          on_track_count?: number
+          snapshot_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       note_backlinks: {
         Row: {
@@ -2506,11 +2779,30 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_indexa_contribution: {
+        Args: {
+          p_amount: number
+          p_current_price?: number
+          p_fund_id: string
+          p_shares: number
+          p_user_id: string
+        }
+        Returns: Json
+      }
+      fix_aave_position_for_user: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
       generate_historical_snapshots: {
         Args: { p_user_id: string }
         Returns: undefined
       }
+      reset_crypto_for_user: { Args: { p_user_id: string }; Returns: undefined }
       seed_crypto_for_user: { Args: { p_user_id: string }; Returns: undefined }
+      seed_crypto_for_user_v2: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
       seed_horos_for_user: { Args: { p_user_id: string }; Returns: undefined }
       seed_indexa_for_user: { Args: { p_user_id: string }; Returns: Json }
       seed_patrimonio_for_user: { Args: { p_user_id: string }; Returns: Json }
@@ -2518,6 +2810,7 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: undefined
       }
+      update_aave_apr2026: { Args: { p_user_id: string }; Returns: undefined }
     }
     Enums: {
       asset_category:

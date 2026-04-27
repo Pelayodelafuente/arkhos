@@ -38,7 +38,7 @@ export async function getRecentActivity(
 ): Promise<ActivityEntry[]> {
   let query = client
     .from('activity_log')
-    .select('*')
+    .select('id, user_id, module, action, entity_name, detail, created_at')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
     .limit(limit);
@@ -67,7 +67,7 @@ export async function getProjectActivity(
 ): Promise<{ entries: ActivityEntry[]; hasMore: boolean }> {
   const result = await client
     .from('activity_log')
-    .select('*')
+    .select('id, user_id, module, action, entity_name, detail, created_at')
     .eq('user_id', userId)
     .eq('module', 'proyectos')
     .ilike('detail', `%${projectId}%`)

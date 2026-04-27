@@ -149,7 +149,7 @@ function mapTask(row: TaskRow, links: TaskLink[] = [], tags: Tag[] = []): PhaseT
 export async function getProjectTypes(client: Client, userId: string): Promise<ProjectTypeRecord[]> {
   const result = await client
     .from('project_types')
-    .select('*')
+    .select('id, user_id, name, icon, color, sort_order, created_at')
     .eq('user_id', userId)
     .order('sort_order', { ascending: true });
 
@@ -190,7 +190,7 @@ export async function deleteProjectType(client: Client, typeId: string): Promise
 export async function getProjectStatuses(client: Client, userId: string): Promise<ProjectStatusRecord[]> {
   const result = await client
     .from('project_statuses')
-    .select('*')
+    .select('id, user_id, name, color, is_default, sort_order, created_at')
     .eq('user_id', userId)
     .order('sort_order', { ascending: true });
 
@@ -312,10 +312,11 @@ export async function deleteProjectLogo(
 export async function getProjects(client: Client, userId: string): Promise<ProjectListItem[]> {
   const result = await client
     .from('projects')
-    .select('*')
+    .select('id, user_id, name, description, icon, logo_url, type, status, stack, tags, start_date, target_date, repository_url, sort_order, created_at, updated_at')
     .eq('user_id', userId)
     .order('sort_order', { ascending: true })
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(200);
 
   const projects = assertData<ProjectRow[]>(result, 'Error fetching projects');
 
@@ -376,7 +377,7 @@ export async function getProjects(client: Client, userId: string): Promise<Proje
 export async function getProject(client: Client, projectId: string): Promise<Project> {
   const result = await client
     .from('projects')
-    .select('*')
+    .select('id, user_id, name, description, icon, logo_url, type, status, stack, tags, start_date, target_date, repository_url, sort_order, created_at, updated_at')
     .eq('id', projectId)
     .single();
 
@@ -385,7 +386,7 @@ export async function getProject(client: Client, projectId: string): Promise<Pro
   // Fetch phases
   const phasesResult = await client
     .from('project_phases')
-    .select('*')
+    .select('id, project_id, name, status, notes, start_date, end_date, color, sort_order, created_at')
     .eq('project_id', projectId)
     .order('sort_order', { ascending: true });
 
@@ -399,7 +400,7 @@ export async function getProject(client: Client, projectId: string): Promise<Pro
   if (phaseIds.length > 0) {
     const tasksResult = await client
       .from('phase_tasks')
-      .select('*')
+      .select('id, phase_id, text, done, priority, status, description, content, due_date, start_date, estimated_hours, tracked_seconds, labels, subtasks, assigned_role, color, sort_order, created_at, updated_at')
       .in('phase_id', phaseIds)
       .order('sort_order', { ascending: true });
 
@@ -409,7 +410,7 @@ export async function getProject(client: Client, projectId: string): Promise<Pro
     if (taskIds.length > 0) {
       const linksResult = await client
         .from('task_links')
-        .select('*')
+        .select('id, task_id, url, label, sort_order')
         .in('task_id', taskIds)
         .order('sort_order', { ascending: true });
 
@@ -428,7 +429,7 @@ export async function getProject(client: Client, projectId: string): Promise<Pro
   // Fetch tags for this project
   const tagsResult = await client
     .from('tags')
-    .select('*')
+    .select('id, project_id, name, color, sort_order, created_at')
     .eq('project_id', projectId)
     .order('sort_order', { ascending: true });
 
@@ -440,7 +441,7 @@ export async function getProject(client: Client, projectId: string): Promise<Pro
     const taskIds = taskRows.map((t) => t.id);
     const taskTagsResult = await client
       .from('task_tags')
-      .select('*')
+      .select('task_id, tag_id')
       .in('task_id', taskIds);
     taskTagRows = (taskTagsResult.data ?? []) as TaskTagRow[];
   }
@@ -472,7 +473,7 @@ export async function getProject(client: Client, projectId: string): Promise<Pro
   // Fetch project links
   const projectLinksResult = await client
     .from('project_links')
-    .select('*')
+    .select('id, user_id, project_id, label, url, icon, sort_order, created_at')
     .eq('project_id', projectId)
     .order('sort_order', { ascending: true });
 
@@ -681,9 +682,10 @@ export async function removeTaskLink(client: Client, linkId: string): Promise<vo
 export async function getTimeEntries(client: Client, projectId: string): Promise<TimeEntry[]> {
   const result = await client
     .from('project_time_entries')
-    .select('*')
+    .select('id, user_id, task_id, project_id, started_at, ended_at, duration, note, created_at')
     .eq('project_id', projectId)
-    .order('started_at', { ascending: false });
+    .order('started_at', { ascending: false })
+    .limit(500);
 
   return assertData<TimeEntryRow[]>(result, 'Error fetching time entries') as TimeEntry[];
 }
@@ -720,9 +722,10 @@ export async function deleteTimeEntry(client: Client, entryId: string): Promise<
 export async function getTaskTimeEntries(client: Client, taskId: string): Promise<TimeEntry[]> {
   const result = await client
     .from('project_time_entries')
-    .select('*')
+    .select('id, user_id, task_id, project_id, started_at, ended_at, duration, note, created_at')
     .eq('task_id', taskId)
-    .order('started_at', { ascending: false });
+    .order('started_at', { ascending: false })
+    .limit(200);
 
   return assertData<TimeEntryRow[]>(result, 'Error fetching task time entries') as TimeEntry[];
 }
@@ -734,7 +737,7 @@ export async function getTaskTimeEntries(client: Client, taskId: string): Promis
 export async function getProjectLinks(client: Client, projectId: string): Promise<ProjectLink[]> {
   const result = await client
     .from('project_links')
-    .select('*')
+    .select('id, user_id, project_id, label, url, icon, sort_order, created_at')
     .eq('project_id', projectId)
     .order('sort_order', { ascending: true });
 
@@ -802,10 +805,11 @@ export async function reorderProjectLinks(
 export async function getProjectTemplates(client: Client, userId: string): Promise<ProjectTemplate[]> {
   const result = await client
     .from('project_templates')
-    .select('*')
+    .select('id, user_id, name, description, type, phases, is_system, created_at')
     .or(`user_id.eq.${userId},is_system.eq.true`)
     .order('is_system', { ascending: false })
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(100);
 
   const rows = assertData<TemplateRow[]>(result, 'Error fetching project templates');
   return rows.map((row) => ({
@@ -865,7 +869,7 @@ export async function deleteProjectTemplate(client: Client, templateId: string):
 export async function getTags(client: Client, projectId: string): Promise<Tag[]> {
   const result = await client
     .from('tags')
-    .select('*')
+    .select('id, project_id, name, color, sort_order, created_at')
     .eq('project_id', projectId)
     .order('sort_order', { ascending: true });
 
@@ -1078,9 +1082,10 @@ export async function getProjectsForSelect(client: Client, userId: string): Prom
 export async function getTaskComments(client: Client, taskId: string): Promise<TaskComment[]> {
   const { data, error } = await client
     .from('task_comments')
-    .select('*')
+    .select('id, task_id, user_id, content, created_at')
     .eq('task_id', taskId)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(100);
 
   if (error) throw new ProjectsError('Error fetching task comments', error.message);
   return (data ?? []) as TaskComment[];

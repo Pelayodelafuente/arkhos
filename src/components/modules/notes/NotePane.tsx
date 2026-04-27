@@ -6,9 +6,14 @@ import { getLucideIcon, getLucideIconOrDefault } from "@/lib/utils/icons"
 import { Button, SelectCustom } from "@/components/ui"
 import { useNotesStore, useAllTags } from "@/stores/notes-store"
 import { useToast } from "@/stores/ui-store"
+import dynamic from "next/dynamic"
 import { NoteColorPicker } from "./NoteColorPicker"
 import { TagInput } from "./TagInput"
-import { NoteEditor } from "./NoteEditor"
+
+const NoteEditor = dynamic(() => import("./NoteEditor").then(m => ({ default: m.NoteEditor })), {
+  ssr: false,
+  loading: () => <div className="h-32 animate-pulse rounded-md bg-border/30" />,
+})
 import type { Note, NoteColor, NoteStatus, NoteVersion } from "@/types/notes"
 import { NOTE_STATUS_CONFIG } from "@/types/notes"
 import * as notesApi from "@/lib/supabase/notes"
