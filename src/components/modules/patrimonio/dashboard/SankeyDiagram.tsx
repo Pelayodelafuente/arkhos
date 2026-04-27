@@ -3,7 +3,7 @@
 import { useRef, useEffect, useMemo } from "react";
 // @ts-ignore
 import * as d3Sankey from "d3-sankey";
-import * as d3 from "d3";
+import { select as d3Select } from "d3";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { useIndexaStore } from "@/stores/indexa-store";
 import { useHorosStore } from "@/stores/horos-store";
@@ -174,7 +174,7 @@ export function SankeyDiagram() {
     const W = 560;
     const H = 320;
 
-    const svg = d3.select(ref.current);
+    const svg = d3Select(ref.current);
     svg.selectAll("*").remove();
     svg.attr("viewBox", `0 0 ${W} ${H}`);
 

@@ -25,7 +25,12 @@ import { PlatformCard, type PlatformCardProps } from "@/components/modules/patri
 import { GlobalEvolutionChart } from "@/components/modules/patrimonio/dashboard/GlobalEvolutionChart";
 import { PatrimonioHero } from "@/components/modules/patrimonio/dashboard/PatrimonioHero";
 import { PlatformDistributionBar } from "@/components/modules/patrimonio/dashboard/PlatformDistributionBar";
-import { SankeyDiagram } from "@/components/modules/patrimonio/dashboard/SankeyDiagram";
+import dynamic from "next/dynamic";
+
+const SankeyDiagram = dynamic(
+  () => import("@/components/modules/patrimonio/dashboard/SankeyDiagram").then((m) => ({ default: m.SankeyDiagram })),
+  { ssr: false, loading: () => <div className="h-[320px] animate-pulse rounded-xl bg-bg-sand" /> },
+);
 import { FiscalidadPanel } from "@/components/modules/patrimonio/trade-republic/FiscalidadPanel";
 import { PatrimonioAlerts } from "@/components/modules/patrimonio/shared/PatrimonioAlerts";
 

@@ -54,10 +54,6 @@ export async function getAaveUSDCPosition(
 
     if (!aBalance) {
       console.warn(`[aave] No aUSDC balance found for ${walletAddress}`);
-    } else {
-      console.log(
-        `[aave] Found aUSDC ${aBalance.version.toUpperCase()}: ${aBalance.amount.toFixed(6)} USDC`,
-      );
     }
 
     // 2. Fetch current APY from DeFiLlama (Aave V3 USDC Ethereum)

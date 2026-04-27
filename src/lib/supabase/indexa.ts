@@ -33,7 +33,7 @@ export async function getIndexaFunds(userId: string): Promise<IndexaFund[]> {
   const supabase = await getClient();
   const { data } = await supabase
     .from('indexa_funds')
-    .select('*')
+    .select('id, user_id, name, isin, fund_type, benchmark, annual_cost, currency, color, is_active, created_at')
     .eq('user_id', userId)
     .eq('is_active', true)
     .order('fund_type');
@@ -67,7 +67,7 @@ export async function getIndexaMonthlyReturns(userId: string): Promise<IndexaMon
   const supabase = await getClient();
   const { data } = await supabase
     .from('indexa_monthly_returns')
-    .select('*')
+    .select('id, user_id, year, month, return_pct, benchmark_pct, cumulative_twr, created_at')
     .eq('user_id', userId)
     .order('year', { ascending: true })
     .order('month', { ascending: true });
@@ -78,7 +78,7 @@ export async function getIndexaMonthlyPlan(userId: string): Promise<IndexaMonthl
   const supabase = await getClient();
   const { data } = await supabase
     .from('indexa_monthly_plan')
-    .select('*')
+    .select('id, user_id, monthly_amount, execution_day, is_active, started_at, notes, created_at')
     .eq('user_id', userId)
     .eq('is_active', true)
     .single();

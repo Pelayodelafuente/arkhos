@@ -31,7 +31,7 @@ export async function getCryptoAssets(userId: string): Promise<CryptoAsset[]> {
   const supabase = await getClient();
   const { data } = await supabase
     .from('crypto_assets')
-    .select('*')
+    .select('id, user_id, symbol, name, coingecko_id, wallet_address, wallet_type, network, current_balance, avg_buy_price_eur, total_invested_eur, current_price_eur, price_updated_at, is_active, notes, color, sort_order, created_at')
     .eq('user_id', userId)
     .eq('is_active', true)
     .order('sort_order');
@@ -42,7 +42,7 @@ export async function getCryptoTransactions(userId: string): Promise<CryptoTrans
   const supabase = await getClient();
   const { data } = await supabase
     .from('crypto_transactions')
-    .select('*')
+    .select('id, user_id, asset_id, transaction_date, type, quantity, price_eur, amount_eur, fee_eur, exchange, tx_hash, notes, source, external_id, created_at')
     .eq('user_id', userId)
     .order('transaction_date', { ascending: true });
   return (data ?? []) as unknown as CryptoTransaction[];
@@ -52,7 +52,7 @@ export async function getCryptoDefiPositions(userId: string): Promise<CryptoDefi
   const supabase = await getClient();
   const { data } = await supabase
     .from('crypto_defi_positions')
-    .select('*')
+    .select('id, user_id, asset_id, protocol, network, wallet_address, deposited_amount, current_amount, apy, yield_earned, last_updated, is_active, created_at')
     .eq('user_id', userId)
     .eq('is_active', true);
   return (data ?? []) as unknown as CryptoDefiPosition[];
@@ -62,7 +62,7 @@ export async function getCryptoMonthlyPlan(userId: string): Promise<CryptoMonthl
   const supabase = await getClient();
   const { data } = await supabase
     .from('crypto_monthly_plan')
-    .select('*')
+    .select('id, user_id, asset_id, monthly_amount_eur, destination, is_active, started_at, notes')
     .eq('user_id', userId)
     .eq('is_active', true);
   return (data ?? []) as unknown as CryptoMonthlyPlan[];
@@ -76,7 +76,7 @@ export async function addCryptoTransaction(
   const { data } = await supabase
     .from('crypto_transactions')
     .insert({ ...tx, user_id: userId })
-    .select('*')
+    .select('id, user_id, asset_id, transaction_date, type, quantity, price_eur, amount_eur, fee_eur, exchange, tx_hash, notes, source, external_id, created_at')
     .maybeSingle();
   return data as unknown as CryptoTransaction | null;
 }

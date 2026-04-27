@@ -15,9 +15,20 @@ import { FiscalidadPanel } from "./FiscalidadPanel";
 import { MetricasAvanzadasPanel } from "./MetricasAvanzadasPanel";
 import { SimuladorProyeccion } from "./SimuladorProyeccion";
 import { CapitalVsReturnChart } from "./CapitalVsReturnChart";
-import { ReturnHeatmap } from "./ReturnHeatmap";
-import { PLWaterfall } from "./PLWaterfall";
-import { RiskReturnScatter } from "./RiskReturnScatter";
+import dynamic from "next/dynamic";
+
+const ReturnHeatmap = dynamic(
+  () => import("./ReturnHeatmap").then((m) => ({ default: m.ReturnHeatmap })),
+  { ssr: false, loading: () => <div className="h-[200px] animate-pulse rounded-xl bg-bg-sand" /> },
+);
+const PLWaterfall = dynamic(
+  () => import("./PLWaterfall").then((m) => ({ default: m.PLWaterfall })),
+  { ssr: false, loading: () => <div className="h-[260px] animate-pulse rounded-xl bg-bg-sand" /> },
+);
+const RiskReturnScatter = dynamic(
+  () => import("./RiskReturnScatter").then((m) => ({ default: m.RiskReturnScatter })),
+  { ssr: false, loading: () => <div className="h-[280px] animate-pulse rounded-xl bg-bg-sand" /> },
+);
 import { RebalanceoPanel } from "./RebalanceoPanel";
 
 type Tab = "overview" | "cartera" | "plan" | "analisis" | "ingresos" | "fiscal";

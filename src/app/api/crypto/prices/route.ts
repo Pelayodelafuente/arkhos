@@ -114,7 +114,7 @@ export async function POST(): Promise<Response> {
       .eq('user_id', user.id)
       .eq('protocol', 'aave');
 
-    console.log(
+    console.warn(
       `[aave] Updated: current=${aavePosition.currentAmount.toFixed(4)} deposited=${depositedAmount} yield=${yieldEarned.toFixed(4)} apy=${aavePosition.apy?.toFixed(2)}%`,
     );
   } else if (aavePosition?.apy != null) {

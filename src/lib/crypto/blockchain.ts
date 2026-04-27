@@ -65,7 +65,7 @@ export async function getAaveUSDCBalance(
     fetchEtherscanTokenBalance(walletAddress, AUSDC_V2, apiKey),
   ]);
 
-  console.log(`[aave] aUSDC balances for ${walletAddress}: V3=${v3}, V2=${v2}`);
+  console.warn(`[aave] aUSDC balances for ${walletAddress}: V3=${v3}, V2=${v2}`);
 
   if (v3 !== null && v3 > 0.01) return { amount: v3, version: 'v3' };
   if (v2 !== null && v2 > 0.01) return { amount: v2, version: 'v2' };

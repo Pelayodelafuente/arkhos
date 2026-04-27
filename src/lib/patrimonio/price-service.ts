@@ -267,7 +267,7 @@ async function fetchYahooSingle(
   const priceEur = convertToEur(rawPrice, currency, ticker, forex);
   if (priceEur === null || !Number.isFinite(priceEur)) return null;
 
-  console.log(formatPriceLog(ticker, rawPrice, currency, priceEur, forex));
+  console.warn(formatPriceLog(ticker, rawPrice, currency, priceEur, forex));
 
   return {
     price: priceEur,
@@ -300,7 +300,7 @@ async function fetchFinnhubSingle(
   if (!data.c || data.c <= 0) return null;
 
   const priceEur = data.c * usdToEur;
-  console.log(formatPriceLog(ticker, data.c, 'USD', priceEur, forex));
+  console.warn(formatPriceLog(ticker, data.c, 'USD', priceEur, forex));
 
   return {
     price: priceEur,
@@ -370,7 +370,7 @@ export async function fetchAllTRPrices(): Promise<{
       prices.push({ isin, priceEur: data.price, changePercent: data.changePercent, source: 'yahoo', updatedAt: now });
     } else {
       missingIsins.push(`${isin}→${ticker}(${currency})`);
-      console.log(`[price-service] FAILED ${ticker} (${isin})`);
+      console.warn(`[price-service] FAILED ${ticker} (${isin})`);
     }
   }
 
@@ -383,7 +383,7 @@ export async function fetchAllTRPrices(): Promise<{
       prices.push({ isin, priceEur: data.price, changePercent: data.changePercent, source: 'finnhub', updatedAt: now });
     } else {
       missingIsins.push(`${isin}→${ticker}(USD)`);
-      console.log(`[price-service] FAILED ${ticker} (${isin})`);
+      console.warn(`[price-service] FAILED ${ticker} (${isin})`);
     }
   }
 
@@ -396,7 +396,7 @@ export async function fetchAllTRPrices(): Promise<{
       prices.push({ isin, priceEur: data.price, changePercent: data.changePercent, source: 'yahoo_hk', updatedAt: now });
     } else {
       missingIsins.push(`${isin}→${ticker}(HKD)`);
-      console.log(`[price-service] FAILED ${ticker} (${isin})`);
+      console.warn(`[price-service] FAILED ${ticker} (${isin})`);
     }
   }
 
@@ -404,8 +404,8 @@ export async function fetchAllTRPrices(): Promise<{
   const finnhubCount = prices.filter((p) => p.source === 'finnhub').length;
   const yahooHkCount = prices.filter((p) => p.source === 'yahoo_hk').length;
 
-  console.log(`[price-service] Total: ${prices.length} precios — yahoo=${yahooEuCount} finnhub=${finnhubCount} hk=${yahooHkCount} missing=${missingIsins.length}`);
-  if (errors.length) console.log('[price-service] Errors:', errors);
+  console.warn(`[price-service] Total: ${prices.length} precios — yahoo=${yahooEuCount} finnhub=${finnhubCount} hk=${yahooHkCount} missing=${missingIsins.length}`);
+  if (errors.length) console.warn('[price-service] Errors:', errors);
 
   const debug: PriceDebugInfo = {
     yahoo_eu_count: yahooEuCount,

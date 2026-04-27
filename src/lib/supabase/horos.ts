@@ -33,7 +33,7 @@ export async function getHorosPosition(userId: string): Promise<HorosPosition | 
   const supabase = await getClient();
   const { data } = await supabase
     .from('horos_position')
-    .select('*')
+    .select('id, user_id, fund_name, isin, account_code, shares, nav_price, nav_date, total_value, total_cost, unrealized_gain, unrealized_gain_pct, updated_at')
     .eq('user_id', userId)
     .maybeSingle();
   return data as HorosPosition | null;
@@ -43,7 +43,7 @@ export async function getHorosTransactions(userId: string): Promise<HorosTransac
   const supabase = await getClient();
   const { data } = await supabase
     .from('horos_transactions')
-    .select('*')
+    .select('id, user_id, request_date, value_date, type, nav_applied, shares, amount, commission, notes, source, created_at')
     .eq('user_id', userId)
     .order('value_date', { ascending: true });
   return (data ?? []) as HorosTransaction[];
@@ -53,7 +53,7 @@ export async function getHorosNavHistory(userId: string): Promise<HorosNavHistor
   const supabase = await getClient();
   const { data } = await supabase
     .from('horos_nav_history')
-    .select('*')
+    .select('id, user_id, nav_date, nav_price, portfolio_value, created_at')
     .eq('user_id', userId)
     .order('nav_date', { ascending: true });
   return (data ?? []) as HorosNavHistory[];
@@ -65,7 +65,7 @@ export async function getHorosFundDistribution(
   const supabase = await getClient();
   const { data } = await supabase
     .from('horos_fund_distribution')
-    .select('*')
+    .select('id, user_id, report_date, dimension, category, percentage, created_at')
     .eq('user_id', userId)
     .order('report_date', { ascending: false });
   return (data ?? []) as HorosFundDistribution[];
@@ -75,7 +75,7 @@ export async function getHorosAnnualCosts(userId: string): Promise<HorosAnnualCo
   const supabase = await getClient();
   const { data } = await supabase
     .from('horos_annual_costs')
-    .select('*')
+    .select('id, user_id, year, management_fee, custody_fee, other_fees, operation_costs, total_costs, total_pct, created_at')
     .eq('user_id', userId)
     .order('year', { ascending: false });
   return (data ?? []) as HorosAnnualCosts[];
@@ -85,7 +85,7 @@ export async function getHorosMonthlyPlan(userId: string): Promise<HorosMonthlyP
   const supabase = await getClient();
   const { data } = await supabase
     .from('horos_monthly_plan')
-    .select('*')
+    .select('id, user_id, monthly_amount, execution_day, is_active, started_at, notes, created_at')
     .eq('user_id', userId)
     .eq('is_active', true)
     .maybeSingle();

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useMemo, useState } from "react";
-import * as d3 from "d3";
+import { select as d3Select, scaleLinear as d3ScaleLinear } from "d3";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import type { PortfolioSnapshot } from "@/types/patrimonio";
 
@@ -102,11 +102,10 @@ export function ReturnHeatmap() {
   const { cells, years } = useMemo(() => buildCells(snapshots), [snapshots]);
 
   // D3 color scale: red → neutral → green
-  // @ts-ignore — d3.scaleLinear<string> type parameter accepted at runtime
+  // @ts-ignore — scaleLinear<string> type parameter accepted at runtime
   const colorScale = useMemo(
     () =>
-      d3
-        .scaleLinear<string>()
+      d3ScaleLinear<string>()
         .domain([-3, 0, 3])
         .range(["#A32D2D", "#e8e3dc", "#2E7D6B"]),
     []
@@ -115,7 +114,7 @@ export function ReturnHeatmap() {
   useEffect(() => {
     if (!ref.current || cells.length === 0) return;
 
-    const svg = d3.select(ref.current);
+    const svg = d3Select(ref.current);
     svg.selectAll("*").remove();
 
     const CELL_W = 36;

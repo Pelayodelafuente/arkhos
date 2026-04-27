@@ -39,7 +39,7 @@ export async function getExpenseCategories(userId: string): Promise<ExpenseCateg
   const client = createClient()
   const { data, error } = await client
     .from('expense_categories')
-    .select('*')
+    .select('id, user_id, name, icon, color, sort_order, created_at, updated_at')
     .eq('user_id', userId)
     .order('sort_order', { ascending: true })
 
@@ -243,7 +243,7 @@ export async function getPriceHistory(subscriptionId: string): Promise<PriceHist
   const client = createClient()
   const { data, error } = await client
     .from('subscription_price_history')
-    .select('*')
+    .select('id, subscription_id, user_id, old_amount, new_amount, changed_at')
     .eq('subscription_id', subscriptionId)
     .order('changed_at', { ascending: false })
 
@@ -259,7 +259,7 @@ export async function getUserGastosSettings(userId: string): Promise<UserGastosS
   const client = createClient()
   const { data, error } = await client
     .from('user_gastos_settings')
-    .select('*')
+    .select('user_id, monthly_budget, default_currency, show_annual_prices, list_view_mode, collapsed_categories, alert_days_before, alert_renewal_days, alert_enabled, created_at, updated_at')
     .eq('user_id', userId)
     .maybeSingle()
 
@@ -301,7 +301,7 @@ export async function getPayments(
   const client = createClient()
   let query = client
     .from('subscription_payments')
-    .select('*')
+    .select('id, subscription_id, user_id, amount, currency, paid_at, cycle, auto_generated, notes, created_at')
     .eq('user_id', userId)
     .order('paid_at', { ascending: false })
 
@@ -319,7 +319,7 @@ export async function getPaymentsBySubscription(
   const client = createClient()
   const { data, error } = await client
     .from('subscription_payments')
-    .select('*')
+    .select('id, subscription_id, user_id, amount, currency, paid_at, cycle, auto_generated, notes, created_at')
     .eq('subscription_id', subscriptionId)
     .order('paid_at', { ascending: false })
 

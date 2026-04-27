@@ -56,3 +56,6 @@ Thumbs.db
 playwright/.auth/
 reports/
 .claude/worktrees/
+
+# Supabase CLI temp
+supabase/.temp/
