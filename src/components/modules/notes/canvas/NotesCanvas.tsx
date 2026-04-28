@@ -303,6 +303,7 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
       if (stored) {
         const vp = JSON.parse(stored)
         setViewport(vp)
+        hasAutoFitted.current = true // no sobreescribir viewport guardado con auto-fit
       }
     } catch { /* ignore */ }
   }, [canvas, setViewport])

@@ -284,7 +284,14 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
   isLoading: false,
   searchQuery: '',
   activeTag: null,
-  viewMode: 'list',
+  viewMode: (() => {
+    if (typeof window === 'undefined') return 'list'
+    try {
+      const v = localStorage.getItem('arkhos:notes:viewMode')
+      if (v === 'canvas' || v === 'graph') return v
+    } catch { /* ignore */ }
+    return 'list'
+  })() as 'list' | 'canvas' | 'graph',
   sortMode: 'recent' as NoteSortMode,
   canvas: null,
   canvasNodes: [],
@@ -704,7 +711,10 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
 
   setSearchQuery: (q) => set({ searchQuery: q }),
   setActiveTag: (tag) => set({ activeTag: tag }),
-  setViewMode: (mode) => set({ viewMode: mode }),
+  setViewMode: (mode) => {
+    set({ viewMode: mode })
+    try { localStorage.setItem('arkhos:notes:viewMode', mode) } catch { /* ignore */ }
+  },
   loadGraphData: async () => {
     try {
       const backlinks = await notesApi.getAllBacklinksForGraph()
