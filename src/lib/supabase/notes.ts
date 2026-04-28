@@ -291,7 +291,7 @@ export async function getCanvasWithNodes(
 
   const [canvasRes, nodesRes, edgesRes] = await Promise.all([
     client.from('note_canvases').select('id, user_id, name, description, is_default, created_at, updated_at').eq('id', canvasId).single(),
-    client.from('canvas_nodes').select(`id, canvas_id, note_id, node_type, pos_x, pos_y, width, height, color, content, label, url, z_index, locked, group_id, created_at, updated_at, note:notes(${NOTE_LIST_FIELDS}, content)`).eq('canvas_id', canvasId).order('z_index'),
+    client.from('canvas_nodes').select(`id, canvas_id, note_id, node_type, pos_x, pos_y, width, height, color, content, label, url, z_index, locked, group_id, created_at, note:notes(${NOTE_LIST_FIELDS}, content)`).eq('canvas_id', canvasId).order('z_index'),
     client.from('canvas_edges').select('id, canvas_id, from_node_id, to_node_id, label, color, style, from_side, to_side, created_at').eq('canvas_id', canvasId),
   ])
 
