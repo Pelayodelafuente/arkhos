@@ -54,8 +54,12 @@ Thumbs.db
 
 # Visual Auditor
 playwright/.auth/
+.playwright-mcp/
 reports/
 .claude/worktrees/
+
+# Screenshots de debug
+canvas-estado.png
 
 # Supabase CLI temp
 supabase/.temp/
