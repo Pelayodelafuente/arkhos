@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useEffect, useMemo } from "react";
-// @ts-ignore
 import * as d3Sankey from "d3-sankey";
 import { select as d3Select } from "d3";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
@@ -178,7 +177,6 @@ export function SankeyDiagram() {
     svg.selectAll("*").remove();
     svg.attr("viewBox", `0 0 ${W} ${H}`);
 
-    // @ts-ignore
     const { sankey, sankeyLinkHorizontal } = d3Sankey;
     const sankeyLayout = sankey()
       .nodeWidth(12)
@@ -190,11 +188,10 @@ export function SankeyDiagram() {
 
     // Deep copy to avoid mutation — cast through unknown to bypass d3-sankey strict typing
     const sankeyInput = {
-      // @ts-ignore
       nodes: rawNodes.map((d) => ({ ...d })),
       links: rawLinks.map((d) => ({ ...d })),
     };
-    // @ts-ignore
+    // @ts-expect-error — d3-sankey sin tipos
     const { nodes, links } = sankeyLayout(sankeyInput);
 
     // Links
@@ -204,17 +201,15 @@ export function SankeyDiagram() {
       .data(links)
       .enter()
       .append("path")
-      // @ts-ignore
       .attr("d", sankeyLinkHorizontal())
       .attr("fill", "none")
       .attr(
         "stroke",
-        // @ts-ignore
+        // @ts-expect-error — color en nodo Sankey custom, no en el tipo base
         (d) => (d as { source: { color: string } }).source.color ?? "#999"
       )
       .attr(
         "stroke-width",
-        // @ts-ignore
         (d) => Math.max(1, (d as { width: number }).width)
       )
       .attr("stroke-opacity", 0.28);
@@ -226,17 +221,12 @@ export function SankeyDiagram() {
       .data(nodes)
       .enter()
       .append("rect")
-      // @ts-ignore
       .attr("x", (d) => (d as { x0: number }).x0)
-      // @ts-ignore
       .attr("y", (d) => (d as { y0: number }).y0)
       .attr("height", (d) =>
-        // @ts-ignore
         Math.max(1, (d as { y1: number; y0: number }).y1 - (d as { y0: number }).y0)
       )
-      // @ts-ignore
       .attr("width", (d) => (d as { x1: number; x0: number }).x1 - (d as { x0: number }).x0)
-      // @ts-ignore
       .attr("fill", (d) => (d as { color: string }).color ?? "var(--module-patrimonio)")
       .attr("rx", 2)
       .attr("opacity", 0.9);
@@ -250,28 +240,22 @@ export function SankeyDiagram() {
       .append("text")
       .attr(
         "x",
-        // @ts-ignore
         (d) =>
           (d as { x0: number }).x0 < W / 2
-            ? // @ts-ignore
-              (d as { x1: number }).x1 + 5
-            : // @ts-ignore
-              (d as { x0: number }).x0 - 5
+            ? (d as { x1: number }).x1 + 5
+            : (d as { x0: number }).x0 - 5
       )
       .attr(
         "y",
-        // @ts-ignore
         (d) => ((d as { y0: number }).y0 + (d as { y1: number }).y1) / 2
       )
       .attr("dy", "0.35em")
       .attr(
         "text-anchor",
-        // @ts-ignore
         (d) => ((d as { x0: number }).x0 < W / 2 ? "start" : "end")
       )
       .attr("font-size", 10)
       .attr("fill", "var(--text-secondary)")
-      // @ts-ignore
       .text((d) => (d as { name: string }).name);
   }, [graphData]);
 

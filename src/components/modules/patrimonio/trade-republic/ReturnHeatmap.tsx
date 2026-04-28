@@ -102,7 +102,6 @@ export function ReturnHeatmap() {
   const { cells, years } = useMemo(() => buildCells(snapshots), [snapshots]);
 
   // D3 color scale: red → neutral → green
-  // @ts-ignore — scaleLinear<string> type parameter accepted at runtime
   const colorScale = useMemo(
     () =>
       d3ScaleLinear<string>()
@@ -172,7 +171,6 @@ export function ReturnHeatmap() {
       .attr("width", CELL_W - 2)
       .attr("height", CELL_H - 2)
       .attr("rx", 3)
-      // @ts-ignore — colorScale accepts number at runtime
       .attr("fill", (d) => (d.pct === null ? "var(--bg-sand)" : colorScale(d.pct)))
       .attr("opacity", (d) => (d.pct === null ? 0.5 : 0.85))
       .style("cursor", "default")

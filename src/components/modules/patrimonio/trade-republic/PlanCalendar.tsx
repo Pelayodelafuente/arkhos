@@ -109,20 +109,22 @@ export function PlanCalendar() {
   }, [transactions]);
 
   // Current month missing count for banner
-  const today = new Date();
-  const currentYear = today.getFullYear();
+  const today = useMemo(() => new Date(), []);
   const currentMonth = today.getMonth();
+  const currentMonthLabel = MONTH_LABELS[currentMonth];
 
   const missingThisMonth = useMemo(
-    () =>
-      activeItems.filter((item) => {
-        const key = `${item.asset_id}-${currentYear}-${currentMonth}`;
+    () => {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth();
+      return activeItems.filter((item) => {
+        const key = `${item.asset_id}-${year}-${month}`;
         return !txSet.has(key);
-      }),
-    [activeItems, txSet, currentYear, currentMonth]
+      });
+    },
+    [activeItems, txSet]
   );
-
-  const currentMonthLabel = MONTH_LABELS[currentMonth];
 
   if (activeItems.length === 0) {
     return (

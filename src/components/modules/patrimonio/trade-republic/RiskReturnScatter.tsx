@@ -60,7 +60,6 @@ interface CircleShapeProps {
 }
 
 function CircleShape(rawProps: unknown) {
-  // @ts-ignore
   const props = rawProps as CircleShapeProps;
   const { cx, cy, payload } = props;
   const r = Math.max(4, Math.min(20, payload.z * 0.4));
@@ -211,7 +210,6 @@ export function RiskReturnScatter() {
         <Tooltip content={<ScatterTooltip />} cursor={{ strokeDasharray: "3 3" }} />
         <Scatter
           data={scatterData}
-          // @ts-ignore — shape prop accepts custom render function
           shape={CircleShape}
           isAnimationActive={false}
         />
