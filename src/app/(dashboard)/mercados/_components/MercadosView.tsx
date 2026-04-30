@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   TrendingUp,
@@ -17,6 +17,28 @@ import {
 import { Button } from "@/components/ui";
 import { useMercadosStore } from "@/stores/mercados-store";
 import type { MercadosTab } from "@/stores/mercados-store";
+import { MarketPulseBar } from "./MarketPulseBar";
+
+interface CachedMetricValue {
+  current: number;
+  change24h?: number;
+  changePct24h?: number;
+  history?: Array<{ date: string; value: number }>;
+  label?: string;
+}
+
+interface PulseData {
+  vix: CachedMetricValue;
+  fearGreed: CachedMetricValue;
+  dxy: CachedMetricValue;
+  eurusd: CachedMetricValue;
+  us10y: CachedMetricValue;
+  gold: CachedMetricValue;
+  bitcoin: CachedMetricValue;
+  m2: CachedMetricValue;
+  fetchedAt: string;
+  errors: string[];
+}
 
 interface MercadosViewProps {
   userId: string;
@@ -36,12 +58,47 @@ const TABS: {
 
 export function MercadosView({ initialTab }: MercadosViewProps) {
   const router = useRouter();
-  const { activeTab, setActiveTab, isRefreshing, setIsRefreshing, unreadAlertsCount } =
-    useMercadosStore();
+  const {
+    activeTab,
+    setActiveTab,
+    unreadAlertsCount,
+    setLastUpdated,
+    setIsRefreshing: storeSetIsRefreshing,
+  } = useMercadosStore();
+
+  const [pulseData, setPulseData] = useState<PulseData | null>(null);
+  const [isPulseLoading, setIsPulseLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     setActiveTab(initialTab);
   }, [initialTab, setActiveTab]);
+
+  const loadPulse = useCallback(
+    async (forceRefresh = false) => {
+      const url = forceRefresh ? "/api/mercados/pulse?refresh=true" : "/api/mercados/pulse";
+      try {
+        const res = await fetch(url);
+        if (res.ok) {
+          const data = (await res.json()) as PulseData;
+          setPulseData(data);
+          setLastUpdated(new Date(data.fetchedAt));
+        }
+      } catch {
+        // Network error — keep existing data
+      }
+    },
+    [setLastUpdated]
+  );
+
+  useEffect(() => {
+    async function init() {
+      setIsPulseLoading(true);
+      await loadPulse(false);
+      setIsPulseLoading(false);
+    }
+    void init();
+  }, [loadPulse]);
 
   function handleTabChange(tab: MercadosTab) {
     setActiveTab(tab);
@@ -50,8 +107,13 @@ export function MercadosView({ initialTab }: MercadosViewProps) {
 
   async function handleRefresh() {
     setIsRefreshing(true);
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    setIsRefreshing(false);
+    storeSetIsRefreshing(true);
+    try {
+      await loadPulse(true);
+    } finally {
+      setIsRefreshing(false);
+      storeSetIsRefreshing(false);
+    }
   }
 
   return (
@@ -93,10 +155,15 @@ export function MercadosView({ initialTab }: MercadosViewProps) {
         </div>
       </div>
 
+      {/* Pulso Global — always visible */}
+      <div className="animate-fade-in-up" style={{ animationDelay: "50ms" }}>
+        <MarketPulseBar data={pulseData} isLoading={isPulseLoading} />
+      </div>
+
       {/* Tabs nav */}
       <div
         className="animate-fade-in-up flex border-b border-border"
-        style={{ animationDelay: "50ms" }}
+        style={{ animationDelay: "100ms" }}
       >
         {TABS.map(({ id, label, icon: Icon }) => (
           <button
@@ -116,7 +183,7 @@ export function MercadosView({ initialTab }: MercadosViewProps) {
       </div>
 
       {/* Tab panels */}
-      <div className="animate-fade-in-up" style={{ animationDelay: "100ms" }}>
+      <div className="animate-fade-in-up" style={{ animationDelay: "150ms" }}>
         {activeTab === "pulse" && <PulseTabContent />}
         {activeTab === "macro" && <MacroTabContent />}
         {activeTab === "assets" && <AssetsTabContent />}
@@ -126,39 +193,11 @@ export function MercadosView({ initialTab }: MercadosViewProps) {
   );
 }
 
-const PULSE_ITEMS = [
-  { label: "VIX", sub: "Fear Index" },
-  { label: "Fear & Greed", sub: "Crypto" },
-  { label: "DXY", sub: "USD Index" },
-  { label: "EUR/USD", sub: "Forex" },
-  { label: "US 10Y", sub: "Treasury" },
-  { label: "XAU/USD", sub: "Gold" },
-  { label: "BTC", sub: "Bitcoin" },
-  { label: "Global M2", sub: "Liquidez" },
-];
-
 function PulseTabContent() {
   return (
-    <div className="space-y-4">
-      <p className="text-sm text-text-secondary">
-        8 indicadores clave del mercado global — próximamente con datos en tiempo real.
-      </p>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {PULSE_ITEMS.map(({ label, sub }) => (
-          <div
-            key={label}
-            className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-text-tertiary">{label}</span>
-              <span className="text-[10px] text-text-tertiary">{sub}</span>
-            </div>
-            <div className="h-5 w-20 rounded bg-sand" />
-            <div className="h-3 w-12 rounded bg-sand" />
-          </div>
-        ))}
-      </div>
-    </div>
+    <p className="text-sm text-text-tertiary">
+      Datos macro y análisis — próximamente.
+    </p>
   );
 }
 

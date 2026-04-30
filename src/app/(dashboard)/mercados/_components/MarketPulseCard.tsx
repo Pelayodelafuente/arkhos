@@ -1,0 +1,159 @@
+"use client";
+
+import { Skeleton } from "@/components/ui";
+import { AreaChart, Area, ResponsiveContainer, Tooltip } from "recharts";
+import { formatMetricValue, formatChangePct } from "@/lib/mercados/formatters";
+
+interface CachedMetricValue {
+  current: number;
+  change24h?: number;
+  changePct24h?: number;
+  history?: Array<{ date: string; value: number }>;
+  label?: string;
+}
+
+interface MarketPulseCardProps {
+  metricId: string;
+  label: string;
+  description: string;
+  value: CachedMetricValue;
+  isLoading?: boolean;
+}
+
+function getStatusColor(metricId: string, value: number): "green" | "yellow" | "red" {
+  if (metricId === "vix") {
+    if (value < 15) return "green";
+    if (value < 25) return "yellow";
+    return "red";
+  }
+  if (metricId === "fearGreed") {
+    if (value < 25 || value > 75) return "red";
+    if (value < 45 || value > 60) return "yellow";
+    return "green";
+  }
+  if (metricId === "dxy") {
+    if (value < 100) return "green";
+    if (value < 104) return "yellow";
+    return "red";
+  }
+  if (metricId === "us10y") {
+    if (value < 3.5) return "green";
+    if (value < 4.5) return "yellow";
+    return "red";
+  }
+  return "green";
+}
+
+const STATUS_DOT_CLASSES: Record<"green" | "yellow" | "red", string> = {
+  green: "bg-emerald-400",
+  yellow: "bg-yellow-400",
+  red: "bg-red-400",
+};
+
+export function MarketPulseCard({
+  metricId,
+  label,
+  description,
+  value,
+  isLoading = false,
+}: MarketPulseCardProps) {
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-3 rounded-xl border border-[#7260C4]/30 bg-[#1a1625] p-4">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-3 w-16" style={{ background: "#2d2540" }} />
+          <Skeleton className="h-2.5 w-2.5 rounded-full" style={{ background: "#2d2540" }} />
+        </div>
+        <Skeleton className="h-7 w-24" style={{ background: "#2d2540" }} />
+        <Skeleton className="h-3 w-14" style={{ background: "#2d2540" }} />
+        <Skeleton className="h-10 w-full" style={{ background: "#2d2540" }} />
+      </div>
+    );
+  }
+
+  const status = getStatusColor(metricId, value.current);
+  const dotClass = STATUS_DOT_CLASSES[status];
+  const hasChange = value.change24h !== undefined || value.changePct24h !== undefined;
+  const changePct = value.changePct24h ?? 0;
+  const isPositive = changePct >= 0;
+  const displayValue = value.current === 0 ? "—" : formatMetricValue(metricId, value.current);
+  const historyData = value.history ?? [];
+
+  return (
+    <div
+      className="flex flex-col gap-2 rounded-xl border border-[#7260C4]/30 bg-[#1a1625] p-4 transition-colors hover:border-[#7260C4]/50"
+      title={description}
+    >
+      {/* Top row: label + status dot */}
+      <div className="flex items-center justify-between">
+        <span className="font-mono text-[11px] font-medium uppercase tracking-widest text-[#8b80b8]">
+          {label}
+        </span>
+        <span
+          className={`h-2 w-2 rounded-full animate-pulse ${dotClass}`}
+          aria-label={`Estado: ${status}`}
+        />
+      </div>
+
+      {/* Main value */}
+      <span className="font-mono text-2xl font-bold leading-none text-white">
+        {displayValue}
+      </span>
+
+      {/* Secondary label (e.g. Fear & Greed text) */}
+      {value.label && (
+        <span className="text-[11px] text-[#6b7eb8]">{value.label}</span>
+      )}
+
+      {/* 24h change */}
+      {hasChange && value.current !== 0 && (
+        <span
+          className={`flex items-center gap-0.5 font-mono text-[11px] font-medium ${
+            isPositive ? "text-emerald-400" : "text-red-400"
+          }`}
+        >
+          {isPositive ? "↑" : "↓"}
+          {formatChangePct(changePct)}
+        </span>
+      )}
+
+      {/* Sparkline */}
+      {historyData.length > 1 && (
+        <div className="mt-1 h-10 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={historyData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id={`grad-${metricId}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#7260C4" stopOpacity={0.35} />
+                  <stop offset="100%" stopColor="#7260C4" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <Area
+                type="monotone"
+                dataKey="value"
+                stroke="#7260C4"
+                strokeWidth={1.5}
+                fill={`url(#grad-${metricId})`}
+                dot={false}
+                isAnimationActive={false}
+              />
+              <Tooltip
+                contentStyle={{
+                  background: "#1a1625",
+                  border: "1px solid #7260C4",
+                  borderRadius: "6px",
+                  fontSize: "11px",
+                  color: "#fff",
+                  padding: "4px 8px",
+                }}
+                itemStyle={{ color: "#a89fd8" }}
+                labelStyle={{ display: "none" }}
+                formatter={(v) => [formatMetricValue(metricId, typeof v === 'number' ? v : 0), ""]}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+    </div>
+  );
+}

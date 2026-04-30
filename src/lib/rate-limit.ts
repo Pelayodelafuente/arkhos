@@ -17,13 +17,16 @@ export async function rateLimit(
   const ip = req.headers.get('x-forwarded-for') ?? 'anonymous';
   const key = `rate_limit:${req.nextUrl.pathname}:${ip}`;
 
-  const current = await redis.incr(key);
-  if (current === 1) {
-    await redis.expire(key, window);
+  try {
+    const current = await redis.incr(key);
+    if (current === 1) {
+      await redis.expire(key, window);
+    }
+    return {
+      success: current <= limit,
+      remaining: Math.max(0, limit - current),
+    };
+  } catch {
+    return { success: true, remaining: limit };
   }
-
-  return {
-    success: current <= limit,
-    remaining: Math.max(0, limit - current),
-  };
 }
