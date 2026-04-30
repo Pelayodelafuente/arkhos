@@ -59,14 +59,14 @@ export function MarketPulseCard({
 }: MarketPulseCardProps) {
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-3 rounded-xl border border-[#7260C4]/30 bg-[#1a1625] p-4">
+      <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4">
         <div className="flex items-center justify-between">
-          <Skeleton className="h-3 w-16" style={{ background: "#2d2540" }} />
-          <Skeleton className="h-2.5 w-2.5 rounded-full" style={{ background: "#2d2540" }} />
+          <Skeleton className="h-3 w-16" />
+          <Skeleton className="h-2.5 w-2.5 rounded-full" />
         </div>
-        <Skeleton className="h-7 w-24" style={{ background: "#2d2540" }} />
-        <Skeleton className="h-3 w-14" style={{ background: "#2d2540" }} />
-        <Skeleton className="h-10 w-full" style={{ background: "#2d2540" }} />
+        <Skeleton className="h-7 w-24" />
+        <Skeleton className="h-3 w-14" />
+        <Skeleton className="h-10 w-full" />
       </div>
     );
   }
@@ -81,12 +81,12 @@ export function MarketPulseCard({
 
   return (
     <div
-      className="flex flex-col gap-2 rounded-xl border border-[#7260C4]/30 bg-[#1a1625] p-4 transition-colors hover:border-[#7260C4]/50"
+      className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4 transition-colors hover:bg-background"
       title={description}
     >
       {/* Top row: label + status dot */}
       <div className="flex items-center justify-between">
-        <span className="font-mono text-[11px] font-medium uppercase tracking-widest text-[#8b80b8]">
+        <span className="font-mono text-[11px] font-medium uppercase tracking-widest text-text-secondary">
           {label}
         </span>
         <span
@@ -96,13 +96,13 @@ export function MarketPulseCard({
       </div>
 
       {/* Main value */}
-      <span className="font-mono text-2xl font-bold leading-none text-white">
+      <span className="font-mono text-2xl font-bold leading-none text-foreground">
         {displayValue}
       </span>
 
       {/* Secondary label (e.g. Fear & Greed text) */}
       {value.label && (
-        <span className="text-[11px] text-[#6b7eb8]">{value.label}</span>
+        <span className="text-[11px] text-text-tertiary">{value.label}</span>
       )}
 
       {/* 24h change */}
@@ -139,14 +139,14 @@ export function MarketPulseCard({
               />
               <Tooltip
                 contentStyle={{
-                  background: "#1a1625",
-                  border: "1px solid #7260C4",
+                  background: "#ffffff",
+                  border: "1px solid rgba(160, 120, 80, 0.35)",
                   borderRadius: "6px",
                   fontSize: "11px",
-                  color: "#fff",
+                  color: "#1a1410",
                   padding: "4px 8px",
                 }}
-                itemStyle={{ color: "#a89fd8" }}
+                itemStyle={{ color: "#4a3820" }}
                 labelStyle={{ display: "none" }}
                 formatter={(v) => [formatMetricValue(metricId, typeof v === 'number' ? v : 0), ""]}
               />

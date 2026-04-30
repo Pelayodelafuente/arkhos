@@ -139,8 +139,8 @@ export function AIChatPanel({
       ]);
 
       try {
-        // Capture current messages + new user message for the API call
-        const allMessages = [...messages, userMsg];
+        // Filter out welcome message (role: 'assistant') — Claude requires starting with 'user'
+        const allMessages = [...messages, userMsg].filter(m => m.id !== 'welcome');
         const res = await fetch('/api/mercados/ai/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

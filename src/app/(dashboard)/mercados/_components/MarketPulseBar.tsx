@@ -78,20 +78,20 @@ export function MarketPulseBar({ data, isLoading }: MarketPulseBarProps) {
   const isLive = data !== null && !hasErrors;
 
   return (
-    <div className="rounded-2xl bg-[#0f0d1a] p-4">
+    <div className="rounded-xl border border-border bg-card p-4">
       {/* Header */}
       <div className="mb-4 flex items-center gap-2">
-        <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.15em] text-[#6b5fa8]">
+        <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.15em] text-mercados">
           Pulso Global
         </span>
         <span
           className={`h-1.5 w-1.5 rounded-full animate-pulse ${
-            isLive ? "bg-emerald-400" : "bg-[#3d3656]"
+            isLive ? "bg-emerald-500" : "bg-border"
           }`}
           aria-label={isLive ? "Datos actualizados" : "Sin datos"}
         />
         {data?.fetchedAt && (
-          <span className="ml-auto font-mono text-[10px] text-[#4a4268]">
+          <span className="ml-auto font-mono text-[10px] text-text-tertiary">
             {timeAgo(data.fetchedAt)}
           </span>
         )}
@@ -99,9 +99,9 @@ export function MarketPulseBar({ data, isLoading }: MarketPulseBarProps) {
 
       {/* Error banner */}
       {hasErrors && (
-        <div className="mb-3 flex items-center gap-1.5 rounded-lg border border-yellow-500/20 bg-yellow-500/5 px-3 py-2">
+        <div className="mb-3 flex items-center gap-1.5 rounded-lg border border-yellow-300 bg-yellow-50 px-3 py-2">
           <span aria-hidden="true">⚠️</span>
-          <span className="text-[11px] text-yellow-400/80">
+          <span className="text-[11px] text-yellow-700">
             Algunos datos no pudieron actualizarse
           </span>
         </div>

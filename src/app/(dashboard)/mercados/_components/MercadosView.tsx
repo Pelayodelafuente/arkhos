@@ -336,7 +336,103 @@ export function MercadosView({ initialTab }: MercadosViewProps) {
       {/* Tab panels */}
       <div className="animate-fade-in-up" style={{ animationDelay: "150ms" }}>
         {activeTab === "pulse" && (
-          <p className="text-sm text-text-tertiary">Datos macro y análisis — próximamente.</p>
+          <div className="space-y-4">
+            <p className="text-sm text-text-secondary">
+              Los 8 indicadores que determinan el clima del mercado global en este momento.
+            </p>
+            {pulseData && (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {(
+                  [
+                    {
+                      key: "vix",
+                      label: "VIX — Miedo del mercado",
+                      value: pulseData.vix.current.toFixed(1),
+                      note:
+                        pulseData.vix.current > 25
+                          ? "Tensión elevada — el mercado anticipa volatilidad"
+                          : pulseData.vix.current < 15
+                          ? "Calma extrema — posible complacencia"
+                          : "Zona neutral — volatilidad normal",
+                    },
+                    {
+                      key: "fearGreed",
+                      label: "Fear & Greed Crypto",
+                      value: `${pulseData.fearGreed.current}/100${pulseData.fearGreed.label ? ` · ${pulseData.fearGreed.label}` : ""}`,
+                      note:
+                        pulseData.fearGreed.current < 25
+                          ? "Miedo extremo — históricamente buena zona de entrada a largo plazo"
+                          : pulseData.fearGreed.current > 75
+                          ? "Codicia extrema — precaución, mercado sobreextendido"
+                          : "Sentimiento equilibrado",
+                    },
+                    {
+                      key: "dxy",
+                      label: "DXY — Fortaleza del dólar",
+                      value: pulseData.dxy.current.toFixed(2),
+                      note:
+                        pulseData.dxy.current > 104
+                          ? "Dólar fuerte — presión sobre activos denominados en USD"
+                          : pulseData.dxy.current < 100
+                          ? "Dólar débil — favorable para materias primas y emergentes"
+                          : "DXY en zona neutral",
+                    },
+                    {
+                      key: "eurusd",
+                      label: "EUR/USD",
+                      value: pulseData.eurusd.current.toFixed(4),
+                      note:
+                        pulseData.eurusd.current > 1.1
+                          ? "Euro fuerte — tu cartera en EUR vale menos en términos USD"
+                          : pulseData.eurusd.current < 1.0
+                          ? "Paridad — máxima exposición al riesgo de cambio"
+                          : "Tipo de cambio en rango histórico normal",
+                    },
+                    {
+                      key: "us10y",
+                      label: "Bono USA 10 años",
+                      value: `${pulseData.us10y.current.toFixed(2)}%`,
+                      note:
+                        pulseData.us10y.current > 4.5
+                          ? "Yield alta — presión sobre valoraciones growth y renta fija"
+                          : pulseData.us10y.current < 3.5
+                          ? "Yield baja — favorable para acciones y duración larga"
+                          : "Zona intermedia — mercado en transición",
+                    },
+                    {
+                      key: "gold",
+                      label: "Oro (XAU/USD)",
+                      value: `$${pulseData.gold.current.toLocaleString("en-US", { maximumFractionDigits: 0 })}`,
+                      note: "Activo de refugio — sube en incertidumbre geopolítica y debilidad del dólar. Tienes IGLN en cartera.",
+                    },
+                    {
+                      key: "bitcoin",
+                      label: "Bitcoin (BTC/USD)",
+                      value: `$${pulseData.bitcoin.current.toLocaleString("en-US", { maximumFractionDigits: 0 })}`,
+                      note: "Indicador de apetito de riesgo. Correlaciona con el Nasdaq en entornos de alta liquidez.",
+                    },
+                    {
+                      key: "m2",
+                      label: "M2 USA (masa monetaria)",
+                      value: `$${pulseData.m2.current}T`,
+                      note: "Expansión de M2 históricamente correlaciona con subidas en Bitcoin y activos de riesgo a 12-18 meses.",
+                    },
+                  ] as const
+                ).map((item) => (
+                  <div key={item.key} className="rounded-lg border border-border bg-card p-4">
+                    <div className="mb-1.5 flex items-center justify-between gap-2">
+                      <span className="text-xs font-semibold text-text-secondary">{item.label}</span>
+                      <span className="font-mono text-sm font-bold text-foreground">{item.value}</span>
+                    </div>
+                    <p className="text-xs leading-relaxed text-text-tertiary">{item.note}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+            {!pulseData && isPulseLoading && (
+              <p className="text-sm text-text-tertiary">Cargando indicadores...</p>
+            )}
+          </div>
         )}
         {activeTab === "macro" && (
           <MacroDashboard data={macroData} isLoading={isMacroLoading} />
