@@ -247,7 +247,7 @@ export function MercadosView({ initialTab }: MercadosViewProps) {
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
-      <div className="animate-fade-in-up flex items-center justify-between">
+      <div className="animate-fade-in-up relative z-10 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-md bg-mercados">
             <TrendingUp size={20} strokeWidth={1.75} className="text-white" />
