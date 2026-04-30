@@ -17,7 +17,9 @@ import {
 import { Button } from "@/components/ui";
 import { useMercadosStore } from "@/stores/mercados-store";
 import type { MercadosTab } from "@/stores/mercados-store";
+import type { MacroData } from "@/lib/mercados/macro";
 import { MarketPulseBar } from "./MarketPulseBar";
+import { MacroDashboard } from "./macro/MacroDashboard";
 
 interface CachedMetricValue {
   current: number;
@@ -70,6 +72,9 @@ export function MercadosView({ initialTab }: MercadosViewProps) {
   const [isPulseLoading, setIsPulseLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  const [macroData, setMacroData] = useState<MacroData | null>(null);
+  const [isMacroLoading, setIsMacroLoading] = useState(false);
+
   useEffect(() => {
     setActiveTab(initialTab);
   }, [initialTab, setActiveTab]);
@@ -91,25 +96,51 @@ export function MercadosView({ initialTab }: MercadosViewProps) {
     [setLastUpdated]
   );
 
+  const loadMacro = useCallback(async (forceRefresh = false) => {
+    const url = forceRefresh ? "/api/mercados/macro?refresh=true" : "/api/mercados/macro";
+    setIsMacroLoading(true);
+    try {
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = (await res.json()) as MacroData;
+        setMacroData(data);
+      }
+    } catch {
+      // Network error — keep existing data
+    } finally {
+      setIsMacroLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     async function init() {
       setIsPulseLoading(true);
       await loadPulse(false);
       setIsPulseLoading(false);
+      if (initialTab === "macro") {
+        void loadMacro(false);
+      }
     }
     void init();
-  }, [loadPulse]);
+  }, [loadPulse, loadMacro, initialTab]);
 
   function handleTabChange(tab: MercadosTab) {
     setActiveTab(tab);
     router.push(`/mercados?tab=${tab}`, { scroll: false });
+    if (tab === "macro" && !macroData && !isMacroLoading) {
+      void loadMacro();
+    }
   }
 
   async function handleRefresh() {
     setIsRefreshing(true);
     storeSetIsRefreshing(true);
     try {
-      await loadPulse(true);
+      if (activeTab === "macro") {
+        await Promise.all([loadPulse(true), loadMacro(true)]);
+      } else {
+        await loadPulse(true);
+      }
     } finally {
       setIsRefreshing(false);
       storeSetIsRefreshing(false);
@@ -141,7 +172,7 @@ export function MercadosView({ initialTab }: MercadosViewProps) {
           <Button
             variant="secondary"
             size="sm"
-            onClick={handleRefresh}
+            onClick={() => void handleRefresh()}
             disabled={isRefreshing}
             className="gap-1.5"
           >
@@ -185,7 +216,9 @@ export function MercadosView({ initialTab }: MercadosViewProps) {
       {/* Tab panels */}
       <div className="animate-fade-in-up" style={{ animationDelay: "150ms" }}>
         {activeTab === "pulse" && <PulseTabContent />}
-        {activeTab === "macro" && <MacroTabContent />}
+        {activeTab === "macro" && (
+          <MacroDashboard data={macroData} isLoading={isMacroLoading} />
+        )}
         {activeTab === "assets" && <AssetsTabContent />}
         {activeTab === "portfolio" && <PortfolioTabContent />}
       </div>
@@ -198,37 +231,6 @@ function PulseTabContent() {
     <p className="text-sm text-text-tertiary">
       Datos macro y análisis — próximamente.
     </p>
-  );
-}
-
-const MACRO_CHART_HEIGHTS = [28, 42, 35, 55, 48, 38, 60, 45, 32, 50, 44, 40];
-
-function MacroTabContent() {
-  return (
-    <div className="space-y-4">
-      <p className="text-sm text-text-secondary">
-        Datos macroeconómicos vía FRED — VIX histórico, M2, yields, CPI, Fed Funds.
-        Próximamente.
-      </p>
-      <div className="grid gap-3 sm:grid-cols-2">
-        {["VIX Histórico", "Global M2 Supply", "US Treasury Yields", "CPI & Inflación"].map(
-          (name) => (
-            <div key={name} className="rounded-xl border border-border bg-card p-4">
-              <p className="mb-3 text-sm font-medium text-text-secondary">{name}</p>
-              <div className="flex items-end gap-1">
-                {MACRO_CHART_HEIGHTS.map((h, i) => (
-                  <div
-                    key={i}
-                    className="flex-1 rounded-sm bg-sand"
-                    style={{ height: `${h}px` }}
-                  />
-                ))}
-              </div>
-            </div>
-          )
-        )}
-      </div>
-    </div>
   );
 }
 

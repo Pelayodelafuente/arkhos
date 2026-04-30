@@ -1,35 +1,9 @@
 import { getCachedMetric, setCachedMetric } from './cache';
 import type { CachedMetric } from './cache';
 import { PULSE_METRICS } from './constants';
+import { fetchFREDSeries } from './fred';
 
 // ─── FRED ────────────────────────────────────────────────────────────────────
-
-async function fetchFREDSeries(
-  seriesId: string,
-  limit = 30
-): Promise<Array<{ date: string; value: number }>> {
-  const url = new URL('https://api.stlouisfed.org/fred/series/observations');
-  url.searchParams.set('series_id', seriesId);
-  url.searchParams.set('api_key', process.env.FRED_API_KEY!);
-  url.searchParams.set('file_type', 'json');
-  url.searchParams.set('sort_order', 'desc');
-  url.searchParams.set('limit', String(limit));
-  url.searchParams.set('observation_start', '2020-01-01');
-
-  const res = await fetch(url.toString(), { cache: 'no-store' });
-  if (!res.ok) throw new Error(`FRED error ${res.status} for ${seriesId}`);
-
-  const json = (await res.json()) as {
-    observations: Array<{ date: string; value: string }>;
-  };
-  return json.observations
-    .filter((o) => o.value !== '.')
-    .map((o) => ({
-      date: o.date,
-      value: parseFloat(o.value),
-    }))
-    .reverse();
-}
 
 async function getVIX(forceRefresh = false): Promise<CachedMetric['value']> {
   const cached = await getCachedMetric('FRED', 'vix', forceRefresh);
