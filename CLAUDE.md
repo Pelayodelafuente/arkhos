@@ -6,7 +6,8 @@
 - Fases 0-4 completadas al 100% (Auth, Layout, Proyectos, Gastos, Notas)
 - Auditoría total completada 2026-04-09 — ver `docs/AUDIT-REPORT.md`
 - Stack Cognitivo v2 instalado 2026-04-09 — agentes, skills, hooks, reglas modulares
-- Próximo: Fase 5 (Mercados) + Fase 6 (Patrimonio) — ver STATUS.md
+- Mercados completado al 100% 2026-04-30 (Fases 0-5: Pulso, Macro, Activos, Mi Cartera, IA Copiloto)
+- Próximo: definir siguiente módulo (Dashboard global, Agenda, o mejoras UX)
 
 ## Stack
 | Tecnología | Versión | Nota |
