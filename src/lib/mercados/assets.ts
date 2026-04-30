@@ -104,7 +104,7 @@ export interface AssetsData {
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
-async function fetchYahooHistory(
+export async function fetchYahooHistory(
   ticker: string,
   days = 365
 ): Promise<Array<{ date: string; value: number }>> {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   TrendingUp,
@@ -16,9 +16,13 @@ import { useMercadosStore } from "@/stores/mercados-store";
 import type { MercadosTab } from "@/stores/mercados-store";
 import type { MacroData } from "@/lib/mercados/macro";
 import type { AssetsData } from "@/lib/mercados/assets";
+import type { PortfolioMarketData } from "@/lib/mercados/portfolio-market";
+import type { MarketAlert } from "@/lib/mercados/alerts";
 import { MarketPulseBar } from "./MarketPulseBar";
 import { MacroDashboard } from "./macro/MacroDashboard";
 import { AssetsDashboard } from "./assets/AssetsDashboard";
+import { PortfolioDashboard } from "./portfolio/PortfolioDashboard";
+import { AlertsFeed } from "./portfolio/AlertsFeed";
 
 interface CachedMetricValue {
   current: number;
@@ -39,6 +43,11 @@ interface PulseData {
   m2: CachedMetricValue;
   fetchedAt: string;
   errors: string[];
+}
+
+interface AlertsResponse {
+  alerts: MarketAlert[];
+  unreadCount: number;
 }
 
 interface MercadosViewProps {
@@ -62,7 +71,6 @@ export function MercadosView({ initialTab }: MercadosViewProps) {
   const {
     activeTab,
     setActiveTab,
-    unreadAlertsCount,
     setLastUpdated,
     setIsRefreshing: storeSetIsRefreshing,
   } = useMercadosStore();
@@ -76,6 +84,14 @@ export function MercadosView({ initialTab }: MercadosViewProps) {
 
   const [assetsData, setAssetsData] = useState<AssetsData | null>(null);
   const [isAssetsLoading, setIsAssetsLoading] = useState(false);
+
+  const [portfolioData, setPortfolioData] = useState<PortfolioMarketData | null>(null);
+  const [isPortfolioLoading, setIsPortfolioLoading] = useState(false);
+
+  const [alerts, setAlerts] = useState<MarketAlert[]>([]);
+  const [unreadAlertsCount, setUnreadAlertsCount] = useState(0);
+  const [isAlertsFeedOpen, setIsAlertsFeedOpen] = useState(false);
+  const bellRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setActiveTab(initialTab);
@@ -103,12 +119,9 @@ export function MercadosView({ initialTab }: MercadosViewProps) {
     setIsMacroLoading(true);
     try {
       const res = await fetch(url);
-      if (res.ok) {
-        const data = (await res.json()) as MacroData;
-        setMacroData(data);
-      }
+      if (res.ok) setMacroData((await res.json()) as MacroData);
     } catch {
-      // Network error — keep existing data
+      // Network error
     } finally {
       setIsMacroLoading(false);
     }
@@ -119,14 +132,51 @@ export function MercadosView({ initialTab }: MercadosViewProps) {
     setIsAssetsLoading(true);
     try {
       const res = await fetch(url);
-      if (res.ok) {
-        const data = (await res.json()) as AssetsData;
-        setAssetsData(data);
-      }
+      if (res.ok) setAssetsData((await res.json()) as AssetsData);
     } catch {
-      // Network error — keep existing data
+      // Network error
     } finally {
       setIsAssetsLoading(false);
+    }
+  }, []);
+
+  const loadPortfolio = useCallback(async (forceRefresh = false) => {
+    const url = forceRefresh ? "/api/mercados/portfolio?refresh=true" : "/api/mercados/portfolio";
+    setIsPortfolioLoading(true);
+    try {
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = (await res.json()) as PortfolioMarketData;
+        setPortfolioData(data);
+        // Si hay alertas de rebalanceo warning/critical, persistirlas
+        const toCreate = data.rebalanceAlerts.filter(a => a.severity !== 'info');
+        if (toCreate.length > 0) {
+          void fetch('/api/mercados/alerts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'create_rebalance', alerts: toCreate }),
+          });
+        }
+        // Refrescar conteo de alertas
+        void loadAlerts();
+      }
+    } catch {
+      // Network error
+    } finally {
+      setIsPortfolioLoading(false);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const loadAlerts = useCallback(async () => {
+    try {
+      const res = await fetch('/api/mercados/alerts');
+      if (res.ok) {
+        const data = (await res.json()) as AlertsResponse;
+        setAlerts(data.alerts);
+        setUnreadAlertsCount(data.unreadCount);
+      }
+    } catch {
+      // Network error
     }
   }, []);
 
@@ -137,15 +187,18 @@ export function MercadosView({ initialTab }: MercadosViewProps) {
       setIsPulseLoading(false);
       if (initialTab === "macro") void loadMacro(false);
       if (initialTab === "assets") void loadAssets(false);
+      if (initialTab === "portfolio") void loadPortfolio(false);
+      void loadAlerts();
     }
     void init();
-  }, [loadPulse, loadMacro, loadAssets, initialTab]);
+  }, [loadPulse, loadMacro, loadAssets, loadPortfolio, loadAlerts, initialTab]);
 
   function handleTabChange(tab: MercadosTab) {
     setActiveTab(tab);
     router.push(`/mercados?tab=${tab}`, { scroll: false });
     if (tab === "macro" && !macroData && !isMacroLoading) void loadMacro();
     if (tab === "assets" && !assetsData && !isAssetsLoading) void loadAssets();
+    if (tab === "portfolio" && !portfolioData && !isPortfolioLoading) void loadPortfolio();
   }
 
   async function handleRefresh() {
@@ -156,13 +209,36 @@ export function MercadosView({ initialTab }: MercadosViewProps) {
         await Promise.all([loadPulse(true), loadMacro(true)]);
       } else if (activeTab === "assets") {
         await Promise.all([loadPulse(true), loadAssets(true)]);
+      } else if (activeTab === "portfolio") {
+        await Promise.all([loadPulse(true), loadPortfolio(true)]);
       } else {
         await loadPulse(true);
       }
+      await loadAlerts();
     } finally {
       setIsRefreshing(false);
       storeSetIsRefreshing(false);
     }
+  }
+
+  function handleMarkRead(id: string) {
+    setAlerts(prev => prev.map(a => (a.id === id ? { ...a, is_read: true } : a)));
+    setUnreadAlertsCount(prev => Math.max(0, prev - 1));
+    void fetch('/api/mercados/alerts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'mark_read', alertId: id }),
+    });
+  }
+
+  function handleMarkAllRead() {
+    setAlerts(prev => prev.map(a => ({ ...a, is_read: true })));
+    setUnreadAlertsCount(0);
+    void fetch('/api/mercados/alerts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'mark_all_read' }),
+    });
   }
 
   return (
@@ -176,17 +252,30 @@ export function MercadosView({ initialTab }: MercadosViewProps) {
           <h1 className="font-heading text-2xl text-foreground">Mercados</h1>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            className="relative flex h-9 w-9 items-center justify-center rounded-md border border-border text-text-secondary transition-colors hover:bg-sand"
-            aria-label="Alertas de mercado"
-          >
-            <Bell size={16} strokeWidth={1.5} />
-            {unreadAlertsCount > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-mercados text-[10px] font-semibold text-white">
-                {unreadAlertsCount > 9 ? "9+" : unreadAlertsCount}
-              </span>
-            )}
-          </button>
+          {/* Bell icon con AlertsFeed */}
+          <div ref={bellRef} className="relative">
+            <button
+              onClick={() => setIsAlertsFeedOpen(prev => !prev)}
+              className="relative flex h-9 w-9 items-center justify-center rounded-md border border-border text-text-secondary transition-colors hover:bg-sand"
+              aria-label="Alertas de mercado"
+            >
+              <Bell size={16} strokeWidth={1.5} />
+              {unreadAlertsCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-mercados text-[10px] font-semibold text-white">
+                  {unreadAlertsCount > 9 ? "9+" : unreadAlertsCount}
+                </span>
+              )}
+            </button>
+            <AlertsFeed
+              alerts={alerts}
+              unreadCount={unreadAlertsCount}
+              isOpen={isAlertsFeedOpen}
+              onClose={() => setIsAlertsFeedOpen(false)}
+              onMarkRead={handleMarkRead}
+              onMarkAllRead={handleMarkAllRead}
+            />
+          </div>
+
           <Button
             variant="secondary"
             size="sm"
@@ -233,41 +322,18 @@ export function MercadosView({ initialTab }: MercadosViewProps) {
 
       {/* Tab panels */}
       <div className="animate-fade-in-up" style={{ animationDelay: "150ms" }}>
-        {activeTab === "pulse" && <PulseTabContent />}
+        {activeTab === "pulse" && (
+          <p className="text-sm text-text-tertiary">Datos macro y análisis — próximamente.</p>
+        )}
         {activeTab === "macro" && (
           <MacroDashboard data={macroData} isLoading={isMacroLoading} />
         )}
         {activeTab === "assets" && (
           <AssetsDashboard data={assetsData} isLoading={isAssetsLoading} />
         )}
-        {activeTab === "portfolio" && <PortfolioTabContent />}
-      </div>
-    </div>
-  );
-}
-
-function PulseTabContent() {
-  return (
-    <p className="text-sm text-text-tertiary">
-      Datos macro y análisis — próximamente.
-    </p>
-  );
-}
-
-function PortfolioTabContent() {
-  return (
-    <div className="space-y-4">
-      <p className="text-sm text-text-secondary">
-        Vista integrada de tu cartera (Patrimonio) junto al contexto de mercado. Próximamente.
-      </p>
-      <div className="rounded-xl border border-border bg-card p-6 text-center">
-        <Briefcase size={32} strokeWidth={1} className="mx-auto mb-3 text-text-tertiary" />
-        <p className="text-sm font-medium text-text-secondary">
-          Conectado con Módulo Patrimonio
-        </p>
-        <p className="mt-1 text-xs text-text-tertiary">
-          Verás tus posiciones junto a benchmarks y correlaciones de mercado
-        </p>
+        {activeTab === "portfolio" && (
+          <PortfolioDashboard data={portfolioData} isLoading={isPortfolioLoading} />
+        )}
       </div>
     </div>
   );
