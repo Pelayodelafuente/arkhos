@@ -4,22 +4,21 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   TrendingUp,
-  TrendingDown,
   Bell,
   RefreshCw,
   Activity,
   BarChart3,
   PieChart,
   Briefcase,
-  Globe,
-  AreaChart,
 } from "lucide-react";
 import { Button } from "@/components/ui";
 import { useMercadosStore } from "@/stores/mercados-store";
 import type { MercadosTab } from "@/stores/mercados-store";
 import type { MacroData } from "@/lib/mercados/macro";
+import type { AssetsData } from "@/lib/mercados/assets";
 import { MarketPulseBar } from "./MarketPulseBar";
 import { MacroDashboard } from "./macro/MacroDashboard";
+import { AssetsDashboard } from "./assets/AssetsDashboard";
 
 interface CachedMetricValue {
   current: number;
@@ -75,6 +74,9 @@ export function MercadosView({ initialTab }: MercadosViewProps) {
   const [macroData, setMacroData] = useState<MacroData | null>(null);
   const [isMacroLoading, setIsMacroLoading] = useState(false);
 
+  const [assetsData, setAssetsData] = useState<AssetsData | null>(null);
+  const [isAssetsLoading, setIsAssetsLoading] = useState(false);
+
   useEffect(() => {
     setActiveTab(initialTab);
   }, [initialTab, setActiveTab]);
@@ -112,24 +114,38 @@ export function MercadosView({ initialTab }: MercadosViewProps) {
     }
   }, []);
 
+  const loadAssets = useCallback(async (forceRefresh = false) => {
+    const url = forceRefresh ? "/api/mercados/assets?refresh=true" : "/api/mercados/assets";
+    setIsAssetsLoading(true);
+    try {
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = (await res.json()) as AssetsData;
+        setAssetsData(data);
+      }
+    } catch {
+      // Network error — keep existing data
+    } finally {
+      setIsAssetsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     async function init() {
       setIsPulseLoading(true);
       await loadPulse(false);
       setIsPulseLoading(false);
-      if (initialTab === "macro") {
-        void loadMacro(false);
-      }
+      if (initialTab === "macro") void loadMacro(false);
+      if (initialTab === "assets") void loadAssets(false);
     }
     void init();
-  }, [loadPulse, loadMacro, initialTab]);
+  }, [loadPulse, loadMacro, loadAssets, initialTab]);
 
   function handleTabChange(tab: MercadosTab) {
     setActiveTab(tab);
     router.push(`/mercados?tab=${tab}`, { scroll: false });
-    if (tab === "macro" && !macroData && !isMacroLoading) {
-      void loadMacro();
-    }
+    if (tab === "macro" && !macroData && !isMacroLoading) void loadMacro();
+    if (tab === "assets" && !assetsData && !isAssetsLoading) void loadAssets();
   }
 
   async function handleRefresh() {
@@ -138,6 +154,8 @@ export function MercadosView({ initialTab }: MercadosViewProps) {
     try {
       if (activeTab === "macro") {
         await Promise.all([loadPulse(true), loadMacro(true)]);
+      } else if (activeTab === "assets") {
+        await Promise.all([loadPulse(true), loadAssets(true)]);
       } else {
         await loadPulse(true);
       }
@@ -219,7 +237,9 @@ export function MercadosView({ initialTab }: MercadosViewProps) {
         {activeTab === "macro" && (
           <MacroDashboard data={macroData} isLoading={isMacroLoading} />
         )}
-        {activeTab === "assets" && <AssetsTabContent />}
+        {activeTab === "assets" && (
+          <AssetsDashboard data={assetsData} isLoading={isAssetsLoading} />
+        )}
         {activeTab === "portfolio" && <PortfolioTabContent />}
       </div>
     </div>
@@ -231,43 +251,6 @@ function PulseTabContent() {
     <p className="text-sm text-text-tertiary">
       Datos macro y análisis — próximamente.
     </p>
-  );
-}
-
-const ASSET_CATEGORIES = [
-  { label: "Crypto", icon: TrendingUp },
-  { label: "Commodities", icon: Globe },
-  { label: "Índices", icon: AreaChart },
-  { label: "Forex", icon: TrendingDown },
-] as const;
-
-const ASSET_BAR_WIDTHS = [80, 60, 45];
-
-function AssetsTabContent() {
-  return (
-    <div className="space-y-4">
-      <p className="text-sm text-text-secondary">
-        Clases de activos — Crypto, Commodities, Índices globales, Forex. Próximamente.
-      </p>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {ASSET_CATEGORIES.map(({ label, icon: Icon }) => (
-          <div key={label} className="rounded-xl border border-border bg-card p-4">
-            <div className="mb-3 flex items-center gap-2 text-text-tertiary">
-              <Icon size={15} strokeWidth={1.5} />
-              <span className="text-sm font-medium">{label}</span>
-            </div>
-            <div className="space-y-2">
-              {ASSET_BAR_WIDTHS.map((w) => (
-                <div key={w} className="flex items-center gap-2">
-                  <div className="h-3 w-3 rounded-full bg-sand" />
-                  <div className="h-2 rounded bg-sand" style={{ width: `${w}%` }} />
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
   );
 }
 
