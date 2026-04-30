@@ -10,6 +10,7 @@ import {
   BarChart3,
   PieChart,
   Briefcase,
+  Bot,
 } from "lucide-react";
 import { Button } from "@/components/ui";
 import { useMercadosStore } from "@/stores/mercados-store";
@@ -23,6 +24,7 @@ import { MacroDashboard } from "./macro/MacroDashboard";
 import { AssetsDashboard } from "./assets/AssetsDashboard";
 import { PortfolioDashboard } from "./portfolio/PortfolioDashboard";
 import { AlertsFeed } from "./portfolio/AlertsFeed";
+import { AIChatPanel } from "./AIChatPanel";
 
 interface CachedMetricValue {
   current: number;
@@ -91,6 +93,7 @@ export function MercadosView({ initialTab }: MercadosViewProps) {
   const [alerts, setAlerts] = useState<MarketAlert[]>([]);
   const [unreadAlertsCount, setUnreadAlertsCount] = useState(0);
   const [isAlertsFeedOpen, setIsAlertsFeedOpen] = useState(false);
+  const [isAIPanelOpen, setIsAIPanelOpen] = useState(false);
   const bellRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -279,6 +282,16 @@ export function MercadosView({ initialTab }: MercadosViewProps) {
           <Button
             variant="secondary"
             size="sm"
+            onClick={() => setIsAIPanelOpen(true)}
+            className="gap-1.5"
+          >
+            <Bot size={13} strokeWidth={1.75} />
+            IA Copiloto
+          </Button>
+
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => void handleRefresh()}
             disabled={isRefreshing}
             className="gap-1.5"
@@ -335,6 +348,15 @@ export function MercadosView({ initialTab }: MercadosViewProps) {
           <PortfolioDashboard data={portfolioData} isLoading={isPortfolioLoading} />
         )}
       </div>
+
+      <AIChatPanel
+        isOpen={isAIPanelOpen}
+        onClose={() => setIsAIPanelOpen(false)}
+        pulseData={pulseData}
+        macroData={macroData}
+        assetsData={assetsData}
+        portfolioData={portfolioData}
+      />
     </div>
   );
 }
