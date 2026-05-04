@@ -6,7 +6,7 @@
 - Fases 0-4 completadas al 100% (Auth, Layout, Proyectos, Gastos, Notas)
 - Auditoría total completada 2026-04-09 — ver `docs/AUDIT-REPORT.md`
 - Stack Cognitivo v2 instalado 2026-04-09 — agentes, skills, hooks, reglas modulares
-- Mercados completado al 100% 2026-04-30 (Fases 0-5: Pulso, Macro, Activos, Mi Cartera, IA Copiloto)
+- Mercados completado + auditado 2026-05-04 v1.1 (bugs AI/Recharts/F&G/USD, ChartWrapper, DailySummary, tooltips)
 - Próximo: definir siguiente módulo (Dashboard global, Agenda, o mejoras UX)
 
 ## Stack
@@ -30,7 +30,7 @@
 - Gastos ✅ — `src/components/modules/expenses/`
 - Notas ✅ — `src/components/modules/notes/`
 - Patrimonio ✅ — `src/components/modules/patrimonio/` — 18 componentes, store, migrations 022-023
-- Mercados ⏳ — siguiente (Fase 5)
+- Mercados ✅ — `src/app/(dashboard)/mercados/` — Fases 0-5 + auditoría v1.1
 
 ## Reglas activas
 Ver: `.claude/rules/reading-protocol.md` — lectura eficiente de archivos
