@@ -365,7 +365,7 @@ function calculateRiskMetrics(
       .toFixed(2)
   );
 
-  const usdBuckets = ['etfs_index', 'etfs_thematic', 'stocks_us', 'crypto'];
+  const usdBuckets = ['etfs_index', 'etfs_thematic', 'stocks_us', 'stocks_asia', 'crypto'];
   const usdExposurePct = parseFloat(
     allocation.filter(a => usdBuckets.includes(a.id)).reduce((s, a) => s + a.currentPct, 0).toFixed(1)
   );

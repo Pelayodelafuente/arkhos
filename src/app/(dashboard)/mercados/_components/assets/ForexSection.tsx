@@ -8,6 +8,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import type { ForexData } from "@/lib/mercados/assets";
+import { ChartWrapper } from "../ChartWrapper";
 
 interface Props {
   data: ForexData;
@@ -68,11 +69,12 @@ function ForexPairCard({
         {pair.value.toFixed(4)}
       </p>
 
-      <ResponsiveContainer width="100%" height={80}>
-        <AreaChart
-          data={pair.history}
-          margin={{ top: 2, right: 2, left: 2, bottom: 2 }}
-        >
+      <ChartWrapper minHeight={80}>
+        <ResponsiveContainer width="100%" height={80}>
+          <AreaChart
+            data={pair.history}
+            margin={{ top: 2, right: 2, left: 2, bottom: 2 }}
+          >
           <defs>
             <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor={color} stopOpacity={0.25} />
@@ -97,8 +99,9 @@ function ForexPairCard({
             fill={`url(#${gradId})`}
             dot={false}
           />
-        </AreaChart>
-      </ResponsiveContainer>
+          </AreaChart>
+        </ResponsiveContainer>
+      </ChartWrapper>
 
       <p className="text-[11px] text-text-tertiary leading-snug border-t border-border pt-2">
         {pair.relevance}

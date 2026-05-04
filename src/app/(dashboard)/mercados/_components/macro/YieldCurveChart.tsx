@@ -11,6 +11,7 @@ import {
   ReferenceLine,
 } from "recharts";
 import type { MacroData } from "@/lib/mercados/macro";
+import { ChartWrapper } from "../ChartWrapper";
 
 const C = {
   violet: "var(--color-mercados)",
@@ -78,109 +79,113 @@ export function YieldCurveChart({ data }: Props) {
       {/* Curva actual */}
       <div>
         <p className="mb-1.5 text-xs text-text-tertiary">Curva actual</p>
-        <ResponsiveContainer width="100%" height={120}>
-          <AreaChart data={points} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-            <defs>
-              <linearGradient id="curveGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={curveColor} stopOpacity={0.2} />
-                <stop offset="95%" stopColor={curveColor} stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke="var(--color-border)"
-              strokeOpacity={0.5}
-            />
-            <XAxis
-              dataKey="maturity"
-              tick={{ fontSize: 11 }}
-              tickLine={false}
-              axisLine={false}
-            />
-            <YAxis
-              tick={{ fontSize: 11 }}
-              tickLine={false}
-              axisLine={false}
-              tickFormatter={(v: number) => `${v.toFixed(1)}%`}
-              domain={["auto", "auto"]}
-            />
-            <Tooltip
-              formatter={(value: unknown) => [
-                `${(value as number).toFixed(2)}%`,
-                "Yield",
-              ]}
-              contentStyle={{
-                fontSize: 12,
-                border: "1px solid var(--color-border)",
-                borderRadius: 8,
-              }}
-            />
-            <Area
-              type="monotone"
-              dataKey="yield"
-              stroke={curveColor}
-              strokeWidth={2}
-              fill="url(#curveGrad)"
-              dot={{ r: 4, fill: curveColor, strokeWidth: 0 }}
-            />
-          </AreaChart>
-        </ResponsiveContainer>
+        <ChartWrapper minHeight={120}>
+          <ResponsiveContainer width="100%" height={120}>
+            <AreaChart data={points} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+              <defs>
+                <linearGradient id="curveGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={curveColor} stopOpacity={0.2} />
+                  <stop offset="95%" stopColor={curveColor} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="var(--color-border)"
+                strokeOpacity={0.5}
+              />
+              <XAxis
+                dataKey="maturity"
+                tick={{ fontSize: 11 }}
+                tickLine={false}
+                axisLine={false}
+              />
+              <YAxis
+                tick={{ fontSize: 11 }}
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(v: number) => `${v.toFixed(1)}%`}
+                domain={["auto", "auto"]}
+              />
+              <Tooltip
+                formatter={(value: unknown) => [
+                  `${(value as number).toFixed(2)}%`,
+                  "Yield",
+                ]}
+                contentStyle={{
+                  fontSize: 12,
+                  border: "1px solid var(--color-border)",
+                  borderRadius: 8,
+                }}
+              />
+              <Area
+                type="monotone"
+                dataKey="yield"
+                stroke={curveColor}
+                strokeWidth={2}
+                fill="url(#curveGrad)"
+                dot={{ r: 4, fill: curveColor, strokeWidth: 0 }}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </ChartWrapper>
       </div>
 
       {/* Spread histórico */}
       <div>
         <p className="mb-1.5 text-xs text-text-tertiary">Spread 10Y-2Y histórico</p>
-        <ResponsiveContainer width="100%" height={100}>
-          <AreaChart data={history} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-            <defs>
-              <linearGradient id="spreadPos" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={C.green} stopOpacity={0.3} />
-                <stop offset="95%" stopColor={C.green} stopOpacity={0} />
-              </linearGradient>
-              <linearGradient id="spreadNeg" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={C.red} stopOpacity={0.3} />
-                <stop offset="95%" stopColor={C.red} stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke="var(--color-border)"
-              strokeOpacity={0.5}
-            />
-            <XAxis dataKey="date" tick={false} tickLine={false} axisLine={false} />
-            <YAxis
-              tick={{ fontSize: 10 }}
-              tickLine={false}
-              axisLine={false}
-              tickFormatter={(v: number) => `${v.toFixed(1)}`}
-              domain={["auto", "auto"]}
-            />
-            <Tooltip
-              formatter={(value: unknown) => [
-                `${(value as number).toFixed(3)}%`,
-                "Spread 10Y-2Y",
-              ]}
-              contentStyle={{
-                fontSize: 12,
-                border: "1px solid var(--color-border)",
-                borderRadius: 8,
-              }}
-            />
-            <ReferenceLine
-              y={0}
-              stroke={C.red}
-              strokeDasharray="4 2"
-              strokeWidth={1.5}
-            />
-            <Area
-              type="monotone"
-              dataKey="value"
-              stroke={isInverted ? C.red : C.violet}
-              strokeWidth={1.5}
-              fill={isInverted ? "url(#spreadNeg)" : "url(#spreadPos)"}
-            />
-          </AreaChart>
-        </ResponsiveContainer>
+        <ChartWrapper minHeight={100}>
+          <ResponsiveContainer width="100%" height={100}>
+            <AreaChart data={history} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+              <defs>
+                <linearGradient id="spreadPos" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={C.green} stopOpacity={0.3} />
+                  <stop offset="95%" stopColor={C.green} stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="spreadNeg" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={C.red} stopOpacity={0.3} />
+                  <stop offset="95%" stopColor={C.red} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="var(--color-border)"
+                strokeOpacity={0.5}
+              />
+              <XAxis dataKey="date" tick={false} tickLine={false} axisLine={false} />
+              <YAxis
+                tick={{ fontSize: 10 }}
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(v: number) => `${v.toFixed(1)}`}
+                domain={["auto", "auto"]}
+              />
+              <Tooltip
+                formatter={(value: unknown) => [
+                  `${(value as number).toFixed(3)}%`,
+                  "Spread 10Y-2Y",
+                ]}
+                contentStyle={{
+                  fontSize: 12,
+                  border: "1px solid var(--color-border)",
+                  borderRadius: 8,
+                }}
+              />
+              <ReferenceLine
+                y={0}
+                stroke={C.red}
+                strokeDasharray="4 2"
+                strokeWidth={1.5}
+              />
+              <Area
+                type="monotone"
+                dataKey="value"
+                stroke={isInverted ? C.red : C.violet}
+                strokeWidth={1.5}
+                fill={isInverted ? "url(#spreadNeg)" : "url(#spreadPos)"}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </ChartWrapper>
       </div>
 
       {/* Explicación */}

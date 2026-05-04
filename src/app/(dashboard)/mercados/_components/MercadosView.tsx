@@ -25,6 +25,7 @@ import { AssetsDashboard } from "./assets/AssetsDashboard";
 import { PortfolioDashboard } from "./portfolio/PortfolioDashboard";
 import { AlertsFeed } from "./portfolio/AlertsFeed";
 import { AIChatPanel } from "./AIChatPanel";
+import { DailySummary } from "./DailySummary";
 
 interface CachedMetricValue {
   current: number;
@@ -311,9 +312,16 @@ export function MercadosView({ initialTab }: MercadosViewProps) {
         <MarketPulseBar data={pulseData} isLoading={isPulseLoading} />
       </div>
 
+      {/* DailySummary — entre Pulso Global y tabs */}
+      {pulseData && (
+        <div className="animate-fade-in-up" style={{ animationDelay: "75ms" }}>
+          <DailySummary pulseData={pulseData} portfolioData={portfolioData} />
+        </div>
+      )}
+
       {/* Tabs nav */}
       <div
-        className="animate-fade-in-up flex border-b border-border"
+        className="animate-fade-in-up mb-2 flex border-b border-border"
         style={{ animationDelay: "100ms" }}
       >
         {TABS.map(({ id, label, icon: Icon }) => (
@@ -413,7 +421,7 @@ export function MercadosView({ initialTab }: MercadosViewProps) {
                     },
                     {
                       key: "m2",
-                      label: "M2 USA (masa monetaria)",
+                      label: "M2 USA (billones $)",
                       value: `$${pulseData.m2.current}T`,
                       note: "Expansión de M2 históricamente correlaciona con subidas en Bitcoin y activos de riesgo a 12-18 meses.",
                     },
@@ -438,7 +446,13 @@ export function MercadosView({ initialTab }: MercadosViewProps) {
           <MacroDashboard data={macroData} isLoading={isMacroLoading} />
         )}
         {activeTab === "assets" && (
-          <AssetsDashboard data={assetsData} isLoading={isAssetsLoading} />
+          <AssetsDashboard
+            data={assetsData && pulseData ? {
+              ...assetsData,
+              crypto: { ...assetsData.crypto, fearGreed: pulseData.fearGreed.current },
+            } : assetsData}
+            isLoading={isAssetsLoading}
+          />
         )}
         {activeTab === "portfolio" && (
           <PortfolioDashboard data={portfolioData} isLoading={isPortfolioLoading} />

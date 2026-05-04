@@ -12,6 +12,7 @@ import {
   ReferenceLine,
 } from "recharts";
 import type { BenchmarkComparison } from "@/lib/mercados/portfolio-market";
+import { ChartWrapper } from "../ChartWrapper";
 
 interface Props {
   data: BenchmarkComparison | undefined;
@@ -66,8 +67,9 @@ export function BenchmarkChart({ data, isLoading }: Props) {
         Mi Cartera vs Benchmarks
       </p>
 
-      <ResponsiveContainer width="100%" height={220}>
-        <BarChart
+      <ChartWrapper minHeight={220}>
+        <ResponsiveContainer width="100%" height={220}>
+          <BarChart
           data={chartData}
           margin={{ top: 4, right: 4, left: -10, bottom: 0 }}
           barCategoryGap="25%"
@@ -113,8 +115,9 @@ export function BenchmarkChart({ data, isLoading }: Props) {
               radius={[2, 2, 0, 0]}
             />
           ))}
-        </BarChart>
-      </ResponsiveContainer>
+          </BarChart>
+        </ResponsiveContainer>
+      </ChartWrapper>
 
       <p className="text-[11px] text-text-tertiary border-t border-border pt-3 leading-relaxed">
         Los retornos de &ldquo;Mi Cartera&rdquo; son estimaciones basadas en la ponderación por clase de activo.

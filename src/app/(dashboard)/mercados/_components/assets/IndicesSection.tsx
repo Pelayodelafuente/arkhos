@@ -11,6 +11,7 @@ import {
   Legend,
 } from "recharts";
 import type { IndicesData } from "@/lib/mercados/assets";
+import { ChartWrapper } from "../ChartWrapper";
 
 interface Props {
   data: IndicesData;
@@ -135,11 +136,12 @@ export function IndicesSection({ data, isLoading }: Props) {
           Performance comparado (base 100, 1 año)
         </p>
 
-        <ResponsiveContainer width="100%" height={280}>
-          <LineChart
-            data={normalizedHistory}
-            margin={{ top: 4, right: 4, left: -20, bottom: 0 }}
-          >
+        <ChartWrapper minHeight={280}>
+          <ResponsiveContainer width="100%" height={280}>
+            <LineChart
+              data={normalizedHistory}
+              margin={{ top: 4, right: 4, left: -20, bottom: 0 }}
+            >
             <CartesianGrid
               strokeDasharray="3 3"
               stroke="var(--color-border)"
@@ -181,8 +183,9 @@ export function IndicesSection({ data, isLoading }: Props) {
                 connectNulls
               />
             ))}
-          </LineChart>
-        </ResponsiveContainer>
+            </LineChart>
+          </ResponsiveContainer>
+        </ChartWrapper>
       </div>
     </div>
   );

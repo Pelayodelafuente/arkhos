@@ -12,6 +12,7 @@ import {
   Legend,
 } from "recharts";
 import type { MacroData } from "@/lib/mercados/macro";
+import { ChartWrapper } from "../ChartWrapper";
 
 interface Props {
   data: MacroData["m2"];
@@ -21,6 +22,18 @@ const VIOLET = "var(--color-mercados)";
 const AMBER = "var(--color-warning)";
 
 type ViewMode = "level" | "yoy";
+
+function normalizeToBase100(
+  data: Array<{ date: string; value: number }>
+): Array<{ date: string; value: number }> {
+  if (data.length === 0) return [];
+  const base = data[0].value;
+  if (!base) return data;
+  return data.map(d => ({
+    date: d.date,
+    value: parseFloat(((d.value / base) * 100).toFixed(2)),
+  }));
+}
 
 export function M2BitcoinChart({ data }: Props) {
   const [viewMode, setViewMode] = useState<ViewMode>("level");
@@ -34,7 +47,7 @@ export function M2BitcoinChart({ data }: Props) {
   const m2YoYMap = new Map<string, number>();
   m2ByMonthArr.forEach((h, i) => {
     if (i >= 12) {
-      const prev = m2ByMonthArr[i - 12].value;
+      const prev = m2ByMonthArr[i - 12]!.value;
       if (prev !== 0) {
         m2YoYMap.set(
           h.month,
@@ -54,20 +67,48 @@ export function M2BitcoinChart({ data }: Props) {
     .sort()
     .slice(-60);
 
-  const chartData = allMonths.map((month) => ({
+  // Normalized level data
+  const normalizedM2 = normalizeToBase100(
+    allMonths
+      .map(month => ({ date: month, value: m2ByMonth.get(month) ?? 0 }))
+      .filter(d => d.value > 0)
+  );
+  const normalizedBTC = normalizeToBase100(
+    allMonths
+      .map(month => ({ date: month, value: btcByMonth.get(month) ?? 0 }))
+      .filter(d => d.value > 0)
+  );
+  const normalizedM2Map = new Map(normalizedM2.map(d => [d.date, d.value]));
+  const normalizedBTCMap = new Map(normalizedBTC.map(d => [d.date, d.value]));
+
+  const levelChartData = allMonths.map((month) => ({
     month,
-    m2Level: m2ByMonth.get(month) ?? null,
+    m2Level: normalizedM2Map.get(month) ?? null,
+    m2YoY: null as number | null,
+    btc: normalizedBTCMap.get(month) ?? null,
+  }));
+
+  const yoyChartData = allMonths.map((month) => ({
+    month,
+    m2Level: null as number | null,
     m2YoY: m2YoYMap.get(month) ?? null,
     btc: btcByMonth.get(month) ?? null,
   }));
 
+  const chartData = viewMode === "level" ? levelChartData : yoyChartData;
   const m2DataKey = viewMode === "level" ? "m2Level" : "m2YoY";
-  const m2Label = viewMode === "level" ? "M2 (T$)" : "M2 YoY %";
+  const m2Label = viewMode === "level" ? "M2 (base 100)" : "M2 YoY %";
 
   const m2TickFormatter =
     viewMode === "level"
-      ? (v: number) => `$${v.toFixed(1)}T`
+      ? (v: number) => `${v.toFixed(0)}`
       : (v: number) => `${v.toFixed(1)}%`;
+
+  const btcTickFormatter =
+    viewMode === "level"
+      ? (v: number) => `${v.toFixed(0)}`
+      : (v: number) =>
+          v >= 1000 ? `$${(v / 1000).toFixed(0)}K` : `$${v}`;
 
   const yoySign = yoyChange >= 0 ? "+" : "";
 
@@ -87,6 +128,11 @@ export function M2BitcoinChart({ data }: Props) {
               ? "Contracción monetaria — viento en contra para crypto y growth."
               : "M2 estable — contexto neutral."}
         </p>
+        {viewMode === "level" && (
+          <p className="text-[10px] text-text-tertiary mt-1">
+            Ambas series normalizadas a 100 en el punto de inicio — muestra evolución relativa, no valores absolutos.
+          </p>
+        )}
       </div>
 
       {/* Header + toggle */}
@@ -118,69 +164,82 @@ export function M2BitcoinChart({ data }: Props) {
         </div>
       </div>
 
-      <ResponsiveContainer width="100%" height={220}>
-        <ComposedChart data={chartData} margin={{ top: 4, right: 8, left: -10, bottom: 0 }}>
-          <CartesianGrid
-            strokeDasharray="3 3"
-            stroke="var(--color-border)"
-            strokeOpacity={0.5}
-          />
-          <XAxis dataKey="month" tick={false} tickLine={false} axisLine={false} />
-          <YAxis
-            yAxisId="m2"
-            tick={{ fontSize: 10 }}
-            tickLine={false}
-            axisLine={false}
-            tickFormatter={m2TickFormatter}
-            domain={["auto", "auto"]}
-          />
-          <YAxis
-            yAxisId="btc"
-            orientation="right"
-            tick={{ fontSize: 10 }}
-            tickLine={false}
-            axisLine={false}
-            tickFormatter={(v: number) =>
-              v >= 1000 ? `$${(v / 1000).toFixed(0)}K` : `$${v}`
-            }
-            domain={["auto", "auto"]}
-          />
-          <Tooltip
-            formatter={(value: unknown, name: string | number | undefined) => {
-              if (value === null || value === undefined) return ["-", name];
-              const numVal = value as number;
-              if (name === m2Label) return [m2TickFormatter(numVal), name];
-              return [`$${numVal.toLocaleString("en-US")}`, "Bitcoin"];
-            }}
-            contentStyle={{
-              fontSize: 12,
-              border: "1px solid var(--color-border)",
-              borderRadius: 8,
-            }}
-          />
-          <Legend iconType="line" wrapperStyle={{ fontSize: 11, paddingTop: 4 }} />
-          <Line
-            yAxisId="m2"
-            type="monotone"
-            dataKey={m2DataKey}
-            stroke={VIOLET}
-            strokeWidth={2.5}
-            dot={false}
-            name={m2Label}
-            connectNulls
-          />
-          <Line
-            yAxisId="btc"
-            type="monotone"
-            dataKey="btc"
-            stroke={AMBER}
-            strokeWidth={1.5}
-            dot={false}
-            name="Bitcoin"
-            connectNulls
-          />
-        </ComposedChart>
-      </ResponsiveContainer>
+      <ChartWrapper minHeight={220}>
+        <ResponsiveContainer width="100%" height={220}>
+          <ComposedChart data={chartData} margin={{ top: 4, right: 8, left: -10, bottom: 0 }}>
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="var(--color-border)"
+              strokeOpacity={0.5}
+            />
+            <XAxis dataKey="month" tick={false} tickLine={false} axisLine={false} />
+            {viewMode === "level" ? (
+              <YAxis
+                tick={{ fontSize: 10 }}
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(v: number) => `${v.toFixed(0)}`}
+                domain={["auto", "auto"]}
+              />
+            ) : (
+              <>
+                <YAxis
+                  yAxisId="m2"
+                  tick={{ fontSize: 10 }}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={m2TickFormatter}
+                  domain={["auto", "auto"]}
+                />
+                <YAxis
+                  yAxisId="btc"
+                  orientation="right"
+                  tick={{ fontSize: 10 }}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={btcTickFormatter}
+                  domain={["auto", "auto"]}
+                />
+              </>
+            )}
+            <Tooltip
+              formatter={(value: unknown, name: string | number | undefined) => {
+                if (value === null || value === undefined) return ["-", name];
+                const numVal = value as number;
+                if (name === m2Label) return [m2TickFormatter(numVal), name];
+                if (viewMode === "level") return [`${numVal.toFixed(0)}`, "Bitcoin (base 100)"];
+                return [`$${numVal.toLocaleString("en-US")}`, "Bitcoin"];
+              }}
+              contentStyle={{
+                fontSize: 12,
+                border: "1px solid var(--color-border)",
+                borderRadius: 8,
+              }}
+            />
+            <Legend iconType="line" wrapperStyle={{ fontSize: 11, paddingTop: 4 }} />
+            <Line
+              {...(viewMode === "yoy" ? { yAxisId: "m2" } : {})}
+              type="monotone"
+              dataKey={m2DataKey}
+              stroke={VIOLET}
+              strokeWidth={2.5}
+              dot={false}
+              name={m2Label}
+              connectNulls
+            />
+            <Line
+              {...(viewMode === "yoy" ? { yAxisId: "btc" } : {})}
+              type="monotone"
+              dataKey="btc"
+              stroke={AMBER}
+              strokeWidth={1.5}
+              dot={false}
+              name={viewMode === "level" ? "Bitcoin (base 100)" : "Bitcoin"}
+              connectNulls
+            />
+          </ComposedChart>
+        </ResponsiveContainer>
+      </ChartWrapper>
     </div>
   );
 }

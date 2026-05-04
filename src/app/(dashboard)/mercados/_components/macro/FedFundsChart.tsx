@@ -11,6 +11,7 @@ import {
   ReferenceLine,
 } from "recharts";
 import type { MacroData } from "@/lib/mercados/macro";
+import { ChartWrapper } from "../ChartWrapper";
 
 interface Props {
   data: MacroData["fedFunds"];
@@ -51,8 +52,9 @@ export function FedFundsChart({ data }: Props) {
         </div>
       )}
 
-      <ResponsiveContainer width="100%" height={160}>
-        <AreaChart data={history} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+      <ChartWrapper minHeight={160}>
+        <ResponsiveContainer width="100%" height={160}>
+          <AreaChart data={history} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
           <defs>
             <linearGradient id="fedGrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor={VIOLET} stopOpacity={0.2} />
@@ -102,8 +104,9 @@ export function FedFundsChart({ data }: Props) {
             strokeWidth={2}
             fill="url(#fedGrad)"
           />
-        </AreaChart>
-      </ResponsiveContainer>
+          </AreaChart>
+        </ResponsiveContainer>
+      </ChartWrapper>
 
       <p className="text-xs text-text-tertiary border-t border-border pt-3">
         El tipo actual del{" "}

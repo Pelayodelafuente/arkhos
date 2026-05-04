@@ -8,6 +8,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import type { AssetClassAllocation } from "@/lib/mercados/portfolio-market";
+import { ChartWrapper } from "../ChartWrapper";
 
 interface Props {
   data: AssetClassAllocation[];
@@ -73,7 +74,8 @@ export function AssetAllocationChart({ data, isLoading }: Props) {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
         {/* Donut */}
         <div className="flex-shrink-0">
-          <ResponsiveContainer width={180} height={180}>
+          <ChartWrapper minHeight={180}>
+            <ResponsiveContainer width={180} height={180}>
             <PieChart>
               <Pie
                 data={chartData}
@@ -103,7 +105,8 @@ export function AssetAllocationChart({ data, isLoading }: Props) {
                 labelFormatter={(label) => String(label)}
               />
             </PieChart>
-          </ResponsiveContainer>
+            </ResponsiveContainer>
+          </ChartWrapper>
         </div>
 
         {/* Tabla */}

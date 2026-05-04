@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import type { MacroData } from "@/lib/mercados/macro";
+import { ChartWrapper } from "../ChartWrapper";
 
 interface Props {
   data: MacroData["fedBalance"];
@@ -61,8 +62,9 @@ export function FedBalanceChart({ data }: Props) {
         </span>
       </div>
 
-      <ResponsiveContainer width="100%" height={160}>
-        <AreaChart data={history} margin={{ top: 4, right: 4, left: -10, bottom: 0 }}>
+      <ChartWrapper minHeight={160}>
+        <ResponsiveContainer width="100%" height={160}>
+          <AreaChart data={history} margin={{ top: 4, right: 4, left: -10, bottom: 0 }}>
           <defs>
             <linearGradient id="fedBalGrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor={VIOLET} stopOpacity={0.2} />
@@ -100,8 +102,9 @@ export function FedBalanceChart({ data }: Props) {
             strokeWidth={2}
             fill="url(#fedBalGrad)"
           />
-        </AreaChart>
-      </ResponsiveContainer>
+          </AreaChart>
+        </ResponsiveContainer>
+      </ChartWrapper>
 
       <p className="text-xs text-text-tertiary border-t border-border pt-3">
         El balance de la Fed se está{" "}

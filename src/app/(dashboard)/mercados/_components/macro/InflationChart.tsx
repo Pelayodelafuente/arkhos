@@ -12,6 +12,7 @@ import {
   Legend,
 } from "recharts";
 import type { MacroData } from "@/lib/mercados/macro";
+import { ChartWrapper } from "../ChartWrapper";
 
 interface Props {
   cpi: MacroData["cpi"];
@@ -54,8 +55,9 @@ export function InflationChart({ cpi, pce }: Props) {
         </span>
       </div>
 
-      <ResponsiveContainer width="100%" height={180}>
-        <LineChart data={combined} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+      <ChartWrapper minHeight={180}>
+        <ResponsiveContainer width="100%" height={180}>
+          <LineChart data={combined} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
           <CartesianGrid
             strokeDasharray="3 3"
             stroke="var(--color-border)"
@@ -116,8 +118,9 @@ export function InflationChart({ cpi, pce }: Props) {
             connectNulls
           />
           <Legend iconType="line" wrapperStyle={{ fontSize: 11, paddingTop: 4 }} />
-        </LineChart>
-      </ResponsiveContainer>
+          </LineChart>
+        </ResponsiveContainer>
+      </ChartWrapper>
 
       <p className="text-xs text-text-tertiary border-t border-border pt-3">
         CPI en <span className="font-semibold">{cpi.current.toFixed(1)}%</span>,{" "}

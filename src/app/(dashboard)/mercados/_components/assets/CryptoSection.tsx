@@ -8,6 +8,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import type { CryptoData } from "@/lib/mercados/assets";
+import { ChartWrapper } from "../ChartWrapper";
 
 const C = {
   violet: "var(--color-mercados)",
@@ -68,34 +69,36 @@ function Sparkline({
   gradientId: string;
 }) {
   return (
-    <ResponsiveContainer width="100%" height={80}>
-      <AreaChart data={data} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
-        <defs>
-          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor={color} stopOpacity={0.25} />
-            <stop offset="95%" stopColor={color} stopOpacity={0} />
-          </linearGradient>
-        </defs>
-        <XAxis dataKey="date" hide />
-        <Tooltip
-          formatter={(v: unknown) => [`$${(v as number).toLocaleString("en-US")}`, ""]}
-          contentStyle={{
-            fontSize: 12,
-            border: "1px solid var(--color-border)",
-            borderRadius: 8,
-          }}
-          labelFormatter={(label) => String(label)}
-        />
-        <Area
-          type="monotone"
-          dataKey="value"
-          stroke={color}
-          strokeWidth={1.5}
-          fill={`url(#${gradientId})`}
-          dot={false}
-        />
-      </AreaChart>
-    </ResponsiveContainer>
+    <ChartWrapper minHeight={80}>
+      <ResponsiveContainer width="100%" height={80}>
+        <AreaChart data={data} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
+          <defs>
+            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={color} stopOpacity={0.25} />
+              <stop offset="95%" stopColor={color} stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <XAxis dataKey="date" hide />
+          <Tooltip
+            formatter={(v: unknown) => [`$${(v as number).toLocaleString("en-US")}`, ""]}
+            contentStyle={{
+              fontSize: 12,
+              border: "1px solid var(--color-border)",
+              borderRadius: 8,
+            }}
+            labelFormatter={(label) => String(label)}
+          />
+          <Area
+            type="monotone"
+            dataKey="value"
+            stroke={color}
+            strokeWidth={1.5}
+            fill={`url(#${gradientId})`}
+            dot={false}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    </ChartWrapper>
   );
 }
 

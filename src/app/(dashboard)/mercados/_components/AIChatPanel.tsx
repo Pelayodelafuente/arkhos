@@ -77,6 +77,8 @@ export function AIChatPanel({
   const [messages, setMessages] = useState<Message[]>([WELCOME_MESSAGE]);
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const [lastUserMessage, setLastUserMessage] = useState<string>('');
   const [lastWeeklyDate, setLastWeeklyDate] = useState<string | null>(null);
   const [isWeeklyLoading, setIsWeeklyLoading] = useState(false);
 
@@ -118,6 +120,8 @@ export function AIChatPanel({
       const trimmed = content.trim();
       if (!trimmed || isStreaming) return;
 
+      setHasError(false);
+
       const userMsg: Message = {
         id: crypto.randomUUID(),
         role: 'user',
@@ -125,6 +129,7 @@ export function AIChatPanel({
         timestamp: new Date(),
       };
 
+      setLastUserMessage(trimmed);
       setMessages(prev => [...prev, userMsg]);
       setInput('');
       if (textareaRef.current) {
@@ -179,6 +184,7 @@ export function AIChatPanel({
               : m
           )
         );
+        setHasError(true);
       } finally {
         setIsStreaming(false);
       }
@@ -283,7 +289,7 @@ export function AIChatPanel({
     }
   }
 
-  const showQuickActions = messages.length === 1;
+  const showQuickActions = messages.length === 1 || hasError;
 
   return (
     <AnimatePresence>
@@ -304,11 +310,11 @@ export function AIChatPanel({
           {/* Panel */}
           <motion.div
             key="panel"
-            initial={{ x: 420, opacity: 0 }}
+            initial={{ x: 500, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            exit={{ x: 420, opacity: 0 }}
+            exit={{ x: 500, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="fixed right-0 top-0 z-50 flex h-full w-[420px] flex-col border-l border-border bg-white"
+            className="fixed right-0 top-0 z-50 flex h-full w-[500px] flex-col border-l border-border bg-white"
             role="dialog"
             aria-modal="true"
             aria-label="Arkhos Intelligence — Chat IA"
@@ -323,9 +329,12 @@ export function AIChatPanel({
                   <p className="font-heading text-base text-foreground leading-tight">
                     Arkhos Intelligence
                   </p>
-                  <p className="text-[11px] text-text-secondary leading-tight">
-                    Asistente de mercados con contexto real
-                  </p>
+                  <div className="flex items-center gap-1.5">
+                    <span className={`h-1.5 w-1.5 rounded-full ${hasError ? 'bg-red-400' : 'bg-emerald-400'}`} />
+                    <p className="text-[11px] text-text-secondary leading-tight">
+                      {hasError ? 'IA no disponible' : 'Asistente de mercados con contexto real'}
+                    </p>
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-1">
@@ -413,7 +422,20 @@ export function AIChatPanel({
                 </div>
               ))}
 
-              {/* Quick actions — shown only before any user message */}
+              {/* Retry button — shown when there's an error */}
+              {hasError && lastUserMessage && (
+                <div className="flex justify-center mt-2">
+                  <button
+                    onClick={() => void sendMessage(lastUserMessage)}
+                    disabled={isStreaming}
+                    className="flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-100 disabled:opacity-50"
+                  >
+                    ↺ Reintentar
+                  </button>
+                </div>
+              )}
+
+              {/* Quick actions — shown only before any user message or on error */}
               {showQuickActions && (
                 <div className="mt-2">
                   <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-text-secondary">

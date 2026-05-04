@@ -1,8 +1,52 @@
 "use client";
 
 import { Skeleton } from "@/components/ui";
-import { AreaChart, Area, ResponsiveContainer, Tooltip } from "recharts";
+import { AreaChart, Area, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { formatMetricValue, formatChangePct } from "@/lib/mercados/formatters";
+import { Info } from "lucide-react";
+
+const METRIC_EDUCATION: Record<string, { what: string; thresholds: string; impact: string }> = {
+  vix: {
+    what: 'Mide el miedo del mercado de acciones USA. A mayor VIX, más incertidumbre.',
+    thresholds: '0-15: Calma · 15-25: Normal · 25-35: Tensión · +35: Pánico',
+    impact: 'VIX alto puede ser oportunidad de compra a largo plazo. No vendas por impulso.',
+  },
+  fearGreed: {
+    what: 'Sentimiento del mercado crypto (0 = miedo extremo, 100 = codicia extrema).',
+    thresholds: '0-25: Miedo extremo · 25-45: Miedo · 45-55: Neutral · 55-75: Codicia · 75-100: Codicia extrema',
+    impact: 'Comprar en miedo extremo y vender en codicia extrema es históricamente rentable.',
+  },
+  dxy: {
+    what: 'Fortaleza del dólar USA vs una cesta de 6 monedas principales.',
+    thresholds: 'DXY alto (>104) = dólar fuerte = presión sobre crypto, oro y emergentes',
+    impact: 'Tu cartera tiene ~85% en USD. DXY alto puede ser positivo para tus retornos en EUR.',
+  },
+  eurusd: {
+    what: 'Cuántos dólares vale un euro. Clave para tu cartera denominada en USD.',
+    thresholds: 'EUR/USD alto (>1.15) = euro fuerte = tus inversiones USD valen menos en EUR',
+    impact: 'Con EUR/USD en baja, tus activos USD valen más en euros. Favorable si tienes gastos en EUR.',
+  },
+  us10y: {
+    what: 'Rendimiento del bono USA 10 años. Referencia global del coste del dinero.',
+    thresholds: '<3.5%: Dinero barato · 3.5-4.5%: Normal · >4.5%: Dinero caro',
+    impact: 'Tipos altos perjudican acciones growth (NVDA, GOOGL). También baja precio de bonos VDCP.',
+  },
+  gold: {
+    what: 'Precio del oro en dólares por onza troy. Activo refugio en incertidumbre.',
+    thresholds: 'No hay umbrales fijos — importa la tendencia y el ratio Oro/Plata (GSR)',
+    impact: 'Tienes IGLN (ETF de oro físico) en cartera. Cada 1% de subida impacta directamente.',
+  },
+  bitcoin: {
+    what: 'Precio de Bitcoin. Activo de mayor riesgo/retorno del mercado global.',
+    thresholds: 'Sin umbrales fijos. Sigue Fear & Greed y liquidez global (M2) para contexto.',
+    impact: 'BTC correlaciona con liquidez global. Tiende a subir cuando M2 crece.',
+  },
+  m2: {
+    what: 'Cantidad total de dinero en circulación en USA (billetes + depósitos) en billones $.',
+    thresholds: 'Lo importante es el cambio YoY: M2 creciendo >5% YoY históricamente precede subidas en activos de riesgo',
+    impact: 'Cuando la Fed imprime más, Bitcoin y acciones suelen subir 1-2 años después.',
+  },
+};
 
 interface CachedMetricValue {
   current: number;
@@ -79,18 +123,39 @@ export function MarketPulseCard({
   const displayValue = value.current === 0 ? "—" : formatMetricValue(metricId, value.current);
   const historyData = value.history ?? [];
 
+  const sparkValues = historyData.map(h => h.value).filter(v => v > 0);
+  const sparkMin = sparkValues.length > 0 ? Math.min(...sparkValues) : 0;
+  const sparkMax = sparkValues.length > 0 ? Math.max(...sparkValues) : 1;
+  const sparkPad = (sparkMax - sparkMin) * 0.1 || sparkMax * 0.02 || 0.01;
+
   return (
     <div
       className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4 transition-colors hover:bg-background"
       title={description}
     >
-      {/* Top row: label + status dot */}
-      <div className="flex items-center justify-between">
+      {/* Top row: label | info | status dot */}
+      <div className="flex items-center gap-1">
         <span className="font-mono text-[11px] font-medium uppercase tracking-widest text-text-secondary">
           {label}
         </span>
+        {METRIC_EDUCATION[metricId] && (
+          <div className="relative ml-auto mr-1 group">
+            <button className="flex h-4 w-4 items-center justify-center text-text-secondary hover:text-foreground transition-colors">
+              <Info size={11} strokeWidth={1.75} />
+            </button>
+            <div className="absolute right-0 top-5 z-50 hidden group-hover:block w-64 rounded-lg border border-border bg-white p-3 shadow-lg text-[11px] leading-relaxed space-y-2">
+              <p className="text-foreground font-medium">{METRIC_EDUCATION[metricId]!.what}</p>
+              <div className="border-t border-border pt-2">
+                <p className="text-text-tertiary font-mono text-[10px]">{METRIC_EDUCATION[metricId]!.thresholds}</p>
+              </div>
+              <div className="border-t border-border pt-2">
+                <p className="text-text-secondary">{METRIC_EDUCATION[metricId]!.impact}</p>
+              </div>
+            </div>
+          </div>
+        )}
         <span
-          className={`h-2 w-2 rounded-full animate-pulse ${dotClass}`}
+          className={`h-2 w-2 rounded-full animate-pulse ${dotClass} ${METRIC_EDUCATION[metricId] ? '' : 'ml-auto'}`}
           aria-label={`Estado: ${status}`}
         />
       </div>
@@ -128,6 +193,7 @@ export function MarketPulseCard({
                   <stop offset="100%" stopColor="#7260C4" stopOpacity={0} />
                 </linearGradient>
               </defs>
+              <YAxis domain={[sparkMin - sparkPad, sparkMax + sparkPad]} hide />
               <Area
                 type="monotone"
                 dataKey="value"
@@ -154,6 +220,19 @@ export function MarketPulseCard({
           </ResponsiveContainer>
         </div>
       )}
+
+      {/* 14d period change */}
+      {sparkValues.length > 1 && (() => {
+        const first = sparkValues[0]!;
+        const last = sparkValues[sparkValues.length - 1]!;
+        const periodChange = first > 0 ? ((last - first) / first * 100) : 0;
+        const isPos = periodChange >= 0;
+        return (
+          <span className={`font-mono text-[10px] ${isPos ? 'text-emerald-400' : 'text-red-400'}`}>
+            14d: {isPos ? '+' : ''}{periodChange.toFixed(1)}%
+          </span>
+        );
+      })()}
     </div>
   );
 }
