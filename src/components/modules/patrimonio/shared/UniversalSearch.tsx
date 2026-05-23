@@ -21,7 +21,7 @@ const QUICK_ACTIONS: QuickAction[] = [
   { label: "Ver Horos", description: "Fondo activo" },
   { label: "Ver Mintos", description: "P2P lending" },
   { label: "Ver Crypto", description: "Criptomonedas" },
-  { label: "Ir a Fiscalidad", description: "FIFO y plusvalias" },
+  { label: "Ir a Fiscalidad", description: "FIFO y plusvalías" },
 ];
 
 const formatEur = (value: number) =>

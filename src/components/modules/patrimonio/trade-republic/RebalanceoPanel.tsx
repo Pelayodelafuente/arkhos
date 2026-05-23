@@ -125,8 +125,8 @@ export function RebalanceoPanel() {
           </span>
           <span>
             {alertCount === 1
-              ? "1 activo con desviacion superior a ±5 pp"
-              : `${alertCount} activos con desviacion superior a ±5 pp`}
+              ? "1 activo con desviación superior a ±5 pp"
+              : `${alertCount} activos con desviación superior a ±5 pp`}
           </span>
         </div>
       )}
@@ -216,7 +216,7 @@ export function RebalanceoPanel() {
                   </span>
                 </span>
                 <span style={{ color: deviationColor, fontWeight: isAlert ? 700 : 400 }}>
-                  {formatPct(row.deviation, true)} desviacion
+                  {formatPct(row.deviation, true)} desviación
                 </span>
                 <span style={{ color: "var(--text-tertiary)" }}>
                   Objetivo:{" "}
@@ -233,7 +233,7 @@ export function RebalanceoPanel() {
       {/* Footer note */}
       <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
         El peso objetivo se calcula proporcionalmente al importe mensual del plan de ahorro activo.
-        Se muestra alerta cuando la desviacion supera ±5 puntos porcentuales.
+        Se muestra alerta cuando la desviación supera ±5 puntos porcentuales.
       </p>
     </div>
   );

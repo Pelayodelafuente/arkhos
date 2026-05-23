@@ -329,20 +329,22 @@ export function PatrimonioDashboard() {
       : 0;
 
   // Build TR data
-  const { trValue, trInvested, trPL, trPLPct, trPositions } = useMemo(() => {
+  const { trValue, trInvested, trPL, trPLPct, trPositions, trCash } = useMemo(() => {
     const trPlatform = platforms.find((p) => p.slug === "trade-republic");
     if (!trPlatform) {
-      return { trValue: 0, trInvested: 0, trPL: 0, trPLPct: 0, trPositions: 0 };
+      return { trValue: 0, trInvested: 0, trPL: 0, trPLPct: 0, trPositions: 0, trCash: 0 };
     }
-    const trAssets = assets.filter(
-      (a) => a.platform_id === trPlatform.id && a.category !== "cash"
-    );
+    const allTRAssets = assets.filter((a) => a.platform_id === trPlatform.id);
+    const trAssets = allTRAssets.filter((a) => a.category !== "cash");
+    const cash = allTRAssets
+      .filter((a) => a.category === "cash")
+      .reduce((s, a) => s + (a.current_value ?? 0), 0);
     const val = trAssets.reduce((s, a) => s + (a.current_value ?? 0), 0);
     const inv = trAssets.reduce((s, a) => s + a.total_invested, 0);
     const pl = val - inv;
     const plPct = inv > 0 ? (pl / inv) * 100 : 0;
     const pos = trAssets.filter((a) => (a.current_value ?? 0) > 0).length;
-    return { trValue: val, trInvested: inv, trPL: pl, trPLPct: plPct, trPositions: pos };
+    return { trValue: val, trInvested: inv, trPL: pl, trPLPct: plPct, trPositions: pos, trCash: cash };
   }, [assets, platforms]);
 
   type CardDef = Omit<PlatformCardProps, "onClick">;
@@ -359,6 +361,7 @@ export function PatrimonioDashboard() {
       totalInvested: trInvested > 0 ? trInvested : null,
       plAmount: trValue > 0 ? trPL : null,
       plPercentage: trValue > 0 ? trPLPct : null,
+      cashValue: trCash > 0 ? trCash : null,
       sparklineData: sparklines.totalValue,
       positionsCount: trPositions,
       lastUpdated: pricesLastUpdated,

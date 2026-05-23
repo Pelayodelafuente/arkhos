@@ -299,7 +299,7 @@ function TaxLossHarvestingPanel({ trNonCash, totalRealizedThisYear }: TaxLossHar
               style={{ color: canFullyOffset ? "#2E7D6B" : "#A32D2D" }}
             >
               {canFullyOffset
-                ? "Puedes compensar totalmente las ganancias de este ano"
+                ? "Puedes compensar totalmente las ganancias de este año"
                 : `Solo puedes compensar ${formatEur(totalLatentLoss)} de ${formatEur(totalRealizedThisYear)} en ganancias`}
             </p>
           </div>
@@ -314,7 +314,7 @@ function TaxLossHarvestingPanel({ trNonCash, totalRealizedThisYear }: TaxLossHar
             }}
           >
             <p className="text-sm font-medium" style={{ color: "#2E7D6B" }}>
-              Sin ganancias realizadas este ano. Las perdidas latentes podran compensar ganancias futuras hasta 4 anos.
+              Sin ganancias realizadas este año. Las pérdidas latentes podrán compensar ganancias futuras hasta 4 años.
             </p>
           </div>
         )}
@@ -324,7 +324,7 @@ function TaxLossHarvestingPanel({ trNonCash, totalRealizedThisYear }: TaxLossHar
       {candidates.length > 0 ? (
         <div className="rounded-xl border border-border bg-card p-5">
           <h4 className="mb-3 text-sm font-semibold text-foreground">
-            Candidatos a realizar perdidas ({candidates.length})
+            Candidatos a realizar pérdidas ({candidates.length})
           </h4>
           <div className="space-y-3">
             {candidates.map((c) => (
@@ -368,10 +368,10 @@ function TaxLossHarvestingPanel({ trNonCash, totalRealizedThisYear }: TaxLossHar
           style={{ backgroundColor: "var(--bg-card)" }}
         >
           <p className="text-sm font-medium text-foreground">
-            Sin posiciones con perdidas latentes
+            Sin posiciones con pérdidas latentes
           </p>
           <p className="mt-1 text-xs" style={{ color: "var(--text-tertiary)" }}>
-            Todas tus posiciones en TR estan en positivo o son efectivo.
+            Todas tus posiciones en TR están en positivo o son efectivo.
           </p>
         </div>
       )}
@@ -382,10 +382,10 @@ function TaxLossHarvestingPanel({ trNonCash, totalRealizedThisYear }: TaxLossHar
         style={{ backgroundColor: "var(--bg-sand)" }}
       >
         <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
-          Este analisis es orientativo. Consulta con un asesor fiscal antes de tomar decisiones.
+          Este análisis es orientativo. Consulta con un asesor fiscal antes de tomar decisiones.
           La regla de los 2 meses (art. 33.5 LIRPF) impide recomprar el mismo activo (o uno
-          sustancialmente identico) en los 2 meses anteriores o posteriores a la venta con perdida
-          si quieres que esa perdida sea computable en el mismo ejercicio. El ahorro estimado
+          sustancialmente idéntico) en los 2 meses anteriores o posteriores a la venta con pérdida
+          si quieres que esa pérdida sea computable en el mismo ejercicio. El ahorro estimado
           usa el primer tramo IRPF (19%) como referencia simplificada.
         </p>
       </div>

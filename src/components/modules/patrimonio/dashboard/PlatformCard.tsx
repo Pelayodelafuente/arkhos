@@ -19,6 +19,7 @@ export interface PlatformCardProps {
   totalInvested?: number | null;
   plAmount?: number | null;
   plPercentage?: number | null;
+  cashValue?: number | null;
   sparklineData?: number[];
   positionsCount?: number;
   lastUpdated?: string | null;
@@ -89,6 +90,7 @@ export function PlatformCard({
   totalInvested,
   plAmount,
   plPercentage,
+  cashValue,
   sparklineData,
   positionsCount,
   lastUpdated,
@@ -192,9 +194,23 @@ export function PlatformCard({
               />
               {positionsCount !== undefined && positionsCount > 0 && (
                 <span className="text-xs text-muted-foreground">
-                  {positionsCount} posiciones
+                  <span className="font-mono">{positionsCount}</span> posiciones
                 </span>
               )}
+            </div>
+          )}
+
+          {cashValue !== null && cashValue !== undefined && cashValue > 0 && (
+            <div className="mt-1.5 flex items-center gap-1.5">
+              <span
+                className="rounded px-1.5 py-0.5 text-xs"
+                style={{
+                  backgroundColor: "rgba(160,120,80,0.08)",
+                  color: "var(--text-tertiary)",
+                }}
+              >
+                Efectivo <span className="font-mono">{formatEur(cashValue)}</span>
+              </span>
             </div>
           )}
 

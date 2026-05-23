@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { RefreshCw, EyeOff, Eye, CalendarClock } from "lucide-react";
+import { RefreshCw, CalendarClock } from "lucide-react";
 import { usePatrimonioPrices } from "@/lib/hooks/use-patrimonio-prices";
 import { useToast } from "@/stores/ui-store";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
@@ -21,8 +21,6 @@ export function PriceStatusBanner() {
   const { lastUpdated, refreshPrices, isRefreshing } = usePatrimonioPrices();
   const toast = useToast();
   const router = useRouter();
-  const privacyMode = usePatrimonioStore((s) => s.privacyMode);
-  const togglePrivacyMode = usePatrimonioStore((s) => s.togglePrivacyMode);
 
   const [cooldown, setCooldown] = useState(0);
   const [isLoadingHistorical, setIsLoadingHistorical] = useState(false);
@@ -102,24 +100,6 @@ export function PriceStatusBanner() {
     ? "Actualizar"
     : "Obtener precios";
 
-  const privacyBtn = (
-    <button
-      type="button"
-      onClick={togglePrivacyMode}
-      className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors"
-      style={{
-        backgroundColor: privacyMode ? "rgba(91,140,106,0.12)" : "transparent",
-        color: privacyMode ? "var(--module-patrimonio)" : "var(--text-tertiary)",
-        border: `1px solid ${privacyMode ? "rgba(91,140,106,0.3)" : "var(--border)"}`,
-      }}
-      aria-label={privacyMode ? "Mostrar cifras" : "Ocultar cifras"}
-      title={privacyMode ? "Mostrar cifras" : "Modo privacidad: ocultar cifras"}
-    >
-      {privacyMode ? <Eye size={11} strokeWidth={2} aria-hidden="true" /> : <EyeOff size={11} strokeWidth={2} aria-hidden="true" />}
-      {privacyMode ? "Mostrar" : "Privacidad"}
-    </button>
-  );
-
   const refreshBtn = (
     <button
       type="button"
@@ -177,7 +157,7 @@ export function PriceStatusBanner() {
         style={{ backgroundColor: "var(--bg-sand)", border: "1px solid var(--border)" }}
       >
         <span className="text-text-tertiary">Sin precios</span>
-        <div className="ml-auto flex items-center gap-2">{privacyBtn}{historicalBtn}{refreshBtn}</div>
+        <div className="ml-auto flex items-center gap-2">{historicalBtn}{refreshBtn}</div>
       </div>
     );
   }
@@ -201,7 +181,7 @@ export function PriceStatusBanner() {
       <span className="text-text-secondary font-medium">
         Precios del {formatDateTime(lastUpdated)}
       </span>
-      <div className="ml-auto flex items-center gap-2">{privacyBtn}{historicalBtn}{refreshBtn}</div>
+      <div className="ml-auto flex items-center gap-2">{historicalBtn}{refreshBtn}</div>
     </div>
   );
 }

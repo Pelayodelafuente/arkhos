@@ -86,11 +86,11 @@ export function PlatformDistributionBar() {
   const segments = useMemo((): PlatformSegment[] => {
     return PLATFORM_CONFIG.map((cfg) => {
       if (cfg.slug === "trade-republic") {
-        // Incluimos cash para que el total coincida con el header
+        // Solo carteraInvertida — el efectivo se muestra en la card como sub-badge
         const platform = trPlatforms.find((p) => p.slug === "trade-republic");
         const value = platform
           ? trAssets
-              .filter((a) => a.platform_id === platform.id)
+              .filter((a) => a.platform_id === platform.id && a.category !== "cash")
               .reduce((s, a) => s + (a.current_value ?? 0), 0)
           : 0;
         const plAmount = trOverview?.pl_amount ?? null;

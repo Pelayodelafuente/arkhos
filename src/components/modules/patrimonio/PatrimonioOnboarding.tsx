@@ -43,7 +43,7 @@ export function PatrimonioOnboarding() {
         Tu centro de mando financiero
       </h1>
       <p className="mt-3 max-w-md text-sm text-text-secondary">
-        Conecta tus plataformas de inversion y ten una vision completa de tu patrimonio en tiempo
+        Conecta tus plataformas de inversión y ten una visión completa de tu patrimonio en tiempo
         real.
       </p>
 

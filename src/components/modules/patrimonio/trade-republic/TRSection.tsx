@@ -6,6 +6,7 @@ import { Landmark, Banknote, BarChart2, TrendingUp, TrendingDown } from "lucide-
 import { PlatformLayout } from "@/components/modules/patrimonio/shared/PlatformLayout";
 import { TRDashboard } from "@/components/modules/patrimonio/trade-republic/TRDashboard";
 import { PLBadge } from "@/components/modules/patrimonio/shared/PLBadge";
+import { Skeleton } from "@/components/ui";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 
 const formatEur = (value: number) =>
@@ -56,6 +57,8 @@ function TRSectionKPIs() {
   const assets = usePatrimonioStore((s) => s.assets);
   const platforms = usePatrimonioStore((s) => s.platforms);
 
+  const isLoading = platforms.length === 0;
+
   const { cashValue, portfolioValue, portfolioInvested, portfolioPL, portfolioPLPct } =
     useMemo(() => {
       const trPlatform = platforms.find((p) => p.slug === "trade-republic");
@@ -83,6 +86,19 @@ function TRSectionKPIs() {
     }, [assets, platforms]);
 
   const plColor = portfolioPL >= 0 ? "var(--platform-tr)" : "#A32D2D";
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="rounded-xl p-4" style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-stone)" }}>
+            <Skeleton className="h-3 w-20 rounded mb-3" />
+            <Skeleton className="h-7 w-28 rounded" />
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">

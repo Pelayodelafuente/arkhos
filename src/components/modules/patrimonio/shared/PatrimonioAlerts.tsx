@@ -7,7 +7,9 @@ import { usePatrimonioStore } from "@/stores/patrimonio-store";
 interface Alert {
   id: string;
   type: "warning" | "info";
-  message: string;
+  label: string;
+  monoValue?: string;
+  labelSuffix?: string;
 }
 
 export function PatrimonioAlerts() {
@@ -20,20 +22,36 @@ export function PatrimonioAlerts() {
   const alerts = useMemo<Alert[]>(() => {
     const result: Alert[] = [];
 
-    // ── Alerta 1: Concentración alta ────────────────────────────────────────
-    const totalPatrimonio = assets.reduce((sum, a) => sum + (a.current_value ?? 0), 0);
+    // ── Alerta 1: Concentración alta (sobre carteraInvertida, sin efectivo) ──
+    const investedAssets = assets.filter((a) => a.category !== "cash");
+    const totalInvested = investedAssets.reduce((sum, a) => sum + (a.current_value ?? 0), 0);
 
-    if (totalPatrimonio > 0) {
-      assets.forEach((asset) => {
-        const pct = (asset.current_value ?? 0) / totalPatrimonio;
+    if (totalInvested > 0) {
+      investedAssets.forEach((asset) => {
+        const pct = (asset.current_value ?? 0) / totalInvested;
         if (pct > 0.25) {
-          const pctLabel = (pct * 100).toFixed(0);
           result.push({
             id: `concentration-${asset.id}`,
             type: "warning",
-            message: `Concentración alta en ${asset.name} (${pctLabel}% del patrimonio)`,
+            label: `Concentración alta en ${asset.name}`,
+            monoValue: `${(pct * 100).toFixed(0)}% de la cartera`,
           });
         }
+      });
+    }
+
+    // ── Nota: liquidez elevada ────────────────────────────────────────────────
+    const totalCash = assets
+      .filter((a) => a.category === "cash")
+      .reduce((sum, a) => sum + (a.current_value ?? 0), 0);
+    const totalPatrimonio = totalInvested + totalCash;
+    if (totalPatrimonio > 0 && totalCash / totalPatrimonio > 0.4) {
+      result.push({
+        id: "high-cash",
+        type: "info",
+        label: "Liquidez elevada:",
+        monoValue: `${((totalCash / totalPatrimonio) * 100).toFixed(0)}%`,
+        labelSuffix: "del patrimonio en efectivo",
       });
     }
 
@@ -68,7 +86,9 @@ export function PatrimonioAlerts() {
           result.push({
             id: `savings-plan-pending-${currentYear}-${currentMonth}`,
             type: "info",
-            message: `Plan de ${monthName} pendiente — ${pendingCount} ${pendingCount === 1 ? "activo sin registrar" : "activos sin registrar"}`,
+            label: `Plan de ${monthName} pendiente —`,
+            monoValue: String(pendingCount),
+            labelSuffix: pendingCount === 1 ? "activo sin registrar" : "activos sin registrar",
           });
         }
       }
@@ -106,7 +126,13 @@ export function PatrimonioAlerts() {
                 }
           }
         >
-          <span>{alert.message}</span>
+          <span>
+            {alert.label}
+            {alert.monoValue && (
+              <span className="font-mono mx-1">{alert.monoValue}</span>
+            )}
+            {alert.labelSuffix}
+          </span>
           <button
             type="button"
             onClick={() => dismiss(alert.id)}

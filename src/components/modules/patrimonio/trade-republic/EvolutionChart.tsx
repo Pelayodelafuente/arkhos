@@ -86,7 +86,7 @@ interface EvolutionPointExtended extends EvolutionPoint {
   isToday?: boolean;
   benchmark?: number;
   totalValue?: number; // portfolio value including cash (E-01)
-  periodChangePct?: number; // % change since start of selected period (UX-01)
+  periodChangePct?: number | null; // rentabilidad acumulada: P&L / capital_invertido (PAT-02)
 }
 
 interface TooltipPayloadItem {
@@ -262,13 +262,12 @@ export function EvolutionChart({ height = 300, showBenchmark = false, showTotal:
       }
     }
 
-    // Compute period % change from first point (UX-01)
-    const firstValue = base[0]?.value ?? 0;
-    if (firstValue > 0) {
-      base.forEach((p) => {
-        p.periodChangePct = ((p.value - firstValue) / firstValue) * 100;
-      });
-    }
+    // Rentabilidad acumulada = P&L / capital_invertido (PAT-02, PAT-03)
+    // No se usa el primer punto como base porque produce % inflados cuando
+    // el capital inicial es pequeño y el signo puede contradecir el P&L.
+    base.forEach((p) => {
+      p.periodChangePct = p.invested > 0 ? ((p.value - p.invested) / p.invested) * 100 : null;
+    });
 
     // Compute cash-flow-adjusted MSCI World benchmark
     if (!showBenchmark || base.length === 0) return base;

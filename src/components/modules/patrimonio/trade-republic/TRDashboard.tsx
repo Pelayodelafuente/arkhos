@@ -284,7 +284,7 @@ export function TRDashboard() {
               Seguimiento del rebalanceo
             </h3>
             <p className="mb-4 text-xs text-text-tertiary">
-              Peso actual vs objetivo del plan de ahorro activo. Alerta si la desviacion supera ±5 pp.
+              Peso actual vs objetivo del plan de ahorro activo. Alerta si la desviación supera ±5 pp.
             </p>
             <RebalanceoPanel />
           </div>
