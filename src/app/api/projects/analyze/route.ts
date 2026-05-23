@@ -1,12 +1,19 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod/v4';
 import { createClient } from '@/lib/supabase/server';
+import { rateLimit } from '@/lib/rate-limit';
 
-interface AnalyzeRequestBody {
-  projectData: string;
-}
+const analyzeSchema = z.object({
+  projectData: z.string().min(1).max(20000),
+});
 
 export async function POST(req: NextRequest) {
+  const { success } = await rateLimit(req, { limit: 10, window: 60 });
+  if (!success) {
+    return NextResponse.json({ error: 'Demasiadas peticiones. Espera un momento.' }, { status: 429 });
+  }
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
@@ -21,9 +28,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  let body: AnalyzeRequestBody;
+  let rawBody: unknown;
   try {
-    body = (await req.json()) as AnalyzeRequestBody;
+    rawBody = await req.json();
   } catch {
     return NextResponse.json(
       { error: 'Cuerpo de petición inválido' },
@@ -31,12 +38,15 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (!body.projectData || typeof body.projectData !== 'string') {
+  const parsed = analyzeSchema.safeParse(rawBody);
+  if (!parsed.success) {
     return NextResponse.json(
-      { error: 'projectData es requerido' },
+      { error: 'Datos de entrada inválidos' },
       { status: 400 }
     );
   }
+
+  const { projectData } = parsed.data;
 
   const client = new Anthropic({ apiKey });
 
@@ -47,7 +57,7 @@ export async function POST(req: NextRequest) {
     '3. Sugerencias concretas para avanzar\n' +
     'Sé conciso y directo. Responde en español. Máximo 300 palabras.';
 
-  const userMessage = `Analiza este proyecto:\n\n${body.projectData}`;
+  const userMessage = `Analiza este proyecto:\n\n${projectData}`;
 
   try {
     const stream = client.messages.stream({
@@ -73,16 +83,16 @@ export async function POST(req: NextRequest) {
             // Parse the SSE event from the raw stream
             const chunk = decoder.decode(value, { stream: true });
             try {
-              const parsed = JSON.parse(chunk) as {
+              const event = JSON.parse(chunk) as {
                 type: string;
                 delta?: { type: string; text?: string };
               };
               if (
-                parsed.type === 'content_block_delta' &&
-                parsed.delta?.type === 'text_delta' &&
-                parsed.delta.text
+                event.type === 'content_block_delta' &&
+                event.delta?.type === 'text_delta' &&
+                event.delta.text
               ) {
-                controller.enqueue(encoder.encode(parsed.delta.text));
+                controller.enqueue(encoder.encode(event.delta.text));
               }
             } catch {
               // Raw text chunk — some SDK versions emit text directly

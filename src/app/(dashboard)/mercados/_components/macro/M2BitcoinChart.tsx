@@ -140,7 +140,7 @@ export function M2BitcoinChart({ data }: Props) {
         <div className="flex items-center gap-2">
           <p className="text-sm font-medium text-text-secondary">M2 USA vs Bitcoin</p>
           <span className="font-mono text-xs text-text-tertiary">
-            ${current.toFixed(1)}T · YoY{" "}
+            ${current.toFixed(1).replace('.', ',')} T · YoY{" "}
             <span className={yoyChange >= 0 ? "text-green-600" : "text-red-600"}>
               {yoySign}{yoyChange.toFixed(1)}%
             </span>

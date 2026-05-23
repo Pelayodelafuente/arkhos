@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   BarChart,
@@ -74,9 +74,28 @@ export function IndexaProjectionSimulator({
   getProjection,
   defaultMonthlyContrib = 152,
 }: IndexaProjectionSimulatorProps) {
-  const [years, setYears] = useState<YearOption>(10);
-  const [annualReturn, setAnnualReturn] = useState(8);
-  const [monthlyContrib, setMonthlyContrib] = useState(defaultMonthlyContrib);
+  const [years, setYears] = useState<YearOption>(() => {
+    if (typeof window === "undefined") return 10;
+    const stored = localStorage.getItem("arkhos_sim_indexa_years");
+    const parsed = Number(stored) as YearOption;
+    return stored !== null && (YEAR_OPTIONS as readonly number[]).includes(parsed) ? parsed : 10;
+  });
+
+  const [annualReturn, setAnnualReturn] = useState<number>(() => {
+    if (typeof window === "undefined") return 8;
+    const stored = localStorage.getItem("arkhos_sim_indexa_rate");
+    return stored !== null ? Number(stored) : 8;
+  });
+
+  const [monthlyContrib, setMonthlyContrib] = useState<number>(() => {
+    if (typeof window === "undefined") return defaultMonthlyContrib;
+    const stored = localStorage.getItem("arkhos_sim_indexa_monthly");
+    return stored !== null ? Number(stored) : defaultMonthlyContrib;
+  });
+
+  useEffect(() => { localStorage.setItem("arkhos_sim_indexa_years", String(years)); }, [years]);
+  useEffect(() => { localStorage.setItem("arkhos_sim_indexa_rate", String(annualReturn)); }, [annualReturn]);
+  useEffect(() => { localStorage.setItem("arkhos_sim_indexa_monthly", String(monthlyContrib)); }, [monthlyContrib]);
 
   const projection = getProjection(years, annualReturn, monthlyContrib);
   const lastPoint = projection[projection.length - 1];

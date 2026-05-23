@@ -131,12 +131,13 @@ const TYPE_CLASSES: Record<SummaryType, string> = {
 };
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('es-ES', {
+  const raw = new Date(iso).toLocaleDateString('es-ES', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
     year: 'numeric',
   });
+  return raw.charAt(0).toUpperCase() + raw.slice(1);
 }
 
 function timeAgo(iso: string): string {
@@ -160,7 +161,7 @@ export function DailySummary({ pulseData, portfolioData }: DailySummaryProps) {
           Estado hoy
         </span>
         <span className="text-[11px] text-text-tertiary">·</span>
-        <span className="text-[11px] text-text-tertiary capitalize">
+        <span className="text-[11px] text-text-tertiary">
           {formatDate(pulseData.fetchedAt)}
         </span>
         <span className="ml-auto text-[10px] text-text-tertiary">

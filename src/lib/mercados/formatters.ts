@@ -17,7 +17,7 @@ export function formatMetricValue(metricId: string, value: number): string {
     case 'bitcoin':
       return `$${value.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
     case 'm2':
-      return `${value.toFixed(1)}T`;
+      return `$${value.toFixed(1).replace('.', ',')} T`;
     default:
       return value.toString();
   }

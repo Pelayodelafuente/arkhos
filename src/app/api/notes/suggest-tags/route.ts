@@ -1,14 +1,21 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod/v4'
 import { createClient } from '@/lib/supabase/server'
+import { rateLimit } from '@/lib/rate-limit'
 
-interface SuggestTagsRequestBody {
-  title: string
-  content: string
-  existingTags: string[]
-}
+const suggestTagsSchema = z.object({
+  title: z.string().max(500).optional().default(''),
+  content: z.string().max(50000).optional().default(''),
+  existingTags: z.array(z.string().max(50)).max(100).optional().default([]),
+})
 
 export async function POST(req: NextRequest) {
+  const { success } = await rateLimit(req, { limit: 10, window: 60 })
+  if (!success) {
+    return NextResponse.json({ error: 'Demasiadas peticiones. Espera un momento.' }, { status: 429 })
+  }
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
@@ -20,15 +27,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 
-  let body: SuggestTagsRequestBody
+  let rawBody: unknown
   try {
-    body = (await req.json()) as SuggestTagsRequestBody
+    rawBody = await req.json()
   } catch {
     return NextResponse.json({ error: 'Cuerpo de petición inválido' }, { status: 400 })
   }
 
-  const plainText = (body.content ?? '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
-  const existing = Array.isArray(body.existingTags) ? body.existingTags : []
+  const parsed = suggestTagsSchema.safeParse(rawBody)
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Datos de entrada inválidos' }, { status: 400 })
+  }
+
+  const { title, content, existingTags } = parsed.data
+
+  const plainText = content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+  const existing = existingTags
 
   const client = new Anthropic({ apiKey })
 
@@ -38,8 +52,8 @@ export async function POST(req: NextRequest) {
     (existing.length > 0 ? `No repitas estas etiquetas ya existentes: ${existing.join(', ')}. ` : '') +
     'Responde ÚNICAMENTE con JSON válido en este formato exacto: {"tags": ["tag1", "tag2", "tag3"]}'
 
-  const userMessage = body.title
-    ? `Título: ${body.title}\n\n${plainText.slice(0, 2000)}`
+  const userMessage = title
+    ? `Título: ${title}\n\n${plainText.slice(0, 2000)}`
     : plainText.slice(0, 2000)
 
   try {
@@ -58,9 +72,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ tags: [] })
     }
 
-    const parsed = JSON.parse(jsonMatch[0]) as { tags?: unknown }
-    const tags = Array.isArray(parsed.tags)
-      ? (parsed.tags as unknown[])
+    const jsonParsed = JSON.parse(jsonMatch[0]) as { tags?: unknown }
+    const tags = Array.isArray(jsonParsed.tags)
+      ? (jsonParsed.tags as unknown[])
           .filter((t): t is string => typeof t === 'string' && t.length > 0)
           .filter((t) => !existing.includes(t))
           .slice(0, 5)

@@ -44,15 +44,18 @@ export function InflationChart({ cpi, pce }: Props) {
     <div className="rounded-xl border border-border bg-card p-5 space-y-4">
       <div className="flex items-start justify-between gap-3">
         <p className="text-sm font-medium text-text-secondary">Inflación USA</p>
-        <span
-          className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium ${badgeColor}`}
-        >
-          CPI{" "}
-          <span className="font-mono font-bold">{cpi.current.toFixed(1)}%</span>
-          {" · "}
-          PCE Core{" "}
-          <span className="font-mono font-bold">{pce.current.toFixed(1)}%</span>
-        </span>
+        <div className="flex items-center gap-1.5">
+          <span
+            className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium ${badgeColor}`}
+          >
+            CPI general{" "}
+            <span className="font-mono font-bold">{cpi.current.toFixed(1)}%</span>
+          </span>
+          <span className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-0.5 text-xs font-medium text-text-secondary">
+            PCE Core{" "}
+            <span className="font-mono font-bold">{pce.current.toFixed(1)}%</span>
+          </span>
+        </div>
       </div>
 
       <ChartWrapper minHeight={180}>
@@ -123,7 +126,7 @@ export function InflationChart({ cpi, pce }: Props) {
       </ChartWrapper>
 
       <p className="text-xs text-text-tertiary border-t border-border pt-3">
-        CPI en <span className="font-semibold">{cpi.current.toFixed(1)}%</span>,{" "}
+        CPI general en <span className="font-semibold">{cpi.current.toFixed(1)}%</span>,{" "}
         <span className="font-semibold">
           {Math.abs(cpi.vsTarget).toFixed(1)} pp{" "}
           {aboveTarget ? "por encima" : "por debajo"}

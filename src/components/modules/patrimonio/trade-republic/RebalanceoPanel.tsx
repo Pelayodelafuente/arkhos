@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import Link from "next/link";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 
 // ---------------------------------------------------------------------------
@@ -235,6 +236,17 @@ export function RebalanceoPanel() {
         El peso objetivo se calcula proporcionalmente al importe mensual del plan de ahorro activo.
         Se muestra alerta cuando la desviación supera ±5 puntos porcentuales.
       </p>
+
+      {/* Link to Mi Cartera in Mercados */}
+      <div className="flex justify-end">
+        <Link
+          href="/mercados?tab=portfolio"
+          className="text-xs font-medium transition-colors"
+          style={{ color: "var(--module-patrimonio)" }}
+        >
+          Editar objetivos en Mi Cartera →
+        </Link>
+      </div>
     </div>
   );
 }

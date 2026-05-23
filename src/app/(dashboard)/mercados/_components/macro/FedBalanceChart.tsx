@@ -52,7 +52,7 @@ export function FedBalanceChart({ data }: Props) {
         <div>
           <p className="text-sm font-medium text-text-secondary">Balance de la Fed</p>
           <p className="font-mono text-2xl font-bold text-foreground mt-0.5">
-            ${current.toFixed(2)}T
+            ${current.toFixed(2).replace('.', ',')} T
           </p>
         </div>
         <span
@@ -81,12 +81,12 @@ export function FedBalanceChart({ data }: Props) {
             tick={{ fontSize: 10 }}
             tickLine={false}
             axisLine={false}
-            tickFormatter={(v: number) => `$${v.toFixed(1)}T`}
+            tickFormatter={(v: number) => `$${v.toFixed(1).replace('.', ',')} T`}
             domain={["auto", "auto"]}
           />
           <Tooltip
             formatter={(value: unknown) => [
-              `$${(value as number).toFixed(2)}T`,
+              `$${(value as number).toFixed(2).replace('.', ',')} T`,
               "Balance Fed",
             ]}
             contentStyle={{

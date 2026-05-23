@@ -23,11 +23,11 @@ function Skeleton({ className = "" }: { className?: string }) {
   return <div className={`rounded-xl border border-border bg-card animate-pulse ${className}`} />;
 }
 
-const COLORS = {
-  portfolio: "var(--color-mercados)",
-  sp500:     "#60A5FA",
-  msciWorld: "#34D399",
-  nasdaq:    "#F87171",
+const COLORS: Record<string, string> = {
+  "Mi Cartera": "#C4704A",
+  "S&P 500":    "#3B78B0",
+  "MSCI World": "#2E7D6B",
+  "NASDAQ":     "#E67E22",
 };
 
 export function BenchmarkChart({ data, isLoading }: Props) {
@@ -54,12 +54,6 @@ export function BenchmarkChart({ data, isLoading }: Props) {
   ];
 
   const barKeys = ["Mi Cartera", ...data.benchmarks.map(b => b.label)];
-  const barColors = [
-    COLORS.portfolio,
-    COLORS.sp500,
-    COLORS.msciWorld,
-    COLORS.nasdaq,
-  ];
 
   return (
     <div className="rounded-xl border border-border bg-card p-5 space-y-4">
@@ -107,11 +101,11 @@ export function BenchmarkChart({ data, isLoading }: Props) {
           />
           <ReferenceLine y={0} stroke="var(--color-border)" strokeWidth={1} />
           <Legend wrapperStyle={{ fontSize: 11 }} />
-          {barKeys.map((key, i) => (
+          {barKeys.map((key) => (
             <Bar
               key={key}
               dataKey={key}
-              fill={barColors[i] ?? "var(--color-border)"}
+              fill={COLORS[key] ?? "var(--color-border)"}
               radius={[2, 2, 0, 0]}
             />
           ))}

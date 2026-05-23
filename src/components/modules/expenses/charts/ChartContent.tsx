@@ -14,7 +14,7 @@ export default function ChartContent() {
   const subscriptions = useExpensesStore((s) => s.subscriptions)
 
   const active = useMemo(
-    () => subscriptions.filter((s) => s.status === 'active'),
+    () => subscriptions.filter((s) => s.status === 'active' || s.status === 'trial'),
     [subscriptions]
   )
 

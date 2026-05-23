@@ -493,6 +493,7 @@ export async function createProject(
     .insert({
       user_id: userId,
       name: input.name,
+      description: input.description ?? null,
       icon: input.icon ?? 'Box',
       type: input.type ?? 'Web',
       status: input.status ?? 'Idea',

@@ -32,10 +32,11 @@ async function getUS10Y(forceRefresh = false): Promise<CachedMetric['value']> {
   const latest = history[history.length - 1];
   const prev = history[history.length - 2];
 
+  const absDiff = parseFloat((latest.value - prev.value).toFixed(3));
   const value: CachedMetric['value'] = {
     current: latest.value,
-    change24h: latest.value - prev.value,
-    changePct24h: ((latest.value - prev.value) / prev.value) * 100,
+    change24h: absDiff,
+    changePct24h: absDiff,
     history: history.slice(-14),
   };
 

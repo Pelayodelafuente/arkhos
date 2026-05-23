@@ -422,7 +422,7 @@ export function MercadosView({ initialTab }: MercadosViewProps) {
                     {
                       key: "m2",
                       label: "M2 USA (billones $)",
-                      value: `$${pulseData.m2.current}T`,
+                      value: `$${pulseData.m2.current.toFixed(1).replace('.', ',')} T`,
                       note: "Expansión de M2 históricamente correlaciona con subidas en Bitcoin y activos de riesgo a 12-18 meses.",
                     },
                   ] as const

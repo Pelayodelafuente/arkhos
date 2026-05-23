@@ -231,6 +231,29 @@ export function SankeyDiagram() {
       .attr("rx", 2)
       .attr("opacity", 0.9);
 
+    // Node tooltips (title element for native browser tooltip on hover)
+    svg
+      .append("g")
+      .selectAll("rect.tooltip-target")
+      .data(nodes)
+      .enter()
+      .append("rect")
+      .attr("x", (d) => (d as { x0: number }).x0)
+      .attr("y", (d) => (d as { y0: number }).y0)
+      .attr("height", (d) =>
+        Math.max(1, (d as { y1: number; y0: number }).y1 - (d as { y0: number }).y0)
+      )
+      .attr("width", (d) => (d as { x1: number; x0: number }).x1 - (d as { x0: number }).x0)
+      .attr("fill", "transparent")
+      .attr("class", "tooltip-target")
+      .append("title")
+      .text((d) => {
+        const node = d as { name: string; value?: number };
+        const val = node.value ?? 0;
+        const fmt = new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
+        return `${node.name}: ${fmt.format(val)}`;
+      });
+
     // Labels
     svg
       .append("g")
@@ -254,7 +277,7 @@ export function SankeyDiagram() {
         "text-anchor",
         (d) => ((d as { x0: number }).x0 < W / 2 ? "start" : "end")
       )
-      .attr("font-size", 10)
+      .attr("font-size", 12)
       .attr("fill", "var(--text-secondary)")
       .text((d) => (d as { name: string }).name);
   }, [graphData]);

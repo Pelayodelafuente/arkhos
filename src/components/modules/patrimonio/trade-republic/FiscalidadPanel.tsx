@@ -1,8 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import type { PortfolioTransaction, PortfolioAsset } from "@/types/patrimonio";
+
+type TLHStatusValue = "pendiente" | "revisado" | "aplicado";
 
 const formatEur = (value: number) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
@@ -194,7 +196,44 @@ interface TaxLossHarvestingProps {
   totalRealizedThisYear: number;
 }
 
+const TLH_STATUS_LABELS: Record<TLHStatusValue, string> = {
+  pendiente: "Pendiente",
+  revisado: "Revisado",
+  aplicado: "Aplicado",
+};
+
+const TLH_STATUS_COLORS: Record<TLHStatusValue, { bg: string; text: string }> = {
+  pendiente: { bg: "rgba(163,45,45,0.10)", text: "#A32D2D" },
+  revisado: { bg: "rgba(176,122,58,0.12)", text: "#B07A3A" },
+  aplicado: { bg: "rgba(46,125,107,0.10)", text: "#2E7D6B" },
+};
+
+const TLH_STATUS_OPTIONS: TLHStatusValue[] = ["pendiente", "revisado", "aplicado"];
+
 function TaxLossHarvestingPanel({ trNonCash, totalRealizedThisYear }: TaxLossHarvestingProps) {
+  const [tlhStatus, setTlhStatus] = useState<Record<string, TLHStatusValue>>(() => {
+    if (typeof window === "undefined") return {};
+    try {
+      return JSON.parse(localStorage.getItem("arkhos_tlh_status") ?? "{}") as Record<string, TLHStatusValue>;
+    } catch {
+      return {};
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem("arkhos_tlh_status", JSON.stringify(tlhStatus));
+  }, [tlhStatus]);
+
+  function cycleStatus(id: string) {
+    setTlhStatus((prev) => {
+      const current = prev[id] ?? "pendiente";
+      const currentIdx = TLH_STATUS_OPTIONS.indexOf(current);
+      const nextIdx = (currentIdx + 1) % TLH_STATUS_OPTIONS.length;
+      const next: TLHStatusValue = TLH_STATUS_OPTIONS[nextIdx] ?? "pendiente";
+      return { ...prev, [id]: next };
+    });
+  }
+
   const candidates: TLHCandidate[] = trNonCash
     .filter((a) => (a.pl_amount ?? 0) < 0)
     .map((a) => {
@@ -327,39 +366,52 @@ function TaxLossHarvestingPanel({ trNonCash, totalRealizedThisYear }: TaxLossHar
             Candidatos a realizar pérdidas ({candidates.length})
           </h4>
           <div className="space-y-3">
-            {candidates.map((c) => (
-              <div
-                key={c.id}
-                className="flex items-center justify-between gap-3 border-b border-border/50 pb-3 last:border-0 last:pb-0"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <span
-                    className="shrink-0 rounded-md px-2 py-0.5 text-xs font-semibold"
-                    style={{
-                      backgroundColor: "rgba(163,45,45,0.12)",
-                      color: "#A32D2D",
-                      fontFamily: "var(--font-mono)",
-                    }}
-                  >
-                    {c.lossPercent.toFixed(1)}%
-                  </span>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-foreground">{c.name}</p>
-                    <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
-                      {c.ticker} · coste {formatEur(c.costBasis)} · valor {formatEur(c.currentValue)}
+            {candidates.map((c) => {
+              const status = tlhStatus[c.id] ?? "pendiente";
+              const statusStyle = TLH_STATUS_COLORS[status];
+              return (
+                <div
+                  key={c.id}
+                  className="flex items-center justify-between gap-3 border-b border-border/50 pb-3 last:border-0 last:pb-0"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span
+                      className="shrink-0 rounded-md px-2 py-0.5 text-xs font-semibold"
+                      style={{
+                        backgroundColor: "rgba(163,45,45,0.12)",
+                        color: "#A32D2D",
+                        fontFamily: "var(--font-mono)",
+                      }}
+                    >
+                      {c.lossPercent.toFixed(1)}%
+                    </span>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-foreground">{c.name}</p>
+                      <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
+                        {c.ticker} · coste {formatEur(c.costBasis)} · valor {formatEur(c.currentValue)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="shrink-0 flex flex-col items-end gap-1">
+                    <p className="font-mono text-sm font-semibold" style={{ color: "#A32D2D" }}>
+                      {formatEur(c.lossAmount)}
                     </p>
+                    <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
+                      ahorro {formatEur(c.taxSaving)}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => cycleStatus(c.id)}
+                      className="rounded-full px-2 py-0.5 text-xs font-medium transition-colors cursor-pointer"
+                      style={{ backgroundColor: statusStyle.bg, color: statusStyle.text }}
+                      aria-label={`Estado TLH: ${TLH_STATUS_LABELS[status]}. Haz clic para cambiar.`}
+                    >
+                      {TLH_STATUS_LABELS[status]}
+                    </button>
                   </div>
                 </div>
-                <div className="shrink-0 text-right">
-                  <p className="font-mono text-sm font-semibold" style={{ color: "#A32D2D" }}>
-                    {formatEur(c.lossAmount)}
-                  </p>
-                  <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
-                    ahorro {formatEur(c.taxSaving)}
-                  </p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       ) : (

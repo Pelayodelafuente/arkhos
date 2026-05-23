@@ -191,6 +191,7 @@ export function ProjectModal({
     } else {
       const input: CreateProjectInput = {
         name: name.trim(),
+        description: description.trim() || null,
         icon,
         type,
         status,

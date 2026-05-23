@@ -2,7 +2,7 @@
 
 import { useMemo } from "react"
 import Link from "next/link"
-import { ChevronDown, CreditCard, Pencil, Pause, Play, Plus, X, MonitorPlay, Code2, Music, HardDrive, Zap, Gamepad2, Shield, Heart, BookOpen, TrendingUp, Layers, StickyNote } from "lucide-react"
+import { ChevronDown, CreditCard, Pencil, PauseCircle, Play, Plus, X, MonitorPlay, Code2, Music, HardDrive, Zap, Gamepad2, Shield, Heart, BookOpen, TrendingUp, Layers, StickyNote } from "lucide-react"
 import { ICON_MAP } from "./CategoryManager"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import { Card, Badge, Button } from "@/components/ui"
@@ -11,7 +11,16 @@ import { useNotesStore } from "@/stores/notes-store"
 import { ServiceAvatar } from "./ServiceAvatar"
 import { HighlightText } from "./HighlightText"
 import { formatCurrency, formatNextBilling, isBillingToday, groupByCategory, getCycleShortLabel, getDaysUntilBilling, getNextBillingDate } from "@/lib/gastos-utils"
-import type { SubscriptionWithCategory } from "@/types/expenses"
+import type { BillingCycle, SubscriptionWithCategory } from "@/types/expenses"
+
+function getCycleSuffix(cycle: BillingCycle): string {
+  switch (cycle) {
+    case 'monthly': return '/mes'
+    case 'quarterly': return '/trim'
+    case 'semiannual': return '/sem'
+    case 'annual': return '/año'
+  }
+}
 
 interface SubscriptionListProps {
   onEdit: (subscription: SubscriptionWithCategory) => void
@@ -508,6 +517,7 @@ function SubscriptionRow({
         )}
         <span className={`font-mono text-[13px] text-foreground min-w-[72px] text-right ${isInactive ? 'line-through' : ''}`}>
           {formatCurrency(displayAmount)}
+          <span className="text-[10px] text-text-tertiary ml-0.5">{getCycleSuffix(subscription.cycle)}</span>
         </span>
       </div>
 
@@ -543,10 +553,10 @@ function SubscriptionRow({
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); onToggleActive() }}
-          aria-label="Eliminar suscripción"
+          aria-label={isPaused ? "Activar suscripción" : "Pausar suscripción"}
           className="flex h-7 w-7 items-center justify-center rounded-md text-text-tertiary hover:bg-sand hover:text-foreground hover:scale-110 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent"
         >
-          {isPaused ? <Play size={13} strokeWidth={1.75} /> : <Pause size={13} strokeWidth={1.75} />}
+          {isPaused ? <Play size={13} strokeWidth={1.75} /> : <PauseCircle size={13} strokeWidth={1.75} />}
         </button>
       </div>
     </motion.div>

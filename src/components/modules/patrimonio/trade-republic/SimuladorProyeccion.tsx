@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   ComposedChart,
   Area,
@@ -141,10 +141,35 @@ export function SimuladorProyeccion() {
 
   const defaultRate = storeCagr !== null ? Math.min(Math.max(Math.round(storeCagr * 100 * 10) / 10, 1), 30) : 7;
 
-  const [initialCapital, setInitialCapital] = useState(() => Math.round(storeValue));
-  const [monthlyContrib, setMonthlyContrib] = useState(() => Math.round(storeMonthly) || 500);
-  const [annualRatePct, setAnnualRatePct] = useState(defaultRate);
-  const [horizon, setHorizon] = useState(20);
+  const [initialCapital, setInitialCapital] = useState<number>(() => {
+    if (typeof window === "undefined") return Math.round(storeValue);
+    const stored = localStorage.getItem("arkhos_sim_capital");
+    return stored !== null ? Number(stored) : Math.round(storeValue);
+  });
+
+  const [monthlyContrib, setMonthlyContrib] = useState<number>(() => {
+    if (typeof window === "undefined") return Math.round(storeMonthly) || 500;
+    const stored = localStorage.getItem("arkhos_sim_monthly");
+    return stored !== null ? Number(stored) : Math.round(storeMonthly) || 500;
+  });
+
+  const [annualRatePct, setAnnualRatePct] = useState<number>(() => {
+    if (typeof window === "undefined") return defaultRate;
+    const stored = localStorage.getItem("arkhos_sim_rate");
+    return stored !== null ? Number(stored) : defaultRate;
+  });
+
+  const [horizon, setHorizon] = useState<number>(() => {
+    if (typeof window === "undefined") return 20;
+    const stored = localStorage.getItem("arkhos_sim_horizon");
+    const parsed = Number(stored);
+    return stored !== null && YEAR_OPTIONS.includes(parsed) ? parsed : 20;
+  });
+
+  useEffect(() => { localStorage.setItem("arkhos_sim_capital", String(initialCapital)); }, [initialCapital]);
+  useEffect(() => { localStorage.setItem("arkhos_sim_monthly", String(monthlyContrib)); }, [monthlyContrib]);
+  useEffect(() => { localStorage.setItem("arkhos_sim_rate", String(annualRatePct)); }, [annualRatePct]);
+  useEffect(() => { localStorage.setItem("arkhos_sim_horizon", String(horizon)); }, [horizon]);
 
   const baseRate = annualRatePct / 100;
   const pesRate = Math.max(baseRate - SPREAD, 0.01);

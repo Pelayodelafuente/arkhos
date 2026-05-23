@@ -1,6 +1,6 @@
 export const MODULE_COLORS = {
   proyectos:  '#C4704A',
-  mercados:   '#7260C4',
+  mercados:   '#9B7A4A',
   patrimonio: '#2E7D6B',
   gastos:     '#3B78B0',
   notas:      '#B07A3A',

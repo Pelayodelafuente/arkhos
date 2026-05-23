@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
-import { Play, Pause, Trash2, AlertTriangle, Upload, X, ChevronDown } from "lucide-react"
+import { Play, PauseCircle, Trash2, AlertTriangle, Upload, X, ChevronDown } from "lucide-react"
 import { z } from "zod/v4"
 import { Modal, Button, Input, Textarea } from "@/components/ui"
 import { useExpensesStore } from "@/stores/expenses-store"
@@ -457,7 +457,7 @@ export function SubscriptionModal({
                 >
                   {subscription.is_active ? (
                     <>
-                      <Pause size={14} strokeWidth={1.75} />
+                      <PauseCircle size={14} strokeWidth={1.75} />
                       Pausar
                     </>
                   ) : (
@@ -467,13 +467,14 @@ export function SubscriptionModal({
                     </>
                   )}
                 </Button>
-                <button
+                <Button
+                  variant="danger"
+                  size="sm"
                   onClick={() => setConfirmDelete(true)}
-                  className="inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-150 cursor-pointer border border-border text-foreground/60 hover:bg-sand hover:text-foreground/90"
                 >
                   <Trash2 size={14} strokeWidth={1.75} />
                   Eliminar
-                </button>
+                </Button>
               </div>
             )}
 
@@ -493,17 +494,15 @@ export function SubscriptionModal({
                   >
                     Cancelar
                   </button>
-                  <button
+                  <Button
+                    variant="danger"
+                    size="sm"
                     onClick={handleDelete}
-                    disabled={saving}
-                    className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold bg-[var(--module-gastos)] text-white hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-60"
+                    loading={saving}
                   >
-                    {saving && (
-                      <span className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                    )}
                     <Trash2 size={13} strokeWidth={1.75} />
                     Eliminar
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}

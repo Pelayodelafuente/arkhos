@@ -6,6 +6,7 @@ import {
   CheckSquare, Square, ChevronRight,
 } from 'lucide-react';
 import { useProjectsStore } from '@/stores/projects-store';
+import { useToast } from '@/stores/ui-store';
 import {
   TASK_STATUS_CONFIG,
   TASK_PRIORITY_CONFIG,
@@ -86,6 +87,7 @@ interface TableViewProps {
 export default function TableView({ phases, projectId: _projectId, userId: _userId, onOpenTask }: TableViewProps) {
   const removeTask = useProjectsStore((s) => s.removeTask);
   const changeTaskStatus = useProjectsStore((s) => s.changeTaskStatus);
+  const toast = useToast();
 
   const [search, setSearch] = useState('');
   const [filterPriority, setFilterPriority] = useState<TaskPriority | 'all'>('all');
@@ -236,7 +238,7 @@ export default function TableView({ phases, projectId: _projectId, userId: _user
 
         {/* Export CSV */}
         <button
-          onClick={() => downloadCSV(sorted)}
+          onClick={() => { downloadCSV(sorted); toast.success('CSV descargado'); }}
           className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-xs text-text-secondary transition-colors hover:border-accent hover:text-accent"
         >
           <Download size={13} strokeWidth={2} />

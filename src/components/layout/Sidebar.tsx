@@ -47,7 +47,7 @@ const moduleItems = [
     href: "/mercados",
     icon: TrendingUp,
     dot: MODULE_COLORS.mercados,
-    dotGlow: "0 0 6px rgba(114,96,196,0.50)",
+    dotGlow: "0 0 6px rgba(155,122,74,0.50)",
     countKey: "mercados" as const,
   },
   {
@@ -90,7 +90,7 @@ export function Sidebar({ userName, initialProjectCount = 0, initialNoteCount = 
   // Store counts — fallback a los valores del servidor mientras el store no ha cargado todavía
   // Only count active projects (not archived) and active notes (not archived/trashed)
   const storeProjectCount = useProjectsStore((s) =>
-    s.initialized ? s.projects.filter((p) => p.status !== "archived").length : null
+    s.initialized ? s.projects.filter((p) => p.status === "active").length : null
   );
   const storeNoteCount = useNotesStore((s) =>
     s.initialized ? s.notes.filter((n) => !n.archived).length : null
@@ -598,26 +598,26 @@ export function Sidebar({ userName, initialProjectCount = 0, initialNoteCount = 
         style={{ padding: collapsed ? "8px 6px" : "12px 12px" }}
       >
         <Link
-          href="/settings/security"
+          href="/settings"
           className="flex items-center rounded-xl text-sm font-medium transition-all duration-200"
           style={{
             gap: collapsed ? 0 : 12,
             padding: collapsed ? "10px 0" : "10px 12px",
             justifyContent: collapsed ? "center" : "flex-start",
             color:
-              pathname === "/settings/security"
+              pathname.startsWith("/settings")
                 ? "var(--accent-light)"
                 : "var(--sb-text-secondary)",
             backgroundColor:
-              pathname === "/settings/security"
+              pathname.startsWith("/settings")
                 ? "rgba(196,112,74,0.13)"
                 : undefined,
             border:
-              pathname === "/settings/security"
+              pathname.startsWith("/settings")
                 ? "1px solid rgba(196,112,74,0.20)"
                 : "1px solid transparent",
           }}
-          title={collapsed ? "Seguridad" : undefined}
+          title={collapsed ? "Configuracion" : undefined}
         >
           {!collapsed && <span className="h-2 w-2 flex-shrink-0" />}
           <Shield
@@ -625,7 +625,7 @@ export function Sidebar({ userName, initialProjectCount = 0, initialNoteCount = 
             strokeWidth={1.75}
             className="flex-shrink-0"
           />
-          {!collapsed && "Seguridad"}
+          {!collapsed && "Configuracion"}
         </Link>
       </div>
 

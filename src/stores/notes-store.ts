@@ -719,8 +719,20 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
     try {
       const backlinks = await notesApi.getAllBacklinksForGraph()
 
-      // Also include canvas edges between note-type nodes
-      const { canvasNodes, canvasEdges } = get()
+      // Also include canvas edges between note-type nodes.
+      // If the canvas is not yet loaded in memory, fetch from DB.
+      const { canvasNodes: memNodes, canvasEdges: memEdges, canvas } = get()
+      let canvasNodes = memNodes
+      let canvasEdges = memEdges
+      if (canvas && canvasEdges.length === 0) {
+        const [dbNodes, dbEdges] = await Promise.all([
+          notesApi.getCanvasNodesForGraph(canvas.id),
+          notesApi.getCanvasEdgesForGraph(canvas.id),
+        ])
+        canvasNodes = dbNodes
+        canvasEdges = dbEdges
+      }
+
       const nodeNoteMap = new Map<string, string>()
       for (const n of canvasNodes) {
         if (n.note_id) nodeNoteMap.set(n.id, n.note_id)

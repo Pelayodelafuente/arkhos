@@ -1,18 +1,25 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod/v4';
 import { createClient } from '@/lib/supabase/server';
+import { rateLimit } from '@/lib/rate-limit';
 
-interface ChatMessage {
-  role: 'user' | 'assistant';
-  content: string;
-}
+const chatMessageSchema = z.object({
+  role: z.enum(['user', 'assistant']),
+  content: z.string().min(1).max(10000),
+});
 
-interface ChatRequestBody {
-  messages: ChatMessage[];
-  projectData: string;
-}
+const chatSchema = z.object({
+  messages: z.array(chatMessageSchema).min(1).max(50),
+  projectData: z.string().min(1).max(20000),
+});
 
 export async function POST(req: NextRequest) {
+  const { success } = await rateLimit(req, { limit: 20, window: 60 });
+  if (!success) {
+    return NextResponse.json({ error: 'Demasiadas peticiones. Espera un momento.' }, { status: 429 });
+  }
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
@@ -27,9 +34,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  let body: ChatRequestBody;
+  let rawBody: unknown;
   try {
-    body = (await req.json()) as ChatRequestBody;
+    rawBody = await req.json();
   } catch {
     return NextResponse.json(
       { error: 'Cuerpo de petición inválido' },
@@ -37,19 +44,15 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (!Array.isArray(body.messages) || body.messages.length === 0) {
+  const parsed = chatSchema.safeParse(rawBody);
+  if (!parsed.success) {
     return NextResponse.json(
-      { error: 'messages es requerido y no puede estar vacío' },
+      { error: 'Datos de entrada inválidos' },
       { status: 400 }
     );
   }
 
-  if (!body.projectData || typeof body.projectData !== 'string') {
-    return NextResponse.json(
-      { error: 'projectData es requerido' },
-      { status: 400 }
-    );
-  }
+  const { messages, projectData } = parsed.data;
 
   const client = new Anthropic({ apiKey });
 
@@ -57,10 +60,10 @@ export async function POST(req: NextRequest) {
     'Eres un asistente integrado en Arkhos, una plataforma de gestión de proyectos.\n' +
     'El usuario está trabajando en el siguiente proyecto. Responde preguntas sobre el proyecto,\n' +
     'sugiere mejoras y ayuda a planificar. Sé conciso y directo. Responde en español.\n\n' +
-    `Datos del proyecto:\n${body.projectData}`;
+    `Datos del proyecto:\n${projectData}`;
 
   const apiMessages: Array<{ role: 'user' | 'assistant'; content: string }> =
-    body.messages.map((m) => ({
+    messages.map((m) => ({
       role: m.role,
       content: m.content,
     }));
@@ -87,16 +90,16 @@ export async function POST(req: NextRequest) {
             if (done) break;
             const chunk = decoder.decode(value, { stream: true });
             try {
-              const parsed = JSON.parse(chunk) as {
+              const event = JSON.parse(chunk) as {
                 type: string;
                 delta?: { type: string; text?: string };
               };
               if (
-                parsed.type === 'content_block_delta' &&
-                parsed.delta?.type === 'text_delta' &&
-                parsed.delta.text
+                event.type === 'content_block_delta' &&
+                event.delta?.type === 'text_delta' &&
+                event.delta.text
               ) {
-                controller.enqueue(encoder.encode(parsed.delta.text));
+                controller.enqueue(encoder.encode(event.delta.text));
               }
             } catch {
               // Non-JSON chunk — skip

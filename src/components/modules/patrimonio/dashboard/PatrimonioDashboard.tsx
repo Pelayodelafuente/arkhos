@@ -440,7 +440,7 @@ export function PatrimonioDashboard() {
               key={mode}
               type="button"
               onClick={() => setViewMode(mode)}
-              className="rounded-md px-3 py-1 text-xs font-medium transition-all duration-150"
+              className={`rounded-md px-3 py-1 text-xs transition-all duration-150 ${viewMode === mode ? "font-semibold" : "font-medium"}`}
               style={
                 viewMode === mode
                   ? { backgroundColor: "var(--module-patrimonio)", color: "#fff" }

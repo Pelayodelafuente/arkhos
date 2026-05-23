@@ -896,6 +896,26 @@ export async function getNoteBacklinks(noteId: string): Promise<Note[]> {
   return data.map((r: Record<string, unknown>) => r.notes as Note).filter(Boolean)
 }
 
+/** Canvas edges para un canvas — usado por el grafo cuando el canvas no está cargado en memoria. */
+export async function getCanvasEdgesForGraph(canvasId: string): Promise<CanvasEdge[]> {
+  const supabase = createClient()
+  const { data } = await supabase
+    .from('canvas_edges')
+    .select('id, canvas_id, from_node_id, to_node_id, label, color, style, from_side, to_side, created_at')
+    .eq('canvas_id', canvasId)
+  return (data ?? []) as CanvasEdge[]
+}
+
+/** Canvas nodes para un canvas — usado por el grafo cuando el canvas no está cargado en memoria. */
+export async function getCanvasNodesForGraph(canvasId: string): Promise<CanvasNode[]> {
+  const supabase = createClient()
+  const { data } = await supabase
+    .from('canvas_nodes')
+    .select('*, note:notes(*)')
+    .eq('canvas_id', canvasId)
+  return (data ?? []) as CanvasNode[]
+}
+
 /** Todos los backlinks del usuario — para construir el grafo de conocimiento.
  *  RLS de note_backlinks filtra por user_id vía:
  *  source_note_id IN (SELECT id FROM notes WHERE user_id = auth.uid())

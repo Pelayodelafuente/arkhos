@@ -1,13 +1,20 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod/v4'
 import { createClient } from '@/lib/supabase/server'
+import { rateLimit } from '@/lib/rate-limit'
 
-interface SummarizeRequestBody {
-  title: string
-  content: string
-}
+const summarizeSchema = z.object({
+  title: z.string().max(500).optional().default(''),
+  content: z.string().min(1).max(50000),
+})
 
 export async function POST(req: NextRequest) {
+  const { success } = await rateLimit(req, { limit: 10, window: 60 })
+  if (!success) {
+    return NextResponse.json({ error: 'Demasiadas peticiones. Espera un momento.' }, { status: 429 })
+  }
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
@@ -19,18 +26,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 
-  let body: SummarizeRequestBody
+  let rawBody: unknown
   try {
-    body = (await req.json()) as SummarizeRequestBody
+    rawBody = await req.json()
   } catch {
     return NextResponse.json({ error: 'Cuerpo de petición inválido' }, { status: 400 })
   }
 
-  if (!body.content || typeof body.content !== 'string') {
-    return NextResponse.json({ error: 'content es requerido' }, { status: 400 })
+  const parsed = summarizeSchema.safeParse(rawBody)
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Datos de entrada inválidos' }, { status: 400 })
   }
 
-  const plainText = body.content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+  const { title, content } = parsed.data
+
+  const plainText = content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
   if (plainText.length < 20) {
     return NextResponse.json({ error: 'La nota es demasiado corta para resumir' }, { status: 422 })
   }
@@ -42,8 +52,8 @@ export async function POST(req: NextRequest) {
     'Captura las ideas principales sin frases introductorias como "Esta nota trata de...". ' +
     'Ve directo al contenido. Responde en español.'
 
-  const userMessage = body.title
-    ? `Título: ${body.title}\n\n${plainText}`
+  const userMessage = title
+    ? `Título: ${title}\n\n${plainText}`
     : plainText
 
   try {
@@ -67,16 +77,16 @@ export async function POST(req: NextRequest) {
             if (done) break
             const chunk = decoder.decode(value, { stream: true })
             try {
-              const parsed = JSON.parse(chunk) as {
+              const event = JSON.parse(chunk) as {
                 type: string
                 delta?: { type: string; text?: string }
               }
               if (
-                parsed.type === 'content_block_delta' &&
-                parsed.delta?.type === 'text_delta' &&
-                parsed.delta.text
+                event.type === 'content_block_delta' &&
+                event.delta?.type === 'text_delta' &&
+                event.delta.text
               ) {
-                controller.enqueue(encoder.encode(parsed.delta.text))
+                controller.enqueue(encoder.encode(event.delta.text))
               }
             } catch {
               // Raw chunk — skip unparseable

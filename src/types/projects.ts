@@ -210,6 +210,7 @@ export interface Project {
 
 export interface CreateProjectInput {
   name: string;
+  description?: string | null;
   icon?: string;
   logo_url?: string | null;
   type?: string;

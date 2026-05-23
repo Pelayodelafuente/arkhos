@@ -54,9 +54,9 @@ function fearGreedLabel(value: number): { label: string; colorClass: string } {
 }
 
 function formatMarketCap(value: number): string {
-  if (value >= 1e12) return `${(value / 1e12).toFixed(2)} T$`;
-  if (value >= 1e9) return `${(value / 1e9).toFixed(1)} B$`;
-  return `${(value / 1e6).toFixed(0)} M$`;
+  if (value >= 1e12) return `$${(value / 1e12).toFixed(2).replace('.', ',')} T`;
+  if (value >= 1e9) return `$${(value / 1e9).toFixed(1).replace('.', ',')} B`;
+  return `$${(value / 1e6).toFixed(0)} M`;
 }
 
 function Sparkline({

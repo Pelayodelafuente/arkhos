@@ -22,16 +22,22 @@ export function ConfirmModal({
   loading = false,
 }: ConfirmModalProps) {
   return (
-    <Modal open={open} onClose={onClose} title={title}>
-      <p className="mb-4 text-sm text-text-secondary">{message}</p>
-      <div className="animate-fade-in-up flex justify-end gap-2" style={{ animationDelay: "150ms" }}>
-        <Button variant="secondary" size="sm" onClick={onClose} disabled={loading}>
-          Cancelar
-        </Button>
-        <Button variant="danger" size="sm" onClick={onConfirm} loading={loading}>
-          {confirmLabel}
-        </Button>
-      </div>
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={title}
+      footer={
+        <div className="flex justify-end gap-2">
+          <Button variant="secondary" size="sm" onClick={onClose} disabled={loading}>
+            Cancelar
+          </Button>
+          <Button variant="danger" size="sm" onClick={onConfirm} loading={loading}>
+            {confirmLabel}
+          </Button>
+        </div>
+      }
+    >
+      <p className="text-sm text-text-secondary">{message}</p>
     </Modal>
   );
 }

@@ -135,20 +135,20 @@ export function MobileDrawer({ open, onClose, userName }: MobileDrawerProps) {
           </a>
         </div>
 
-        {/* Security */}
+        {/* Settings */}
         <div className="border-t px-3 py-3" style={{ borderTopColor: "var(--border-subtle)" }}>
           <Link
-            href="/settings/security"
+            href="/settings"
             onClick={handleClose}
             className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
-              pathname === "/settings/security"
+              pathname.startsWith("/settings")
                 ? "bg-card text-accent"
                 : "text-text-secondary hover:bg-sand hover:text-foreground"
             }`}
           >
             <span className="h-2 w-2 flex-shrink-0" />
             <Shield size={16} strokeWidth={1.75} className="flex-shrink-0" />
-            Seguridad
+            Configuracion
           </Link>
         </div>
 

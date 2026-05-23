@@ -10,6 +10,32 @@ function getGreeting() {
   return "Buenas noches";
 }
 
+/** Devuelve una cadena de tiempo relativo legible en español */
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 1) return "ahora mismo";
+  if (mins < 60) return `hace ${mins} ${mins === 1 ? "min" : "min"}`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `hace ${hours} ${hours === 1 ? "hora" : "horas"}`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `hace ${days} ${days === 1 ? "día" : "días"}`;
+  const weeks = Math.floor(days / 7);
+  return `hace ${weeks} ${weeks === 1 ? "semana" : "semanas"}`;
+}
+
+/** Etiqueta legible para un módulo */
+function moduleLabel(module: string): string {
+  const map: Record<string, string> = {
+    proyectos: "Proyecto",
+    notas: "Nota",
+    gastos: "Gasto",
+    mercados: "Mercados",
+    patrimonio: "Patrimonio",
+  };
+  return map[module] ?? module;
+}
+
 export default async function DashboardPage() {
   const supabase = await createClient();
   const {
@@ -19,30 +45,67 @@ export default async function DashboardPage() {
   let displayName = "";
   let projectCount = 0;
   let noteCount = 0;
+  let monthlyExpenses = 0;
+  let recentActivity: Array<{
+    id: string;
+    module: string;
+    action: string;
+    entity_name: string | null;
+    created_at: string;
+  }> = [];
 
   if (user) {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+      .toISOString()
+      .split("T")[0];
+
     const [
       { data: profile },
       { count: pc },
       { count: nc },
+      { data: payments },
+      { data: activity },
     ] = await Promise.all([
       supabase.from("profiles").select("full_name").eq("id", user.id).single(),
+      // Bug 2 fix: solo proyectos con status "active"
       supabase
         .from("projects")
         .select("id", { count: "exact", head: true })
         .eq("user_id", user.id)
-        .neq("status", "archived"),
+        .eq("status", "active"),
       supabase
         .from("notes")
         .select("id", { count: "exact", head: true })
         .eq("user_id", user.id)
         .eq("archived", false)
         .is("deleted_at", null),
+      // Bug 3 fix: gasto real del mes en curso desde subscription_payments
+      supabase
+        .from("subscription_payments")
+        .select("amount")
+        .eq("user_id", user.id)
+        .gte("paid_at", monthStart),
+      // Bug 4 fix: actividad real desde activity_log
+      supabase
+        .from("activity_log")
+        .select("id, module, action, entity_name, created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(5),
     ]);
 
     displayName = profile?.full_name || user.email || "";
     projectCount = pc ?? 0;
     noteCount = nc ?? 0;
+
+    monthlyExpenses =
+      (payments ?? []).reduce(
+        (sum, p) => sum + (typeof p.amount === "number" ? p.amount : 0),
+        0
+      );
+
+    recentActivity = (activity ?? []) as typeof recentActivity;
   }
 
   const moduleCards = [
@@ -61,25 +124,32 @@ export default async function DashboardPage() {
       preview: `${noteCount} ${noteCount === 1 ? "nota" : "notas"}`,
     },
     {
+      // Bug 5 fix: color correcto de Mercados en el design system
       name: "Mercados",
       href: "/mercados",
       icon: TrendingUp,
-      color: "#7260C4",
-      preview: "BTC $—",
+      color: "#9B7A4A",
+      // Bug 3 fix: texto honesto, sin datos falsos
+      preview: "Ver mercados",
     },
     {
       name: "Patrimonio",
       href: "/patrimonio",
       icon: Wallet,
       color: "#2E7D6B",
-      preview: "€— total",
+      // Bug 3 fix: texto honesto, sin datos falsos
+      preview: "Ver patrimonio",
     },
     {
       name: "Gastos",
       href: "/gastos",
       icon: CreditCard,
       color: "#3B78B0",
-      preview: "€— este mes",
+      // Bug 3 fix: gasto real del mes o fallback honesto
+      preview:
+        monthlyExpenses > 0
+          ? `€${monthlyExpenses.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })} este mes`
+          : "Ver gastos",
     },
   ];
 
@@ -128,15 +198,33 @@ export default async function DashboardPage() {
         ))}
       </div>
 
-      {/* Recent activity */}
-      <div className="animate-fade-in-up" style={{ animationDelay: "550ms" }}>
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-text-tertiary">
-          Actividad reciente
-        </h2>
-        <Card padding="md" className="text-center">
-          <p className="text-sm text-text-tertiary">Sin actividad reciente</p>
-        </Card>
-      </div>
+      {/* Bug 4 fix: feed de actividad real */}
+      {recentActivity.length > 0 && (
+        <div className="animate-fade-in-up" style={{ animationDelay: "550ms" }}>
+          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-text-tertiary">
+            Actividad reciente
+          </h2>
+          <Card padding="md">
+            <ul className="divide-y divide-border">
+              {recentActivity.map((entry) => (
+                <li key={entry.id} className="flex items-center justify-between gap-4 py-2 first:pt-0 last:pb-0">
+                  <p className="text-sm text-foreground">
+                    <span className="font-medium">{moduleLabel(entry.module)}</span>
+                    {entry.entity_name ? (
+                      <> &lsquo;{entry.entity_name}&rsquo;</>
+                    ) : null}
+                    {" "}
+                    <span className="text-text-tertiary">{entry.action}</span>
+                  </p>
+                  <span className="shrink-0 font-mono text-xs text-text-tertiary">
+                    {timeAgo(entry.created_at)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
