@@ -1,4 +1,6 @@
+import { NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { rateLimit } from '@/lib/rate-limit';
 import { getCoinGeckoPrices } from '@/lib/crypto/coingecko';
 import { getBTCBalance, getETHBalance, getUSDCBalance } from '@/lib/crypto/blockchain';
 import { getAaveUSDCPosition } from '@/lib/crypto/aave';
@@ -28,7 +30,12 @@ interface CryptoPricesResponse {
   updatedAt: string;
 }
 
-export async function POST(): Promise<Response> {
+export async function POST(req: NextRequest): Promise<Response> {
+  const { success } = await rateLimit(req, { limit: 20, window: 3600 });
+  if (!success) {
+    return Response.json({ error: 'Demasiadas peticiones. Espera un momento.' }, { status: 429 });
+  }
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 

@@ -175,7 +175,7 @@ export function ExportModal({ project }: ExportModalProps) {
   function handleDownload() {
     if (!project) return;
     const ext = format === "markdown" ? "md" : "json";
-    const mime = format === "markdown" ? "text/markdown" : "application/json";
+    const mime = format === "markdown" ? "text/markdown;charset=utf-8" : "application/json;charset=utf-8";
     const blob = new Blob([content], { type: mime });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
