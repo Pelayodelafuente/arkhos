@@ -61,6 +61,7 @@ interface KPICardProps {
   deltaLabel?: string | null;
   deltaColor?: string;
   borderTopColor: string;
+  subtitle?: string;
 }
 
 function KPICard({
@@ -72,6 +73,7 @@ function KPICard({
   deltaLabel,
   deltaColor,
   borderTopColor,
+  subtitle,
 }: KPICardProps) {
   return (
     <motion.div
@@ -113,6 +115,11 @@ function KPICard({
       {deltaLabel && (
         <p className="mt-1.5 font-mono text-xs" style={{ color: deltaColor ?? "var(--text-secondary)" }}>
           {deltaLabel}
+        </p>
+      )}
+      {subtitle && (
+        <p className="mt-1 text-[10px] leading-tight" style={{ color: "var(--text-muted, var(--text-tertiary))" }}>
+          {subtitle}
         </p>
       )}
     </motion.div>
@@ -280,11 +287,12 @@ export function GlobalKPIs() {
         sparklineValues={trSparklines.plAmount}
       />
       <KPICard
-        label="Rentabilidad anualizada"
+        label="Rentabilidad media ponderada"
         displayValue={combinedReturnPct !== null ? formatPct(animatedReturn, true) : "—"}
         icon={<Percent size={14} strokeWidth={1.75} />}
         accentColor="#7260C4"
         borderTopColor="#7260C4"
+        subtitle="TR: CAGR · Indexa: TWR · Horos/Crypto: P&L% · Mintos: XIRR"
       />
     </div>
   );

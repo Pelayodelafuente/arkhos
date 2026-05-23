@@ -34,7 +34,7 @@ import { RebalanceoPanel } from "./RebalanceoPanel";
 type Tab = "overview" | "cartera" | "plan" | "analisis" | "ingresos" | "fiscal";
 
 const TABS: { key: Tab; label: string }[] = [
-  { key: "overview", label: "Overview" },
+  { key: "overview", label: "Resumen" },
   { key: "cartera", label: "Cartera" },
   { key: "plan", label: "Plan de Ahorro" },
   { key: "analisis", label: "Análisis" },

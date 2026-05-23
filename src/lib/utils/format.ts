@@ -11,6 +11,30 @@ export function formatCurrency(amount: number, currency: string): string {
 }
 
 /**
+ * Adjust an array of percentages so their toFixed(decimals) values sum to exactly 100.
+ * Uses the Largest Remainder Method to avoid 100.1% / 99.9% display artifacts.
+ * Returns a new array with the same structure but corrected `percentage` values.
+ */
+export function largestRemainder<T extends { percentage: number }>(
+  items: T[],
+  decimals = 1
+): T[] {
+  if (items.length === 0) return items;
+  const factor = Math.pow(10, decimals);
+  const floors = items.map((item) => Math.floor(item.percentage * factor) / factor);
+  const remainders = items.map((item) => item.percentage * factor - Math.floor(item.percentage * factor));
+  const floorSum = floors.reduce((s, v) => s + v, 0);
+  let toDistribute = Math.round((100 - floorSum) * factor);
+  const order = remainders
+    .map((r, i) => ({ r, i }))
+    .sort((a, b) => b.r - a.r)
+    .map((x) => x.i);
+  const bonuses = new Array<number>(items.length).fill(0);
+  for (let k = 0; k < toDistribute; k++) bonuses[order[k]] = 1 / factor;
+  return items.map((item, i) => ({ ...item, percentage: floors[i] + bonuses[i] }));
+}
+
+/**
  * Format a Date as a relative time string (e.g. "hace 3 horas").
  */
 export function relativeTime(date: Date): string {

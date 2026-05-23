@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { largestRemainder } from "@/lib/utils/format";
 import type { AllocationSlice } from "@/types/patrimonio";
 
 const formatEur = (value: number) =>
@@ -13,6 +14,7 @@ interface AllocationBarsProps {
 
 export function AllocationBars({ data, title }: AllocationBarsProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const lrData = useMemo(() => largestRemainder(data), [data]);
 
   if (data.length === 0) {
     return (
@@ -29,6 +31,7 @@ export function AllocationBars({ data, title }: AllocationBarsProps) {
         {data.map((item, i) => {
           const isHovered = hoveredIndex === i;
           const dimmed = hoveredIndex !== null && !isHovered;
+          const displayPct = lrData[i]?.percentage ?? item.percentage;
           return (
             <div
               key={item.name}
@@ -51,7 +54,7 @@ export function AllocationBars({ data, title }: AllocationBarsProps) {
                     {formatEur(item.value)}
                   </span>
                   <span className="w-10 text-right font-mono text-xs font-semibold text-foreground">
-                    {item.percentage.toFixed(1)}%
+                    {displayPct.toFixed(1)}%
                   </span>
                 </div>
               </div>

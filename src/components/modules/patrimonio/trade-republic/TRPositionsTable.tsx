@@ -372,7 +372,7 @@ function CategoryGroup({
                         title="P&L% anualizado (CAGR por posición)"
                       >
                         {plAnnualized >= 0 ? "+" : ""}
-                        {plAnnualized.toFixed(1)}%/año
+                        {plAnnualized.toFixed(2)}%/año
                       </span>
                     )}
                   </div>

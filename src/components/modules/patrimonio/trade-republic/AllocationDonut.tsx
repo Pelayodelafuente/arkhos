@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import { largestRemainder } from "@/lib/utils/format";
 import type { AllocationSlice } from "@/types/patrimonio";
 
 const formatEur = (value: number) =>
@@ -15,8 +16,9 @@ interface AllocationDonutProps {
 
 export function AllocationDonut({ data, title, totalLabel }: AllocationDonutProps) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const lrData = useMemo(() => largestRemainder(data), [data]);
   const total = data.reduce((sum, d) => sum + d.value, 0);
-  const active = activeIndex !== null ? data[activeIndex] : null;
+  const active = activeIndex !== null ? lrData[activeIndex] : null;
 
   if (data.length === 0) {
     return (
@@ -103,7 +105,7 @@ export function AllocationDonut({ data, title, totalLabel }: AllocationDonutProp
                 {formatEur(item.value)}
               </span>
               <span className="w-9 text-right font-mono text-xs text-text-tertiary">
-                {item.percentage.toFixed(1)}%
+                {(lrData[i]?.percentage ?? item.percentage).toFixed(1)}%
               </span>
             </div>
           </div>

@@ -236,7 +236,7 @@ function SyncPlatformsPanel() {
           icon={<Landmark size={14} strokeWidth={1.75} />}
           color="var(--platform-tr)"
           name="Trade Republic"
-          description="Precios de mercado en tiempo real (Alpha Vantage)"
+          description="Precios vía Alpha Vantage (actualización manual)"
           action={<TRSyncButton />}
         />
         <SyncRow

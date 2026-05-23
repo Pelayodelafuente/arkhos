@@ -15,7 +15,13 @@ const formatDateTime = (date: Date) =>
     minute: "2-digit",
   });
 
+const STALE_HOURS = 24;
 const COOLDOWN_S = 60;
+
+function getPriceAge(date: Date): { hours: number; days: number; isStale: boolean } {
+  const hours = (Date.now() - date.getTime()) / 1000 / 3600;
+  return { hours, days: Math.floor(hours / 24), isStale: hours > STALE_HOURS };
+}
 
 export function PriceStatusBanner() {
   const { lastUpdated, refreshPrices, isRefreshing } = usePatrimonioPrices();
@@ -163,24 +169,33 @@ export function PriceStatusBanner() {
   }
 
   // Prices available — show date of last update
+  const age = getPriceAge(lastUpdated);
+  const staleColor = "#B07A3A";
+
   return (
     <div
       className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg px-3 py-2 text-xs"
       style={{
-        backgroundColor: "rgba(136,135,128,0.06)",
-        border: "1px solid rgba(136,135,128,0.18)",
+        backgroundColor: age.isStale ? "rgba(176,122,58,0.06)" : "rgba(136,135,128,0.06)",
+        border: `1px solid ${age.isStale ? "rgba(176,122,58,0.28)" : "rgba(136,135,128,0.18)"}`,
         borderLeftWidth: 2,
-        borderLeftColor: "#888780",
+        borderLeftColor: age.isStale ? staleColor : "#888780",
       }}
     >
       <span
         className="h-2 w-2 flex-shrink-0 rounded-full"
-        style={{ backgroundColor: "#888780" }}
+        style={{ backgroundColor: age.isStale ? staleColor : "#888780" }}
         aria-hidden="true"
       />
-      <span className="text-text-secondary font-medium">
-        Precios del {formatDateTime(lastUpdated)}
-      </span>
+      {age.isStale ? (
+        <span className="font-medium" style={{ color: staleColor }}>
+          Precios de hace {age.days === 1 ? "1 día" : `${age.days} días`} — actualiza
+        </span>
+      ) : (
+        <span className="text-text-secondary font-medium">
+          Precios del {formatDateTime(lastUpdated)}
+        </span>
+      )}
       <div className="ml-auto flex items-center gap-2">{historicalBtn}{refreshBtn}</div>
     </div>
   );

@@ -19,7 +19,7 @@ const TABS = [
   { id: "dashboard" as const, label: "Resumen" },
   { id: "transactions" as const, label: "Transacciones" },
   { id: "defi" as const, label: "DeFi" },
-  { id: "plan" as const, label: "Plan DCA" },
+  { id: "plan" as const, label: "Plan de Ahorro" },
   { id: "costs" as const, label: "Costes" },
 ] as const;
 

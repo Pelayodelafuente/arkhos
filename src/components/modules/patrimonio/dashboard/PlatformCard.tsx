@@ -194,7 +194,7 @@ export function PlatformCard({
               />
               {positionsCount !== undefined && positionsCount > 0 && (
                 <span className="text-xs text-muted-foreground">
-                  <span className="font-mono">{positionsCount}</span> posiciones
+                  <span className="font-mono">{positionsCount}</span> {positionsCount === 1 ? "posición" : "posiciones"}
                 </span>
               )}
             </div>
