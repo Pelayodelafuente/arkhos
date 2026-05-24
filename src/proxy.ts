@@ -56,12 +56,17 @@ export async function proxy(request: NextRequest) {
   }
 
   // MFA check: if user has aal2 required, redirect to /verify-mfa
+  // try/catch: fail-open so a Supabase Auth timeout never blocks authenticated requests with 503
   if (user && pathname !== "/verify-mfa") {
-    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-    if (aal && aal.currentLevel === "aal1" && aal.nextLevel === "aal2") {
-      const url = request.nextUrl.clone();
-      url.pathname = "/verify-mfa";
-      return NextResponse.redirect(url);
+    try {
+      const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (aal && aal.currentLevel === "aal1" && aal.nextLevel === "aal2") {
+        const url = request.nextUrl.clone();
+        url.pathname = "/verify-mfa";
+        return NextResponse.redirect(url);
+      }
+    } catch {
+      // fail-open: let the request proceed rather than returning 503
     }
   }
 

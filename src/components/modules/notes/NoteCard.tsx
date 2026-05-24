@@ -290,7 +290,7 @@ export function NoteCard({ note, userId: _userId, onEdit, onDelete, onTogglePin,
               <span className="text-[10px] text-text-tertiary">+{note.tags.length - 3}</span>
             )}
           </div>
-          <span className="text-[10px] font-mono text-text-tertiary whitespace-nowrap ml-auto">
+          <span suppressHydrationWarning className="text-[10px] font-mono text-text-tertiary whitespace-nowrap ml-auto">
             {isInTrash ? `Eliminada ${timeAgo}` : timeAgo}
           </span>
         </div>
