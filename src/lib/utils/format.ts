@@ -24,7 +24,7 @@ export function largestRemainder<T extends { percentage: number }>(
   const floors = items.map((item) => Math.floor(item.percentage * factor) / factor);
   const remainders = items.map((item) => item.percentage * factor - Math.floor(item.percentage * factor));
   const floorSum = floors.reduce((s, v) => s + v, 0);
-  let toDistribute = Math.round((100 - floorSum) * factor);
+  const toDistribute = Math.round((100 - floorSum) * factor);
   const order = remainders
     .map((r, i) => ({ r, i }))
     .sort((a, b) => b.r - a.r)
