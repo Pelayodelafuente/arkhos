@@ -12,6 +12,7 @@ import { CryptoTransactionTable } from "./CryptoTransactionTable";
 import { AavePositionPanel } from "./AavePositionPanel";
 import { CryptoPlanPanel } from "./CryptoPlanPanel";
 import { UpdateOnChainBalancesButton } from "./UpdateOnChainBalancesButton";
+import { SyncBit2MeButton } from "./SyncBit2MeButton";
 
 const CRYPTO_COLOR = "var(--platform-crypto)";
 
@@ -289,7 +290,8 @@ export function CryptoDashboard() {
           </button>
         ))}
         </div>
-        <div className="flex-shrink-0">
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <SyncBit2MeButton compact />
           <UpdateOnChainBalancesButton compact />
         </div>
       </div>
