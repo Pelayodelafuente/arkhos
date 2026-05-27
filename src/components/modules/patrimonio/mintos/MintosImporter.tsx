@@ -15,6 +15,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useMintosStore } from "@/stores/mintos-store";
+import { loadMintosData } from "@/app/actions/mintos";
 import type { MintosImportResult } from "@/types/mintos";
 import type { MintosParseResult } from "@/lib/mintos/parse-excel";
 
@@ -587,9 +588,15 @@ export function MintosImporter() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
 
-  // Store data for conflict detection
+  // Store data for conflict detection and post-import refresh
   const existingSnapshots = useMintosStore((s) => s.monthlySnapshots);
   const existingDeposits = useMintosStore((s) => s.deposits);
+  const setOverview = useMintosStore((s) => s.setOverview);
+  const setDeposits = useMintosStore((s) => s.setDeposits);
+  const setMonthlySnapshots = useMintosStore((s) => s.setMonthlySnapshots);
+  const setPortfolioHealth = useMintosStore((s) => s.setPortfolioHealth);
+  const setDistributions = useMintosStore((s) => s.setDistributions);
+  const setPlan = useMintosStore((s) => s.setPlan);
 
   // Compute conflict info whenever preview or store changes
   const conflictInfo = useMemo<ConflictInfo | null>(() => {
@@ -677,6 +684,18 @@ export function MintosImporter() {
 
       const data = (await res.json()) as { result: MintosImportResult };
       setResult(data.result);
+
+      // Reload store immediately so charts update without needing a full page refresh
+      const fresh = await loadMintosData();
+      if (fresh) {
+        setOverview(fresh.overview);
+        setDeposits(fresh.deposits);
+        setMonthlySnapshots(fresh.monthlySnapshots);
+        setPortfolioHealth(fresh.portfolioHealth);
+        setDistributions(fresh.distributions);
+        setPlan(fresh.plan);
+      }
+
       setStatus("success");
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : "Error desconocido al guardar los datos");
