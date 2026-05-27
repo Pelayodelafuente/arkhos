@@ -15,13 +15,18 @@ export function SyncBit2MeButton({ compact = false }: { compact?: boolean }) {
 
   const [status, setStatus] = useState<Status>("idle");
   const [syncedCount, setSyncedCount] = useState<number | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   async function handleSync() {
     setStatus("loading");
     setSyncedCount(null);
+    setErrorMsg(null);
     try {
       const res = await fetch("/api/bit2me/sync", { method: "POST" });
-      if (!res.ok) throw new Error("API error");
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({})) as { error?: string };
+        throw new Error(body.error ?? `HTTP ${res.status}`);
+      }
 
       const json = (await res.json()) as { synced: number; skipped: number; total: number };
       setSyncedCount(json.synced);
@@ -36,9 +41,10 @@ export function SyncBit2MeButton({ compact = false }: { compact?: boolean }) {
 
       setStatus("success");
       setTimeout(() => setStatus("idle"), 4000);
-    } catch {
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : "Error desconocido");
       setStatus("error");
-      setTimeout(() => setStatus("idle"), 4000);
+      setTimeout(() => { setStatus("idle"); setErrorMsg(null); }, 6000);
     }
   }
 
@@ -91,16 +97,23 @@ export function SyncBit2MeButton({ compact = false }: { compact?: boolean }) {
     );
 
   return (
-    <button
-      type="button"
-      onClick={handleSync}
-      disabled={isLoading}
-      className={`flex items-center gap-2 rounded-lg font-medium transition-all duration-150 disabled:opacity-50 ${compact ? "px-3 py-1.5 text-xs" : "px-4 py-2 text-sm"}`}
-      style={btnStyle}
-      aria-label="Sincronizar transacciones desde Bit2Me"
-    >
-      {icon}
-      {label}
-    </button>
+    <div className="flex flex-col items-end gap-1">
+      <button
+        type="button"
+        onClick={handleSync}
+        disabled={isLoading}
+        className={`flex items-center gap-2 rounded-lg font-medium transition-all duration-150 disabled:opacity-50 ${compact ? "px-3 py-1.5 text-xs" : "px-4 py-2 text-sm"}`}
+        style={btnStyle}
+        aria-label="Sincronizar transacciones desde Bit2Me"
+      >
+        {icon}
+        {label}
+      </button>
+      {errorMsg && (
+        <p className="font-mono text-xs max-w-48 text-right" style={{ color: "#A32D2D" }}>
+          {errorMsg}
+        </p>
+      )}
+    </div>
   );
 }
