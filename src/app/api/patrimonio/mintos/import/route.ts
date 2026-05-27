@@ -130,9 +130,15 @@ export async function POST(request: Request): Promise<Response> {
     }
   }
 
-  // ── Update overview: net_gain + cash_balance (from last Saldo in Excel) ──
+  // ── Update overview from Excel data ──────────────────────────────────────
+  // total_value = total_deposited + net_gain (book value, accurate for P2P at par)
+  // cash_balance = last Saldo in the statement
+  const estimatedTotalValue = parseFloat(
+    (parsed.totalDeposited + parsed.totalNetInterest).toFixed(2)
+  );
   const overviewPatch: Record<string, unknown> = {
     net_gain: parseFloat(parsed.totalNetInterest.toFixed(4)),
+    total_value: estimatedTotalValue,
     updated_at: new Date().toISOString(),
   };
   if (parsed.finalCashBalance !== null) {
