@@ -13,6 +13,7 @@ import { MintosOriginators } from "./MintosOriginators";
 import { MintosProjection } from "./MintosProjection";
 import { MintosFiscal } from "./MintosFiscal";
 import { MintosImporter } from "./MintosImporter";
+import { MintosOverviewForm } from "./MintosOverviewForm";
 
 const MINTOS_COLOR = "#C4704A";
 
@@ -98,35 +99,8 @@ export function MintosDashboard() {
             <MintosEvolutionChart data={evolutionData} />
             <MintosInterestChart data={interestData} />
           </div>
-          {/* Overview info row */}
-          {overview && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {[
-                { label: "En préstamos", value: overview.invested_in_loans },
-                { label: "Caja disponible", value: overview.cash_balance },
-                { label: "Pagos pendientes", value: overview.pending_payments },
-                { label: "Préstamos activos", value: overview.active_loans_count, isCount: true },
-              ].map(({ label, value, isCount }) => (
-                <div
-                  key={label}
-                  className="rounded-xl p-4 flex flex-col gap-1"
-                  style={{
-                    backgroundColor: "var(--bg-card)",
-                    border: "1px solid var(--border-stone, rgba(160,120,80,0.25))",
-                  }}
-                >
-                  <span className="text-xs uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
-                    {label}
-                  </span>
-                  <span className="font-mono text-lg font-semibold tabular-nums" style={{ color: "var(--text-primary)" }}>
-                    {isCount
-                      ? value.toLocaleString("es-ES")
-                      : new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
+          {/* Overview info row — editable */}
+          <MintosOverviewForm />
         </div>
       )}
 

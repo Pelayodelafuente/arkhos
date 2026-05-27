@@ -130,16 +130,15 @@ export async function POST(request: Request): Promise<Response> {
     }
   }
 
-  // ── Update overview net_gain ──────────────────────────────────────────────
-  if (parsed.totalNetInterest > 0) {
-    await supabase
-      .from('mintos_overview')
-      .update({
-        net_gain: parseFloat(parsed.totalNetInterest.toFixed(4)),
-        updated_at: new Date().toISOString(),
-      })
-      .eq('user_id', user.id);
+  // ── Update overview: net_gain + cash_balance (from last Saldo in Excel) ──
+  const overviewPatch: Record<string, unknown> = {
+    net_gain: parseFloat(parsed.totalNetInterest.toFixed(4)),
+    updated_at: new Date().toISOString(),
+  };
+  if (parsed.finalCashBalance !== null) {
+    overviewPatch.cash_balance = parseFloat(parsed.finalCashBalance.toFixed(2));
   }
+  await supabase.from('mintos_overview').update(overviewPatch).eq('user_id', user.id);
 
   revalidatePath('/patrimonio');
 

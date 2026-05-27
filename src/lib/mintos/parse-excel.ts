@@ -63,6 +63,7 @@ export interface MintosParseResult {
   totalNetInterest: number;
   typeSummary: Record<string, number>;
   unknownTypes: string[];
+  finalCashBalance: number | null;
 }
 
 const MONTHS_SHORT = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
@@ -86,7 +87,7 @@ export function parseMintosRows(rows: unknown[][]): MintosParseResult {
       isValidFormat: false, formatError: 'El archivo está vacío o no tiene transacciones.',
       totalRows: 0, periodStart: '', periodEnd: '', months: [],
       deposits: [], totalDeposited: 0, monthlyBreakdown: [],
-      totalNetInterest: 0, typeSummary: {}, unknownTypes: [],
+      totalNetInterest: 0, typeSummary: {}, unknownTypes: [], finalCashBalance: null,
     };
   }
 
@@ -101,7 +102,7 @@ export function parseMintosRows(rows: unknown[][]): MintosParseResult {
       formatError: 'Cabeceras no reconocidas. Asegúrate de exportar el "Extracto de cuenta" de Mintos.',
       totalRows: rows.length - 1, periodStart: '', periodEnd: '', months: [],
       deposits: [], totalDeposited: 0, monthlyBreakdown: [],
-      totalNetInterest: 0, typeSummary: {}, unknownTypes: [],
+      totalNetInterest: 0, typeSummary: {}, unknownTypes: [], finalCashBalance: null,
     };
   }
 
@@ -110,13 +111,21 @@ export function parseMintosRows(rows: unknown[][]): MintosParseResult {
   const deposits: DepositEntry[] = [];
   const typeSummary: Record<string, number> = {};
   const unknownTypeSet = new Set<string>();
+  let finalCashBalance: number | null = null;
 
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i] as unknown[];
     const rawDate = row[0];
     const rawVolume = row[3];
+    const rawSaldo = row[4]; // Saldo — running balance after each transaction
     const tipoPago = String(row[6] ?? '').trim();
     if (!rawDate || rawVolume === '' || rawVolume === undefined) continue;
+
+    // Track last valid balance
+    if (rawSaldo !== '' && rawSaldo !== undefined) {
+      const saldo = typeof rawSaldo === 'number' ? rawSaldo : parseFloat(String(rawSaldo));
+      if (isFinite(saldo)) finalCashBalance = saldo;
+    }
 
     let dateStr: string;
     if (rawDate instanceof Date) {
@@ -196,5 +205,6 @@ export function parseMintosRows(rows: unknown[][]): MintosParseResult {
     totalNetInterest: parseFloat(totalNetInterest.toFixed(4)),
     typeSummary,
     unknownTypes: [...unknownTypeSet],
+    finalCashBalance,
   };
 }
