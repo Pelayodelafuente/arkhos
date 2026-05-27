@@ -170,18 +170,38 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   const incomingIds = candidates.map((c) => c.external_id);
 
-  const { data: existingRows } = await supabase
+  // Dedup by external_id (API-synced rows)
+  const { data: existingById } = await supabase
     .from('crypto_transactions')
     .select('external_id')
     .eq('user_id', userId)
     .eq('source', 'import_bit2me')
     .in('external_id', incomingIds);
 
-  const existingSet = new Set(
-    (existingRows ?? []).map((r) => r.external_id ?? ''),
+  const existingIdSet = new Set(
+    (existingById ?? []).map((r) => r.external_id ?? ''),
   );
 
-  const newRows = candidates.filter((c) => !existingSet.has(c.external_id));
+  // Dedup by fingerprint: catches legacy seeded rows without external_id
+  const { data: existingFingerprints } = await supabase
+    .from('crypto_transactions')
+    .select('asset_id, type, amount_eur, transaction_date')
+    .eq('user_id', userId)
+    .in('type', ['buy', 'transfer_out']);
+
+  const fingerprintSet = new Set(
+    (existingFingerprints ?? []).map((r) => {
+      const day = r.transaction_date ? r.transaction_date.slice(0, 10) : '';
+      return `${r.type}:${r.asset_id}:${day}:${Math.round((r.amount_eur ?? 0) * 100)}`;
+    }),
+  );
+
+  const newRows = candidates.filter((c) => {
+    if (existingIdSet.has(c.external_id)) return false;
+    const day = c.transaction_date.slice(0, 10);
+    const fp = `${c.type}:${c.asset_id}:${day}:${Math.round((c.amount_eur ?? 0) * 100)}`;
+    return !fingerprintSet.has(fp);
+  });
 
   if (newRows.length === 0) {
     return NextResponse.json({

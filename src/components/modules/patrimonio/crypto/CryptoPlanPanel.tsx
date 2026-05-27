@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Upload } from "lucide-react";
+import { Upload } from "lucide-react";
 import { Skeleton } from "@/components/ui";
 import { useCryptoStore } from "@/stores/crypto-store";
-import { RegisterCryptoPurchaseModal } from "./RegisterCryptoPurchaseModal";
 import { ImportBit2MeCSVModal } from "./ImportBit2MeCSVModal";
 
 const formatEur = (v: number) =>
@@ -20,7 +19,6 @@ const WALLET_LABELS: Record<string, string> = {
 export function CryptoPlanPanel() {
   const isLoading = useCryptoStore((s) => s.isLoading);
   const getMonthlyPlanWithAssets = useCryptoStore((s) => s.getMonthlyPlanWithAssets);
-  const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
 
   const plan = getMonthlyPlanWithAssets();
@@ -127,20 +125,6 @@ export function CryptoPlanPanel() {
           type="button"
           className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-150"
           style={{
-            backgroundColor: "color-mix(in srgb, var(--platform-crypto) 10%, transparent)",
-            color: "var(--platform-crypto)",
-            border: "1px solid color-mix(in srgb, var(--platform-crypto) 20%, transparent)",
-          }}
-          onClick={() => setShowRegisterModal(true)}
-        >
-          <Plus size={15} strokeWidth={2} aria-hidden="true" />
-          Registrar compra del mes
-        </button>
-
-        <button
-          type="button"
-          className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-150"
-          style={{
             backgroundColor: "color-mix(in srgb, var(--text-muted) 6%, transparent)",
             color: "var(--text-secondary)",
             border: "1px solid var(--border-stone, rgba(160,120,80,0.25))",
@@ -153,13 +137,6 @@ export function CryptoPlanPanel() {
       </div>
 
       {/* Modals */}
-      {showRegisterModal && (
-        <RegisterCryptoPurchaseModal
-          onClose={() => setShowRegisterModal(false)}
-          onSuccess={() => setShowRegisterModal(false)}
-        />
-      )}
-
       {showImportModal && (
         <ImportBit2MeCSVModal
           onClose={() => setShowImportModal(false)}
