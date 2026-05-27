@@ -14,6 +14,8 @@ export const MINTOS_TYPE_MAP: Record<string, string> = {
   'Mintos Core fee': 'commissions',
   'Ingresos por intereses retrasados derivados de la conciliación en tránsito': 'late_interest',
   'Intereses recibidos por pagos pendientes': 'late_interest',
+  'Bonificación': 'interest_income',
+  'Comisiones de mora recibidas': 'late_interest',
 };
 
 export const EXPECTED_HEADERS = [
