@@ -204,6 +204,33 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     );
   }
 
+  // Recalculate total_invested_eur and avg_buy_price_eur for affected assets
+  const affectedAssetIds = [...new Set(newRows.filter((r) => r.type === 'buy').map((r) => r.asset_id))];
+
+  for (const assetId of affectedAssetIds) {
+    const { data: buyTxs } = await supabase
+      .from('crypto_transactions')
+      .select('quantity, amount_eur')
+      .eq('asset_id', assetId)
+      .eq('user_id', userId)
+      .eq('type', 'buy');
+
+    if (!buyTxs || buyTxs.length === 0) continue;
+
+    const totalInvested = buyTxs.reduce((sum, tx) => sum + (tx.amount_eur ?? 0), 0);
+    const totalQty = buyTxs.reduce((sum, tx) => sum + (tx.quantity ?? 0), 0);
+    const avgBuyPrice = totalQty > 0 ? totalInvested / totalQty : 0;
+
+    await supabase
+      .from('crypto_assets')
+      .update({
+        total_invested_eur: totalInvested,
+        avg_buy_price_eur: avgBuyPrice,
+      })
+      .eq('id', assetId)
+      .eq('user_id', userId);
+  }
+
   const skipped = relevant.length - newRows.length;
 
   return NextResponse.json({
