@@ -14,6 +14,7 @@ import { MintosProjection } from "./MintosProjection";
 import { MintosFiscal } from "./MintosFiscal";
 import { MintosImporter } from "./MintosImporter";
 import { MintosOverviewForm } from "./MintosOverviewForm";
+import { MintosHealthForm } from "./MintosHealthForm";
 
 const MINTOS_COLOR = "#C4704A";
 
@@ -106,10 +107,13 @@ export function MintosDashboard() {
 
       {/* Tab: Salud cartera */}
       {activeTab === "health" && (
-        <MintosPortfolioHealth
-          segments={healthSegments}
-          snapshotDate={portfolioHealth?.snapshot_date}
-        />
+        <div className="space-y-4">
+          <MintosPortfolioHealth
+            segments={healthSegments}
+            snapshotDate={portfolioHealth?.snapshot_date}
+          />
+          <MintosHealthForm />
+        </div>
       )}
 
       {/* Tab: Distribución */}
