@@ -58,6 +58,9 @@ playwright/.auth/
 reports/
 .claude/worktrees/
 
+# Claude Code local settings (puede contener permisos con secrets)
+.claude/settings.local.json
+
 # Screenshots de debug
 canvas-estado.png
 
