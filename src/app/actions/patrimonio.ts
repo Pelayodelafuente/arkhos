@@ -229,6 +229,26 @@ export async function executeSavingsPlan(
   const assetIds = [...new Set(executions.map((e) => e.assetId))];
   await recalcAssets(supabase, user.id, assetIds);
 
+  // Decrementar caja por el total invertido en el plan
+  const totalInvested = executions.reduce((s, e) => s + e.totalAmount, 0);
+  const { data: cashAsset } = await supabase
+    .from('portfolio_assets')
+    .select('id, current_quantity')
+    .eq('user_id', user.id)
+    .eq('platform_id', platform.id)
+    .eq('category', 'cash')
+    .eq('is_active', true)
+    .maybeSingle();
+
+  if (cashAsset) {
+    const newQty = Math.max(0, Number(cashAsset.current_quantity) - totalInvested);
+    await supabase
+      .from('portfolio_assets')
+      .update({ current_quantity: newQty })
+      .eq('id', cashAsset.id)
+      .eq('user_id', user.id);
+  }
+
   revalidatePath('/patrimonio');
   return { success: true, data: { count: executions.length } };
 }
@@ -522,6 +542,9 @@ async function recalcAssets(
       .eq('id', assetId)
       .eq('user_id', userId);
   }
+
+  // Regenerar snapshot del día actual con los valores actualizados
+  await supabase.rpc('upsert_today_snapshot', { p_user_id: userId });
 }
 
 // ---------------------------------------------------------------------------
@@ -561,6 +584,8 @@ export async function updateLivePrices(
   const updated = results.filter(
     (r) => r.status === 'fulfilled' && !r.value.error,
   ).length;
+
+  await supabase.rpc('upsert_today_snapshot', { p_user_id: user.id });
 
   return { updated };
 }
