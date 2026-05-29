@@ -271,6 +271,7 @@ export async function updateIndexaPrices(
 
   const now = new Date().toISOString();
 
+  // 1. Update price and total_value for each position
   for (const u of updates) {
     const totalValue = u.shares * u.pricePerShare;
     const { error } = await supabase
@@ -284,6 +285,24 @@ export async function updateIndexaPrices(
       .eq('user_id', user.id);
 
     if (error) return { ok: false, error: error.message };
+  }
+
+  // 2. Recalculate allocation_pct across all positions for this user
+  const { data: allPositions, error: fetchError } = await supabase
+    .from('indexa_positions')
+    .select('id, total_value')
+    .eq('user_id', user.id);
+
+  if (!fetchError && allPositions && allPositions.length > 0) {
+    const total = allPositions.reduce((s, p) => s + (p.total_value ?? 0), 0);
+    for (const pos of allPositions) {
+      const pct = total > 0 ? ((pos.total_value ?? 0) / total) * 100 : 0;
+      await supabase
+        .from('indexa_positions')
+        .update({ allocation_pct: parseFloat(pct.toFixed(2)) })
+        .eq('id', pos.id)
+        .eq('user_id', user.id);
+    }
   }
 
   revalidatePath('/patrimonio');

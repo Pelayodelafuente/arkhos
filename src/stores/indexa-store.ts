@@ -143,6 +143,23 @@ export const useIndexaStore = create<IndexaStore>((set, get) => ({
       result.push({ label, value: parseFloat(value.toFixed(2)), cost: parseFloat(cumCost.toFixed(2)) });
     }
 
+    // If the last point is the current calendar month and has no return registered yet,
+    // override its value with the real positions total (updated via "Actualizar precios").
+    // This keeps the chart accurate when prices are updated before the month closes.
+    if (result.length > 0) {
+      const now = new Date();
+      const currentKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      const lastKey = allKeys[allKeys.length - 1];
+      const positions = get().positions;
+      if (lastKey === currentKey && !returnMap.has(currentKey) && positions.length > 0) {
+        const liveTotal = positions.reduce((s, p) => s + p.total_value, 0);
+        result[result.length - 1] = {
+          ...result[result.length - 1],
+          value: parseFloat(liveTotal.toFixed(2)),
+        };
+      }
+    }
+
     return result;
   },
 
