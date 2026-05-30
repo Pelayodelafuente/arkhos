@@ -2,19 +2,18 @@
  * Trade Republic — Browser Authentication Script
  *
  * Abre Chrome visible, el usuario se loguea manualmente en la web de TR,
- * el script extrae la sesión automáticamente y la guarda para el sync.
+ * el script detecta el login automáticamente y guarda la sesión.
  *
  * Usage:
  *   pnpm tr:auth
  *
- * No se requieren credenciales en .env.local para este script.
+ * No requiere credenciales — el usuario se loguea en la ventana de Chrome.
  */
 
 import puppeteer from 'puppeteer'
 import * as fs from 'node:fs/promises'
 import * as os from 'node:os'
 import * as path from 'node:path'
-import * as readline from 'node:readline/promises'
 
 const SESSION_FILE = path.join(os.homedir(), '.tr_api_cookies.json')
 const TR_APP_URL = 'https://app.traderepublic.com'
@@ -26,12 +25,6 @@ interface SavedCookieData {
   rawCookies: string[]
 }
 
-async function waitForEnter(prompt: string) {
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
-  await rl.question(prompt)
-  rl.close()
-}
-
 async function main() {
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
   console.log('  Trade Republic — Auth Setup')
@@ -39,10 +32,9 @@ async function main() {
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
   console.log('')
   console.log('Se abrirá Chrome. Inicia sesión en Trade Republic.')
-  console.log('Cuando estés dentro del dashboard, pulsa ENTER aquí.')
+  console.log('El script detectará el login automáticamente.')
   console.log('')
 
-  // Launch visible Chrome (headless: false)
   const browser = await puppeteer.launch({
     headless: false,
     defaultViewport: null,
@@ -51,62 +43,97 @@ async function main() {
 
   const page = await browser.newPage()
 
-  // Intercept cookies from API responses
+  // Collect cookies from API responses
   const capturedCookieHeaders: string[] = []
   let capturedSessionToken: string | null = null
 
   await page.setRequestInterception(true)
-
-  page.on('request', (req) => {
-    req.continue()
-  })
+  page.on('request', (req) => { req.continue() })
 
   page.on('response', async (response) => {
-    const url = response.url()
-    if (!url.includes(TR_API_HOST)) return
-
+    if (!response.url().includes(TR_API_HOST)) return
     try {
       const headers = response.headers()
       const setCookie = headers['set-cookie']
       if (setCookie) {
         const cookies = Array.isArray(setCookie) ? setCookie : [setCookie]
         for (const c of cookies) {
-          capturedCookieHeaders.push(c)
+          if (!capturedCookieHeaders.includes(c)) capturedCookieHeaders.push(c)
           const match = /tr_session=([^;]+)/.exec(c)
           if (match) capturedSessionToken = match[1]
         }
       }
-    } catch {
-      // ignore errors reading response headers
-    }
+    } catch { /* ignore */ }
   })
 
   console.log('🌐 Abriendo Trade Republic...')
   await page.goto(TR_APP_URL, { waitUntil: 'domcontentloaded' })
 
-  console.log('')
-  console.log('👆 Inicia sesión en la ventana de Chrome que se ha abierto.')
-  console.log('   Cuando veas el dashboard (tus posiciones), pulsa ENTER aquí.')
+  console.log('👆 Loguéate en la ventana de Chrome.')
+  console.log('   Esperando detección automática del login...')
   console.log('')
 
-  await waitForEnter('Pulsa ENTER cuando hayas iniciado sesión: ')
+  // Wait for tr_session cookie to appear (indicates successful login)
+  // Polls every 2 seconds, timeout 5 minutes
+  const MAX_WAIT_MS = 5 * 60 * 1000
+  const POLL_INTERVAL_MS = 2_000
+  const start = Date.now()
 
-  // Also read cookies via Puppeteer API as fallback
+  while (Date.now() - start < MAX_WAIT_MS) {
+    const cookies = await page.cookies()
+    const trSession = cookies.find((c) => c.name === 'tr_session')
+
+    if (trSession) {
+      capturedSessionToken = trSession.value
+      console.log('✅ Login detectado!')
+      break
+    }
+
+    // Also check localStorage as fallback
+    try {
+      const localStorageToken = await page.evaluate(() => {
+        return (
+          localStorage.getItem('tr_session') ??
+          localStorage.getItem('session') ??
+          localStorage.getItem('accessToken') ??
+          null
+        )
+      })
+      if (localStorageToken) {
+        capturedSessionToken = localStorageToken
+        console.log('✅ Login detectado (localStorage)!')
+        break
+      }
+    } catch { /* page might not be ready */ }
+
+    await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS))
+  }
+
+  if (!capturedSessionToken) {
+    // Last resort: collect any cookies even without tr_session
+    const allCookies = await page.cookies()
+    const trRelated = allCookies.filter((c) => c.domain.includes('traderepublic'))
+
+    if (trRelated.length > 0) {
+      console.log(`⚠️  No se encontró tr_session pero hay ${trRelated.length} cookies de TR.`)
+      console.log('   Cookies encontradas:', trRelated.map((c) => c.name).join(', '))
+      // Use any token-like cookie as session token
+      const anyToken = trRelated.find((c) => c.name.includes('session') || c.name.includes('token'))
+      if (anyToken) capturedSessionToken = anyToken.value
+    }
+  }
+
+  // Build rawCookies array
   const pageCookies = await page.cookies()
-  const trSessionCookie = pageCookies.find((c) => c.name === 'tr_session')
   const trRefreshCookie = pageCookies.find(
     (c) => c.name === 'tr_session_refresh' || c.name === 'tr_refresh'
   )
-
-  if (trSessionCookie && !capturedSessionToken) {
-    capturedSessionToken = trSessionCookie.value
-  }
 
   if (capturedCookieHeaders.length === 0) {
     for (const cookie of pageCookies) {
       if (cookie.domain.includes('traderepublic')) {
         capturedCookieHeaders.push(
-          `${cookie.name}=${cookie.value}; Path=${cookie.path}; Domain=${cookie.domain}`
+          `${cookie.name}=${cookie.value}; Path=${cookie.path ?? '/'}; Domain=${cookie.domain}`
         )
       }
     }
@@ -116,8 +143,8 @@ async function main() {
 
   if (!capturedSessionToken) {
     console.error('')
-    console.error('❌ No se encontró el token tr_session.')
-    console.error('   Asegúrate de haber completado el login antes de pulsar ENTER.')
+    console.error('❌ No se pudo capturar el token de sesión.')
+    console.error('   ¿Completaste el login en la ventana de Chrome?')
     process.exit(1)
   }
 
@@ -150,7 +177,7 @@ async function main() {
   console.log('Secret value:')
   console.log(sessionB64)
   console.log('')
-  console.log('Otros secrets necesarios (si no los tienes ya):')
+  console.log('Otros secrets necesarios:')
   console.log('  TR_USER_ID              = [UUID en Supabase Auth → Users]')
   console.log('  NEXT_PUBLIC_SUPABASE_URL = [de .env.local]')
   console.log('  SUPABASE_SERVICE_ROLE_KEY = [de .env.local]')
