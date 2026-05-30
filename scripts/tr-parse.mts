@@ -1,6 +1,5 @@
 /**
  * Helper para parsear respuestas del WebSocket de Trade Republic.
- * TR puede enviar bytes extra tras el JSON — este parser los descarta.
  */
 
 export function parseTRResponse<T>(raw: string): T {
@@ -9,23 +8,46 @@ export function parseTRResponse<T>(raw: string): T {
     return JSON.parse(raw) as T
   } catch { /* fall through */ }
 
-  // TR may append a single character (status byte) after the closing bracket.
-  // Find the last } or ] that closes the top-level structure.
-  const lastBrace = raw.lastIndexOf('}')
-  const lastBracket = raw.lastIndexOf(']')
-  const end = Math.max(lastBrace, lastBracket)
+  // Log the exact raw string for debugging (hex dump of first 100 chars)
+  const hex = Array.from(raw.slice(0, 100))
+    .map(c => c.charCodeAt(0).toString(16).padStart(2, '0'))
+    .join(' ')
+  console.error('TR raw response (text):', JSON.stringify(raw.slice(0, 120)))
+  console.error('TR raw response (hex):', hex)
+  console.error('TR raw length:', raw.length)
 
-  if (end !== -1) {
+  // Try slicing to first valid JSON boundary
+  // Scan from start to find the outermost { } or [ ]
+  let depth = 0
+  let inString = false
+  let escape = false
+  let jsonEnd = -1
+
+  for (let i = 0; i < raw.length; i++) {
+    const ch = raw[i]
+    if (escape) { escape = false; continue }
+    if (ch === '\\' && inString) { escape = true; continue }
+    if (ch === '"') { inString = !inString; continue }
+    if (inString) continue
+
+    if (ch === '{' || ch === '[') depth++
+    else if (ch === '}' || ch === ']') {
+      depth--
+      if (depth === 0) { jsonEnd = i; break }
+    }
+  }
+
+  if (jsonEnd !== -1) {
+    const jsonStart = raw.search(/[{[]/)
+    const candidate = raw.slice(jsonStart, jsonEnd + 1)
     try {
-      return JSON.parse(raw.slice(0, end + 1)) as T
-    } catch { /* fall through */ }
+      const result = JSON.parse(candidate) as T
+      console.error('TR parse fixed: sliced to', jsonStart, '-', jsonEnd)
+      return result
+    } catch (e) {
+      console.error('Slice attempt failed:', e)
+    }
   }
 
-  // Find first JSON token and try from there
-  const start = raw.search(/[{[]/)
-  if (start !== -1 && end !== -1) {
-    return JSON.parse(raw.slice(start, end + 1)) as T
-  }
-
-  throw new SyntaxError(`Cannot parse TR response: ${raw.slice(0, 120)}`)
+  throw new SyntaxError(`Cannot parse TR response at len=${raw.length}: ${JSON.stringify(raw.slice(0, 120))}`)
 }
