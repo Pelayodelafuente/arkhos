@@ -7,8 +7,12 @@
 import * as fs from 'node:fs/promises'
 import * as os from 'node:os'
 import * as path from 'node:path'
-import { connectTR, fetchTickerPrice } from '../src/lib/tr/websocket.ts'
-import type { TRPortfolioResponse, TRCashResponse } from '../src/lib/tr/types.ts'
+import { connectTR, fetchTickerPrice } from './tr-client.mts'
+
+interface TRCashResponse { amount: number; currencyId: string }
+interface TRPortfolioPosition { isin: string; name: string; netSize: string; averageBuyIn: string }
+interface TRPortfolioCategory { categoryType: string; positions: TRPortfolioPosition[] }
+interface TRPortfolioResponse { categories?: TRPortfolioCategory[] }
 
 const SESSION_FILE = path.join(os.homedir(), '.tr_api_cookies.json')
 
