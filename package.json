@@ -9,6 +9,7 @@
     "lint": "eslint src",
     "audit:visual": "tsx scripts/audit.ts",
     "tr:auth": "tsx scripts/tr-auth.mts",
+    "tr:refresh": "tsx scripts/tr-refresh.mts",
     "tr:test": "tsx scripts/tr-test-data.mts",
     "tr:sync": "tsx scripts/tr-sync-run.mts"
   },

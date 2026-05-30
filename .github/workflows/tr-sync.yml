@@ -32,6 +32,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Install Chromium for Puppeteer
+        run: node node_modules/.pnpm/puppeteer@25.1.0/node_modules/puppeteer/install.mjs
+
+      - name: Refresh TR session (uses saved cookies, no OTP needed)
+        run: npx tsx scripts/tr-refresh.mts
+        continue-on-error: true  # if refresh fails, try sync with existing session
+        env:
+          TR_COOKIE_FILE_B64: ${{ secrets.TR_COOKIE_FILE_B64 }}
+
       - name: Run TR Sync
         run: npx tsx scripts/tr-sync-run.mts
         env:
