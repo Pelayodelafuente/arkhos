@@ -50,13 +50,19 @@ export async function connectTR(session: TRSession): Promise<TRClient> {
           const msgId = parseInt(msg.slice(0, spaceIdx), 10)
           if (msgId !== id) return
 
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          ws.off('message', onMessage as any)
-          clearTimeout(timeout)
-
           const payload = msg.slice(spaceIdx + 1)
-          try { resolve(parseRaw<T>(payload)) }
-          catch (e) { reject(e) }
+
+          // TR may send a non-JSON ack (e.g. "OK") before the actual data.
+          // Keep the listener alive until we get valid JSON.
+          try {
+            const parsed = parseRaw<T>(payload)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            ws.off('message', onMessage as any)
+            clearTimeout(timeout)
+            resolve(parsed)
+          } catch {
+            // Not JSON yet — wait for next message with same ID
+          }
         }
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
