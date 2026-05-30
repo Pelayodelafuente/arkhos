@@ -1,0 +1,1621 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portfolio ETFs — Pelayo de la Fuente</title>
+<link rel="preconnect" href="https://fonts.bunny.net">
+<link href="https://fonts.bunny.net/css?family=dm-serif-display:400|plus-jakarta-sans:400,500,600,700|jetbrains-mono:400,500" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0d0d;--card:#141414;--surface2:#1c1c1c;--surface3:#232323;
+  --accent:#C4704A;--green:#4caf82;--red:#e05c5c;--gold:#d4a843;
+  --muted:#666;--text:#f0ebe1;--text2:#a09890;--border:rgba(255,255,255,0.07);
+  --font-display:'DM Serif Display',serif;--font-body:'Plus Jakarta Sans',sans-serif;--font-mono:'JetBrains Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:14px;line-height:1.6;display:flex;min-height:100vh}
+
+/* NAV */
+#nav{position:fixed;top:0;left:0;width:210px;height:100vh;background:#0a0a0a;border-right:1px solid var(--border);overflow-y:auto;padding:24px 0;z-index:100}
+#nav h2{font-family:var(--font-display);font-size:15px;color:var(--accent);padding:0 20px 16px;border-bottom:1px solid var(--border);margin-bottom:8px;letter-spacing:.5px}
+.nav-item{display:block;padding:10px 20px;text-decoration:none;color:var(--text2);transition:all .2s;border-left:2px solid transparent}
+.nav-item:hover{color:var(--text);background:var(--surface2);border-left-color:var(--accent)}
+.nav-ticker{font-family:var(--font-mono);font-size:13px;font-weight:500;color:var(--accent);display:block}
+.nav-name{font-size:11px;color:var(--muted);display:block;margin-top:1px}
+.nav-mes{font-family:var(--font-mono);font-size:10px;color:var(--green);display:block;margin-top:2px}
+
+/* MAIN */
+#main{margin-left:210px;padding:40px 48px 80px;width:100%}
+
+/* PORTFOLIO HEADER */
+.portfolio-header{margin-bottom:48px;padding-bottom:32px;border-bottom:1px solid var(--border)}
+.portfolio-header h1{font-family:var(--font-display);font-size:36px;color:var(--text);margin-bottom:8px}
+.portfolio-header p{color:var(--text2);font-size:14px}
+.portfolio-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:24px}
+.ps-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px}
+.ps-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px}
+.ps-value{font-family:var(--font-mono);font-size:20px;font-weight:500}
+.ps-value.pos{color:var(--green)}
+.ps-value.neg{color:var(--red)}
+
+/* FICHA */
+.ficha{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:36px;margin-bottom:32px;scroll-margin-top:24px}
+.back-link{font-size:11px;color:var(--muted);text-decoration:none;text-transform:uppercase;letter-spacing:.8px;margin-bottom:20px;display:inline-block;transition:color .2s}
+.back-link:hover{color:var(--accent)}
+
+/* FICHA HEADER */
+.ficha-header{margin-bottom:28px}
+.ficha-num-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.ficha-num{font-family:var(--font-mono);font-size:11px;color:var(--muted);background:var(--surface2);padding:3px 8px;border-radius:4px}
+.badge{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;padding:3px 8px;border-radius:4px}
+.badge-cat{background:rgba(196,112,74,.15);color:var(--accent)}
+.badge-risk-yellow{background:rgba(212,168,67,.15);color:var(--gold)}
+.badge-risk-orange{background:rgba(230,120,60,.15);color:#e0783c}
+.badge-risk-red{background:rgba(224,92,92,.15);color:var(--red)}
+.badge-risk-redx{background:rgba(224,50,50,.2);color:#ff4444}
+.ficha-name{font-family:var(--font-display);font-size:28px;color:var(--text);line-height:1.2;margin-bottom:10px}
+.ficha-ticker-row{display:flex;align-items:baseline;gap:14px;margin-bottom:14px}
+.ficha-ticker{font-family:var(--font-mono);font-size:22px;font-weight:500;color:var(--accent)}
+.ficha-isin{font-family:var(--font-mono);font-size:12px;color:var(--muted)}
+.ficha-tags{display:flex;flex-wrap:wrap;gap:8px}
+.tag{font-size:11px;color:var(--text2);background:var(--surface2);border:1px solid var(--border);padding:4px 10px;border-radius:20px}
+
+/* STATS ROW */
+.stats-row{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:28px}
+.stat-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 10px;text-align:center}
+.stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px}
+.stat-value{font-family:var(--font-mono);font-size:12px;font-weight:500;color:var(--text)}
+
+/* SECTION TITLE */
+.section-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+
+/* PERFORMANCE */
+.perf-badges{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.perf-badge{text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;min-width:70px}
+.perf-badge .pb-label{font-size:10px;color:var(--muted);display:block;margin-bottom:3px}
+.perf-badge .pb-val{font-family:var(--font-mono);font-size:14px;font-weight:500;display:block}
+.pos{color:var(--green)}.neg{color:var(--red)}
+
+.annual-table{width:100%;border-collapse:collapse;margin-bottom:20px}
+.annual-table th{font-size:10px;color:var(--muted);text-align:center;padding:6px 8px;background:var(--surface2);text-transform:uppercase;letter-spacing:.6px}
+.annual-table td{font-family:var(--font-mono);font-size:13px;text-align:center;padding:8px;border-top:1px solid var(--border)}
+.heat-pos{color:var(--green)}.heat-neg{color:var(--red)}
+
+.risk-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:28px}
+.risk-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px}
+.risk-card .rl{font-size:10px;color:var(--muted);margin-bottom:3px}
+.risk-card .rv{font-family:var(--font-mono);font-size:13px;font-weight:500}
+
+/* COMPOSITION */
+.composition-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:28px}
+.holdings-table{width:100%;border-collapse:collapse}
+.holdings-table tr{border-bottom:1px solid var(--border)}
+.holdings-table td{padding:7px 0;font-size:12px}
+.holdings-table td:first-child{color:var(--text2);width:52%}
+.holdings-table td:last-child{font-family:var(--font-mono);color:var(--text);text-align:right;width:14%}
+.bar-cell{width:34%;padding:7px 8px}
+.bar-bg{background:var(--surface3);border-radius:2px;height:4px;overflow:hidden}
+.bar-fill{background:var(--accent);height:4px;border-radius:2px}
+.chart-container{position:relative;height:220px}
+
+.geo-bars{margin-top:4px}
+.geo-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.geo-label{font-size:11px;color:var(--text2);width:120px;flex-shrink:0}
+.geo-bar-wrap{flex:1;background:var(--surface3);border-radius:2px;height:6px}
+.geo-bar-fill{background:var(--gold);height:6px;border-radius:2px}
+.geo-pct{font-family:var(--font-mono);font-size:11px;color:var(--text);width:40px;text-align:right}
+
+/* ANALYSIS */
+.analysis-block{margin-bottom:28px}
+.desc-text{color:var(--text2);font-size:13px;line-height:1.7;margin-bottom:20px}
+
+.pros-cons-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.pros-block,.cons-block{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:16px}
+.pros-block{border-top:2px solid var(--green)}
+.cons-block{border-top:2px solid var(--red)}
+.pros-title{font-size:11px;font-weight:600;color:var(--green);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
+.cons-title{font-size:11px;font-weight:600;color:var(--red);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
+.pros-block li,.cons-block li{font-size:12px;color:var(--text2);margin-bottom:6px;padding-left:14px;position:relative;list-style:none}
+.pros-block li::before{content:"✓";position:absolute;left:0;color:var(--green);font-size:10px}
+.cons-block li::before{content:"✕";position:absolute;left:0;color:var(--red);font-size:10px}
+
+.opinion-block{background:rgba(196,112,74,.08);border:1px solid rgba(196,112,74,.2);border-radius:8px;padding:16px;margin-bottom:20px}
+.opinion-label{font-size:10px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
+.opinion-text{font-size:13px;color:var(--text2);line-height:1.7}
+
+/* COMPETITORS */
+.comp-table{width:100%;border-collapse:collapse;margin-bottom:28px}
+.comp-table th{font-size:10px;color:var(--muted);text-align:left;padding:6px 8px;background:var(--surface2);text-transform:uppercase;letter-spacing:.6px}
+.comp-table th:not(:first-child){text-align:right}
+.comp-table td{font-size:12px;padding:8px;border-top:1px solid var(--border);color:var(--text2)}
+.comp-table td:not(:first-child){font-family:var(--font-mono);text-align:right;color:var(--text)}
+
+/* MI INVERSION */
+.mi-inversion{background:var(--surface2);border:1px solid rgba(196,112,74,.25);border-radius:10px;padding:20px;display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.mi-inv-item .mil{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px}
+.mi-inv-item .miv{font-family:var(--font-mono);font-size:16px;font-weight:500}
+.mi-inv-item .miv.pos{color:var(--green)}
+.mi-inv-item .miv.neg{color:var(--red)}
+.mi-inv-item .miv.accent{color:var(--accent)}
+.plan-note{background:rgba(196,112,74,.1);border:1px solid rgba(196,112,74,.2);border-radius:6px;padding:10px 14px;font-size:12px;color:var(--text2);margin-top:12px;grid-column:1/-1}
+
+/* FOOTER */
+footer{display:none}
+</style>
+</head>
+<body>
+
+<!-- NAV LATERAL -->
+<nav id="nav">
+  <h2>Portfolio ETFs</h2>
+  <a href="#SXR8" class="nav-item"><span class="nav-ticker">SXR8</span><span class="nav-name">iShares S&amp;P 500</span><span class="nav-mes">250€/mes</span></a>
+  <a href="#VFEM" class="nav-item"><span class="nav-ticker">VFEM</span><span class="nav-name">Vanguard EM</span><span class="nav-mes">150€/mes</span></a>
+  <a href="#CNDX" class="nav-item"><span class="nav-ticker">CNDX</span><span class="nav-name">iShares Nasdaq 100</span><span class="nav-mes">100€/mes</span></a>
+  <a href="#XXSC" class="nav-item"><span class="nav-ticker">XXSC</span><span class="nav-name">Xtrackers EU SmCap</span><span class="nav-mes">75€/mes</span></a>
+  <a href="#WDEF" class="nav-item"><span class="nav-ticker">WDEF</span><span class="nav-name">WisdomTree Defence</span><span class="nav-mes">75€/mes</span></a>
+  <a href="#XWIN" class="nav-item"><span class="nav-ticker">XWIN</span><span class="nav-name">Xtrackers Industrials</span><span class="nav-mes">50€/mes</span></a>
+  <a href="#STCE" class="nav-item"><span class="nav-ticker">STCE</span><span class="nav-name">iShares Clean Energy</span><span class="nav-mes">50€/mes</span></a>
+  <a href="#IGLN" class="nav-item"><span class="nav-ticker">IGLN</span><span class="nav-name">iShares Gold ETC</span><span class="nav-mes">25€/mes</span></a>
+  <a href="#ISLN" class="nav-item"><span class="nav-ticker">ISLN</span><span class="nav-name">iShares Silver ETC</span><span class="nav-mes">25€/mes</span></a>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main id="main">
+
+<!-- PORTFOLIO SUMMARY -->
+<div class="portfolio-header">
+  <h1>Fichas de Portfolio</h1>
+  <p>9 ETFs/ETCs · Plan de inversión sistemático (DCA) · Actualizado 30/05/2026</p>
+  <div class="portfolio-summary">
+    <div class="ps-card"><div class="ps-label">Total invertido</div><div class="ps-value">7.474,98€</div></div>
+    <div class="ps-card"><div class="ps-label">Valor actual</div><div class="ps-value">8.764,97€</div></div>
+    <div class="ps-card"><div class="ps-label">P&amp;L total</div><div class="ps-value pos">+1.289,99€</div></div>
+    <div class="ps-card"><div class="ps-label">Rentabilidad</div><div class="ps-value pos">+17,26%</div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- FICHA 1: SXR8 -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="ficha" id="SXR8">
+  <a href="#nav" class="back-link">↑ Volver al índice</a>
+  <div class="ficha-header">
+    <div class="ficha-num-row">
+      <span class="ficha-num">#01</span>
+      <span class="badge badge-cat">Renta Variable · USA</span>
+      <span class="badge badge-risk-yellow">Riesgo moderado</span>
+    </div>
+    <div class="ficha-name">iShares Core S&P 500 UCITS ETF USD (Acc)</div>
+    <div class="ficha-ticker-row">
+      <span class="ficha-ticker">SXR8</span>
+      <span class="ficha-isin">ISIN: IE00B5BMR087 · WKN: A0YEDG</span>
+    </div>
+    <div class="ficha-tags">
+      <span class="tag">iShares (BlackRock)</span>
+      <span class="tag">Irlanda</span>
+      <span class="tag">USD</span>
+      <span class="tag">UCITS ✓</span>
+      <span class="tag">Acumulación</span>
+      <span class="tag">Lanzamiento: May 2010</span>
+      <span class="tag">Réplica física total</span>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-label">TER</div><div class="stat-value">0,07%</div></div>
+    <div class="stat-card"><div class="stat-label">AUM</div><div class="stat-value">127.750M€</div></div>
+    <div class="stat-card"><div class="stat-label">Réplica</div><div class="stat-value">Física</div></div>
+    <div class="stat-card"><div class="stat-label">Divisa</div><div class="stat-value">USD</div></div>
+    <div class="stat-card"><div class="stat-label">Lanzamiento</div><div class="stat-value">May 2010</div></div>
+    <div class="stat-card"><div class="stat-label">Distribución</div><div class="stat-value">Acum.</div></div>
+    <div class="stat-card"><div class="stat-label">UCITS</div><div class="stat-value">✓ Sí</div></div>
+  </div>
+
+  <div class="section-title">Rendimiento</div>
+  <div class="perf-badges">
+    <div class="perf-badge"><span class="pb-label">YTD</span><span class="pb-val pos">+11,96%</span></div>
+    <div class="perf-badge"><span class="pb-label">1M</span><span class="pb-val pos">+6,68%</span></div>
+    <div class="perf-badge"><span class="pb-label">3M</span><span class="pb-val pos">+11,77%</span></div>
+    <div class="perf-badge"><span class="pb-label">6M</span><span class="pb-val pos">+10,25%</span></div>
+    <div class="perf-badge"><span class="pb-label">1 año</span><span class="pb-val pos">+25,19%</span></div>
+    <div class="perf-badge"><span class="pb-label">3 años</span><span class="pb-val pos">+70,46%</span></div>
+    <div class="perf-badge"><span class="pb-label">5 años</span><span class="pb-val pos">+98,97%</span></div>
+    <div class="perf-badge"><span class="pb-label">MAX</span><span class="pb-val pos">+807,09%</span></div>
+  </div>
+
+  <table class="annual-table">
+    <thead><tr><th>Año</th><th>2025</th><th>2024</th><th>2023</th><th>2022</th></tr></thead>
+    <tbody><tr>
+      <td style="color:var(--muted);font-size:11px">Rentabilidad</td>
+      <td class="heat-pos">+3,96%</td>
+      <td class="heat-pos">+32,62%</td>
+      <td class="heat-pos">+21,54%</td>
+      <td class="heat-neg">-13,30%</td>
+    </tr></tbody>
+  </table>
+
+  <div class="section-title">Métricas de riesgo</div>
+  <div class="risk-grid">
+    <div class="risk-card"><div class="rl">Volatilidad 1Y</div><div class="rv">11,39%</div></div>
+    <div class="risk-card"><div class="rl">Volatilidad 3Y</div><div class="rv">15,41%</div></div>
+    <div class="risk-card"><div class="rl">Return/Risk 1Y</div><div class="rv pos">2,21</div></div>
+    <div class="risk-card"><div class="rl">MaxDD 1Y</div><div class="rv neg">-7,49%</div></div>
+    <div class="risk-card"><div class="rl">MaxDD 3Y</div><div class="rv neg">-22,60%</div></div>
+    <div class="risk-card"><div class="rl">MaxDD inception</div><div class="rv neg">-33,71%</div></div>
+    <div class="risk-card"><div class="rl">Prestamo valores</div><div class="rv">Sí</div></div>
+    <div class="risk-card"><div class="rl">Custodio</div><div class="rv" style="font-size:10px">State Street</div></div>
+  </div>
+
+  <div class="section-title">Composición</div>
+  <div class="composition-grid">
+    <div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px">TOP 10 HOLDINGS (31/03/2026)</div>
+      <table class="holdings-table">
+        <tr><td>NVIDIA</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:100%"></div></div></td><td>7,57%</td></tr>
+        <tr><td>Apple</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:88%"></div></div></td><td>6,66%</td></tr>
+        <tr><td>Microsoft</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:65%"></div></div></td><td>4,91%</td></tr>
+        <tr><td>Amazon</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:48%"></div></div></td><td>3,63%</td></tr>
+        <tr><td>Alphabet A</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:39%"></div></div></td><td>2,99%</td></tr>
+        <tr><td>Broadcom</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:35%"></div></div></td><td>2,62%</td></tr>
+        <tr><td>Alphabet C</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:32%"></div></div></td><td>2,40%</td></tr>
+        <tr><td>Meta</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:30%"></div></div></td><td>2,24%</td></tr>
+        <tr><td>Tesla</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:25%"></div></div></td><td>1,87%</td></tr>
+        <tr><td>Berkshire Hathaway</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:21%"></div></div></td><td>1,57%</td></tr>
+      </table>
+    </div>
+    <div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px">SECTORES</div>
+      <div class="chart-container"><canvas id="chart-SXR8-sector"></canvas></div>
+    </div>
+  </div>
+
+  <div style="font-size:11px;color:var(--muted);margin-bottom:10px">DISTRIBUCIÓN GEOGRÁFICA</div>
+  <div class="geo-bars">
+    <div class="geo-row"><span class="geo-label">Estados Unidos</span><div class="geo-bar-wrap"><div class="geo-bar-fill" style="width:95.16%"></div></div><span class="geo-pct">95,16%</span></div>
+    <div class="geo-row"><span class="geo-label">Irlanda</span><div class="geo-bar-wrap"><div class="geo-bar-fill" style="width:1.44%"></div></div><span class="geo-pct">1,44%</span></div>
+    <div class="geo-row"><span class="geo-label">Otros</span><div class="geo-bar-wrap"><div class="geo-bar-fill" style="width:3.40%"></div></div><span class="geo-pct">3,40%</span></div>
+  </div>
+
+  <div class="section-title" style="margin-top:24px">¿Qué es?</div>
+  <div class="desc-text">El S&amp;P 500 es el índice de referencia global, compuesto por las 503 mayores empresas cotizadas en bolsas de EEUU, ponderadas por capitalización de mercado. iShares es el mayor proveedor de ETFs del mundo (BlackRock). La réplica es física total: el fondo compra literalmente todas las acciones del índice. El programa de Securities Lending presta acciones a terceros a cambio de una comisión que reduce el coste efectivo, supervisado por BlackRock con colateral del 102-112%.</div>
+
+  <div class="section-title">Análisis</div>
+  <div class="pros-cons-grid">
+    <div class="pros-block">
+      <div class="pros-title">A favor</div>
+      <ul>
+        <li>TER 0,07% — de los más bajos posibles para este índice</li>
+        <li>AUM 127.750M€ garantiza liquidez máxima y spread mínimo</li>
+        <li>Historial impecable: +807% desde lanzamiento en 2010</li>
+        <li>La economía estadounidense ha liderado el crecimiento global durante 15 años</li>
+        <li>Diversificación real: 503 empresas de todos los sectores del S&P</li>
+        <li>Estructura UCITS con máximas garantías regulatorias</li>
+      </ul>
+    </div>
+    <div class="cons-block">
+      <div class="cons-title">En contra</div>
+      <ul>
+        <li>Concentración extrema en EEUU (95%) — riesgo país elevado</li>
+        <li>Las 10 mayores posiciones representan ~37% del índice</li>
+        <li>Tecnología = 33,9% — una corrección en tech penaliza mucho</li>
+        <li>Exposición USD sin cobertura cambiaria</li>
+        <li>Valoraciones actuales (PER ~22x) históricamente elevadas</li>
+      </ul>
+    </div>
+  </div>
+  <div class="opinion-block">
+    <div class="opinion-label">Opinión para inversor 25-30 años, largo plazo</div>
+    <div class="opinion-text">El pilar de cualquier cartera indexada. Para un horizonte de 15-30 años, el S&P 500 es el activo con el mejor binomio rentabilidad-riesgo comprobado históricamente. Los 250€/mes son adecuados como posición core. Curiosidad: SPDR S&P 500 tiene TER 0,03% (menos de la mitad), pero como Trade Republic no cobra comisión de compra, el diferencial en coste absoluto es mínimo para importes mensuales. Mantén y amplía en correcciones.</div>
+  </div>
+
+  <div class="section-title">Alternativas comparables</div>
+  <table class="comp-table">
+    <thead><tr><th>ETF</th><th>TER</th><th>AUM</th><th>Réplica</th></tr></thead>
+    <tbody>
+      <tr><td>Vanguard S&P 500 UCITS (VUSA)</td><td>0,07%</td><td>44.832M€</td><td>Física total</td></tr>
+      <tr><td>Invesco S&P 500 UCITS (SPXS)</td><td>0,05%</td><td>34.177M€</td><td>Swap sintético</td></tr>
+      <tr><td>State Street SPDR S&P 500 (SPY5)</td><td>0,03%</td><td>17.756M€</td><td>Física total</td></tr>
+    </tbody>
+  </table>
+
+  <div class="section-title">Mi inversión</div>
+  <div class="mi-inversion">
+    <div class="mi-inv-item"><div class="mil">€/mes (DCA)</div><div class="miv accent">250€</div></div>
+    <div class="mi-inv-item"><div class="mil">Total invertido</div><div class="miv">3.298,99€</div></div>
+    <div class="mi-inv-item"><div class="mil">Valor actual</div><div class="miv">3.830,27€</div></div>
+    <div class="mi-inv-item"><div class="mil">P&amp;L €</div><div class="miv pos">+531,28€</div></div>
+    <div class="mi-inv-item"><div class="mil">P&amp;L %</div><div class="miv pos">+16,10%</div></div>
+    <div class="plan-note">Nota del plan: Core holding principal. Ampliado a 250€/mes en marzo 2026.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- FICHA 2: VFEM -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="ficha" id="VFEM">
+  <a href="#nav" class="back-link">↑ Volver al índice</a>
+  <div class="ficha-header">
+    <div class="ficha-num-row">
+      <span class="ficha-num">#02</span>
+      <span class="badge badge-cat">Renta Variable · Emergentes</span>
+      <span class="badge badge-risk-orange">Riesgo medio-alto</span>
+    </div>
+    <div class="ficha-name">Vanguard FTSE Emerging Markets UCITS ETF (USD) Acc</div>
+    <div class="ficha-ticker-row">
+      <span class="ficha-ticker">VFEM</span>
+      <span class="ficha-isin">ISIN: IE00BK5BR733 · WKN: A2PLTC</span>
+    </div>
+    <div class="ficha-tags">
+      <span class="tag">Vanguard</span>
+      <span class="tag">Irlanda</span>
+      <span class="tag">USD</span>
+      <span class="tag">UCITS ✓</span>
+      <span class="tag">Acumulación</span>
+      <span class="tag">Lanzamiento: Sep 2019</span>
+      <span class="tag">Réplica física total</span>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-label">TER</div><div class="stat-value">0,17%</div></div>
+    <div class="stat-card"><div class="stat-label">AUM</div><div class="stat-value">1.859M€</div></div>
+    <div class="stat-card"><div class="stat-label">Réplica</div><div class="stat-value">Física</div></div>
+    <div class="stat-card"><div class="stat-label">Divisa</div><div class="stat-value">USD</div></div>
+    <div class="stat-card"><div class="stat-label">Lanzamiento</div><div class="stat-value">Sep 2019</div></div>
+    <div class="stat-card"><div class="stat-label">Distribución</div><div class="stat-value">Acum.</div></div>
+    <div class="stat-card"><div class="stat-label">UCITS</div><div class="stat-value">✓ Sí</div></div>
+  </div>
+
+  <div class="section-title">Rendimiento</div>
+  <div class="perf-badges">
+    <div class="perf-badge"><span class="pb-label">YTD</span><span class="pb-val pos">+11,68%</span></div>
+    <div class="perf-badge"><span class="pb-label">1M</span><span class="pb-val pos">+2,86%</span></div>
+    <div class="perf-badge"><span class="pb-label">3M</span><span class="pb-val pos">+3,65%</span></div>
+    <div class="perf-badge"><span class="pb-label">6M</span><span class="pb-val pos">+11,68%</span></div>
+    <div class="perf-badge"><span class="pb-label">1 año</span><span class="pb-val pos">+24,62%</span></div>
+    <div class="perf-badge"><span class="pb-label">3 años</span><span class="pb-val pos">+53,31%</span></div>
+    <div class="perf-badge"><span class="pb-label">5 años</span><span class="pb-val pos">+34,76%</span></div>
+    <div class="perf-badge"><span class="pb-label">MAX</span><span class="pb-val pos">+65,18%</span></div>
+  </div>
+
+  <table class="annual-table">
+    <thead><tr><th>Año</th><th>2025</th><th>2024</th><th>2023</th><th>2022</th></tr></thead>
+    <tbody><tr>
+      <td style="color:var(--muted);font-size:11px">Rentabilidad</td>
+      <td class="heat-pos">+11,13%</td>
+      <td class="heat-pos">+19,20%</td>
+      <td class="heat-pos">+4,12%</td>
+      <td class="heat-neg">-12,40%</td>
+    </tr></tbody>
+  </table>
+
+  <div class="section-title">Métricas de riesgo</div>
+  <div class="risk-grid">
+    <div class="risk-card"><div class="rl">Volatilidad 1Y</div><div class="rv">13,16%</div></div>
+    <div class="risk-card"><div class="rl">Volatilidad 3Y</div><div class="rv">13,65%</div></div>
+    <div class="risk-card"><div class="rl">Return/Risk 1Y</div><div class="rv pos">1,87</div></div>
+    <div class="risk-card"><div class="rl">MaxDD 1Y</div><div class="rv neg">-9,20%</div></div>
+    <div class="risk-card"><div class="rl">MaxDD 3Y</div><div class="rv neg">-16,90%</div></div>
+    <div class="risk-card"><div class="rl">MaxDD 5Y</div><div class="rv neg">-20,72%</div></div>
+    <div class="risk-card"><div class="rl">MaxDD inception</div><div class="rv neg">-31,41%</div></div>
+    <div class="risk-card"><div class="rl">Custodio</div><div class="rv" style="font-size:10px">BBH</div></div>
+  </div>
+
+  <div class="section-title">Composición</div>
+  <div class="composition-grid">
+    <div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px">TOP 10 HOLDINGS</div>
+      <table class="holdings-table">
+        <tr><td>Taiwan Semiconductor</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:100%"></div></div></td><td>14,00%</td></tr>
+        <tr><td>Tencent</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:29%"></div></div></td><td>4,00%</td></tr>
+        <tr><td>Alibaba</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:20%"></div></div></td><td>2,84%</td></tr>
+        <tr><td>Reliance Industries</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:7%"></div></div></td><td>1,01%</td></tr>
+        <tr><td>China Construction Bank</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:7%"></div></div></td><td>0,97%</td></tr>
+        <tr><td>HDFC Bank</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:6.5%"></div></div></td><td>0,91%</td></tr>
+        <tr><td>Delta Electronics</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:6.2%"></div></div></td><td>0,87%</td></tr>
+        <tr><td>PDD Holdings</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:5.8%"></div></div></td><td>0,81%</td></tr>
+        <tr><td>Hon Hai</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:5.4%"></div></div></td><td>0,75%</td></tr>
+        <tr><td>Xiaomi</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:5.2%"></div></div></td><td>0,73%</td></tr>
+      </table>
+    </div>
+    <div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px">SECTORES</div>
+      <div class="chart-container"><canvas id="chart-VFEM-sector"></canvas></div>
+    </div>
+  </div>
+
+  <div style="font-size:11px;color:var(--muted);margin-bottom:10px">DISTRIBUCIÓN GEOGRÁFICA</div>
+  <div class="geo-bars">
+    <div class="geo-row"><span class="geo-label">China</span><div class="geo-bar-wrap"><div class="geo-bar-fill" style="width:27.84%"></div></div><span class="geo-pct">27,84%</span></div>
+    <div class="geo-row"><span class="geo-label">Taiwán</span><div class="geo-bar-wrap"><div class="geo-bar-fill" style="width:24.67%"></div></div><span class="geo-pct">24,67%</span></div>
+    <div class="geo-row"><span class="geo-label">India</span><div class="geo-bar-wrap"><div class="geo-bar-fill" style="width:13.72%"></div></div><span class="geo-pct">13,72%</span></div>
+    <div class="geo-row"><span class="geo-label">Brasil</span><div class="geo-bar-wrap"><div class="geo-bar-fill" style="width:4.69%"></div></div><span class="geo-pct">4,69%</span></div>
+    <div class="geo-row"><span class="geo-label">Otros</span><div class="geo-bar-wrap"><div class="geo-bar-fill" style="width:29.08%"></div></div><span class="geo-pct">29,08%</span></div>
+  </div>
+
+  <div class="section-title" style="margin-top:24px">¿Qué es?</div>
+  <div class="desc-text">Replica el FTSE Emerging Markets, que incluye aproximadamente 2.300 acciones de 24 países emergentes. Vanguard es el segundo mayor gestor de activos del mundo, fundado por Jack Bogle y conocido por su estructura mutual (los inversores son propietarios del fondo), lo que alinea sus incentivos con los partícipes. La réplica física total implica comprar las acciones reales de cada empresa del índice.</div>
+
+  <div class="section-title">Análisis</div>
+  <div class="pros-cons-grid">
+    <div class="pros-block">
+      <div class="pros-title">A favor</div>
+      <ul>
+        <li>Diversificación geográfica real vs la exposición US-dominada del resto de la cartera</li>
+        <li>Valoraciones atractivas vs mercados desarrollados (PER más bajos históricamente)</li>
+        <li>Demografía y crecimiento a largo plazo: India, ASEAN</li>
+        <li>TER competitivo 0,17% para el universo emergente</li>
+        <li>+24,62% en 1Y demuestra el potencial en ciclos favorables</li>
+        <li>~2.300 empresas — diversificación genuina dentro del universo EM</li>
+      </ul>
+    </div>
+    <div class="cons-block">
+      <div class="cons-title">En contra</div>
+      <ul>
+        <li>Riesgo geopolítico: Taiwán (24,67%) en tensión permanente con China</li>
+        <li>China (27,84%) con riesgo regulatorio y potencial de sanciones occidentales</li>
+        <li>Exposición USD sin cobertura cambiaria</li>
+        <li>EM ha underperformed vs desarrollados en el ciclo 2015-2024</li>
+        <li>Fondo relativamente joven (2019) — sin ciclo completo de 10+ años</li>
+      </ul>
+    </div>
+  </div>
+  <div class="opinion-block">
+    <div class="opinion-label">Opinión para inversor 25-30 años, largo plazo</div>
+    <div class="opinion-text">Complemento inteligente al S&P 500. Añade exposición a Asia en crecimiento, especialmente India que podría ser el motor económico de los próximos 20 años. La posición de 150€/mes es sensata — los mercados emergentes deben ser satélite, no core, dado el riesgo geopolítico añadido. Vigila la situación en el Estrecho de Taiwán, que representaría el mayor riesgo sistémico para este ETF.</div>
+  </div>
+
+  <div class="section-title">Alternativas comparables</div>
+  <table class="comp-table">
+    <thead><tr><th>ETF</th><th>TER</th><th>AUM</th><th>Distribución</th></tr></thead>
+    <tbody>
+      <tr><td>Vanguard FTSE EM Distributing (VFEA)</td><td>0,17%</td><td>3.121M€</td><td>Distribuyente</td></tr>
+      <tr><td>Franklin FTSE EM UCITS (FLXE)</td><td>0,11%</td><td>7M€</td><td>Acumulación</td></tr>
+    </tbody>
+  </table>
+
+  <div class="section-title">Mi inversión</div>
+  <div class="mi-inversion">
+    <div class="mi-inv-item"><div class="mil">€/mes (DCA)</div><div class="miv accent">150€</div></div>
+    <div class="mi-inv-item"><div class="mil">Total invertido</div><div class="miv">1.075,00€</div></div>
+    <div class="mi-inv-item"><div class="mil">Valor actual</div><div class="miv">1.204,86€</div></div>
+    <div class="mi-inv-item"><div class="mil">P&amp;L €</div><div class="miv pos">+129,86€</div></div>
+    <div class="mi-inv-item"><div class="mil">P&amp;L %</div><div class="miv pos">+12,08%</div></div>
+    <div class="plan-note">Nota del plan: Diversificación emergente. Ampliado a 150€/mes en marzo 2026.</div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- FICHA 3: CNDX -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="ficha" id="CNDX">
+  <a href="#nav" class="back-link">↑ Volver al índice</a>
+  <div class="ficha-header">
+    <div class="ficha-num-row">
+      <span class="ficha-num">#03</span>
+      <span class="badge badge-cat">Renta Variable · USA Tech</span>
+      <span class="badge badge-risk-red">Riesgo alto</span>
+    </div>
+    <div class="ficha-name">iShares Nasdaq 100 UCITS ETF (Acc)</div>
+    <div class="ficha-ticker-row">
+      <span class="ficha-ticker">CNDX</span>
+      <span class="ficha-isin">ISIN: IE00B53SZB19 · WKN: A0YEDL</span>
+    </div>
+    <div class="ficha-tags">
+      <span class="tag">iShares (BlackRock)</span>
+      <span class="tag">Irlanda</span>
+      <span class="tag">USD</span>
+      <span class="tag">UCITS ✓</span>
+      <span class="tag">Acumulación</span>
+      <span class="tag">Lanzamiento: Ene 2010</span>
+      <span class="tag">Réplica física total</span>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-label">TER</div><div class="stat-value">0,30%</div></div>
+    <div class="stat-card"><div class="stat-label">AUM</div><div class="stat-value">23.207M€</div></div>
+    <div class="stat-card"><div class="stat-label">Réplica</div><div class="stat-value">Física</div></div>
+    <div class="stat-card"><div class="stat-label">Divisa</div><div class="stat-value">USD</div></div>
+    <div class="stat-card"><div class="stat-label">Lanzamiento</div><div class="stat-value">Ene 2010</div></div>
+    <div class="stat-card"><div class="stat-label">Distribución</div><div class="stat-value">Acum.</div></div>
+    <div class="stat-card"><div class="stat-label">UCITS</div><div class="stat-value">✓ Sí</div></div>
+  </div>
+
+  <div class="section-title">Rendimiento</div>
+  <div class="perf-badges">
+    <div class="perf-badge"><span class="pb-label">YTD</span><span class="pb-val pos">+21,06%</span></div>
+    <div class="perf-badge"><span class="pb-label">1M</span><span class="pb-val pos">+11,93%</span></div>
+    <div class="perf-badge"><span class="pb-label">3M</span><span class="pb-val pos">+23,00%</span></div>
+    <div class="perf-badge"><span class="pb-label">6M</span><span class="pb-val pos">+18,32%</span></div>
+    <div class="perf-badge"><span class="pb-label">1 año</span><span class="pb-val pos">+37,59%</span></div>
+    <div class="perf-badge"><span class="pb-label">3 años</span><span class="pb-val pos">+95,95%</span></div>
+    <div class="perf-badge"><span class="pb-label">5 años</span><span class="pb-val pos">+134,62%</span></div>
+    <div class="perf-badge"><span class="pb-label">MAX</span><span class="pb-val pos">+2.111,86%</span></div>
+  </div>
+
+  <table class="annual-table">
+    <thead><tr><th>Año</th><th>2025</th><th>2024</th><th>2023</th><th>2022</th></tr></thead>
+    <tbody><tr>
+      <td style="color:var(--muted);font-size:11px">Rentabilidad</td>
+      <td class="heat-pos">+6,58%</td>
+      <td class="heat-pos">+33,29%</td>
+      <td class="heat-pos">+49,07%</td>
+      <td class="heat-neg">-28,50%</td>
+    </tr></tbody>
+  </table>
+
+  <div class="section-title">Métricas de riesgo</div>
+  <div class="risk-grid">
+    <div class="risk-card"><div class="rl">Volatilidad 1Y</div><div class="rv">15,13%</div></div>
+    <div class="risk-card"><div class="rl">Volatilidad 3Y</div><div class="rv">19,86%</div></div>
+    <div class="risk-card"><div class="rl">Return/Risk 1Y</div><div class="rv pos">2,48</div></div>
+    <div class="risk-card"><div class="rl">MaxDD 1Y</div><div class="rv neg">-11,27%</div></div>
+    <div class="risk-card"><div class="rl">MaxDD 3Y</div><div class="rv neg">-26,49%</div></div>
+    <div class="risk-card"><div class="rl">MaxDD inception</div><div class="rv neg">-31,43%</div></div>
+    <div class="risk-card"><div class="rl">Prestamo valores</div><div class="rv">Sí</div></div>
+    <div class="risk-card"><div class="rl">Custodio</div><div class="rv" style="font-size:10px">State Street</div></div>
+  </div>
+
+  <div class="section-title">Composición</div>
+  <div class="composition-grid">
+    <div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px">TOP 10 HOLDINGS</div>
+      <table class="holdings-table">
+        <tr><td>NVIDIA</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:100%"></div></div></td><td>8,69%</td></tr>
+        <tr><td>Apple</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:88%"></div></div></td><td>7,64%</td></tr>
+        <tr><td>Microsoft</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:65%"></div></div></td><td>5,63%</td></tr>
+        <tr><td>Amazon</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:53%"></div></div></td><td>4,58%</td></tr>
+        <tr><td>Tesla</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:44%"></div></div></td><td>3,80%</td></tr>
+        <tr><td>Meta</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:40%"></div></div></td><td>3,46%</td></tr>
+        <tr><td>Walmart</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:40%"></div></div></td><td>3,44%</td></tr>
+        <tr><td>Alphabet A</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:39%"></div></div></td><td>3,43%</td></tr>
+        <tr><td>Alphabet C</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:37%"></div></div></td><td>3,20%</td></tr>
+        <tr><td>Broadcom</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:35%"></div></div></td><td>3,01%</td></tr>
+      </table>
+    </div>
+    <div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px">SECTORES</div>
+      <div class="chart-container"><canvas id="chart-CNDX-sector"></canvas></div>
+    </div>
+  </div>
+
+  <div style="font-size:11px;color:var(--muted);margin-bottom:10px">DISTRIBUCIÓN GEOGRÁFICA</div>
+  <div class="geo-bars">
+    <div class="geo-row"><span class="geo-label">Estados Unidos</span><div class="geo-bar-wrap"><div class="geo-bar-fill" style="width:92.90%"></div></div><span class="geo-pct">92,90%</span></div>
+    <div class="geo-row"><span class="geo-label">Otros</span><div class="geo-bar-wrap"><div class="geo-bar-fill" style="width:7.10%"></div></div><span class="geo-pct">7,10%</span></div>
+  </div>
+
+  <div class="section-title" style="margin-top:24px">¿Qué es?</div>
+  <div class="desc-text">Replica el Nasdaq-100: las 100 mayores compañías no financieras listadas en el Nasdaq, dominadas por tecnología y crecimiento. El índice excluye el sector financiero e incluye algunas empresas internacionales de gran capitalización como ASML. Con un retorno máximo de +2.111% desde 2010, es el índice con mayor rentabilidad histórica entre los grandes. Sin embargo, esta concentración tech implica drawdowns severos en entornos de tipos altos.</div>
+
+  <div class="section-title">Análisis</div>
+  <div class="pros-cons-grid">
+    <div class="pros-block">
+      <div class="pros-title">A favor</div>
+      <ul>
+        <li>Exposición directa al megatrend de IA, cloud y tecnología</li>
+        <li>Retornos extraordinarios: 5Y +134%, MAX +2.111%</li>
+        <li>Las empresas del Nasdaq lideran la innovación global</li>
+        <li>2023: +49%, 2024: +33%, YTD 2026: +21% — momentum excepcional</li>
+        <li>Réplica física total: máxima transparencia</li>
+      </ul>
+    </div>
+    <div class="cons-block">
+      <div class="cons-title">En contra</div>
+      <ul>
+        <li>TER 0,30% — el más alto de los índices core (Amundi ofrece 0,22% swap, BNP 0,14%)</li>
+        <li>Tecnología = 49% del índice — alta concentración sectorial</li>
+        <li>2022: -28,5% — puede caer casi un tercio en un año</li>
+        <li>Solapamiento significativo con SXR8 (NVDA, Apple, Microsoft en ambos)</li>
+        <li>Altísima dependencia de unas pocas mega-caps</li>
+      </ul>
+    </div>
+  </div>
+  <div class="opinion-block">
+    <div class="opinion-label">Opinión para inversor 25-30 años, largo plazo</div>
+    <div class="opinion-text">Válido como posición de convicción en tecnología, pero ten presente el solapamiento con SXR8. El TER de 0,30% es el más caro de los ETFs de índices amplios del plan — si eres sensible a costes, Amundi Nasdaq-100 Swap ahorra 0,08% anual. La posición de 100€/mes refleja bien el perfil como complemento tech del S&P 500. En correcciones tecnológicas, este ETF caerá más que SXR8 — es normal y esperado.</div>
+  </div>
+
+  <div class="section-title">Alternativas comparables</div>
+  <table class="comp-table">
+    <thead><tr><th>ETF</th><th>TER</th><th>AUM</th><th>Réplica</th></tr></thead>
+    <tbody>
+      <tr><td>Invesco EQQQ Nasdaq-100</td><td>0,30%</td><td>11.472M€</td><td>Física total</td></tr>
+      <tr><td>Amundi Nasdaq-100 Swap (ANX)</td><td>0,22%</td><td>5.796M€</td><td>Swap sintético</td></tr>
+      <tr><td>BNP Easy Nasdaq-100 II</td><td>0,14%</td><td>2.493M€</td><td>Swap sintético</td></tr>
+    </tbody>
+  </table>
+
+  <div class="section-title">Mi inversión</div>
+  <div class="mi-inversion">
+    <div class="mi-inv-item"><div class="mil">€/mes (DCA)</div><div class="miv accent">100€</div></div>
+    <div class="mi-inv-item"><div class="mil">Total invertido</div><div class="miv">1.100,99€</div></div>
+    <div class="mi-inv-item"><div class="mil">Valor actual</div><div class="miv">1.393,20€</div></div>
+    <div class="mi-inv-item"><div class="mil">P&amp;L €</div><div class="miv pos">+292,21€</div></div>
+    <div class="mi-inv-item"><div class="mil">P&amp;L %</div><div class="miv pos">+26,54%</div></div>
+    <div class="plan-note">Nota del plan: Satélite tecnológico. Ampliado a 100€/mes en marzo 2026.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- FICHA 4: XXSC -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="ficha" id="XXSC">
+  <a href="#nav" class="back-link">↑ Volver al índice</a>
+  <div class="ficha-header">
+    <div class="ficha-num-row">
+      <span class="ficha-num">#04</span>
+      <span class="badge badge-cat">Renta Variable · Europa Small Cap</span>
+      <span class="badge badge-risk-orange">Riesgo medio-alto</span>
+    </div>
+    <div class="ficha-name">Xtrackers MSCI Europe Small Cap UCITS ETF 1C</div>
+    <div class="ficha-ticker-row">
+      <span class="ficha-ticker">XXSC</span>
+      <span class="ficha-isin">ISIN: LU0322253906 · WKN: DBX1AU</span>
+    </div>
+    <div class="ficha-tags">
+      <span class="tag">Xtrackers (DWS)</span>
+      <span class="tag">Luxemburgo</span>
+      <span class="tag">USD</span>
+      <span class="tag">UCITS ✓</span>
+      <span class="tag">Acumulación</span>
+      <span class="tag">Lanzamiento: Ene 2008</span>
+      <span class="tag">Muestreo optimizado</span>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-label">TER</div><div class="stat-value">0,30%</div></div>
+    <div class="stat-card"><div class="stat-label">AUM</div><div class="stat-value">3.050M€</div></div>
+    <div class="stat-card"><div class="stat-label">Réplica</div><div class="stat-value">Muestreo</div></div>
+    <div class="stat-card"><div class="stat-label">Divisa</div><div class="stat-value">USD</div></div>
+    <div class="stat-card"><div class="stat-label">Lanzamiento</div><div class="stat-value">Ene 2008</div></div>
+    <div class="stat-card"><div class="stat-label">Distribución</div><div class="stat-value">Acum.</div></div>
+    <div class="stat-card"><div class="stat-label">UCITS</div><div class="stat-value">✓ Sí</div></div>
+  </div>
+
+  <div class="section-title">Rendimiento</div>
+  <div class="perf-badges">
+    <div class="perf-badge"><span class="pb-label">YTD</span><span class="pb-val pos">+8,83%</span></div>
+    <div class="perf-badge"><span class="pb-label">1M</span><span class="pb-val pos">+5,58%</span></div>
+    <div class="perf-badge"><span class="pb-label">3M</span><span class="pb-val pos">+2,66%</span></div>
+    <div class="perf-badge"><span class="pb-label">6M</span><span class="pb-val pos">+11,02%</span></div>
+    <div class="perf-badge"><span class="pb-label">1 año</span><span class="pb-val pos">+13,81%</span></div>
+    <div class="perf-badge"><span class="pb-label">3 años</span><span class="pb-val pos">+43,02%</span></div>
+    <div class="perf-badge"><span class="pb-label">5 años</span><span class="pb-val pos">+24,62%</span></div>
+    <div class="perf-badge"><span class="pb-label">MAX</span><span class="pb-val pos">+313,90%</span></div>
+  </div>
+
+  <table class="annual-table">
+    <thead><tr><th>Año</th><th>2025</th><th>2024</th><th>2023</th><th>2022</th></tr></thead>
+    <tbody><tr>
+      <td style="color:var(--muted);font-size:11px">Rentabilidad</td>
+      <td class="heat-pos">+16,76%</td>
+      <td class="heat-pos">+5,46%</td>
+      <td class="heat-pos">+12,77%</td>
+      <td class="heat-neg">-22,68%</td>
+    </tr></tbody>
+  </table>
+
+  <div class="section-title">Métricas de riesgo</div>
+  <div class="risk-grid">
+    <div class="risk-card"><div class="rl">Volatilidad 1Y</div><div class="rv">12,96%</div></div>
+    <div class="risk-card"><div class="rl">Volatilidad 3Y</div><div class="rv">15,18%</div></div>
+    <div class="risk-card"><div class="rl">Return/Risk 1Y</div><div class="rv" style="color:var(--gold)">1,07</div></div>
+    <div class="risk-card"><div class="rl">MaxDD 1Y</div><div class="rv neg">-9,72%</div></div>
+    <div class="risk-card"><div class="rl">MaxDD 3Y</div><div class="rv neg">-15,48%</div></div>
+    <div class="risk-card"><div class="rl">MaxDD 5Y</div><div class="rv neg">-32,38%</div></div>
+    <div class="risk-card"><div class="rl">MaxDD inception</div><div class="rv neg">-54,99%</div></div>
+    <div class="risk-card"><div class="rl">Custodio</div><div class="rv" style="font-size:10px">State Street</div></div>
+  </div>
+
+  <div class="section-title">Composición</div>
+  <div class="composition-grid">
+    <div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px">TOP 10 HOLDINGS</div>
+      <table class="holdings-table">
+        <tr><td>Diploma</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:100%"></div></div></td><td>0,73%</td></tr>
+        <tr><td>Beazley</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:98%"></div></div></td><td>0,72%</td></tr>
+        <tr><td>Weir Group</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:88%"></div></div></td><td>0,64%</td></tr>
+        <tr><td>Gaztransport &amp; Technigaz</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:82%"></div></div></td><td>0,60%</td></tr>
+        <tr><td>Accelleron</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:81%"></div></div></td><td>0,59%</td></tr>
+        <tr><td>PSP Swiss Property</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:81%"></div></div></td><td>0,59%</td></tr>
+        <tr><td>St James's Place</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:79%"></div></div></td><td>0,58%</td></tr>
+        <tr><td>IMI</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:79%"></div></div></td><td>0,58%</td></tr>
+        <tr><td>Games Workshop</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:77%"></div></div></td><td>0,56%</td></tr>
+        <tr><td>Millicom</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:75%"></div></div></td><td>0,55%</td></tr>
+      </table>
+    </div>
+    <div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px">SECTORES</div>
+      <div class="chart-container"><canvas id="chart-XXSC-sector"></canvas></div>
+    </div>
+  </div>
+
+  <div style="font-size:11px;color:var(--muted);margin-bottom:10px">DISTRIBUCIÓN GEOGRÁFICA</div>
+  <div class="geo-bars">
+    <div class="geo-row"><span class="geo-label">Reino Unido</span><div class="geo-bar-wrap"><div class="geo-bar-fill" style="width:25.15%"></div></div><span class="geo-pct">25,15%</span></div>
+    <div class="geo-row"><span class="geo-label">Suecia</span><div class="geo-bar-wrap"><div class="geo-bar-fill" style="width:9.13%"></div></div><span class="geo-pct">9,13%</span></div>
+    <div class="geo-row"><span class="geo-label">Suiza</span><div class="geo-bar-wrap"><div class="geo-bar-fill" style="width:8.82%"></div></div><span class="geo-pct">8,82%</span></div>
+    <div class="geo-row"><span class="geo-label">Francia</span><div class="geo-bar-wrap"><div class="geo-bar-fill" style="width:7.87%"></div></div><span class="geo-pct">7,87%</span></div>
+    <div class="geo-row"><span class="geo-label">Otros</span><div class="geo-bar-wrap"><div class="geo-bar-fill" style="width:49.03%"></div></div><span class="geo-pct">49,03%</span></div>
+  </div>
+
+  <div class="section-title" style="margin-top:24px">¿Qué es?</div>
+  <div class="desc-text">Replica el MSCI Europe Small Cap, que incluye aproximadamente 1.000 empresas de pequeña capitalización europea (rango típico de capitalización: 200M-2.000M€). Al ser un universo tan amplio, usa muestreo optimizado en lugar de réplica física total, lo que introduce un pequeño tracking error. Es el ETF con mayor historial de la cartera (2008) y el único domiciliado en Luxemburgo en lugar de Irlanda, lo que puede tener implicaciones fiscales según la jurisdicción.</div>
+
+  <div class="section-title">Análisis</div>
+  <div class="pros-cons-grid">
+    <div class="pros-block">
+      <div class="pros-title">A favor</div>
+      <ul>
+        <li>Exposición única a small caps europeas no replicada por ningún otro ETF del plan</li>
+        <li>Prima de tamaño: históricamente small caps outperforman a largo plazo (Fama-French)</li>
+        <li>2025 YTD +16,76% — mejor que muchos índices amplios</li>
+        <li>Diversificación genuina: ~1.000 empresas en ~15 países europeos</li>
+        <li>Mayor historial del plan (2008) — probado en crisis financiera</li>
+      </ul>
+    </div>
+    <div class="cons-block">
+      <div class="cons-title">En contra</div>
+      <ul>
+        <li>Domicilio en Luxemburgo — diferente tratamiento fiscal vs ETFs irlandeses</li>
+        <li>MaxDD inception -54,99% — en 2008 casi dividió el capital por la mitad</li>
+        <li>5Y +24,62% muy inferior al S&P 500 (+98,97%) en el mismo período</li>
+        <li>Alta exposición a UK (25%) con riesgos estructurales post-Brexit</li>
+        <li>Muestreo optimizado introduce tracking error vs índice</li>
+      </ul>
+    </div>
+  </div>
+  <div class="opinion-block">
+    <div class="opinion-label">Opinión para inversor 25-30 años, largo plazo</div>
+    <div class="opinion-text">Añade diversificación genuina y prima de tamaño. Para un horizonte de 15+ años, el small cap premium debería materializarse — los estudios académicos (Fama-French 1992) demuestran este efecto en períodos largos. El MaxDD de -55% desde inception es el riesgo a aceptar conscientemente. Los 75€/mes son razonables para este satélite; no lo amplíes más allá del 10-15% del total del plan.</div>
+  </div>
+
+  <div class="section-title">Alternativas comparables</div>
+  <table class="comp-table">
+    <thead><tr><th>ETF</th><th>TER</th><th>AUM</th><th>Réplica</th></tr></thead>
+    <tbody>
+      <tr><td>SPDR MSCI Europe Small Cap (SMC)</td><td>0,30%</td><td>296M€</td><td>Muestreo</td></tr>
+    </tbody>
+  </table>
+
+  <div class="section-title">Mi inversión</div>
+  <div class="mi-inversion">
+    <div class="mi-inv-item"><div class="mil">€/mes (DCA)</div><div class="miv accent">75€</div></div>
+    <div class="mi-inv-item"><div class="mil">Total invertido</div><div class="miv">475,00€</div></div>
+    <div class="mi-inv-item"><div class="mil">Valor actual</div><div class="miv">519,15€</div></div>
+    <div class="mi-inv-item"><div class="mil">P&amp;L €</div><div class="miv pos">+44,15€</div></div>
+    <div class="mi-inv-item"><div class="mil">P&amp;L %</div><div class="miv pos">+9,30%</div></div>
+    <div class="plan-note">Nota del plan: Prima de tamaño europea. Ampliado a 75€/mes en marzo 2026.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- FICHA 5: WDEF -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="ficha" id="WDEF">
+  <a href="#nav" class="back-link">↑ Volver al índice</a>
+  <div class="ficha-header">
+    <div class="ficha-num-row">
+      <span class="ficha-num">#05</span>
+      <span class="badge badge-cat">Renta Variable · Europa Defensa</span>
+      <span class="badge badge-risk-red">Riesgo alto</span>
+    </div>
+    <div class="ficha-name">WisdomTree Europe Defence UCITS ETF EUR Unhedged Acc</div>
+    <div class="ficha-ticker-row">
+      <span class="ficha-ticker">WDEF</span>
+      <span class="ficha-isin">ISIN: IE0002Y8CX98 · WKN: A40Y9K</span>
+    </div>
+    <div class="ficha-tags">
+      <span class="tag">WisdomTree</span>
+      <span class="tag">Irlanda</span>
+      <span class="tag">EUR</span>
+      <span class="tag">UCITS ✓</span>
+      <span class="tag">Acumulación</span>
+      <span class="tag">Lanzamiento: Mar 2025</span>
+      <span class="tag">Réplica física total</span>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-label">TER</div><div class="stat-value">0,40%</div></div>
+    <div class="stat-card"><div class="stat-label">AUM</div><div class="stat-value">4.563M€</div></div>
+    <div class="stat-card"><div class="stat-label">Réplica</div><div class="stat-value">Física</div></div>
+    <div class="stat-card"><div class="stat-label">Divisa</div><div class="stat-value">EUR</div></div>
+    <div class="stat-card"><div class="stat-label">Lanzamiento</div><div class="stat-value">Mar 2025</div></div>
+    <div class="stat-card"><div class="stat-label">Distribución</div><div class="stat-value">Acum.</div></div>
+    <div class="stat-card"><div class="stat-label">UCITS</div><div class="stat-value">✓ Sí</div></div>
+  </div>
+
+  <div class="section-title">Rendimiento (fondo lanzado 4 Mar 2025 — datos limitados)</div>
+  <div class="perf-badges">
+    <div class="perf-badge"><span class="pb-label">YTD</span><span class="pb-val pos">+7,92%</span></div>
+    <div class="perf-badge"><span class="pb-label">1M</span><span class="pb-val pos">+6,04%</span></div>
+    <div class="perf-badge"><span class="pb-label">3M</span><span class="pb-val neg">-5,66%</span></div>
+    <div class="perf-badge"><span class="pb-label">6M</span><span class="pb-val pos">+12,53%</span></div>
+    <div class="perf-badge"><span class="pb-label">1 año</span><span class="pb-val pos">+3,84%</span></div>
+    <div class="perf-badge"><span class="pb-label">MAX</span><span class="pb-val pos">+25,05%</span></div>
+  </div>
+
+  <div style="background:rgba(212,168,67,.08);border:1px solid rgba(212,168,67,.2);border-radius:6px;padding:10px 14px;font-size:12px;color:var(--gold);margin-bottom:20px">
+    Fondo con menos de 1 año completo de vida (lanzado 4 Mar 2025). Los datos de rentabilidad son parciales y no representan un ciclo completo.
+  </div>
+
+  <div class="section-title">Métricas de riesgo</div>
+  <div class="risk-grid">
+    <div class="risk-card"><div class="rl">Volatilidad 1Y</div><div class="rv">28,14%</div></div>
+    <div class="risk-card"><div class="rl">Return/Risk 1Y</div><div class="rv" style="color:var(--muted)">0,14</div></div>
+    <div class="risk-card"><div class="rl">MaxDD 1Y</div><div class="rv neg">-19,35%</div></div>
+    <div class="risk-card"><div class="rl">MaxDD inception</div><div class="rv neg">-19,35%</div></div>
+    <div class="risk-card"><div class="rl">Préstamo valores</div><div class="rv">No</div></div>
+    <div class="risk-card"><div class="rl">Custodio</div><div class="rv" style="font-size:10px">BNY Mellon</div></div>
+    <div class="risk-card"><div class="rl">Divisa fondo</div><div class="rv">EUR</div></div>
+    <div class="risk-card"><div class="rl">Auditor</div><div class="rv" style="font-size:10px">Ernst & Young</div></div>
+  </div>
+
+  <div class="section-title">Composición</div>
+  <div class="composition-grid">
+    <div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px">TOP 10 HOLDINGS</div>
+      <table class="holdings-table">
+        <tr><td>Thales SA</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:100%"></div></div></td><td>10,56%</td></tr>
+        <tr><td>BAE Systems</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:95%"></div></div></td><td>10,08%</td></tr>
+        <tr><td>Rheinmetall AG</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:94%"></div></div></td><td>9,94%</td></tr>
+        <tr><td>Leonardo SpA</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:51%"></div></div></td><td>5,38%</td></tr>
+        <tr><td>SAAB</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:50%"></div></div></td><td>5,32%</td></tr>
+        <tr><td>Kongsberg</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:46%"></div></div></td><td>4,85%</td></tr>
+        <tr><td>Airbus</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:44%"></div></div></td><td>4,64%</td></tr>
+        <tr><td>Dassault Aviation</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:43%"></div></div></td><td>4,51%</td></tr>
+        <tr><td>HENSOLDT</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:42%"></div></div></td><td>4,47%</td></tr>
+        <tr><td>Safran</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:42%"></div></div></td><td>4,46%</td></tr>
+      </table>
+    </div>
+    <div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px">SECTORES</div>
+      <div class="chart-container"><canvas id="chart-WDEF-sector"></canvas></div>
+    </div>
+  </div>
+
+  <div style="font-size:11px;color:var(--muted);margin-bottom:10px">DISTRIBUCIÓN GEOGRÁFICA</div>
+  <div class="geo-bars">
+    <div class="geo-row"><span class="geo-label">Reino Unido</span><div class="geo-bar-wrap"><div class="geo-bar-fill" style="width:22.45%"></div></div><span class="geo-pct">22,45%</span></div>
+    <div class="geo-row"><span class="geo-label">Francia</span><div class="geo-bar-wrap"><div class="geo-bar-fill" style="width:21.08%"></div></div><span class="geo-pct">21,08%</span></div>
+    <div class="geo-row"><span class="geo-label">Alemania</span><div class="geo-bar-wrap"><div class="geo-bar-fill" style="width:14.41%"></div></div><span class="geo-pct">14,41%</span></div>
+    <div class="geo-row"><span class="geo-label">Italia</span><div class="geo-bar-wrap"><div class="geo-bar-fill" style="width:5.68%"></div></div><span class="geo-pct">5,68%</span></div>
+    <div class="geo-row"><span class="geo-label">Otros</span><div class="geo-bar-wrap"><div class="geo-bar-fill" style="width:36.38%"></div></div><span class="geo-pct">36,38%</span></div>
+  </div>
+
+  <div class="section-title" style="margin-top:24px">¿Qué es?</div>
+  <div class="desc-text">ETF temático lanzado en marzo 2025 que invierte en las principales empresas europeas de defensa y aeroespacial. Nació para capturar el incremento masivo del gasto en defensa en Europa post-invasión de Ucrania — la OTAN empuja al objetivo del 2% del PIB, con varios países yendo al 3%. Replica un índice propio de WisdomTree con 25-30 empresas europeas de defensa. Creció de 0 a 4.563M€ en solo 15 meses, señal de la enorme demanda institucional por el tema.</div>
+
+  <div class="section-title">Análisis</div>
+  <div class="pros-cons-grid">
+    <div class="pros-block">
+      <div class="pros-title">A favor</div>
+      <ul>
+        <li>Tema estructural: Europa en proceso de rearmamento histórico post-Ucrania</li>
+        <li>Contratos gubernamentales a largo plazo — visibilidad de ingresos excepcional</li>
+        <li>+25% desde lanzamiento en solo ~15 meses</li>
+        <li>Cartera de campeones europeos: Thales, BAE, Rheinmetall, Airbus</li>
+        <li>AUM 4.563M€ en tiempo récord — validación institucional masiva</li>
+        <li>Denominado en EUR — sin riesgo de divisa para inversores europeos</li>
+      </ul>
+    </div>
+    <div class="cons-block">
+      <div class="cons-title">En contra</div>
+      <ul>
+        <li>ETF MUY joven (15 meses) — sin historial en ciclo bajista</li>
+        <li>TER 0,40% — el más alto de los ETFs de renta variable del plan</li>
+        <li>Volatilidad 28,14% — altísima, el doble que SXR8</li>
+        <li>3M -5,66% — el tema puede revertir rápido ante negociaciones de paz</li>
+        <li>BNP Bloomberg Defence a 0,18% es menos del 50% del coste</li>
+        <li>Sin datos de rentabilidad anual completa</li>
+      </ul>
+    </div>
+  </div>
+  <div class="opinion-block">
+    <div class="opinion-label">Opinión para inversor 25-30 años, largo plazo</div>
+    <div class="opinion-text">Apuesta de alta convicción en el superciclo de defensa europeo. La posición de 75€/mes es correcta — significativa pero no excesiva para un ETF con solo 15 meses de vida. El riesgo principal no es de mercado sino temático: si hubiera un acuerdo de paz en Ucrania, el tema podría desacelerarse notablemente. Vigilar también el BNP Bloomberg Defence a 0,18% de TER — si el tema se convierte en posición permanente, el ahorro en coste sería relevante.</div>
+  </div>
+
+  <div class="section-title">Alternativas comparables</div>
+  <table class="comp-table">
+    <thead><tr><th>ETF</th><th>TER</th><th>AUM</th><th>Nota</th></tr></thead>
+    <tbody>
+      <tr><td>Amundi Stoxx Europe Defence (EUDF)</td><td>0,35%</td><td>553M€</td><td>Índice diferente</td></tr>
+      <tr><td>BNP Bloomberg Europe Defence</td><td>0,18%</td><td>525M€</td><td>Más barato</td></tr>
+      <tr><td>iShares Europe Defence UCITS</td><td>0,35%</td><td>359M€</td><td>iShares brand</td></tr>
+    </tbody>
+  </table>
+
+  <div class="section-title">Mi inversión</div>
+  <div class="mi-inversion">
+    <div class="mi-inv-item"><div class="mil">€/mes (DCA)</div><div class="miv accent">75€</div></div>
+    <div class="mi-inv-item"><div class="mil">Total invertido</div><div class="miv">225,00€</div></div>
+    <div class="mi-inv-item"><div class="mil">Valor actual</div><div class="miv">218,27€</div></div>
+    <div class="mi-inv-item"><div class="mil">P&amp;L €</div><div class="miv neg">-6,73€</div></div>
+    <div class="mi-inv-item"><div class="mil">P&amp;L %</div><div class="miv neg">-2,99%</div></div>
+    <div class="plan-note">Nota del plan: Temático defensa europea. Posición nueva iniciada en marzo 2026.</div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- FICHA 6: XWIN -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="ficha" id="XWIN">
+  <a href="#nav" class="back-link">↑ Volver al índice</a>
+  <div class="ficha-header">
+    <div class="ficha-num-row">
+      <span class="ficha-num">#06</span>
+      <span class="badge badge-cat">Renta Variable · Industriales Global</span>
+      <span class="badge badge-risk-orange">Riesgo medio-alto</span>
+    </div>
+    <div class="ficha-name">Xtrackers MSCI World Industrials UCITS ETF 1C</div>
+    <div class="ficha-ticker-row">
+      <span class="ficha-ticker">XWIN</span>
+      <span class="ficha-isin">ISIN: IE00BM67HV82 · WKN: A113FN</span>
+    </div>
+    <div class="ficha-tags">
+      <span class="tag">Xtrackers (DWS)</span>
+      <span class="tag">Irlanda</span>
+      <span class="tag">USD</span>
+      <span class="tag">UCITS ✓</span>
+      <span class="tag">Acumulación</span>
+      <span class="tag">Lanzamiento: Mar 2016</span>
+      <span class="tag">Réplica física total</span>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-label">TER</div><div class="stat-value">0,25%</div></div>
+    <div class="stat-card"><div class="stat-label">AUM</div><div class="stat-value">862M€</div></div>
+    <div class="stat-card"><div class="stat-label">Réplica</div><div class="stat-value">Física</div></div>
+    <div class="stat-card"><div class="stat-label">Divisa</div><div class="stat-value">USD</div></div>
+    <div class="stat-card"><div class="stat-label">Lanzamiento</div><div class="stat-value">Mar 2016</div></div>
+    <div class="stat-card"><div class="stat-label">Distribución</div><div class="stat-value">Acum.</div></div>
+    <div class="stat-card"><div class="stat-label">UCITS</div><div class="stat-value">✓ Sí</div></div>
+  </div>
+
+  <div class="section-title">Rendimiento</div>
+  <div class="perf-badges">
+    <div class="perf-badge"><span class="pb-label">YTD</span><span class="pb-val pos">+12,71%</span></div>
+    <div class="perf-badge"><span class="pb-label">1M</span><span class="pb-val pos">+2,71%</span></div>
+    <div class="perf-badge"><span class="pb-label">3M</span><span class="pb-val neg">-1,09%</span></div>
+    <div class="perf-badge"><span class="pb-label">6M</span><span class="pb-val pos">+13,20%</span></div>
+    <div class="perf-badge"><span class="pb-label">1 año</span><span class="pb-val pos">+18,94%</span></div>
+    <div class="perf-badge"><span class="pb-label">3 años</span><span class="pb-val pos">+67,52%</span></div>
+    <div class="perf-badge"><span class="pb-label">5 años</span><span class="pb-val pos">+79,42%</span></div>
+    <div class="perf-badge"><span class="pb-label">MAX</span><span class="pb-val pos">+219,80%</span></div>
+  </div>
+
+  <table class="annual-table">
+    <thead><tr><th>Año</th><th>2025</th><th>2024</th><th>2023</th><th>2022</th></tr></thead>
+    <tbody><tr>
+      <td style="color:var(--muted);font-size:11px">Rentabilidad</td>
+      <td class="heat-pos">+10,45%</td>
+      <td class="heat-pos">+20,30%</td>
+      <td class="heat-pos">+18,90%</td>
+      <td class="heat-neg">-7,82%</td>
+    </tr></tbody>
+  </table>
+
+  <div class="section-title">Métricas de riesgo</div>
+  <div class="risk-grid">
+    <div class="risk-card"><div class="rl">Volatilidad 1Y</div><div class="rv">12,93%</div></div>
+    <div class="risk-card"><div class="rl">Volatilidad 3Y</div><div class="rv">13,83%</div></div>
+    <div class="risk-card"><div class="rl">Return/Risk 1Y</div><div class="rv pos">1,46</div></div>
+    <div class="risk-card"><div class="rl">MaxDD 1Y</div><div class="rv neg">-10,43%</div></div>
+    <div class="risk-card"><div class="rl">MaxDD 3Y</div><div class="rv neg">-18,44%</div></div>
+    <div class="risk-card"><div class="rl">MaxDD inception</div><div class="rv neg">-38,54%</div></div>
+    <div class="risk-card"><div class="rl">Prestamo valores</div><div class="rv">Sí</div></div>
+    <div class="risk-card"><div class="rl">Custodio</div><div class="rv" style="font-size:10px">State Street</div></div>
+  </div>
+
+  <div class="section-title">Composición</div>
+  <div class="composition-grid">
+    <div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px">TOP 10 HOLDINGS</div>
+      <table class="holdings-table">
+        <tr><td>Caterpillar</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:100%"></div></div></td><td>3,38%</td></tr>
+        <tr><td>GE Aerospace</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:92%"></div></div></td><td>3,12%</td></tr>
+        <tr><td>RTX</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:80%"></div></div></td><td>2,72%</td></tr>
+        <tr><td>GE Vernova</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:71%"></div></div></td><td>2,41%</td></tr>
+        <tr><td>Siemens AG</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:57%"></div></div></td><td>1,94%</td></tr>
+        <tr><td>Boeing</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:48%"></div></div></td><td>1,61%</td></tr>
+        <tr><td>Schneider Electric</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:46%"></div></div></td><td>1,55%</td></tr>
+        <tr><td>Deere &amp; Co</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:46%"></div></div></td><td>1,55%</td></tr>
+        <tr><td>Honeywell</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:46%"></div></div></td><td>1,54%</td></tr>
+        <tr><td>Union Pacific</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:46%"></div></div></td><td>1,54%</td></tr>
+      </table>
+    </div>
+    <div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px">SECTORES</div>
+      <div class="chart-container"><canvas id="chart-XWIN-sector"></canvas></div>
+    </div>
+  </div>
+
+  <div style="font-size:11px;color:var(--muted);margin-bottom:10px">DISTRIBUCIÓN GEOGRÁFICA</div>
+  <div class="geo-bars">
+    <div class="geo-row"><span class="geo-label">Estados Unidos</span><div class="geo-bar-wrap"><div class="geo-bar-fill" style="width:47.19%"></div></div><span class="geo-pct">47,19%</span></div>
+    <div class="geo-row"><span class="geo-label">Japón</span><div class="geo-bar-wrap"><div class="geo-bar-fill" style="width:13.27%"></div></div><span class="geo-pct">13,27%</span></div>
+    <div class="geo-row"><span class="geo-label">Alemania</span><div class="geo-bar-wrap"><div class="geo-bar-fill" style="width:5.58%"></div></div><span class="geo-pct">5,58%</span></div>
+    <div class="geo-row"><span class="geo-label">Francia</span><div class="geo-bar-wrap"><div class="geo-bar-fill" style="width:5.39%"></div></div><span class="geo-pct">5,39%</span></div>
+    <div class="geo-row"><span class="geo-label">Otros</span><div class="geo-bar-wrap"><div class="geo-bar-fill" style="width:28.57%"></div></div><span class="geo-pct">28,57%</span></div>
+  </div>
+
+  <div class="section-title" style="margin-top:24px">¿Qué es?</div>
+  <div class="desc-text">Replica el MSCI World Industrials, el sector industrial global. Incluye empresas de manufactura, defensa, aeroespacial, logística, ingeniería y transporte de todos los países del mundo desarrollado (MSCI World). Con un 91,32% del fondo en industriales puros, es una apuesta de pureza sectorial. El sector industrial tiene una correlación histórica alta con el ciclo económico — se comporta bien en expansiones y resiste mejor que tech en recesiones moderadas.</div>
+
+  <div class="section-title">Análisis</div>
+  <div class="pros-cons-grid">
+    <div class="pros-block">
+      <div class="pros-title">A favor</div>
+      <ul>
+        <li>Complementa WDEF (Europa) con exposición industrial global (USA 47%, Japón 13%)</li>
+        <li>Beneficiado por reshoring, IA industrial e infraestructura</li>
+        <li>Retornos sólidos y consistentes: 3Y +67%, 5Y +79%</li>
+        <li>La menor volatilidad del plan entre renta variable (12,93%)</li>
+        <li>2022 solo -7,82% — muy resiliente en entornos difíciles</li>
+        <li>TER 0,25% razonable para un ETF sectorial especializado</li>
+      </ul>
+    </div>
+    <div class="cons-block">
+      <div class="cons-title">En contra</div>
+      <ul>
+        <li>AUM pequeño (862M€) — riesgo de liquidez vs otros ETFs del plan</li>
+        <li>Apenas un competidor directo (SPDR, 188M€) — nicho poco líquido</li>
+        <li>Boeing (-61% desde máximos históricos) lastra el índice</li>
+        <li>Solapamiento temático con WDEF (ambos tienen empresas aeroespaciales/defensa)</li>
+        <li>3M -1,09% — underperformance reciente vs mercado amplio</li>
+      </ul>
+    </div>
+  </div>
+  <div class="opinion-block">
+    <div class="opinion-label">Opinión para inversor 25-30 años, largo plazo</div>
+    <div class="opinion-text">Posición bien pensada que añade industriales globales sin limitarse a defensa europea. Se complementa bien con WDEF creando una exposición industrial bifurcada: Europa puro defensa (WDEF) + industriales globales diversificados (XWIN). Los 50€/mes son adecuados para este satélite industrial. El AUM de 862M€ es el menor de la cartera en renta variable — si cayera por debajo de 200M€ habría que replantearse.</div>
+  </div>
+
+  <div class="section-title">Alternativas comparables</div>
+  <table class="comp-table">
+    <thead><tr><th>ETF</th><th>TER</th><th>AUM</th><th>Réplica</th></tr></thead>
+    <tbody>
+      <tr><td>SPDR MSCI World Industrials (WIIN)</td><td>0,30%</td><td>188M€</td><td>Muestreo</td></tr>
+    </tbody>
+  </table>
+
+  <div class="section-title">Mi inversión</div>
+  <div class="mi-inversion">
+    <div class="mi-inv-item"><div class="mil">€/mes (DCA)</div><div class="miv accent">50€</div></div>
+    <div class="mi-inv-item"><div class="mil">Total invertido</div><div class="miv">150,00€</div></div>
+    <div class="mi-inv-item"><div class="mil">Valor actual</div><div class="miv">153,16€</div></div>
+    <div class="mi-inv-item"><div class="mil">P&amp;L €</div><div class="miv pos">+3,17€</div></div>
+    <div class="mi-inv-item"><div class="mil">P&amp;L %</div><div class="miv pos">+2,10%</div></div>
+    <div class="plan-note">Nota del plan: Satélite industrial global. Posición nueva iniciada en marzo 2026.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- FICHA 7: STCE -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="ficha" id="STCE">
+  <a href="#nav" class="back-link">↑ Volver al índice</a>
+  <div class="ficha-header">
+    <div class="ficha-num-row">
+      <span class="ficha-num">#07</span>
+      <span class="badge badge-cat">Renta Variable · Clean Energy · ESG</span>
+      <span class="badge badge-risk-red">Riesgo alto</span>
+    </div>
+    <div class="ficha-name">iShares Global Clean Energy Transition UCITS ETF USD (Acc)</div>
+    <div class="ficha-ticker-row">
+      <span class="ficha-ticker">STCE</span>
+      <span class="ficha-isin">ISIN: IE000U58J0M1 · WKN: A3DENG</span>
+    </div>
+    <div class="ficha-tags">
+      <span class="tag">iShares (BlackRock)</span>
+      <span class="tag">Irlanda</span>
+      <span class="tag">USD</span>
+      <span class="tag">UCITS ✓</span>
+      <span class="tag">Acumulación</span>
+      <span class="tag">Lanzamiento: Feb 2022</span>
+      <span class="tag">ESG ✓</span>
+      <span class="tag">Réplica física total</span>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-label">TER</div><div class="stat-value" style="color:var(--red)">0,65%</div></div>
+    <div class="stat-card"><div class="stat-label">AUM</div><div class="stat-value">888M€</div></div>
+    <div class="stat-card"><div class="stat-label">Réplica</div><div class="stat-value">Física</div></div>
+    <div class="stat-card"><div class="stat-label">Divisa</div><div class="stat-value">USD</div></div>
+    <div class="stat-card"><div class="stat-label">Lanzamiento</div><div class="stat-value">Feb 2022</div></div>
+    <div class="stat-card"><div class="stat-label">Distribución</div><div class="stat-value">Acum.</div></div>
+    <div class="stat-card"><div class="stat-label">UCITS</div><div class="stat-value">✓ Sí</div></div>
+  </div>
+
+  <div class="section-title">Rendimiento</div>
+  <div class="perf-badges">
+    <div class="perf-badge"><span class="pb-label">YTD</span><span class="pb-val pos">+43,20%</span></div>
+    <div class="perf-badge"><span class="pb-label">1M</span><span class="pb-val pos">+15,23%</span></div>
+    <div class="perf-badge"><span class="pb-label">3M</span><span class="pb-val pos">+29,50%</span></div>
+    <div class="perf-badge"><span class="pb-label">6M</span><span class="pb-val pos">+37,79%</span></div>
+    <div class="perf-badge"><span class="pb-label">1 año</span><span class="pb-val pos">+81,76%</span></div>
+    <div class="perf-badge"><span class="pb-label">3 años</span><span class="pb-val pos">+20,95%</span></div>
+    <div class="perf-badge"><span class="pb-label">MAX</span><span class="pb-val pos">+13,99%</span></div>
+  </div>
+
+  <table class="annual-table">
+    <thead><tr><th>Año</th><th>2025</th><th>2024</th><th>2023</th><th>2022 (parcial)</th></tr></thead>
+    <tbody><tr>
+      <td style="color:var(--muted);font-size:11px">Rentabilidad</td>
+      <td class="heat-pos">+29,07%</td>
+      <td class="heat-neg">-21,38%</td>
+      <td class="heat-neg">-23,28%</td>
+      <td class="heat-neg">— (inception Feb)</td>
+    </tr></tbody>
+  </table>
+
+  <div class="section-title">Métricas de riesgo</div>
+  <div class="risk-grid">
+    <div class="risk-card"><div class="rl">Volatilidad 1Y</div><div class="rv" style="color:var(--gold)">22,12%</div></div>
+    <div class="risk-card"><div class="rl">Volatilidad 3Y</div><div class="rv" style="color:var(--gold)">20,87%</div></div>
+    <div class="risk-card"><div class="rl">Return/Risk 1Y</div><div class="rv pos">3,70</div></div>
+    <div class="risk-card"><div class="rl">MaxDD 1Y</div><div class="rv neg">-11,89%</div></div>
+    <div class="risk-card"><div class="rl">MaxDD 3Y</div><div class="rv neg">-42,72%</div></div>
+    <div class="risk-card"><div class="rl">MaxDD inception</div><div class="rv neg">-56,69%</div></div>
+    <div class="risk-card"><div class="rl">Custodio</div><div class="rv" style="font-size:10px">State Street</div></div>
+    <div class="risk-card"><div class="rl">Auditor</div><div class="rv" style="font-size:10px">Deloitte</div></div>
+  </div>
+
+  <div class="section-title">Composición</div>
+  <div class="composition-grid">
+    <div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px">TOP 10 HOLDINGS</div>
+      <table class="holdings-table">
+        <tr><td>Nextpower</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:100%"></div></div></td><td>10,18%</td></tr>
+        <tr><td>Bloom Energy</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:92%"></div></div></td><td>9,41%</td></tr>
+        <tr><td>First Solar</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:60%"></div></div></td><td>6,14%</td></tr>
+        <tr><td>Iberdrola</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:57%"></div></div></td><td>5,76%</td></tr>
+        <tr><td>China Yangtze Power</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:46%"></div></div></td><td>4,71%</td></tr>
+        <tr><td>Ormat Technologies</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:31%"></div></div></td><td>3,20%</td></tr>
+        <tr><td>Enphase Energy</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:30%"></div></div></td><td>3,04%</td></tr>
+        <tr><td>Equatorial SA</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:29%"></div></div></td><td>2,91%</td></tr>
+        <tr><td>Vestas Wind Systems</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:26%"></div></div></td><td>2,69%</td></tr>
+        <tr><td>EDP SA</td><td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:22%"></div></div></td><td>2,24%</td></tr>
+      </table>
+    </div>
+    <div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px">SECTORES</div>
+      <div class="chart-container"><canvas id="chart-STCE-sector"></canvas></div>
+    </div>
+  </div>
+
+  <div style="font-size:11px;color:var(--muted);margin-bottom:10px">DISTRIBUCIÓN GEOGRÁFICA</div>
+  <div class="geo-bars">
+    <div class="geo-row"><span class="geo-label">Estados Unidos</span><div class="geo-bar-wrap"><div class="geo-bar-fill" style="width:29.75%"></div></div><span class="geo-pct">29,75%</span></div>
+    <div class="geo-row"><span class="geo-label">China</span><div class="geo-bar-wrap"><div class="geo-bar-fill" style="width:16.65%"></div></div><span class="geo-pct">16,65%</span></div>
+    <div class="geo-row"><span class="geo-label">Brasil</span><div class="geo-bar-wrap"><div class="geo-bar-fill" style="width:8.49%"></div></div><span class="geo-pct">8,49%</span></div>
+    <div class="geo-row"><span class="geo-label">España</span><div class="geo-bar-wrap"><div class="geo-bar-fill" style="width:8.21%"></div></div><span class="geo-pct">8,21%</span></div>
+    <div class="geo-row"><span class="geo-label">Otros</span><div class="geo-bar-wrap"><div class="geo-bar-fill" style="width:36.90%"></div></div><span class="geo-pct">36,90%</span></div>
+  </div>
+
+  <div class="section-title" style="margin-top:24px">¿Qué es?</div>
+  <div class="desc-text">Replica el S&P Global Clean Energy Transition, enfocado en empresas que facilitan la transición energética: solar, eólica, hidrógeno, eficiencia energética y utilities verdes. Tiene etiqueta ESG oficial, siendo la única posición sostenible de la cartera. Con una concentración notable (las 10 mayores posiciones representan el 50% del fondo), su comportamiento puede ser muy volátil. Fue lanzado en febrero de 2022 — el peor momento posible, con la subida de tipos en plena escalada.</div>
+
+  <div class="section-title">Análisis</div>
+  <div class="pros-cons-grid">
+    <div class="pros-block">
+      <div class="pros-title">A favor</div>
+      <ul>
+        <li>YTD 2026 +43,20%, 1Y +81,76% — recuperación explosiva tras dos años brutales</li>
+        <li>Transición energética como megatrend estructural de décadas</li>
+        <li>Subvenciones gubernamentales masivas globales (IRA USA, Green Deal UE)</li>
+        <li>Vestas, Iberdrola, First Solar son líderes de mercado consolidados</li>
+        <li>Única posición ESG del plan — diversificación de criterios de inversión</li>
+      </ul>
+    </div>
+    <div class="cons-block">
+      <div class="cons-title">En contra</div>
+      <ul>
+        <li>TER 0,65% — el más caro de toda la cartera (casi 10x más que SXR8)</li>
+        <li>2023: -23,28% y 2024: -21,38% — dos años brutales consecutivos</li>
+        <li>MaxDD inception -56,69% — más de la mitad del capital perdido en el peor momento</li>
+        <li>Nextpower (10,18%) + Bloom Energy (9,41%) = casi 20% del fondo en solo 2 valores</li>
+        <li>Alta dependencia de política energética — puede revertir con cambios regulatorios</li>
+      </ul>
+    </div>
+  </div>
+  <div class="opinion-block">
+    <div class="opinion-label">Opinión para inversor 25-30 años, largo plazo</div>
+    <div class="opinion-text">El activo más volátil del plan junto con ISLN. Claramente especulativo y satélite. El TER de 0,65% penaliza significativamente la rentabilidad a largo plazo — en 10 años, pagas un 6,5% acumulado solo en comisiones. La recuperación de 2025/2026 es espectacular, pero los -44% acumulados en 2023-2024 son el riesgo real. La posición de 50€/mes es exactamente la correcta: exposición al megatrend sin sobreexposición.</div>
+  </div>
+
+  <div class="section-title">Alternativas comparables</div>
+  <table class="comp-table">
+    <thead><tr><th>ETF</th><th>TER</th><th>AUM</th><th>Distribución</th></tr></thead>
+    <tbody>
+      <tr><td>iShares Global Clean Energy Transition Dist.</td><td>0,65%</td><td>3.480M€</td><td>Distribuyente</td></tr>
+    </tbody>
+  </table>
+
+  <div class="section-title">Mi inversión</div>
+  <div class="mi-inversion">
+    <div class="mi-inv-item"><div class="mil">€/mes (DCA)</div><div class="miv accent">50€</div></div>
+    <div class="mi-inv-item"><div class="mil">Total invertido</div><div class="miv">150,00€</div></div>
+    <div class="mi-inv-item"><div class="mil">Valor actual</div><div class="miv">185,09€</div></div>
+    <div class="mi-inv-item"><div class="mil">P&amp;L €</div><div class="miv pos">+35,09€</div></div>
+    <div class="mi-inv-item"><div class="mil">P&amp;L %</div><div class="miv pos">+23,39%</div></div>
+    <div class="plan-note">Nota del plan: Satélite temático ESG. Posición nueva iniciada en marzo 2026.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- FICHA 8: IGLN -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="ficha" id="IGLN">
+  <a href="#nav" class="back-link">↑ Volver al índice</a>
+  <div class="ficha-header">
+    <div class="ficha-num-row">
+      <span class="ficha-num">#08</span>
+      <span class="badge badge-cat">Metales Preciosos · Oro Físico</span>
+      <span class="badge badge-risk-orange">Riesgo medio-alto</span>
+    </div>
+    <div class="ficha-name">iShares Physical Gold ETC</div>
+    <div class="ficha-ticker-row">
+      <span class="ficha-ticker">IGLN</span>
+      <span class="ficha-isin">ISIN: IE00B4ND3602 · WKN: A1KWPQ</span>
+    </div>
+    <div class="ficha-tags">
+      <span class="tag">iShares (BlackRock)</span>
+      <span class="tag">Irlanda</span>
+      <span class="tag">USD</span>
+      <span class="tag" style="color:var(--red)">NO UCITS — ETC</span>
+      <span class="tag">Acumulación</span>
+      <span class="tag">Lanzamiento: Abr 2011</span>
+      <span class="tag">Respaldo físico total</span>
+    </div>
+  </div>
+
+  <div style="background:rgba(224,92,92,.08);border:1px solid rgba(224,92,92,.2);border-radius:6px;padding:10px 14px;font-size:12px;color:var(--red);margin-bottom:20px">
+    Este producto NO es un ETF UCITS. Es un ETC (Exchange Traded Commodity) — una estructura de deuda respaldada por oro físico. Tiene implicaciones fiscales distintas en Alemania (sin rebaja del 30%) y Austria.
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-label">TER</div><div class="stat-value">0,12%</div></div>
+    <div class="stat-card"><div class="stat-label">AUM</div><div class="stat-value">31.678M€</div></div>
+    <div class="stat-card"><div class="stat-label">Respaldo</div><div class="stat-value">Físico</div></div>
+    <div class="stat-card"><div class="stat-label">Divisa</div><div class="stat-value">USD</div></div>
+    <div class="stat-card"><div class="stat-label">Lanzamiento</div><div class="stat-value">Abr 2011</div></div>
+    <div class="stat-card"><div class="stat-label">Distribución</div><div class="stat-value">Acum.</div></div>
+    <div class="stat-card"><div class="stat-label">UCITS</div><div class="stat-value" style="color:var(--red)">✕ ETC</div></div>
+  </div>
+
+  <div class="section-title">Rendimiento</div>
+  <div class="perf-badges">
+    <div class="perf-badge"><span class="pb-label">YTD</span><span class="pb-val pos">+6,91%</span></div>
+    <div class="perf-badge"><span class="pb-label">1M</span><span class="pb-val pos">+1,51%</span></div>
+    <div class="perf-badge"><span class="pb-label">3M</span><span class="pb-val neg">-11,37%</span></div>
+    <div class="perf-badge"><span class="pb-label">6M</span><span class="pb-val pos">+8,17%</span></div>
+    <div class="perf-badge"><span class="pb-label">1 año</span><span class="pb-val pos">+33,42%</span></div>
+    <div class="perf-badge"><span class="pb-label">3 años</span><span class="pb-val pos">+115,00%</span></div>
+    <div class="perf-badge"><span class="pb-label">5 años</span><span class="pb-val pos">+149,07%</span></div>
+    <div class="perf-badge"><span class="pb-label">MAX</span><span class="pb-val pos">+273,96%</span></div>
+  </div>
+
+  <table class="annual-table">
+    <thead><tr><th>Año</th><th>2025</th><th>2024</th><th>2023</th><th>2022</th></tr></thead>
+    <tbody><tr>
+      <td style="color:var(--muted);font-size:11px">Rentabilidad</td>
+      <td class="heat-pos">+45,72%</td>
+      <td class="heat-pos">+34,47%</td>
+      <td class="heat-pos">+9,69%</td>
+      <td class="heat-pos">+5,65%</td>
+    </tr></tbody>
+  </table>
+
+  <div class="section-title">Métricas de riesgo</div>
+  <div class="risk-grid">
+    <div class="risk-card"><div class="rl">Volatilidad 1Y</div><div class="rv" style="color:var(--gold)">23,15%</div></div>
+    <div class="risk-card"><div class="rl">Volatilidad 3Y</div><div class="rv">17,94%</div></div>
+    <div class="risk-card"><div class="rl">Return/Risk 1Y</div><div class="rv pos">1,44</div></div>
+    <div class="risk-card"><div class="rl">MaxDD 1Y</div><div class="rv neg">-16,30%</div></div>
+    <div class="risk-card"><div class="rl">MaxDD 3Y</div><div class="rv neg">-16,30%</div></div>
+    <div class="risk-card"><div class="rl">MaxDD inception</div><div class="rv neg">-37,20%</div></div>
+    <div class="risk-card"><div class="rl">Custodio oro</div><div class="rv" style="font-size:10px">JP Morgan</div></div>
+    <div class="risk-card"><div class="rl">Almacenamiento</div><div class="rv" style="font-size:10px">Londres</div></div>
+  </div>
+
+  <div class="section-title" style="margin-top:24px">¿Qué es?</div>
+  <div class="desc-text">ETC (Exchange Traded Commodity) respaldado por oro físico almacenado en las bóvedas de JP Morgan en Londres. NO es un ETF UCITS — es una estructura de deuda senior garantizada por oro físico. Cada participación representa una fracción de un troy ounce de oro (actualmente aprox. 0,0955 oz). El mayor ETC de oro europeo de iShares. BlackRock garantiza que el oro físico está segregado y auditado regularmente por PricewaterhouseCoopers.</div>
+
+  <div class="section-title">Análisis</div>
+  <div class="pros-cons-grid">
+    <div class="pros-block">
+      <div class="pros-title">A favor</div>
+      <ul>
+        <li>+33% 1Y, +115% 3Y, +149% 5Y — superciclo alcista del oro en curso</li>
+        <li>+45,72% solo en 2025 — el mejor año del oro en décadas</li>
+        <li>Compras masivas de bancos centrales (China, India, Turquía) empujan el precio</li>
+        <li>Cobertura clásica contra inflación, crisis y devaluación del dólar</li>
+        <li>Respaldo físico en JP Morgan = certeza de que existe el activo subyacente</li>
+        <li>TER 0,12% muy competitivo para oro físico</li>
+      </ul>
+    </div>
+    <div class="cons-block">
+      <div class="cons-title">En contra</div>
+      <ul>
+        <li>NO es UCITS — estructura ETC con implicaciones fiscales distintas por país</li>
+        <li>El oro no genera ingresos ni dividendos — solo apreciación de precio</li>
+        <li>No tiene valor intrínseco de producción (a diferencia de las acciones)</li>
+        <li>Xetra-Gold tiene TER 0,00% y Xtrackers 0,11% — alternativas más baratas</li>
+        <li>3M -11,37% — puede caer rápido y fuerte en periodos de fortaleza del dólar</li>
+      </ul>
+    </div>
+  </div>
+  <div class="opinion-block">
+    <div class="opinion-label">Opinión para inversor 25-30 años, largo plazo</div>
+    <div class="opinion-text">Excelente posición de diversificación y cobertura. El oro ha demostrado ser el mejor diversificador de cartera en entornos de incertidumbre geopolítica y monetaria. Los 25€/mes son adecuados como posición defensiva. Considera que Xetra-Gold tiene TER 0,00% — pero el 0,12% de IGLN es marginal en importes pequeños. Ideal para DCA sistemático a largo plazo. No amplíes la posición en oro por encima del 10% del total de la cartera.</div>
+  </div>
+
+  <div class="section-title">Alternativas comparables</div>
+  <table class="comp-table">
+    <thead><tr><th>ETC</th><th>TER</th><th>AUM</th><th>Nota</th></tr></thead>
+    <tbody>
+      <tr><td>Invesco Physical Gold (SGLD)</td><td>0,12%</td><td>24.503M€</td><td>Mismo coste</td></tr>
+      <tr><td>Xetra-Gold (4GLD)</td><td>0,00%</td><td>21.190M€</td><td>Sin TER — solo custodia</td></tr>
+      <tr><td>Amundi Physical Gold (GOLD)</td><td>0,12%</td><td>10.309M€</td><td>Mismo coste</td></tr>
+      <tr><td>Xtrackers IE Physical Gold (XGLD)</td><td>0,11%</td><td>5.908M€</td><td>Ligeramente más barato</td></tr>
+    </tbody>
+  </table>
+
+  <div class="section-title">Mi inversión</div>
+  <div class="mi-inversion">
+    <div class="mi-inv-item"><div class="mil">€/mes (DCA)</div><div class="miv accent">25€</div></div>
+    <div class="mi-inv-item"><div class="mil">Total invertido</div><div class="miv">575,00€</div></div>
+    <div class="mi-inv-item"><div class="mil">Valor actual</div><div class="miv">643,93€</div></div>
+    <div class="mi-inv-item"><div class="mil">P&amp;L €</div><div class="miv pos">+68,93€</div></div>
+    <div class="mi-inv-item"><div class="mil">P&amp;L %</div><div class="miv pos">+11,99%</div></div>
+    <div class="plan-note">Nota del plan: Cobertura y diversificación. Reducido a 25€/mes en marzo 2026.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- FICHA 9: ISLN -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="ficha" id="ISLN">
+  <a href="#nav" class="back-link">↑ Volver al índice</a>
+  <div class="ficha-header">
+    <div class="ficha-num-row">
+      <span class="ficha-num">#09</span>
+      <span class="badge badge-cat">Metales Preciosos · Plata Física</span>
+      <span class="badge badge-risk-redx">Riesgo muy alto</span>
+    </div>
+    <div class="ficha-name">iShares Physical Silver ETC</div>
+    <div class="ficha-ticker-row">
+      <span class="ficha-ticker">ISLN</span>
+      <span class="ficha-isin">ISIN: IE00B4NCWG09 · WKN: A1KWPR</span>
+    </div>
+    <div class="ficha-tags">
+      <span class="tag">iShares (BlackRock)</span>
+      <span class="tag">Irlanda</span>
+      <span class="tag">USD</span>
+      <span class="tag" style="color:var(--red)">NO UCITS — ETC</span>
+      <span class="tag">Acumulación</span>
+      <span class="tag">Lanzamiento: Abr 2011</span>
+      <span class="tag">Respaldo físico total</span>
+    </div>
+  </div>
+
+  <div style="background:rgba(224,92,92,.12);border:1px solid rgba(224,92,92,.3);border-radius:6px;padding:10px 14px;font-size:12px;color:var(--red);margin-bottom:20px">
+    ADVERTENCIA: ETC (no UCITS) con volatilidad extrema (54,50%). MaxDD histórico -67,82% — puede perder 2/3 del capital. Solo apto como posición satélite de pequeño importe.
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-label">TER</div><div class="stat-value">0,20%</div></div>
+    <div class="stat-card"><div class="stat-label">AUM</div><div class="stat-value">2.966M€</div></div>
+    <div class="stat-card"><div class="stat-label">Respaldo</div><div class="stat-value">Físico</div></div>
+    <div class="stat-card"><div class="stat-label">Divisa</div><div class="stat-value">USD</div></div>
+    <div class="stat-card"><div class="stat-label">Lanzamiento</div><div class="stat-value">Abr 2011</div></div>
+    <div class="stat-card"><div class="stat-label">Distribución</div><div class="stat-value">Acum.</div></div>
+    <div class="stat-card"><div class="stat-label">UCITS</div><div class="stat-value" style="color:var(--red)">✕ ETC</div></div>
+  </div>
+
+  <div class="section-title">Rendimiento</div>
+  <div class="perf-badges">
+    <div class="perf-badge"><span class="pb-label">YTD</span><span class="pb-val pos">+6,15%</span></div>
+    <div class="perf-badge"><span class="pb-label">1M</span><span class="pb-val pos">+4,68%</span></div>
+    <div class="perf-badge"><span class="pb-label">3M</span><span class="pb-val neg">-14,65%</span></div>
+    <div class="perf-badge"><span class="pb-label">6M</span><span class="pb-val pos">+39,50%</span></div>
+    <div class="perf-badge"><span class="pb-label">1 año</span><span class="pb-val pos">+119,53%</span></div>
+    <div class="perf-badge"><span class="pb-label">3 años</span><span class="pb-val pos">+200,00%</span></div>
+    <div class="perf-badge"><span class="pb-label">5 años</span><span class="pb-val pos">+183,26%</span></div>
+    <div class="perf-badge"><span class="pb-label">MAX</span><span class="pb-val pos">+122,67%</span></div>
+  </div>
+
+  <table class="annual-table">
+    <thead><tr><th>Año</th><th>2025</th><th>2024</th><th>2023</th><th>2022</th></tr></thead>
+    <tbody><tr>
+      <td style="color:var(--muted);font-size:11px">Rentabilidad</td>
+      <td class="heat-pos">+119,73%</td>
+      <td class="heat-pos">+28,99%</td>
+      <td class="heat-neg">-4,32%</td>
+      <td class="heat-pos">+9,96%</td>
+    </tr></tbody>
+  </table>
+
+  <div class="section-title">Métricas de riesgo</div>
+  <div class="risk-grid">
+    <div class="risk-card"><div class="rl">Volatilidad 1Y</div><div class="rv" style="color:var(--red)">54,50%</div></div>
+    <div class="risk-card"><div class="rl">Volatilidad 3Y</div><div class="rv" style="color:var(--red)">39,37%</div></div>
+    <div class="risk-card"><div class="rl">Return/Risk 1Y</div><div class="rv pos">2,19</div></div>
+    <div class="risk-card"><div class="rl">MaxDD 1Y</div><div class="rv neg">-41,44%</div></div>
+    <div class="risk-card"><div class="rl">MaxDD 3Y</div><div class="rv neg">-41,44%</div></div>
+    <div class="risk-card"><div class="rl">MaxDD inception</div><div class="rv neg" style="color:#ff4444;font-weight:700">-67,82%</div></div>
+    <div class="risk-card"><div class="rl">Custodio plata</div><div class="rv" style="font-size:10px">JP Morgan</div></div>
+    <div class="risk-card"><div class="rl">Volatilidad 5Y</div><div class="rv" style="color:var(--red)">33,99%</div></div>
+  </div>
+
+  <div class="section-title" style="margin-top:24px">¿Qué es?</div>
+  <div class="desc-text">ETC respaldado por plata física almacenada en las bóvedas de JP Morgan. Misma estructura que IGLN pero con plata. La plata tiene una naturaleza dual única: es tanto activo de inversión/refugio (como el oro) como metal industrial con uso masivo en paneles solares, electrónica, contactos eléctricos y vehículos eléctricos. Esta dualidad hace que su precio sea más volátil que el oro — amplifica los movimientos en ambas direcciones. Con +200% en 3 años, es el activo de mayor rentabilidad de la cartera en ese horizonte.</div>
+
+  <div class="section-title">Análisis</div>
+  <div class="pros-cons-grid">
+    <div class="pros-block">
+      <div class="pros-title">A favor</div>
+      <ul>
+        <li>+119,53% en 1Y — uno de los activos más rentables del mercado</li>
+        <li>+200% en 3Y y +119,73% solo en 2025 — rendimiento extraordinario</li>
+        <li>Demanda industrial de plata para solar y EVs en máximos históricos</li>
+        <li>Ratio oro/plata históricamente alto (~80) — potencial catch-up de la plata</li>
+        <li>Respaldo físico en JP Morgan — certeza del activo subyacente real</li>
+      </ul>
+    </div>
+    <div class="cons-block">
+      <div class="cons-title">En contra</div>
+      <ul>
+        <li>Volatilidad EXTREMA: 54,50% — categoría especulativa</li>
+        <li>MaxDD inception -67,82% — puedes perder dos tercios del capital</li>
+        <li>MaxDD 1Y -41,44% — en 12 meses puede caer casi la mitad</li>
+        <li>NO es UCITS — implicaciones fiscales distintas</li>
+        <li>Mercado mucho más pequeño que el oro = más manipulable y volátil</li>
+        <li>La demanda industrial puede caer bruscamente en recesión</li>
+      </ul>
+    </div>
+  </div>
+  <div class="opinion-block">
+    <div class="opinion-label">Opinión para inversor 25-30 años, largo plazo</div>
+    <div class="opinion-text">El activo MÁS arriesgado de toda la cartera. Una volatilidad del 54% y un MaxDD de -68% es de categoría especulativa pura. El rendimiento de +200% en 3 años es espectacular, pero conviene recordar que también puede caer un 67% — como ya ocurrió históricamente. La posición de 25€/mes es exactamente la correcta: exposición mínima al upside sin poner en riesgo capital significativo. No amplíes esta posición bajo ninguna circunstancia.</div>
+  </div>
+
+  <div class="section-title">Alternativas comparables</div>
+  <table class="comp-table">
+    <thead><tr><th>ETC</th><th>TER</th><th>AUM</th><th>Nota</th></tr></thead>
+    <tbody>
+      <tr><td>Invesco Physical Silver (SSLV)</td><td>0,19%</td><td>924M€</td><td>Ligeramente más barato</td></tr>
+      <tr><td>WisdomTree Core Physical Silver</td><td>0,19%</td><td>824M€</td><td>Ligeramente más barato</td></tr>
+      <tr><td>Xtrackers Physical Silver EUR Hdg</td><td>0,40%</td><td>557M€</td><td>Cubierto EUR, más caro</td></tr>
+      <tr><td>WisdomTree Physical Silver</td><td>0,49%</td><td>2.822M€</td><td>Más caro pero más AUM</td></tr>
+    </tbody>
+  </table>
+
+  <div class="section-title">Mi inversión</div>
+  <div class="mi-inversion">
+    <div class="mi-inv-item"><div class="mil">€/mes (DCA)</div><div class="miv accent">25€</div></div>
+    <div class="mi-inv-item"><div class="mil">Total invertido</div><div class="miv">425,00€</div></div>
+    <div class="mi-inv-item"><div class="mil">Valor actual</div><div class="miv">617,04€</div></div>
+    <div class="mi-inv-item"><div class="mil">P&amp;L €</div><div class="miv pos">+192,04€</div></div>
+    <div class="mi-inv-item"><div class="mil">P&amp;L %</div><div class="miv pos">+45,19%</div></div>
+    <div class="plan-note">Nota del plan: Satélite especulativo. Reducido a 25€/mes en marzo 2026. No ampliar.</div>
+  </div>
+</div>
+
+</main>
+
+<footer>
+  <strong>Fuentes de datos:</strong> justETF.com (datos extraídos el 30/05/2026) · Trade Republic (posiciones personales) · iShares.com · Vanguard.com · Xtrackers.com · WisdomTree.com<br>
+  <strong>Generado con:</strong> Claude (Anthropic) · Solo uso personal informativo<br>
+  <strong>Disclaimer:</strong> Este documento es exclusivamente informativo y de uso personal. No constituye asesoramiento financiero ni recomendación de inversión. Las rentabilidades pasadas no garantizan rentabilidades futuras. Invertir en ETFs conlleva riesgo de pérdida de capital.
+</footer>
+
+<script>
+// ── Chart.js global config ──
+Chart.defaults.color = '#666';
+Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+Chart.defaults.font.size = 11;
+
+const PALETTE = [
+  '#C4704A','#d4a843','#4caf82','#7260C4','#3B78B0',
+  '#2E7D6B','#B07A3A','#e05c5c','#5a9fd4','#a0c878'
+];
+
+function makeDonut(id, labels, data) {
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: data,
+        backgroundColor: PALETTE.slice(0, data.length),
+        borderColor: '#141414',
+        borderWidth: 2,
+        hoverOffset: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '65%',
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: {
+            boxWidth: 10,
+            padding: 8,
+            font: { size: 10 },
+            color: '#a09890'
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              return ' ' + ctx.label + ': ' + ctx.raw + '%';
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+// SXR8 — S&P 500 sectors
+makeDonut('chart-SXR8-sector',
+  ['Tecnología', 'Financieras', 'Telecom', 'Cons. Discr.', 'Otros'],
+  [33.90, 10.38, 10.22, 10.01, 35.49]
+);
+
+// VFEM — Emerging sectors
+makeDonut('chart-VFEM-sector',
+  ['Tecnología', 'Financieras', 'Cons. Discr.', 'Telecom', 'Otros'],
+  [24.82, 20.21, 10.08, 7.66, 37.23]
+);
+
+// CNDX — Nasdaq sectors
+makeDonut('chart-CNDX-sector',
+  ['Tecnología', 'Telecom', 'Cons. Discr.', 'Cons. Básico', 'Otros'],
+  [48.95, 15.31, 12.57, 8.55, 14.62]
+);
+
+// XXSC — Europe Small Cap sectors
+makeDonut('chart-XXSC-sector',
+  ['Industriales', 'Financieras', 'Cons. Discr.', 'Inmobiliario', 'Otros'],
+  [23.96, 15.11, 8.29, 8.15, 44.49]
+);
+
+// WDEF — Defence sectors
+makeDonut('chart-WDEF-sector',
+  ['Industriales', 'Tecnología', 'Telecom', 'Otros'],
+  [69.31, 4.19, 0.75, 25.75]
+);
+
+// XWIN — World Industrials sectors
+makeDonut('chart-XWIN-sector',
+  ['Industriales', 'Tecnología', 'Cons. Discr.', 'Financieras', 'Otros'],
+  [91.32, 1.70, 0.11, 0.09, 6.78]
+);
+
+// STCE — Clean Energy sectors
+makeDonut('chart-STCE-sector',
+  ['Utilities', 'Industriales', 'Tecnología', 'Mat. Básicos', 'Otros'],
+  [43.48, 25.58, 14.43, 1.58, 14.93]
+);
+</script>
+</body>
+</html>
