@@ -1,6 +1,5 @@
 /**
  * Trade Republic WebSocket client — ESM version for scripts
- * Same logic as src/lib/tr/websocket.ts but as .mts for CJS/ESM compatibility
  */
 
 import WebSocket from 'ws'
@@ -12,7 +11,13 @@ export interface TRClient {
   close: () => void
 }
 
-export async function connectTR(rawCookies: string[]): Promise<TRClient> {
+export interface TRSession {
+  trSessionToken: string
+  rawCookies: string[]
+}
+
+export async function connectTR(session: TRSession): Promise<TRClient> {
+  const { trSessionToken, rawCookies } = session
   const cookieHeader = rawCookies
     .map((c) => c.split(';')[0].trim())
     .filter(Boolean)
@@ -38,12 +43,14 @@ export async function connectTR(rawCookies: string[]): Promise<TRClient> {
     }, 15_000)
 
     ws.on('open', () => {
+      // Include token in connect message (matches trapi SDK behavior)
       ws.send(
         `connect 21 ${JSON.stringify({
           locale: 'es',
           platformId: 'webApp',
-          clientId: 'arkhos-sync',
+          clientId: crypto.randomUUID(),
           clientVersion: '1.0.0',
+          token: trSessionToken,
         })}`
       )
     })
@@ -92,7 +99,8 @@ export async function connectTR(rawCookies: string[]): Promise<TRClient> {
             catch (e) { rej(e) }
           })
 
-          ws.send(`sub ${id} ${JSON.stringify({ type, ...params })}`)
+          // Include token in every subscription (matches trapi SDK)
+          ws.send(`sub ${id} ${JSON.stringify({ type, token: trSessionToken, ...params })}`)
         })
       },
       close() { ws.close() },

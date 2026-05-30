@@ -11,10 +11,9 @@ import { createClient } from '@supabase/supabase-js'
 import * as fs from 'node:fs/promises'
 import * as os from 'node:os'
 import * as path from 'node:path'
-import { connectTR, fetchTickerPrice } from './tr-client.mts'
+import { connectTR, fetchTickerPrice, type TRSession } from './tr-client.mts'
 
-// Inline types to avoid importing CJS modules from .mts
-interface SessionData { rawCookies: string[] }
+type SessionData = TRSession
 
 interface TRCashResponse { amount: number; currencyId: string }
 interface TRPosition { isin: string; name: string; netSize: string; averageBuyIn: string }
@@ -159,7 +158,7 @@ async function main() {
   console.log(`[${new Date().toISOString()}] Sync iniciado`)
 
   try {
-    const client = await connectTR(sessionData.rawCookies)
+    const client = await connectTR(sessionData)
     console.log('✅ WebSocket conectado')
 
     const [cash, portfolio, timelineRaw] = await Promise.all([

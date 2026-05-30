@@ -7,7 +7,7 @@
 import * as fs from 'node:fs/promises'
 import * as os from 'node:os'
 import * as path from 'node:path'
-import { connectTR, fetchTickerPrice } from './tr-client.mts'
+import { connectTR, fetchTickerPrice, type TRSession } from './tr-client.mts'
 
 interface TRCashResponse { amount: number; currencyId: string }
 interface TRPortfolioPosition { isin: string; name: string; netSize: string; averageBuyIn: string }
@@ -16,9 +16,7 @@ interface TRPortfolioResponse { categories?: TRPortfolioCategory[] }
 
 const SESSION_FILE = path.join(os.homedir(), '.tr_api_cookies.json')
 
-interface SessionData {
-  rawCookies: string[]
-}
+type SessionData = TRSession
 
 async function main() {
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
@@ -34,10 +32,10 @@ async function main() {
     process.exit(1)
   }
 
-  console.log(`📂 Sesión cargada (${sessionData.rawCookies.length} cookies)`)
+  console.log(`📂 Sesión cargada (${sessionData.rawCookies.length} cookies, token: ${sessionData.trSessionToken.slice(0, 15)}...)`)
   console.log('🔌 Conectando al WebSocket de TR...')
 
-  const client = await connectTR(sessionData.rawCookies)
+  const client = await connectTR(sessionData)
   console.log('✅ Conectado\n')
 
   // Test 1: Cash
