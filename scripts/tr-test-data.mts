@@ -38,12 +38,17 @@ async function main() {
   const client = await connectTR(sessionData)
   console.log('✅ Conectado\n')
 
-  // Test 1: Cash
-  const cash = await client.subscribeOnce<TRCashResponse>('cash')
-  console.log(`💰 Cash: ${cash.amount.toFixed(2)} ${cash.currencyId}`)
+  // Test 1: Cash — log raw to discover actual structure
+  const cashRaw = await client.subscribeOnce<unknown>('cash')
+  console.log('💰 Cash (raw):', JSON.stringify(cashRaw, null, 2))
+  const cash = cashRaw as TRCashResponse
+  const cashAmount = cash.amount ?? (cashRaw as Record<string, unknown>)['cashAmount'] ?? (cashRaw as Record<string, unknown>)['value']
+  console.log(`💰 Cash amount: ${typeof cashAmount === 'number' ? cashAmount.toFixed(2) : cashAmount} EUR`)
 
-  // Test 2: Portfolio
-  const portfolio = await client.subscribeOnce<TRPortfolioResponse>('compactPortfolioByType')
+  // Test 2: Portfolio — log raw too
+  const portfolioRaw = await client.subscribeOnce<unknown>('compactPortfolioByType')
+  console.log('\n📊 Portfolio (raw first 500 chars):', JSON.stringify(portfolioRaw).slice(0, 500))
+  const portfolio = portfolioRaw as TRPortfolioResponse
   const categories = portfolio.categories ?? []
   const totalPos = categories.reduce((s, c) => s + c.positions.length, 0)
   console.log(`\n📊 Posiciones (${totalPos} total):`)
