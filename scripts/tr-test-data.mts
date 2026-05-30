@@ -12,6 +12,7 @@ import { TradeRepublicApi, createMessage } from 'trapi'
 import type { Portfolio } from 'trapi'
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
+import { parseTRResponse } from './tr-parse.mts'
 
 async function loadEnv() {
   const envPath = path.join(process.cwd(), '.env.local')
@@ -37,8 +38,9 @@ function subscribeOnce<T>(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     api.subscribeOnce(createMessage(type as any, data as any), (raw) => {
       clearTimeout(timeout)
-      if (raw === null) reject(new Error(`Null response para ${type}`))
-      else resolve(JSON.parse(raw) as T)
+      if (raw === null) { reject(new Error(`Null response para ${type}`)); return }
+      try { resolve(parseTRResponse<T>(raw)) }
+      catch (e) { reject(e) }
     })
   })
 }

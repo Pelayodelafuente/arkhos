@@ -19,6 +19,7 @@ import * as path from 'node:path'
 import type { Database } from '../src/lib/supabase/types'
 import type { TRCashResponse, TRTimelineSection, TRTickerResponse } from '../src/lib/tr/types'
 import { runTRSync } from '../src/lib/tr/sync'
+import { parseTRResponse } from './tr-parse.mts'
 
 function subscribeOnce<T>(
   api: TradeRepublicApi,
@@ -30,8 +31,9 @@ function subscribeOnce<T>(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     api.subscribeOnce(createMessage(type as any, data as any), (raw) => {
       clearTimeout(timeout)
-      if (raw === null) reject(new Error(`Null response para ${type}`))
-      else resolve(JSON.parse(raw) as T)
+      if (raw === null) { reject(new Error(`Null response para ${type}`)); return }
+      try { resolve(parseTRResponse<T>(raw)) }
+      catch (e) { reject(e) }
     })
   })
 }
