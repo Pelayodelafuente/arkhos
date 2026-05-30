@@ -3,7 +3,7 @@
 // Server-side only — never import in client components
 
 import WebSocket from 'ws'
-import type { TRPortfolioResponse, TRCashResponse, TRTimelineSection } from './types'
+import type { TRPortfolioResponse, TRCashResponse, TRTimelineResponse } from './types'
 
 const TR_WS_URL = 'wss://api.traderepublic.com/api/v1/'
 
@@ -148,25 +148,25 @@ function parseRaw<T>(raw: string): T {
   throw new SyntaxError(`Cannot parse TR response: ${raw.slice(0, 120)}`)
 }
 
-// Convenience: fetch cash, portfolio and timeline in parallel
+// Convenience: fetch cash, portfolio and first timeline page in parallel
 export async function fetchTRData(rawCookies: string[]): Promise<{
   cash: TRCashResponse
   portfolio: TRPortfolioResponse
-  timeline: TRTimelineSection[]
+  timeline: TRTimelineResponse
 }> {
   const client = await connectTR(rawCookies)
 
   try {
-    const [cash, portfolio, timelineRaw] = await Promise.all([
+    const [cash, portfolio, timeline] = await Promise.all([
       client.subscribeOnce<TRCashResponse>('cash'),
       client.subscribeOnce<TRPortfolioResponse>('compactPortfolioByType'),
-      client.subscribeOnce<{ sections?: TRTimelineSection[] }>('timelineTransactions'),
+      client.subscribeOnce<TRTimelineResponse>('timelineTransactions'),
     ])
 
     return {
       cash,
       portfolio: { categories: portfolio.categories ?? [], products: [] },
-      timeline: timelineRaw.sections ?? [],
+      timeline,
     }
   } finally {
     client.close()

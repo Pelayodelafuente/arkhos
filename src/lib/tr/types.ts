@@ -40,22 +40,27 @@ export interface TRTickerResponse {
   delta: string // % change from previous close
 }
 
-// timelineTransactions response
-export interface TRTimelineSection {
-  title: string
-  data: TRTimelineItem[]
-}
-
+// timelineTransactions response (items format, confirmed from live API)
 export interface TRTimelineItem {
   id: string
   title: string
+  subtitle?: string  // action type: "Saving executed", "Completed", "Order executed", etc.
   body?: string
   icon?: string
-  amount: TRAmount
+  amount?: TRAmount
   status?: string
-  timestamp: number
+  timestamp: string  // ISO string e.g. "2026-05-04T15:24:03.867+0000"
   action?: { type: string; payload: string }
-  cashChangeAmount?: number // signed EUR amount
+}
+
+export interface TRTimelineCursors {
+  nextCursor?: string
+  nextId?: string
+}
+
+export interface TRTimelineResponse {
+  items: TRTimelineItem[]
+  cursors?: TRTimelineCursors
 }
 
 export interface TRAmount {

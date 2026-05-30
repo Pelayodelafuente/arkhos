@@ -115,7 +115,10 @@ export async function connectTR(session: TRSession): Promise<TRClient> {
       })
     },
 
-    close() { api.logout().catch(() => {}).finally(() => process.exit(0)) },
+    close() {
+      // Close WebSocket and attempt logout — process exits naturally after event loop drains
+      api.logout().catch(() => {})
+    },
   }
 
   return client

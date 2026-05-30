@@ -1,45 +1,35 @@
 /**
  * Trade Republic — Sync Runner
- * Usa el cliente WebSocket propio con sesión de cookies.
  * Ejecutado por GitHub Actions (cron diario o trigger manual).
- *
- * Nota: todos los imports son ESM-compatible. La lógica de sync está
- * inlineada para evitar el boundary CJS/ESM con src/lib/tr/*.ts
  */
 
 import { createClient } from '@supabase/supabase-js'
 import * as fs from 'node:fs/promises'
 import * as os from 'node:os'
 import * as path from 'node:path'
-import { connectTR, fetchTickerPrice, type TRSession } from './tr-client.mts'
+import { connectTR, fetchTickerPrice, type TRClient, type TRSession } from './tr-client.mts'
 
-type SessionData = TRSession
-
-interface TRCashResponse { amount: number; currencyId: string }
+// TR API types
+interface TRCashItem { accountNumber: string; currencyId: string; amount: number }
+interface TRAccountPairsResponse {
+  accounts: Array<{ securitiesAccountNumber: string; cashAccountNumber: string }>
+}
 interface TRPosition { isin: string; name: string; netSize: string; averageBuyIn: string }
 interface TRCategory { categoryType: string; positions: TRPosition[] }
 interface TRPortfolio { categories?: TRCategory[] }
+interface TRAmount { currency: string; value: number; fractionDigits: number }
 interface TRTimelineItem {
-  id: string; title: string; timestamp: number; cashChangeAmount?: number
+  id: string; timestamp: string; title: string; subtitle?: string
+  amount?: TRAmount; status?: string; action?: { type: string; payload: string }
 }
-interface TRTimelineSection { title: string; data: TRTimelineItem[] }
-
-interface SyncResult {
-  positionsUpdated: number; transactionsUpserted: number
-  passiveIncomeUpserted: number; cashEur: number
-}
+interface TRTimelineCursors { nextCursor?: string; nextId?: string }
+interface TRTimelineResponse { items: TRTimelineItem[]; cursors?: TRTimelineCursors }
 
 const SESSION_FILE = path.join(os.homedir(), '.tr_api_cookies.json')
 
+// Passive income keywords checked against title+subtitle
 const PASSIVE_KEYWORDS = /dividende|dividend|dividendo|zinsen|interest|interés|saveback|coupon/i
-const TX_PATTERNS: Array<[RegExp, string]> = [
-  [/sparplan|savings.?plan|plan de ahorro/i, 'savings_plan'],
-  [/saveback/i, 'saveback'],
-  [/kauf|buy|compra/i, 'buy'],
-  [/verkauf|sell|venta/i, 'sell'],
-  [/einzahlung|eingang|transfer.*in|depósito/i, 'transfer_in'],
-  [/auszahlung|ausgang|transfer.*out|retiro/i, 'transfer_out'],
-]
+
 const PASSIVE_PATTERNS: Array<[RegExp, string]> = [
   [/dividende|dividend|dividendo/i, 'dividend'],
   [/zinsen|interest|interés/i, 'interest'],
@@ -47,71 +37,107 @@ const PASSIVE_PATTERNS: Array<[RegExp, string]> = [
   [/coupon/i, 'coupon'],
 ]
 
-function classifyTx(title: string) {
-  for (const [re, type] of TX_PATTERNS) if (re.test(title)) return type
+// TR subtitle keywords (confirmed from live API):
+//   "Saving executed"  → savings_plan
+//   "Completed" +amt   → transfer_in / transfer_out (sign of amount)
+//   "Order executed"   → buy (negative) or sell (positive)
+function classifyTx(title: string, subtitle: string | undefined, amount: number): string | null {
+  const sub = subtitle ?? ''
+  if (/saving.?exec|sparplan.*exec|savings.*plan/i.test(sub)) return 'savings_plan'
+  if (/saveback/i.test(sub) || /saveback/i.test(title)) return 'saveback'
+  if (/order.?exec|kauf\b|purchase/i.test(sub)) return amount < 0 ? 'buy' : 'sell'
+  if (/verkauf|sell.*exec|sale/i.test(sub)) return 'sell'
+  if (/completed/i.test(sub)) return amount >= 0 ? 'transfer_in' : 'transfer_out'
   return null
 }
-function classifyPassive(title: string) {
-  for (const [re, type] of PASSIVE_PATTERNS) if (re.test(title)) return type
+
+function classifyPassive(title: string, subtitle: string | undefined): string | null {
+  const text = `${title} ${subtitle ?? ''}`
+  for (const [re, type] of PASSIVE_PATTERNS) if (re.test(text)) return type
   return null
+}
+
+// Fetches ALL timeline pages via cursor pagination (up to maxPages × ~30 items each)
+async function fetchAllTimeline(client: TRClient, maxPages = 30): Promise<TRTimelineItem[]> {
+  const all: TRTimelineItem[] = []
+  let cursors: TRTimelineCursors | undefined
+  for (let page = 0; page < maxPages; page++) {
+    const params = cursors ? { cursors } : undefined
+    const resp = await client.subscribeOnce<TRTimelineResponse>('timelineTransactions', params)
+    const batch = resp.items ?? []
+    all.push(...batch)
+    console.log(`    Página ${page + 1}: ${batch.length} items (total: ${all.length})`)
+    if (!resp.cursors?.nextCursor) break
+    cursors = resp.cursors
+  }
+  return all
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function runSync(userId: string, cash: TRCashResponse, portfolio: TRPortfolio, timeline: TRTimelineSection[], tickerPrices: Map<string, number>, supabase: any): Promise<SyncResult> {
-  // Resolve ISINs → asset IDs
-  const { data: assets } = await supabase.from('portfolio_assets').select('id, isin').eq('user_id', userId).not('isin', 'is', null)
-  const isinToId = new Map<string, string>((assets ?? []).map((a: { id: string; isin: string }) => [a.isin, a.id]))
+async function runSync(userId: string, cashEur: number, portfolio: TRPortfolio, items: TRTimelineItem[], tickerPrices: Map<string, number>, supabase: any) {
+  const { data: assets } = await supabase
+    .from('portfolio_assets').select('id, isin').eq('user_id', userId).not('isin', 'is', null)
+  const isinToId = new Map<string, string>(
+    (assets ?? []).map((a: { id: string; isin: string }) => [a.isin, a.id])
+  )
 
-  // Resolve TR platform ID
-  const { data: platform } = await supabase.from('investment_platforms').select('id').eq('user_id', userId).eq('slug', 'trade-republic').single()
+  const { data: platform } = await supabase
+    .from('investment_platforms').select('id').eq('user_id', userId).eq('slug', 'trade-republic').single()
   if (!platform) throw new Error('Plataforma trade-republic no encontrada')
 
-  // Update positions
+  // Update positions: current quantity, avg buy price, and current price
   let positionsUpdated = 0
   for (const cat of portfolio.categories ?? []) {
     for (const pos of cat.positions) {
       const assetId = isinToId.get(pos.isin)
       if (!assetId) continue
-      const currentPrice = tickerPrices.get(pos.isin) ?? null
+      const price = tickerPrices.get(pos.isin) ?? null
       const { error } = await supabase.from('portfolio_assets').update({
         current_quantity: parseFloat(pos.netSize),
-        ...(currentPrice !== null && { current_price: currentPrice, current_price_eur: currentPrice, price_updated_at: new Date().toISOString() }),
+        avg_buy_price: parseFloat(pos.averageBuyIn),
+        ...(price !== null && {
+          current_price: price,
+          current_price_eur: price,
+          price_updated_at: new Date().toISOString(),
+        }),
         updated_at: new Date().toISOString(),
       }).eq('id', assetId).eq('user_id', userId)
       if (!error) positionsUpdated++
     }
   }
 
-  // Upsert transactions
-  let transactionsUpserted = 0, passiveIncomeUpserted = 0
-  for (const section of timeline) {
-    for (const item of section.data) {
-      if (!item.id || !item.title) continue
-      const amount = Math.abs(item.cashChangeAmount ?? 0)
-      const date = new Date(item.timestamp).toISOString().split('T')[0]
+  // Upsert transactions and passive income from full timeline
+  let transactionsUpserted = 0
+  let passiveIncomeUpserted = 0
+  for (const item of items) {
+    if (!item.id || !item.title) continue
+    const amount = item.amount?.value ?? 0
+    const absAmount = Math.abs(amount)
+    const date = new Date(item.timestamp).toISOString().split('T')[0]
+    const searchText = `${item.title} ${item.subtitle ?? ''}`
 
-      if (PASSIVE_KEYWORDS.test(item.title)) {
-        const incomeType = classifyPassive(item.title)
-        if (!incomeType) continue
-        const { error } = await supabase.from('passive_income').upsert({
-          user_id: userId, platform_id: platform.id, asset_id: null,
-          type: incomeType, income_date: date, amount, currency: 'EUR', notes: item.title,
-        }, { onConflict: 'id' })
-        if (!error) passiveIncomeUpserted++
-      } else {
-        const txType = classifyTx(item.title)
-        if (!txType) continue
-        const { error } = await supabase.from('portfolio_transactions').upsert({
-          user_id: userId, platform_id: platform.id, asset_id: null,
-          type: txType, transaction_date: date, total_amount: amount,
-          currency: 'EUR', notes: item.title, source: 'tr-api', external_id: item.id,
-        }, { onConflict: 'external_id' })
-        if (!error) transactionsUpserted++
-      }
+    if (PASSIVE_KEYWORDS.test(searchText)) {
+      const incomeType = classifyPassive(item.title, item.subtitle)
+      if (!incomeType) continue
+      const { error } = await supabase.from('passive_income').upsert({
+        user_id: userId, platform_id: platform.id, asset_id: null,
+        type: incomeType, income_date: date, amount: absAmount, currency: 'EUR',
+        notes: item.title,
+      }, { onConflict: 'id' })
+      if (!error) passiveIncomeUpserted++
+    } else {
+      const txType = classifyTx(item.title, item.subtitle, amount)
+      if (!txType) continue
+      const { error } = await supabase.from('portfolio_transactions').upsert({
+        user_id: userId, platform_id: platform.id, asset_id: null,
+        type: txType, transaction_date: date, total_amount: absAmount,
+        currency: 'EUR', notes: item.title, source: 'tr-api', external_id: item.id,
+      }, { onConflict: 'external_id' })
+      if (!error) transactionsUpserted++
     }
   }
 
-  // Daily snapshot
+  // Daily portfolio snapshot
   const allPos = (portfolio.categories ?? []).flatMap(c => c.positions)
   const totalValue = allPos.reduce((s, p) => s + parseFloat(p.netSize) * (tickerPrices.get(p.isin) ?? 0), 0)
   const totalInvested = allPos.reduce((s, p) => s + parseFloat(p.netSize) * parseFloat(p.averageBuyIn), 0)
@@ -119,29 +145,40 @@ async function runSync(userId: string, cash: TRCashResponse, portfolio: TRPortfo
 
   await supabase.from('portfolio_snapshots').upsert({
     user_id: userId, snapshot_date: today, platform_id: platform.id,
-    total_value: totalValue + cash.amount, total_invested: totalInvested,
-    cash_value: cash.amount, pl_amount: totalValue - totalInvested,
+    total_value: totalValue + cashEur, total_invested: totalInvested,
+    cash_value: cashEur, pl_amount: totalValue - totalInvested,
     pl_percentage: totalInvested > 0 ? ((totalValue - totalInvested) / totalInvested) * 100 : 0,
   }, { onConflict: 'user_id, snapshot_date, platform_id' })
 
-  return { positionsUpdated, transactionsUpserted, passiveIncomeUpserted, cashEur: cash.amount }
+  return { positionsUpdated, transactionsUpserted, passiveIncomeUpserted, cashEur }
 }
 
 async function main() {
-  const { TR_COOKIE_FILE_B64, TR_USER_ID, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = process.env
-  const missing = [!TR_USER_ID && 'TR_USER_ID', !NEXT_PUBLIC_SUPABASE_URL && 'NEXT_PUBLIC_SUPABASE_URL', !SUPABASE_SERVICE_ROLE_KEY && 'SUPABASE_SERVICE_ROLE_KEY'].filter(Boolean)
+  const {
+    TR_COOKIE_FILE_B64, TR_USER_ID, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY,
+  } = process.env
+
+  const missing = [
+    !TR_USER_ID && 'TR_USER_ID',
+    !NEXT_PUBLIC_SUPABASE_URL && 'NEXT_PUBLIC_SUPABASE_URL',
+    !SUPABASE_SERVICE_ROLE_KEY && 'SUPABASE_SERVICE_ROLE_KEY',
+  ].filter(Boolean)
   if (missing.length > 0) { console.error('❌ Vars faltantes:', missing.join(', ')); process.exit(1) }
 
   if (TR_COOKIE_FILE_B64) {
     try {
-      await fs.writeFile(SESSION_FILE, Buffer.from(TR_COOKIE_FILE_B64, 'base64').toString('utf-8'), { encoding: 'utf-8', mode: 0o600 })
+      await fs.writeFile(
+        SESSION_FILE,
+        Buffer.from(TR_COOKIE_FILE_B64, 'base64').toString('utf-8'),
+        { encoding: 'utf-8', mode: 0o600 }
+      )
       console.log('📂 Sesión restaurada desde secret')
     } catch (err) { console.warn('⚠️ No se pudo restaurar sesión:', err) }
   }
 
-  let sessionData: SessionData
+  let session: TRSession
   try {
-    sessionData = JSON.parse(await fs.readFile(SESSION_FILE, 'utf-8')) as SessionData
+    session = JSON.parse(await fs.readFile(SESSION_FILE, 'utf-8')) as TRSession
   } catch {
     console.error('❌ No hay sesión. Ejecuta pnpm tr:auth y actualiza TR_COOKIE_FILE_B64.')
     process.exit(1)
@@ -158,41 +195,63 @@ async function main() {
   console.log(`[${new Date().toISOString()}] Sync iniciado`)
 
   try {
-    const client = await connectTR(sessionData)
+    const client = await connectTR(session)
     console.log('✅ WebSocket conectado')
 
-    const [cash, portfolio, timelineRaw] = await Promise.all([
-      client.subscribeOnce<TRCashResponse>('cash'),
-      client.subscribeOnce<TRPortfolio>('compactPortfolioByType'),
-      client.subscribeOnce<{ sections?: TRTimelineSection[] }>('timelineTransactions'),
-    ])
-    console.log(`💰 ${cash.amount.toFixed(2)} EUR | 📊 ${portfolio.categories?.length ?? 0} cats | 📋 ${(timelineRaw.sections ?? []).flatMap(s => s.data).length} txs`)
+    const cashArray = await client.subscribeOnce<TRCashItem[]>('cash')
+    const cashItem = Array.isArray(cashArray) ? cashArray[0] : cashArray as unknown as TRCashItem
+    const cashEur = cashItem?.amount ?? 0
+    console.log(`💰 Cash: ${cashEur.toFixed(2)} EUR`)
 
+    const accountPairs = await client.subscribeOnce<TRAccountPairsResponse>('accountPairs')
+    const secAccNo = accountPairs.accounts?.[0]?.securitiesAccountNumber
+    console.log(`🏦 Cuenta valores: ${secAccNo}`)
+
+    const portfolio = await client.subscribeOnce<TRPortfolio>(
+      'compactPortfolioByType',
+      secAccNo ? { secAccNo } : undefined
+    )
     const allIsins = (portfolio.categories ?? []).flatMap(c => c.positions.map(p => p.isin))
+    console.log(`📊 ${allIsins.length} posiciones`)
+
+    console.log('📋 Obteniendo historial completo (paginado)...')
+    const items = await fetchAllTimeline(client)
+    console.log(`📋 Total timeline: ${items.length} items`)
+
     const tickerPrices = new Map<string, number>()
     await Promise.allSettled(allIsins.map(async isin => {
       const price = await fetchTickerPrice(client, isin)
       if (price !== null) tickerPrices.set(isin, price)
     }))
     console.log(`📈 Precios: ${tickerPrices.size}/${allIsins.length}`)
+
+    // Close WebSocket before DB operations (no longer needed)
     client.close()
 
-    const result = await runSync(TR_USER_ID!, cash, portfolio, timelineRaw.sections ?? [], tickerPrices, supabase)
-    console.log(`✅ Posiciones: ${result.positionsUpdated} | Txs: ${result.transactionsUpserted} | Ingresos: ${result.passiveIncomeUpserted}`)
+    const result = await runSync(TR_USER_ID!, cashEur, portfolio, items, tickerPrices, supabase)
+    console.log(
+      `✅ Sync: pos=${result.positionsUpdated} txs=${result.transactionsUpserted} ingresos=${result.passiveIncomeUpserted}`
+    )
 
     if (syncLogId) {
       await supabase.from('tr_sync_log').update({
         status: 'success', finished_at: new Date().toISOString(),
-        positions_updated: result.positionsUpdated, transactions_upserted: result.transactionsUpserted,
-        passive_income_upserted: result.passiveIncomeUpserted, cash_eur: result.cashEur,
+        positions_updated: result.positionsUpdated,
+        transactions_upserted: result.transactionsUpserted,
+        passive_income_upserted: result.passiveIncomeUpserted,
+        cash_eur: result.cashEur,
       }).eq('id', syncLogId)
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     console.error('❌ Error:', msg)
-    if (syncLogId) await supabase.from('tr_sync_log').update({ status: 'error', finished_at: new Date().toISOString(), error_message: msg }).eq('id', syncLogId)
+    if (syncLogId) {
+      await supabase.from('tr_sync_log').update({
+        status: 'error', finished_at: new Date().toISOString(), error_message: msg,
+      }).eq('id', syncLogId)
+    }
     process.exit(1)
   }
 }
 
-main().catch((err: unknown) => { console.error('Error inesperado:', err); process.exit(1) })
+main().catch((err: unknown) => { console.error('Error:', err); process.exit(1) })

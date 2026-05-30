@@ -1,12 +1,11 @@
 // Server-side only — never import this in client components
-// Used by: scripts/tr-sync-run.ts and src/app/api/tr/sync/route.ts
 
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/supabase/types'
 import type {
   TRCashResponse,
   TRPortfolioResponse,
-  TRTimelineSection,
+  TRTimelineItem,
   TRTickerResponse,
   TRSyncResult,
 } from './types'
@@ -15,7 +14,7 @@ import {
   classifyPassiveIncomeTitle,
   isPassiveIncome,
   parseDecimal,
-  timestampToDate,
+  isoDateToDate,
 } from './mappers'
 
 type SupabaseAdmin = ReturnType<typeof createClient<Database>>
@@ -24,7 +23,7 @@ export async function runTRSync(
   userId: string,
   cash: TRCashResponse,
   portfolio: TRPortfolioResponse,
-  timeline: TRTimelineSection[],
+  items: TRTimelineItem[],
   tickerPrices: Map<string, number>,
   supabase: SupabaseAdmin
 ): Promise<TRSyncResult> {
@@ -53,7 +52,7 @@ export async function runTRSync(
     throw new Error('Plataforma Trade Republic no encontrada para este usuario')
   }
 
-  // 3. Update current_price and current_quantity on portfolio_assets
+  // 3. Update current_price, current_quantity, and avg_buy_price on portfolio_assets
   let positionsUpdated = 0
 
   for (const category of portfolio.categories) {
@@ -63,11 +62,13 @@ export async function runTRSync(
 
       const currentPrice = tickerPrices.get(pos.isin) ?? null
       const currentQty = parseDecimal(pos.netSize)
+      const avgBuyPrice = parseDecimal(pos.averageBuyIn)
 
       const { error } = await supabase
         .from('portfolio_assets')
         .update({
           current_quantity: currentQty,
+          avg_buy_price: avgBuyPrice,
           ...(currentPrice !== null && {
             current_price: currentPrice,
             current_price_eur: currentPrice,
@@ -82,60 +83,59 @@ export async function runTRSync(
     }
   }
 
-  // 4. Upsert transactions from timeline
+  // 4. Upsert transactions from timeline items
   let transactionsUpserted = 0
   let passiveIncomeUpserted = 0
 
-  for (const section of timeline) {
-    for (const item of section.data) {
-      if (!item.id || !item.title) continue
+  for (const item of items) {
+    if (!item.id || !item.title) continue
 
-      const amount = Math.abs(item.cashChangeAmount ?? item.amount?.value ?? 0)
-      const date = timestampToDate(item.timestamp)
+    const amount = item.amount?.value ?? 0
+    const absAmount = Math.abs(amount)
+    const date = isoDateToDate(item.timestamp)
 
-      if (isPassiveIncome(item.title)) {
-        const incomeType = classifyPassiveIncomeTitle(item.title)
-        if (!incomeType) continue
+    if (isPassiveIncome(item.title, item.subtitle)) {
+      const incomeType = classifyPassiveIncomeTitle(item.title, item.subtitle)
+      if (!incomeType) continue
 
-        const { error } = await supabase.from('passive_income').upsert(
-          {
-            user_id: userId,
-            platform_id: platform.id,
-            asset_id: null, // would need timeline detail to resolve ISIN
-            type: incomeType,
-            income_date: date,
-            amount,
-            currency: 'EUR',
-            notes: item.title,
-          },
-          { onConflict: 'id' }
-        )
+      const { error } = await supabase.from('passive_income').upsert(
+        {
+          user_id: userId,
+          platform_id: platform.id,
+          asset_id: null,
+          type: incomeType,
+          income_date: date,
+          amount: absAmount,
+          currency: 'EUR',
+          notes: item.title,
+        },
+        { onConflict: 'id' }
+      )
 
-        if (!error) passiveIncomeUpserted++
-      } else {
-        const txType = classifyTransactionTitle(item.title)
-        if (!txType) continue
+      if (!error) passiveIncomeUpserted++
+    } else {
+      const txType = classifyTransactionTitle(item.title, item.subtitle, amount)
+      if (!txType) continue
 
-        const { error } = await supabase.from('portfolio_transactions').upsert(
-          {
-            user_id: userId,
-            platform_id: platform.id,
-            asset_id: null, // resolved in step 4b if ISIN available
-            type: txType,
-            transaction_date: date,
-            quantity: null,
-            price_per_unit: null,
-            total_amount: amount,
-            currency: 'EUR',
-            notes: item.title,
-            source: 'tr-api',
-            external_id: item.id,
-          },
-          { onConflict: 'external_id' }
-        )
+      const { error } = await supabase.from('portfolio_transactions').upsert(
+        {
+          user_id: userId,
+          platform_id: platform.id,
+          asset_id: null,
+          type: txType,
+          transaction_date: date,
+          quantity: null,
+          price_per_unit: null,
+          total_amount: absAmount,
+          currency: 'EUR',
+          notes: item.title,
+          source: 'tr-api',
+          external_id: item.id,
+        },
+        { onConflict: 'external_id' }
+      )
 
-        if (!error) transactionsUpserted++
-      }
+      if (!error) transactionsUpserted++
     }
   }
 

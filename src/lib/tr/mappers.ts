@@ -3,43 +3,56 @@ import type { Database } from '@/lib/supabase/types'
 type TransactionType = Database['public']['Enums']['transaction_type']
 type PassiveIncomeType = Database['public']['Enums']['passive_income_type']
 
-// TR timeline item titles contain keywords we use to classify the event type.
-// TR does not expose a machine-readable eventType in timelineTransactions.
-const TITLE_TO_TRANSACTION_TYPE: Array<[RegExp, TransactionType]> = [
-  [/sparplan|savings.?plan|plan de ahorro/i, 'savings_plan'],
+// TR subtitle keywords (confirmed from live API):
+//   "Saving executed"  → savings_plan
+//   "Completed" +amt   → transfer_in / transfer_out (amount sign)
+//   "Order executed"   → buy (negative) or sell (positive)
+const SUBTITLE_TO_TX: Array<[RegExp, TransactionType | 'buy_or_sell' | 'transfer']> = [
+  [/saving.?exec|sparplan.*exec|savings.*plan/i, 'savings_plan'],
   [/saveback/i, 'saveback'],
-  [/kauf|buy|compra/i, 'buy'],
-  [/verkauf|sell|venta/i, 'sell'],
-  [/einzahlung|eingang|transfer.*in|depósito/i, 'transfer_in'],
-  [/auszahlung|ausgang|transfer.*out|retiro/i, 'transfer_out'],
-  [/dividende|dividend|dividendo/i, 'dividend'],
+  [/order.?exec|kauf\b|purchase/i, 'buy_or_sell'],
+  [/verkauf|sell.*exec|sale/i, 'sell'],
+  [/completed/i, 'transfer'],
 ]
 
-const TITLE_TO_PASSIVE_INCOME_TYPE: Array<[RegExp, PassiveIncomeType]> = [
+const PASSIVE_KEYWORDS = /dividende|dividend|dividendo|zinsen|interest|interés|saveback|coupon/i
+
+const PASSIVE_PATTERNS: Array<[RegExp, PassiveIncomeType]> = [
   [/dividende|dividend|dividendo/i, 'dividend'],
   [/zinsen|interest|interés/i, 'interest'],
   [/saveback/i, 'saveback'],
   [/coupon/i, 'coupon'],
 ]
 
-export function classifyTransactionTitle(title: string): TransactionType | null {
-  for (const [pattern, type] of TITLE_TO_TRANSACTION_TYPE) {
-    if (pattern.test(title)) return type
+export function classifyTransactionTitle(
+  title: string,
+  subtitle: string | undefined,
+  amount: number
+): TransactionType | null {
+  const sub = subtitle ?? ''
+  for (const [re, type] of SUBTITLE_TO_TX) {
+    if (re.test(sub) || re.test(title)) {
+      if (type === 'buy_or_sell') return amount < 0 ? 'buy' : 'sell'
+      if (type === 'transfer') return amount >= 0 ? 'transfer_in' : 'transfer_out'
+      return type
+    }
   }
   return null
 }
 
-export function classifyPassiveIncomeTitle(title: string): PassiveIncomeType | null {
-  for (const [pattern, type] of TITLE_TO_PASSIVE_INCOME_TYPE) {
-    if (pattern.test(title)) return type
+export function classifyPassiveIncomeTitle(
+  title: string,
+  subtitle: string | undefined
+): PassiveIncomeType | null {
+  const text = `${title} ${subtitle ?? ''}`
+  for (const [pattern, type] of PASSIVE_PATTERNS) {
+    if (pattern.test(text)) return type
   }
   return null
 }
 
-const PASSIVE_KEYWORDS = /dividende|dividend|dividendo|zinsen|interest|interés|saveback|coupon/i
-
-export function isPassiveIncome(title: string): boolean {
-  return PASSIVE_KEYWORDS.test(title)
+export function isPassiveIncome(title: string, subtitle?: string): boolean {
+  return PASSIVE_KEYWORDS.test(`${title} ${subtitle ?? ''}`)
 }
 
 export function parseDecimal(value: string | undefined | null): number {
@@ -48,6 +61,6 @@ export function parseDecimal(value: string | undefined | null): number {
   return isNaN(parsed) ? 0 : parsed
 }
 
-export function timestampToDate(ms: number): string {
-  return new Date(ms).toISOString().split('T')[0]
+export function isoDateToDate(timestamp: string): string {
+  return new Date(timestamp).toISOString().split('T')[0]
 }
