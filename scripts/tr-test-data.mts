@@ -1,6 +1,5 @@
 /**
  * Trade Republic — Data Test Script
- * Usa el cliente WebSocket propio (no trapi) con sesión de cookies.
  * Usage: pnpm tr:test
  */
 
@@ -9,46 +8,47 @@ import * as os from 'node:os'
 import * as path from 'node:path'
 import { connectTR, fetchTickerPrice, type TRSession } from './tr-client.mts'
 
-interface TRCashResponse { amount: number; currencyId: string }
+// Actual TR response types (discovered from live API)
+interface TRCashItem { accountNumber: string; currencyId: string; amount: number }
 interface TRPortfolioPosition { isin: string; name: string; netSize: string; averageBuyIn: string }
 interface TRPortfolioCategory { categoryType: string; positions: TRPortfolioPosition[] }
 interface TRPortfolioResponse { categories?: TRPortfolioCategory[] }
+interface TRTimelineItem { id: string; title: string; timestamp: number; cashChangeAmount?: number }
+interface TRTimelineSection { title: string; data: TRTimelineItem[] }
+interface TRTimelineResponse { sections?: TRTimelineSection[] }
 
 const SESSION_FILE = path.join(os.homedir(), '.tr_api_cookies.json')
-
-type SessionData = TRSession
 
 async function main() {
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
   console.log('  Trade Republic — Test de Datos')
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
 
-  let sessionData: SessionData
+  let sessionData: TRSession
   try {
-    const content = await fs.readFile(SESSION_FILE, 'utf-8')
-    sessionData = JSON.parse(content) as SessionData
+    sessionData = JSON.parse(await fs.readFile(SESSION_FILE, 'utf-8')) as TRSession
   } catch {
     console.error('❌ No se encontró sesión. Ejecuta pnpm tr:auth primero.')
     process.exit(1)
   }
 
-  console.log(`📂 Sesión cargada (${sessionData.rawCookies.length} cookies, token: ${sessionData.trSessionToken.slice(0, 15)}...)`)
-  console.log('🔌 Conectando al WebSocket de TR...')
+  console.log(`📂 Sesión cargada (${sessionData.rawCookies.length} cookies)`)
+  console.log('🔌 Conectando...')
 
   const client = await connectTR(sessionData)
   console.log('✅ Conectado\n')
 
-  // Test 1: Cash — log raw to discover actual structure
-  const cashRaw = await client.subscribeOnce<unknown>('cash')
-  console.log('💰 Cash (raw):', JSON.stringify(cashRaw, null, 2))
-  const cash = cashRaw as TRCashResponse
-  const cashAmount = cash.amount ?? (cashRaw as Record<string, unknown>)['cashAmount'] ?? (cashRaw as Record<string, unknown>)['value']
-  console.log(`💰 Cash amount: ${typeof cashAmount === 'number' ? cashAmount.toFixed(2) : cashAmount} EUR`)
+  // 1. Cash — comes as array [{accountNumber, currencyId, amount}]
+  const cashArray = await client.subscribeOnce<TRCashItem[]>('cash')
+  const cashItem = Array.isArray(cashArray) ? cashArray[0] : cashArray as unknown as TRCashItem
+  const accountNumber = cashItem?.accountNumber
+  console.log(`💰 Cash: ${cashItem?.amount?.toFixed(2)} ${cashItem?.currencyId} (cuenta: ${accountNumber})`)
 
-  // Test 2: Portfolio — log raw too
-  const portfolioRaw = await client.subscribeOnce<unknown>('compactPortfolioByType')
-  console.log('\n📊 Portfolio (raw first 500 chars):', JSON.stringify(portfolioRaw).slice(0, 500))
-  const portfolio = portfolioRaw as TRPortfolioResponse
+  // 2. Portfolio — requires secAccNo from cash response
+  const portfolio = await client.subscribeOnce<TRPortfolioResponse>(
+    'compactPortfolioByType',
+    accountNumber ? { secAccNo: accountNumber } : undefined
+  )
   const categories = portfolio.categories ?? []
   const totalPos = categories.reduce((s, c) => s + c.positions.length, 0)
   console.log(`\n📊 Posiciones (${totalPos} total):`)
@@ -62,18 +62,21 @@ async function main() {
     }
   }
 
-  // Test 3: Prices (first 3 ISINs)
+  // 3. Prices (first 3)
   if (allIsins.length > 0) {
     console.log('\n📈 Precios (primeros 3):')
     for (const isin of allIsins.slice(0, 3)) {
       const price = await fetchTickerPrice(client, isin)
-      console.log(`    ${isin}: ${price !== null ? price + ' EUR' : 'no disponible'}`)
+      console.log(`    ${isin}: ${price !== null ? price + ' EUR' : 'no disponible en LSX'}`)
     }
   }
 
-  // Test 4: Timeline
-  const timelineRaw = await client.subscribeOnce<{ sections?: Array<{ data: Array<{ id: string; title: string; timestamp: number; cashChangeAmount?: number }> }> }>('timelineTransactions')
-  const allItems = (timelineRaw.sections ?? []).flatMap(s => s.data)
+  // 4. Timeline — try with secAccNo
+  const timeline = await client.subscribeOnce<TRTimelineResponse>(
+    'timelineTransactions',
+    accountNumber ? { secAccNo: accountNumber } : undefined
+  )
+  const allItems = (timeline.sections ?? []).flatMap(s => s.data)
   console.log(`\n📋 Transacciones (${allItems.length} total, primeras 5):`)
   for (const item of allItems.slice(0, 5)) {
     const date = new Date(item.timestamp).toLocaleDateString('es-ES')
@@ -84,9 +87,9 @@ async function main() {
 
   console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
   console.log('Checklist:')
-  console.log(`  [${cash.amount > 0 ? '✓' : '✗'}] Cash recibido (${cash.amount.toFixed(2)} EUR)`)
-  console.log(`  [${allIsins.length > 0 ? '✓' : '✗'}] Posiciones (${allIsins.length} ISINs)`)
-  console.log(`  [${allItems.length > 0 ? '✓' : '✗'}] Transacciones (${allItems.length})`)
+  console.log(`  [${cashItem?.amount > 0 ? '✓' : '✗'}] Cash: ${cashItem?.amount?.toFixed(2)} EUR`)
+  console.log(`  [${allIsins.length > 0 ? '✓' : '✗'}] Posiciones: ${allIsins.length} ISINs`)
+  console.log(`  [${allItems.length > 0 ? '✓' : '✗'}] Transacciones: ${allItems.length}`)
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
 }
 
