@@ -352,7 +352,7 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
     const { snapshots } = get();
     return snapshots.map((s) => ({
       date: s.snapshot_date,
-      value: s.total_value - s.cash_value,
+      value: s.total_value,
       invested: s.total_invested,
       pl: s.pl_amount ?? 0,
     }));
@@ -426,8 +426,8 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
     for (let i = 1; i < sorted.length; i++) {
       const prev = sorted[i - 1];
       const curr = sorted[i];
-      const prevInv = prev.total_value - prev.cash_value;
-      const currInv = curr.total_value - curr.cash_value;
+      const prevInv = prev.total_value;
+      const currInv = curr.total_value;
       const cashFlow = curr.total_invested - prev.total_invested;
       const denominator = prevInv + cashFlow;
       if (denominator <= 0) continue;
@@ -452,8 +452,8 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
     for (let i = 1; i < sorted.length; i++) {
       const prev = sorted[i - 1];
       const curr = sorted[i];
-      const prevInv = prev.total_value - prev.cash_value;
-      const currInv = curr.total_value - curr.cash_value;
+      const prevInv = prev.total_value;
+      const currInv = curr.total_value;
       const cashFlow = curr.total_invested - prev.total_invested;
       const denominator = prevInv + cashFlow;
       if (denominator <= 0) continue;
@@ -478,8 +478,8 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
     for (let i = 1; i < sorted.length; i++) {
       const prev = sorted[i - 1];
       const curr = sorted[i];
-      const prevInv = prev.total_value - prev.cash_value;
-      const currInv = curr.total_value - curr.cash_value;
+      const prevInv = prev.total_value;
+      const currInv = curr.total_value;
       if (prevInv <= 0) continue;
       const cashFlow = curr.total_invested - prev.total_invested;
       // Use cashflow-adjusted return to avoid inflating volatility with injected capital
@@ -524,7 +524,7 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
       const currentTotal = trAssets.reduce((s, a) => s + (a.current_value ?? 0), 0);
       const currentCash = trAssets.filter((a) => a.category === 'cash').reduce((s, a) => s + (a.current_value ?? 0), 0);
       const currentCapital = currentTotal - currentCash;
-      const prevCapital = prevSnapshot.total_value - prevSnapshot.cash_value;
+      const prevCapital = prevSnapshot.total_value;
       const capitalDelta = currentCapital - prevCapital;
       const sanityLimit = Math.max(currentCapital, 1000);
       totalValueDelta = Math.abs(capitalDelta) > sanityLimit ? null : capitalDelta;
@@ -555,7 +555,7 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
     const last = sorted.slice(-12);
     return {
       totalValue: last.map((s) => s.total_value),
-      capitalInvertido: last.map((s) => s.total_value - s.cash_value),
+      capitalInvertido: last.map((s) => s.total_invested),
       plAmount: last.map((s) => s.pl_amount ?? 0),
     };
   },

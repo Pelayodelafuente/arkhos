@@ -145,7 +145,7 @@ export function CapitalVsReturnChart({ height = 300 }: CapitalVsReturnChartProps
     const base = snapshots.map((s): StackedPoint => ({
       date: s.snapshot_date,
       capital: s.total_invested,
-      rentabilidad: (s.total_value - s.cash_value) - s.total_invested,
+      rentabilidad: s.total_value - s.total_invested,
     }));
 
     // Append live "today" point if available

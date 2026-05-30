@@ -19,7 +19,7 @@ const MONTHS = [
 // ---------------------------------------------------------------------------
 
 function investmentValue(s: PortfolioSnapshot): number {
-  return s.total_value - s.cash_value;
+  return s.total_value;
 }
 
 interface HeatCell {

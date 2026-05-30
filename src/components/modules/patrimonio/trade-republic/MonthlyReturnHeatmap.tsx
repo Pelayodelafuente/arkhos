@@ -25,9 +25,9 @@ function getMonth(dateStr: string): number {
   return parseInt(dateStr.substring(5, 7), 10) - 1; // 0-indexed
 }
 
-// Returns the investment value (total_value - cash_value) for a snapshot
+// Returns the portfolio value for a snapshot (total_value is already portfolio-only)
 function investmentValue(s: PortfolioSnapshot): number {
-  return s.total_value - s.cash_value;
+  return s.total_value;
 }
 
 // ---------------------------------------------------------------------------
