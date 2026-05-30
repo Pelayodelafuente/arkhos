@@ -5,7 +5,7 @@
 
 import WebSocket from 'ws'
 
-const TR_WS_URL = 'wss://api.traderepublic.com/api/v1/'
+const TR_WS_URL = 'wss://api.traderepublic.com'
 
 export interface TRClient {
   subscribeOnce: <T>(type: string, params?: Record<string, unknown>) => Promise<T>
