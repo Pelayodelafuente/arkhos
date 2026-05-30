@@ -6,7 +6,7 @@ settings:
 
 patchedDependencies:
   trapi@0.0.1:
-    hash: 793c8eefcffe4d711e2f6d9b37e54f41b131900e6cc1d1cba2e52a79ebb495b4
+    hash: e66cee2f593c2e99fc9fb2079850422887a2d1375fbd6fe3da4c97095c55768a
     path: patches/trapi@0.0.1.patch
 
 importers:
@@ -141,7 +141,7 @@ importers:
         version: 3.8.0(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react-is@17.0.2)(react@19.2.3)(redux@5.0.1)
       trapi:
         specifier: github:NightOwl07/trade-republic-api
-        version: https://codeload.github.com/NightOwl07/trade-republic-api/tar.gz/8154c4e89d422fd93ce2f2f85977865a758ab1a9(patch_hash=793c8eefcffe4d711e2f6d9b37e54f41b131900e6cc1d1cba2e52a79ebb495b4)(typescript@5.9.3)
+        version: https://codeload.github.com/NightOwl07/trade-republic-api/tar.gz/8154c4e89d422fd93ce2f2f85977865a758ab1a9(patch_hash=e66cee2f593c2e99fc9fb2079850422887a2d1375fbd6fe3da4c97095c55768a)(typescript@5.9.3)
       vaul:
         specifier: ^1.1.2
         version: 1.1.2(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -9281,7 +9281,7 @@ snapshots:
     dependencies:
       punycode: 2.3.1
 
-  trapi@https://codeload.github.com/NightOwl07/trade-republic-api/tar.gz/8154c4e89d422fd93ce2f2f85977865a758ab1a9(patch_hash=793c8eefcffe4d711e2f6d9b37e54f41b131900e6cc1d1cba2e52a79ebb495b4)(typescript@5.9.3):
+  trapi@https://codeload.github.com/NightOwl07/trade-republic-api/tar.gz/8154c4e89d422fd93ce2f2f85977865a758ab1a9(patch_hash=e66cee2f593c2e99fc9fb2079850422887a2d1375fbd6fe3da4c97095c55768a)(typescript@5.9.3):
     dependencies:
       bun-plugin-dts: 0.2.4
       puppeteer: 24.43.1(typescript@5.9.3)

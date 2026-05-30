@@ -18,14 +18,18 @@ export interface TRSession {
 }
 
 export async function connectTR(session: TRSession): Promise<TRClient> {
-  // trapi reads ~/.tr_api_cookies.json automatically; we ensure it's there before calling
+  // Ensure session file exists before trapi reads it
+  const sessionFile = (await import('node:os')).homedir() + '/.tr_api_cookies.json'
+  const fs = await import('node:fs/promises')
+  await fs.writeFile(sessionFile, JSON.stringify(session, null, 2), { encoding: 'utf-8', mode: 0o600 })
+
   const api = new TradeRepublicApi(
     process.env.TR_PHONE ?? 'noop',
     process.env.TR_PIN ?? 'noop'
   )
 
   const ok = await api.login()
-  if (!ok) throw new Error('trapi login failed — session expired, run pnpm tr:auth again')
+  if (!ok) throw new Error('Sesión expirada. Ejecuta: pnpm tr:auth')
 
   // Access internal WebSocket directly (bypasses trapi's broken JSON parser)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
