@@ -25,12 +25,7 @@ export async function connectTR(session: TRSession): Promise<TRClient> {
 
   return new Promise((resolve, reject) => {
     const ws = new WebSocket(TR_WS_URL, {
-      headers: {
-        Cookie: cookieHeader,
-        Origin: 'https://app.traderepublic.com',
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36',
-      },
+      headers: { Cookie: cookieHeader },
     })
 
     const pending = new Map<number, (payload: string) => void>()
@@ -43,16 +38,8 @@ export async function connectTR(session: TRSession): Promise<TRClient> {
     }, 15_000)
 
     ws.on('open', () => {
-      // Include token in connect message (matches trapi SDK behavior)
-      ws.send(
-        `connect 21 ${JSON.stringify({
-          locale: 'es',
-          platformId: 'webApp',
-          clientId: crypto.randomUUID(),
-          clientVersion: '1.0.0',
-          token: trSessionToken,
-        })}`
-      )
+      // Exact format used by trapi SDK: only locale
+      ws.send(`connect 21 ${JSON.stringify({ locale: 'en' })}`)
     })
 
     ws.on('message', (data: Buffer) => {
