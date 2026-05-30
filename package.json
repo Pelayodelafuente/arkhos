@@ -64,6 +64,11 @@
     "zod": "^4.3.6",
     "zustand": "^5.0.11"
   },
+  "pnpm": {
+    "patchedDependencies": {
+      "trapi@0.0.1": "patches/trapi@0.0.1.patch"
+    }
+  },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
