@@ -115,7 +115,7 @@ export async function connectTR(session: TRSession): Promise<TRClient> {
       })
     },
 
-    close() { /* let trapi manage the WS lifecycle */ },
+    close() { api.logout().catch(() => {}).finally(() => process.exit(0)) },
   }
 
   return client

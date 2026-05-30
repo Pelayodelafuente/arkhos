@@ -44,12 +44,19 @@ async function main() {
   const accountNumber = cashItem?.accountNumber
   console.log(`💰 Cash: ${cashItem?.amount?.toFixed(2)} ${cashItem?.currencyId} (cuenta: ${accountNumber})`)
 
-  // 2. Portfolio — streaming: first message may be empty, wait for non-empty
+  // 2. Account pairs — get depot (securities) account number
+  const accountPairsRaw = await client.subscribeOnce<unknown>('accountPairs')
+  console.log('🏦 Account pairs (raw):', JSON.stringify(accountPairsRaw).slice(0, 300))
+
+  // 3. Try portfolioStatus to discover available data
+  const portfolioStatus = await client.subscribeOnce<unknown>('portfolioStatus')
+  console.log('📈 Portfolio status (raw):', JSON.stringify(portfolioStatus).slice(0, 300))
+
+  // 4. Portfolio with streaming wait
   const portfolio = await client.subscribeUntil<TRPortfolioResponse>(
     'compactPortfolioByType',
     (d) => Array.isArray(d.categories) && d.categories.length > 0,
   ).catch(async () => {
-    // If no non-empty update comes, fall back to first response (might be truly empty)
     return client.subscribeOnce<TRPortfolioResponse>('compactPortfolioByType')
   })
   const categories = portfolio.categories ?? []
