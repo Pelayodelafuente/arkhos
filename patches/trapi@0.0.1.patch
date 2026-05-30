@@ -1,0 +1,19 @@
+diff --git a/package.json b/package.json
+index 199f8520d79abaded1805692cefde91d60c6eb56..ac941cb3ef3bd6b16fc12b4327215fd03c791292 100644
+--- a/package.json
++++ b/package.json
+@@ -1,7 +1,14 @@
+ {
+   "name": "trapi",
+   "version": "0.0.1",
++  "main": "src/index.ts",
+   "module": "src/index.ts",
++  "exports": {
++    ".": {
++      "import": "./src/index.ts",
++      "default": "./src/index.ts"
++    }
++  },
+   "types": "types/index.d.ts",
+   "type": "module",
+   "scripts": {
