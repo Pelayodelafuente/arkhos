@@ -163,9 +163,9 @@ export async function runTRSync(
       user_id: userId,
       snapshot_date: today,
       platform_id: platform.id,
-      total_value: portfolioTotal,
+      total_value: totalValue,      // portfolio sin efectivo (consistente con RPC)
       total_invested: totalInvested,
-      cash_value: cash.amount,
+      cash_value: cash.amount,      // efectivo por separado
       pl_amount: pl,
       pl_percentage: totalInvested > 0 ? (pl / totalInvested) * 100 : 0,
     },

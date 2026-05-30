@@ -246,10 +246,10 @@ export function EvolutionChart({ height = 300, showBenchmark = false, showTotal:
       .filter((s) => cutoff === null || s.snapshot_date >= cutoff)
       .map((s): EvolutionPointExtended => ({
         date: s.snapshot_date,
-        value: s.total_value - s.cash_value,
+        value: s.total_value,                          // portfolio sin efectivo (RLS y sync lo guardan así)
         invested: s.total_invested,
         pl: s.pl_amount ?? 0,
-        totalValue: s.total_value,
+        totalValue: s.total_value + (s.cash_value ?? 0), // total con efectivo para toggle
       }));
 
     // Append "today" point if we have a live price and it's not already in snapshots

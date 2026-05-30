@@ -145,8 +145,10 @@ async function runSync(userId: string, cashEur: number, portfolio: TRPortfolio, 
 
   await supabase.from('portfolio_snapshots').upsert({
     user_id: userId, snapshot_date: today, platform_id: platform.id,
-    total_value: totalValue + cashEur, total_invested: totalInvested,
-    cash_value: cashEur, pl_amount: totalValue - totalInvested,
+    total_value: totalValue,       // portfolio sin efectivo (consistente con RPC)
+    total_invested: totalInvested,
+    cash_value: cashEur,           // efectivo por separado
+    pl_amount: totalValue - totalInvested,
     pl_percentage: totalInvested > 0 ? ((totalValue - totalInvested) / totalInvested) * 100 : 0,
   }, { onConflict: 'user_id, snapshot_date, platform_id' })
 
