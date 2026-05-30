@@ -7,6 +7,8 @@ import type WebSocket from 'ws'
 
 export interface TRClient {
   subscribeOnce: <T>(type: string, params?: Record<string, unknown>) => Promise<T>
+  /** Like subscribeOnce but keeps listening until `predicate` returns true */
+  subscribeUntil: <T>(type: string, predicate: (data: T) => boolean, params?: Record<string, unknown>) => Promise<T>
   close: () => void
 }
 
@@ -67,6 +69,44 @@ export async function connectTR(session: TRSession): Promise<TRClient> {
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ws.on('message', onMessage as any)
+        ws.send(`sub ${id} ${JSON.stringify({ type, token, ...params })}`)
+      })
+    },
+
+    subscribeUntil<T>(type: string, predicate: (data: T) => boolean, params?: Record<string, unknown>): Promise<T> {
+      return new Promise((resolve, reject) => {
+        const id = nextId++
+        const timeout = setTimeout(() => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          ws.off('message', onMsg as any)
+          reject(new Error(`Timeout esperando datos de '${type}'`))
+        }, 25_000)
+
+        function onMsg(data: Buffer) {
+          const msg = data.toString()
+          const spaceIdx = msg.indexOf(' ')
+          if (spaceIdx === -1) return
+          const msgId = parseInt(msg.slice(0, spaceIdx), 10)
+          if (msgId !== id) return
+
+          try {
+            const parsed = parseRaw<T>(msg.slice(spaceIdx + 1))
+            if (predicate(parsed)) {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              ws.off('message', onMsg as any)
+              clearTimeout(timeout)
+              // Send unsub
+              try { ws.send(`unsub ${id}`) } catch { /* ignore */ }
+              resolve(parsed)
+            }
+            // else: keep listening for next update
+          } catch {
+            // not JSON yet, keep waiting
+          }
+        }
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ws.on('message', onMsg as any)
         ws.send(`sub ${id} ${JSON.stringify({ type, token, ...params })}`)
       })
     },

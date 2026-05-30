@@ -44,11 +44,14 @@ async function main() {
   const accountNumber = cashItem?.accountNumber
   console.log(`💰 Cash: ${cashItem?.amount?.toFixed(2)} ${cashItem?.currencyId} (cuenta: ${accountNumber})`)
 
-  // 2. Portfolio — requires secAccNo from cash response
-  const portfolio = await client.subscribeOnce<TRPortfolioResponse>(
+  // 2. Portfolio — streaming: first message may be empty, wait for non-empty
+  const portfolio = await client.subscribeUntil<TRPortfolioResponse>(
     'compactPortfolioByType',
-    accountNumber ? { secAccNo: accountNumber } : undefined
-  )
+    (d) => Array.isArray(d.categories) && d.categories.length > 0,
+  ).catch(async () => {
+    // If no non-empty update comes, fall back to first response (might be truly empty)
+    return client.subscribeOnce<TRPortfolioResponse>('compactPortfolioByType')
+  })
   const categories = portfolio.categories ?? []
   const totalPos = categories.reduce((s, c) => s + c.positions.length, 0)
   console.log(`\n📊 Posiciones (${totalPos} total):`)
@@ -71,11 +74,11 @@ async function main() {
     }
   }
 
-  // 4. Timeline — try with secAccNo
-  const timeline = await client.subscribeOnce<TRTimelineResponse>(
+  // 4. Timeline — streaming: wait for non-empty
+  const timeline = await client.subscribeUntil<TRTimelineResponse>(
     'timelineTransactions',
-    accountNumber ? { secAccNo: accountNumber } : undefined
-  )
+    (d) => Array.isArray(d.sections) && d.sections.length > 0,
+  ).catch(() => client.subscribeOnce<TRTimelineResponse>('timelineTransactions'))
   const allItems = (timeline.sections ?? []).flatMap(s => s.data)
   console.log(`\n📋 Transacciones (${allItems.length} total, primeras 5):`)
   for (const item of allItems.slice(0, 5)) {
