@@ -33,7 +33,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Run TR Sync
-        run: npx tsx scripts/tr-sync-run.ts
+        run: node --no-warnings --import tsx/esm scripts/tr-sync-run.ts
         env:
           TR_PHONE: ${{ secrets.TR_PHONE }}
           TR_PIN: ${{ secrets.TR_PIN }}
