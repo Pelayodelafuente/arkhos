@@ -209,10 +209,17 @@ export function EvolutionChart({ height = 300, showBenchmark = false, showTotal:
   const gradValue = `gradValue-${uid}`;
   const gradInvested = `gradInvested-${uid}`;
 
-  const snapshots = usePatrimonioStore((s) => s.snapshots);
+  const allSnapshots = usePatrimonioStore((s) => s.snapshots);
+  const platforms = usePatrimonioStore((s) => s.platforms);
   const getTRInvestmentValue = usePatrimonioStore((s) => s.getTRInvestmentValue);
   const getTRCurrentValue = usePatrimonioStore((s) => s.getTRCurrentValue);
   const pricesLastUpdated = usePatrimonioStore((s) => s.pricesLastUpdated);
+
+  // Filter to Trade Republic snapshots only (store holds all platforms)
+  const trPlatformId = platforms.find((p) => p.slug === "trade-republic")?.id;
+  const snapshots = trPlatformId
+    ? allSnapshots.filter((s) => s.platform_id === trPlatformId)
+    : allSnapshots;
 
   const [period, setPeriod] = useState<Period>("Todo");
 
