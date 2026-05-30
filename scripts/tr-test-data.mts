@@ -87,11 +87,19 @@ async function main() {
     }
   }
 
-  // 5. Timeline — use securities account number
-  const timeline = await client.subscribeOnce<TRTimelineResponse>(
+  // 5. Timeline — try multiple approaches to find correct params
+  const timelineRaw = await client.subscribeOnce<unknown>('timelineTransactions')
+  console.log('\n📋 Timeline raw (sin secAccNo):', JSON.stringify(timelineRaw).slice(0, 400))
+
+  const timelineWithAcc = await client.subscribeOnce<unknown>(
     'timelineTransactions',
-    secAccount ? { secAccNo: secAccount } : undefined
+    { secAccNo: secAccount }
   )
+  console.log('📋 Timeline raw (con secAccNo):', JSON.stringify(timelineWithAcc).slice(0, 400))
+
+  const timeline = (timelineRaw as TRTimelineResponse).sections?.length
+    ? timelineRaw as TRTimelineResponse
+    : timelineWithAcc as TRTimelineResponse
   const allItems = (timeline.sections ?? []).flatMap(s => s.data)
   console.log(`\n📋 Transacciones (${allItems.length} total, primeras 5):`)
   for (const item of allItems.slice(0, 5)) {
