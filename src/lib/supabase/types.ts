@@ -52,6 +52,47 @@ export type Database = {
           },
         ]
       }
+      alert_configs: {
+        Row: {
+          alert_type: string
+          channel: string[]
+          created_at: string | null
+          id: string
+          is_enabled: boolean
+          threshold_value: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          alert_type: string
+          channel?: string[]
+          created_at?: string | null
+          id?: string
+          is_enabled?: boolean
+          threshold_value?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          alert_type?: string
+          channel?: string[]
+          created_at?: string | null
+          id?: string
+          is_enabled?: boolean
+          threshold_value?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alert_configs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       asset_price_history: {
         Row: {
           created_at: string
@@ -1118,6 +1159,121 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      market_ai_analyses: {
+        Row: {
+          analysis_type: string
+          created_at: string | null
+          id: string
+          market_context: Json | null
+          prompt: string
+          response: string
+          user_id: string
+        }
+        Insert: {
+          analysis_type: string
+          created_at?: string | null
+          id?: string
+          market_context?: Json | null
+          prompt: string
+          response: string
+          user_id: string
+        }
+        Update: {
+          analysis_type?: string
+          created_at?: string | null
+          id?: string
+          market_context?: Json | null
+          prompt?: string
+          response?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "market_ai_analyses_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      market_alerts: {
+        Row: {
+          alert_type: string
+          id: string
+          is_read: boolean
+          message: string
+          metadata: Json | null
+          metric_value: number | null
+          severity: string
+          threshold_value: number | null
+          title: string
+          triggered_at: string | null
+          user_id: string
+        }
+        Insert: {
+          alert_type: string
+          id?: string
+          is_read?: boolean
+          message: string
+          metadata?: Json | null
+          metric_value?: number | null
+          severity?: string
+          threshold_value?: number | null
+          title: string
+          triggered_at?: string | null
+          user_id: string
+        }
+        Update: {
+          alert_type?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          metadata?: Json | null
+          metric_value?: number | null
+          severity?: string
+          threshold_value?: number | null
+          title?: string
+          triggered_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "market_alerts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      market_data_cache: {
+        Row: {
+          fetched_at: string | null
+          id: string
+          metric: string
+          source: string
+          ttl_hours: number | null
+          value: Json
+        }
+        Insert: {
+          fetched_at?: string | null
+          id?: string
+          metric: string
+          source: string
+          ttl_hours?: number | null
+          value: Json
+        }
+        Update: {
+          fetched_at?: string | null
+          id?: string
+          metric?: string
+          source?: string
+          ttl_hours?: number | null
+          value?: Json
+        }
+        Relationships: []
       }
       mintos_deposits: {
         Row: {
@@ -2724,6 +2880,56 @@ export type Database = {
           },
         ]
       }
+      tr_sync_log: {
+        Row: {
+          cash_eur: number | null
+          error_message: string | null
+          finished_at: string | null
+          id: string
+          passive_income_upserted: number | null
+          positions_updated: number | null
+          started_at: string
+          status: string
+          transactions_upserted: number | null
+          trigger_source: string | null
+          user_id: string
+        }
+        Insert: {
+          cash_eur?: number | null
+          error_message?: string | null
+          finished_at?: string | null
+          id?: string
+          passive_income_upserted?: number | null
+          positions_updated?: number | null
+          started_at?: string
+          status?: string
+          transactions_upserted?: number | null
+          trigger_source?: string | null
+          user_id: string
+        }
+        Update: {
+          cash_eur?: number | null
+          error_message?: string | null
+          finished_at?: string | null
+          id?: string
+          passive_income_upserted?: number | null
+          positions_updated?: number | null
+          started_at?: string
+          status?: string
+          transactions_upserted?: number | null
+          trigger_source?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tr_sync_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_gastos_settings: {
         Row: {
           alert_days_before: number | null
@@ -2811,6 +3017,7 @@ export type Database = {
         Returns: undefined
       }
       update_aave_apr2026: { Args: { p_user_id: string }; Returns: undefined }
+      upsert_today_snapshot: { Args: { p_user_id: string }; Returns: undefined }
     }
     Enums: {
       asset_category:
