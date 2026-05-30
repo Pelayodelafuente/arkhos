@@ -8,9 +8,9 @@
     "start": "next start",
     "lint": "eslint src",
     "audit:visual": "tsx scripts/audit.ts",
-    "tr:auth": "node --no-warnings --import tsx/esm scripts/tr-auth.ts",
-    "tr:test": "node --no-warnings --import tsx/esm scripts/tr-test-data.ts",
-    "tr:sync": "node --no-warnings --import tsx/esm scripts/tr-sync-run.ts"
+    "tr:auth": "tsx scripts/tr-auth.mts",
+    "tr:test": "tsx scripts/tr-test-data.mts",
+    "tr:sync": "tsx scripts/tr-sync-run.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.80.0",
