@@ -9,10 +9,10 @@ import * as fs from 'node:fs/promises'
 import * as os from 'node:os'
 import * as path from 'node:path'
 
-import type { Database } from '../src/lib/supabase/types.js'
-import { connectTR, fetchTickerPrice } from '../src/lib/tr/websocket.js'
-import { runTRSync } from '../src/lib/tr/sync.js'
-import type { TRCashResponse, TRPortfolioResponse, TRTimelineSection } from '../src/lib/tr/types.js'
+import type { Database } from '../src/lib/supabase/types.ts'
+import { connectTR, fetchTickerPrice } from '../src/lib/tr/websocket.ts'
+import { runTRSync } from '../src/lib/tr/sync.ts'
+import type { TRCashResponse, TRPortfolioResponse, TRTimelineSection } from '../src/lib/tr/types.ts'
 
 const SESSION_FILE = path.join(os.homedir(), '.tr_api_cookies.json')
 

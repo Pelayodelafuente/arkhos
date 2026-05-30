@@ -2,7 +2,7 @@
 // Uses session cookies (web app auth) instead of JWT mobile API auth
 // Server-side only — never import in client components
 
-import { WebSocket } from 'ws'
+import WebSocket from 'ws'
 import type { TRPortfolioResponse, TRCashResponse, TRTimelineSection } from './types'
 
 const TR_WS_URL = 'wss://api.traderepublic.com/api/v1/'

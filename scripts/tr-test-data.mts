@@ -7,8 +7,8 @@
 import * as fs from 'node:fs/promises'
 import * as os from 'node:os'
 import * as path from 'node:path'
-import { connectTR, fetchTickerPrice } from '../src/lib/tr/websocket.js'
-import type { TRPortfolioResponse, TRCashResponse } from '../src/lib/tr/types.js'
+import { connectTR, fetchTickerPrice } from '../src/lib/tr/websocket.ts'
+import type { TRPortfolioResponse, TRCashResponse } from '../src/lib/tr/types.ts'
 
 const SESSION_FILE = path.join(os.homedir(), '.tr_api_cookies.json')
 
