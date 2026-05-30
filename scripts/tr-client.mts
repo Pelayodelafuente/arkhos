@@ -1,10 +1,9 @@
 /**
- * Trade Republic WebSocket client — ESM version for scripts
+ * Trade Republic client — usa trapi para la conexión (WAF) + WS directo para datos
  */
 
-import WebSocket from 'ws'
-
-const TR_WS_URL = 'wss://api.traderepublic.com'
+import { TradeRepublicApi } from 'trapi'
+import type WebSocket from 'ws'
 
 export interface TRClient {
   subscribeOnce: <T>(type: string, params?: Record<string, unknown>) => Promise<T>
@@ -17,82 +16,59 @@ export interface TRSession {
 }
 
 export async function connectTR(session: TRSession): Promise<TRClient> {
-  const { trSessionToken, rawCookies } = session
-  const cookieHeader = rawCookies
-    .map((c) => c.split(';')[0].trim())
-    .filter(Boolean)
-    .join('; ')
+  // trapi reads ~/.tr_api_cookies.json automatically; we ensure it's there before calling
+  const api = new TradeRepublicApi(
+    process.env.TR_PHONE ?? 'noop',
+    process.env.TR_PIN ?? 'noop'
+  )
 
-  return new Promise((resolve, reject) => {
-    const ws = new WebSocket(TR_WS_URL, {
-      headers: { Cookie: cookieHeader },
-    })
+  const ok = await api.login()
+  if (!ok) throw new Error('trapi login failed — session expired, run pnpm tr:auth again')
 
-    const pending = new Map<number, (payload: string) => void>()
-    let nextId = 1
-    let connected = false
+  // Access internal WebSocket directly (bypasses trapi's broken JSON parser)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ws = (api as any).ws as WebSocket
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const token = (api as any).trSessionToken as string
 
-    const connectTimeout = setTimeout(() => {
-      ws.close()
-      reject(new Error('TR WebSocket connection timeout after 15s'))
-    }, 15_000)
+  let nextId = 10 // start high to avoid collisions with trapi's internal IDs
 
-    ws.on('open', () => {
-      // Exact format used by trapi SDK: only locale
-      ws.send(`connect 21 ${JSON.stringify({ locale: 'en' })}`)
-    })
+  const client: TRClient = {
+    subscribeOnce<T>(type: string, params?: Record<string, unknown>): Promise<T> {
+      return new Promise((resolve, reject) => {
+        const id = nextId++
+        const timeout = setTimeout(() => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          ws.off('message', onMessage as any)
+          reject(new Error(`Timeout esperando '${type}' (${id})`))
+        }, 20_000)
 
-    ws.on('message', (data: Buffer) => {
-      const msg = data.toString()
+        function onMessage(data: Buffer) {
+          const msg = data.toString()
+          const spaceIdx = msg.indexOf(' ')
+          if (spaceIdx === -1) return
+          const msgId = parseInt(msg.slice(0, spaceIdx), 10)
+          if (msgId !== id) return
 
-      if (!connected && (msg === 'connected' || msg.startsWith('connected '))) {
-        clearTimeout(connectTimeout)
-        connected = true
-        resolve(client)
-        return
-      }
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          ws.off('message', onMessage as any)
+          clearTimeout(timeout)
 
-      const spaceIdx = msg.indexOf(' ')
-      if (spaceIdx === -1) return
-      const id = parseInt(msg.slice(0, spaceIdx), 10)
-      if (isNaN(id)) return
-      const callback = pending.get(id)
-      if (callback) callback(msg.slice(spaceIdx + 1))
-    })
+          const payload = msg.slice(spaceIdx + 1)
+          try { resolve(parseRaw<T>(payload)) }
+          catch (e) { reject(e) }
+        }
 
-    ws.on('close', (code, reason) => {
-      clearTimeout(connectTimeout)
-      if (!connected) reject(new Error(`WS closed: ${code} ${reason.toString()}`))
-    })
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ws.on('message', onMessage as any)
+        ws.send(`sub ${id} ${JSON.stringify({ type, token, ...params })}`)
+      })
+    },
 
-    ws.on('error', (err) => {
-      clearTimeout(connectTimeout)
-      reject(err)
-    })
+    close() { /* let trapi manage the WS lifecycle */ },
+  }
 
-    const client: TRClient = {
-      subscribeOnce<T>(type: string, params?: Record<string, unknown>): Promise<T> {
-        return new Promise((res, rej) => {
-          const id = nextId++
-          const t = setTimeout(() => {
-            pending.delete(id)
-            rej(new Error(`Timeout esperando '${type}'`))
-          }, 20_000)
-
-          pending.set(id, (raw) => {
-            clearTimeout(t)
-            pending.delete(id)
-            try { res(parseRaw<T>(raw)) }
-            catch (e) { rej(e) }
-          })
-
-          // Include token in every subscription (matches trapi SDK)
-          ws.send(`sub ${id} ${JSON.stringify({ type, token: trSessionToken, ...params })}`)
-        })
-      },
-      close() { ws.close() },
-    }
-  })
+  return client
 }
 
 export async function fetchTickerPrice(
@@ -112,8 +88,10 @@ export async function fetchTickerPrice(
 }
 
 function parseRaw<T>(raw: string): T {
+  // Fast path
   try { return JSON.parse(raw) as T } catch { /* fall through */ }
 
+  // Find outermost JSON object/array by scanning braces
   let depth = 0, inStr = false, esc = false, jsonEnd = -1
   const start = raw.search(/[{[]/)
   if (start === -1) throw new SyntaxError(`No JSON in: ${raw.slice(0, 80)}`)
@@ -125,9 +103,12 @@ function parseRaw<T>(raw: string): T {
     if (ch === '"') { inStr = !inStr; continue }
     if (inStr) continue
     if (ch === '{' || ch === '[') depth++
-    else if (ch === '}' || ch === ']') { depth--; if (depth === 0) { jsonEnd = i; break } }
+    else if (ch === '}' || ch === ']') {
+      depth--
+      if (depth === 0) { jsonEnd = i; break }
+    }
   }
 
   if (jsonEnd !== -1) return JSON.parse(raw.slice(start, jsonEnd + 1)) as T
-  throw new SyntaxError(`Cannot parse: ${raw.slice(0, 120)}`)
+  throw new SyntaxError(`Cannot parse TR response (len=${raw.length}): ${raw.slice(0, 120)}`)
 }
