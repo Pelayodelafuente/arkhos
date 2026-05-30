@@ -1,6 +1,6 @@
 /**
  * Trade Republic — Data Test Script
- * Usage: pnpm tr:test
+ * Usage: pnpm tr:test (ejecutar en tu terminal, no con !)
  */
 
 import * as fs from 'node:fs/promises'
@@ -8,9 +8,21 @@ import * as os from 'node:os'
 import * as path from 'node:path'
 import { connectTR, fetchTickerPrice, type TRSession } from './tr-client.mts'
 
-// Actual TR response types (discovered from live API)
+// Actual TR WebSocket response types (verified from live API)
 interface TRCashItem { accountNumber: string; currencyId: string; amount: number }
-interface TRPortfolioPosition { isin: string; name: string; netSize: string; averageBuyIn: string }
+interface TRAccountPair {
+  securitiesAccountNumber: string
+  cashAccountNumber: string
+  productType: string
+  currency: string
+}
+interface TRAccountPairsResponse {
+  authAccountId: string
+  accounts: TRAccountPair[]
+}
+interface TRPortfolioPosition {
+  isin: string; name: string; netSize: string; averageBuyIn: string
+}
 interface TRPortfolioCategory { categoryType: string; positions: TRPortfolioPosition[] }
 interface TRPortfolioResponse { categories?: TRPortfolioCategory[] }
 interface TRTimelineItem { id: string; title: string; timestamp: number; cashChangeAmount?: number }
@@ -38,27 +50,21 @@ async function main() {
   const client = await connectTR(sessionData)
   console.log('✅ Conectado\n')
 
-  // 1. Cash — comes as array [{accountNumber, currencyId, amount}]
+  // 1. Cash (array response)
   const cashArray = await client.subscribeOnce<TRCashItem[]>('cash')
   const cashItem = Array.isArray(cashArray) ? cashArray[0] : cashArray as unknown as TRCashItem
-  const accountNumber = cashItem?.accountNumber
-  console.log(`💰 Cash: ${cashItem?.amount?.toFixed(2)} ${cashItem?.currencyId} (cuenta: ${accountNumber})`)
+  console.log(`💰 Cash: ${cashItem?.amount?.toFixed(2)} ${cashItem?.currencyId}`)
 
-  // 2. Account pairs — get depot (securities) account number
-  const accountPairsRaw = await client.subscribeOnce<unknown>('accountPairs')
-  console.log('🏦 Account pairs (raw):', JSON.stringify(accountPairsRaw).slice(0, 300))
+  // 2. Account pairs → get securities account number
+  const accountPairs = await client.subscribeOnce<TRAccountPairsResponse>('accountPairs')
+  const secAccount = accountPairs.accounts?.[0]?.securitiesAccountNumber
+  console.log(`🏦 Cuenta valores: ${secAccount} | Cuenta efectivo: ${cashItem?.accountNumber}`)
 
-  // 3. Try portfolioStatus to discover available data
-  const portfolioStatus = await client.subscribeOnce<unknown>('portfolioStatus')
-  console.log('📈 Portfolio status (raw):', JSON.stringify(portfolioStatus).slice(0, 300))
-
-  // 4. Portfolio with streaming wait
-  const portfolio = await client.subscribeUntil<TRPortfolioResponse>(
+  // 3. Portfolio — use securities account number
+  const portfolio = await client.subscribeOnce<TRPortfolioResponse>(
     'compactPortfolioByType',
-    (d) => Array.isArray(d.categories) && d.categories.length > 0,
-  ).catch(async () => {
-    return client.subscribeOnce<TRPortfolioResponse>('compactPortfolioByType')
-  })
+    secAccount ? { secAccNo: secAccount } : undefined
+  )
   const categories = portfolio.categories ?? []
   const totalPos = categories.reduce((s, c) => s + c.positions.length, 0)
   console.log(`\n📊 Posiciones (${totalPos} total):`)
@@ -72,20 +78,20 @@ async function main() {
     }
   }
 
-  // 3. Prices (first 3)
+  // 4. Prices (first 3)
   if (allIsins.length > 0) {
     console.log('\n📈 Precios (primeros 3):')
     for (const isin of allIsins.slice(0, 3)) {
       const price = await fetchTickerPrice(client, isin)
-      console.log(`    ${isin}: ${price !== null ? price + ' EUR' : 'no disponible en LSX'}`)
+      console.log(`    ${isin}: ${price !== null ? price + ' EUR' : 'no disponible'}`)
     }
   }
 
-  // 4. Timeline — streaming: wait for non-empty
-  const timeline = await client.subscribeUntil<TRTimelineResponse>(
+  // 5. Timeline — use securities account number
+  const timeline = await client.subscribeOnce<TRTimelineResponse>(
     'timelineTransactions',
-    (d) => Array.isArray(d.sections) && d.sections.length > 0,
-  ).catch(() => client.subscribeOnce<TRTimelineResponse>('timelineTransactions'))
+    secAccount ? { secAccNo: secAccount } : undefined
+  )
   const allItems = (timeline.sections ?? []).flatMap(s => s.data)
   console.log(`\n📋 Transacciones (${allItems.length} total, primeras 5):`)
   for (const item of allItems.slice(0, 5)) {
@@ -93,14 +99,14 @@ async function main() {
     console.log(`    [${date}] ${item.title} | ${item.cashChangeAmount?.toFixed(2) ?? '?'} EUR`)
   }
 
-  client.close()
-
   console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
   console.log('Checklist:')
-  console.log(`  [${cashItem?.amount > 0 ? '✓' : '✗'}] Cash: ${cashItem?.amount?.toFixed(2)} EUR`)
+  console.log(`  [${(cashItem?.amount ?? 0) > 0 ? '✓' : '✗'}] Cash: ${cashItem?.amount?.toFixed(2)} EUR`)
   console.log(`  [${allIsins.length > 0 ? '✓' : '✗'}] Posiciones: ${allIsins.length} ISINs`)
   console.log(`  [${allItems.length > 0 ? '✓' : '✗'}] Transacciones: ${allItems.length}`)
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+
+  client.close()
 }
 
 main().catch((err: unknown) => {
