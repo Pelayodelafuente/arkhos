@@ -30,7 +30,6 @@ const RiskReturnScatter = dynamic(
   { ssr: false, loading: () => <div className="h-[280px] animate-pulse rounded-xl bg-bg-sand" /> },
 );
 import { RebalanceoPanel } from "./RebalanceoPanel";
-import { SyncStatusBadge } from "./SyncStatusBadge";
 
 type Tab = "overview" | "cartera" | "plan" | "analisis" | "ingresos" | "fiscal";
 
@@ -166,9 +165,6 @@ export function TRDashboard() {
     <div className="space-y-5">
       {/* Always-visible price status */}
       <PriceStatusBanner />
-
-      {/* Sync status */}
-      <SyncStatusBadge />
 
       {/* Tab bar */}
       <div className="flex gap-1.5 overflow-x-auto pb-1">
