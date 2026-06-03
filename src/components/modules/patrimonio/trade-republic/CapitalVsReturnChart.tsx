@@ -157,11 +157,21 @@ export function CapitalVsReturnChart({ height = 300 }: CapitalVsReturnChartProps
   }, [snapshots, currentTRValue]);
 
   const data: StackedPoint[] = useMemo(() => {
-    const base = snapshots.map((s): StackedPoint => ({
-      date: s.snapshot_date,
-      capital: s.total_invested,
-      rentabilidad: s.total_value - s.total_invested,
-    }));
+    const currentMonth = new Date().toISOString().substring(0, 7);
+
+    // One point per month (last snapshot of each month), skipping current month
+    const monthMap = new Map<string, StackedPoint>();
+    snapshots.forEach((s) => {
+      const month = s.snapshot_date.substring(0, 7);
+      if (month !== currentMonth) {
+        monthMap.set(month, {
+          date: s.snapshot_date,
+          capital: s.total_invested,
+          rentabilidad: s.total_value - s.total_invested,
+        });
+      }
+    });
+    const base = Array.from(monthMap.values());
 
     // Append live "today" point if available
     if (currentTRValue > 0) {

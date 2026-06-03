@@ -248,31 +248,40 @@ export function EvolutionChart({ height = 300, showBenchmark = false, showTotal:
 
   const data: EvolutionPointExtended[] = useMemo(() => {
     const cutoff = getCutoffDate(period);
-    const base = snapshots
-      .filter((s) => (cutoff === null || s.snapshot_date >= cutoff) && s.total_value > 0)
-      .map((s): EvolutionPointExtended => ({
-        date: s.snapshot_date,
-        value: s.total_value,                          // portfolio sin efectivo (RLS y sync lo guardan así)
-        invested: s.total_invested,
-        pl: s.pl_amount ?? 0,
-        totalValue: s.total_value + (s.cash_value ?? 0), // total con efectivo para toggle
-      }));
+    const currentMonth = new Date().toISOString().substring(0, 7);
 
-    // Append "today" point if we have a live price and it's not already in snapshots
+    // One point per month (last snapshot of each month), skipping current month
+    // — current month is always represented by the live "today" point below
+    const monthMap = new Map<string, EvolutionPointExtended>();
+    snapshots
+      .filter((s) => (cutoff === null || s.snapshot_date >= cutoff) && s.total_value > 0)
+      .forEach((s) => {
+        const month = s.snapshot_date.substring(0, 7);
+        if (month !== currentMonth) {
+          monthMap.set(month, {
+            date: s.snapshot_date,
+            value: s.total_value,
+            invested: s.total_invested,
+            pl: s.pl_amount ?? 0,
+            totalValue: s.total_value + (s.cash_value ?? 0),
+          });
+        }
+      });
+    const base = Array.from(monthMap.values());
+
+    // Append "today" point if we have a live price
     if (currentTRValue > 0) {
       const today = new Date().toISOString().substring(0, 10);
       const lastSnapshot = base[base.length - 1];
-      if (!lastSnapshot || lastSnapshot.date !== today) {
-        const lastInvested = lastSnapshot?.invested ?? 0;
-        base.push({
-          date: today,
-          value: currentTRValue,
-          invested: lastInvested,
-          pl: currentTRValue - lastInvested,
-          totalValue: currentTRTotal,
-          isToday: true,
-        });
-      }
+      const lastInvested = lastSnapshot?.invested ?? 0;
+      base.push({
+        date: today,
+        value: currentTRValue,
+        invested: lastInvested,
+        pl: currentTRValue - lastInvested,
+        totalValue: currentTRTotal,
+        isToday: true,
+      });
     }
 
     // Rentabilidad acumulada = P&L / capital_invertido (PAT-02, PAT-03)
