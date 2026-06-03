@@ -4,6 +4,7 @@ import { rateLimit } from '@/lib/rate-limit';
 import { getCoinGeckoPrices } from '@/lib/crypto/coingecko';
 import { getBTCBalance, getETHBalance, getUSDCBalance } from '@/lib/crypto/blockchain';
 import { getAaveUSDCPosition } from '@/lib/crypto/aave';
+import { recalculateCryptoAssetTotals } from '@/lib/supabase/crypto';
 import type { CoinGeckoPrices } from '@/lib/crypto/coingecko';
 import type { AavePosition } from '@/lib/crypto/aave';
 
@@ -133,6 +134,10 @@ export async function POST(req: NextRequest): Promise<Response> {
       .eq('user_id', user.id)
       .eq('protocol', 'aave');
   }
+
+  // Recalculate total_invested_eur / avg_buy_price_eur from transactions
+  // so manual purchases added since the last sync are reflected immediately
+  await recalculateCryptoAssetTotals(user.id);
 
   const body: CryptoPricesResponse = {
     prices,

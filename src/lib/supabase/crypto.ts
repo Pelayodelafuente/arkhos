@@ -78,7 +78,52 @@ export async function addCryptoTransaction(
     .insert({ ...tx, user_id: userId })
     .select('id, user_id, asset_id, transaction_date, type, quantity, price_eur, amount_eur, fee_eur, exchange, tx_hash, notes, source, external_id, created_at')
     .maybeSingle();
+
+  if (data) {
+    await recalculateCryptoAssetTotals(userId, tx.asset_id ?? undefined);
+  }
+
   return data as unknown as CryptoTransaction | null;
+}
+
+// Recalcula total_invested_eur y avg_buy_price_eur desde crypto_transactions.
+// Si assetId se omite, recalcula todos los activos del usuario.
+export async function recalculateCryptoAssetTotals(
+  userId: string,
+  assetId?: string
+): Promise<void> {
+  const supabase = await getClient();
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let query = (supabase.from('crypto_transactions' as any) as any)
+    .select('asset_id, amount_eur, quantity')
+    .eq('user_id', userId)
+    .eq('type', 'buy');
+
+  if (assetId) query = query.eq('asset_id', assetId);
+
+  const { data: txs } = await query;
+  if (!txs || txs.length === 0) return;
+
+  const byAsset = new Map<string, { invested: number; qty: number }>();
+  for (const tx of txs as { asset_id: string; amount_eur: number; quantity: number }[]) {
+    const cur = byAsset.get(tx.asset_id) ?? { invested: 0, qty: 0 };
+    byAsset.set(tx.asset_id, {
+      invested: cur.invested + (tx.amount_eur ?? 0),
+      qty: cur.qty + (tx.quantity ?? 0),
+    });
+  }
+
+  for (const [aid, { invested, qty }] of byAsset) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase.from('crypto_assets' as any) as any)
+      .update({
+        total_invested_eur: invested,
+        avg_buy_price_eur: qty > 0 ? invested / qty : null,
+      })
+      .eq('id', aid)
+      .eq('user_id', userId);
+  }
 }
 
 export async function updateCryptoAssetBalance(
