@@ -249,7 +249,7 @@ export function EvolutionChart({ height = 300, showBenchmark = false, showTotal:
   const data: EvolutionPointExtended[] = useMemo(() => {
     const cutoff = getCutoffDate(period);
     const base = snapshots
-      .filter((s) => cutoff === null || s.snapshot_date >= cutoff)
+      .filter((s) => (cutoff === null || s.snapshot_date >= cutoff) && s.total_value > 0)
       .map((s): EvolutionPointExtended => ({
         date: s.snapshot_date,
         value: s.total_value,                          // portfolio sin efectivo (RLS y sync lo guardan así)

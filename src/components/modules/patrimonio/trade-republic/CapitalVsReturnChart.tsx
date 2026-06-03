@@ -123,10 +123,18 @@ export function CapitalVsReturnChart({ height = 300 }: CapitalVsReturnChartProps
   const gradCapital = `gradCapital-${uid}`;
   const gradReturn = `gradReturn-${uid}`;
 
-  const snapshots = usePatrimonioStore((s) => s.snapshots);
+  const allSnapshots = usePatrimonioStore((s) => s.snapshots);
+  const platforms = usePatrimonioStore((s) => s.platforms);
   const getTRInvestmentValue = usePatrimonioStore((s) => s.getTRInvestmentValue);
 
   const currentTRValue = getTRInvestmentValue();
+
+  // Filter to TR platform snapshots with valid data only
+  const trPlatformId = platforms.find((p) => p.slug === "trade-republic")?.id;
+  const snapshots = (trPlatformId
+    ? allSnapshots.filter((s) => s.platform_id === trPlatformId)
+    : allSnapshots
+  ).filter((s) => s.total_value > 0);
 
   // Deduplicate to one tick per calendar month (same pattern as EvolutionChart)
   // Include today's date when it falls in a new month to avoid visual gap at chart end
