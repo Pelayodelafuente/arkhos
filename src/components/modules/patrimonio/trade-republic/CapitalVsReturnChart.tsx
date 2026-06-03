@@ -129,17 +129,24 @@ export function CapitalVsReturnChart({ height = 300 }: CapitalVsReturnChartProps
   const currentTRValue = getTRInvestmentValue();
 
   // Deduplicate to one tick per calendar month (same pattern as EvolutionChart)
+  // Include today's date when it falls in a new month to avoid visual gap at chart end
   const uniqueMonthTicks = useMemo(() => {
     const seen = new Set<string>();
-    return snapshots
-      .filter((s) => {
-        const key = s.snapshot_date.substring(0, 7);
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      })
-      .map((s) => s.snapshot_date);
-  }, [snapshots]);
+    const dates = snapshots.map((s) => s.snapshot_date);
+    if (currentTRValue > 0) {
+      const today = new Date().toISOString().substring(0, 10);
+      const lastDate = snapshots[snapshots.length - 1]?.snapshot_date ?? "";
+      if (today.substring(0, 7) !== lastDate.substring(0, 7)) {
+        dates.push(today);
+      }
+    }
+    return dates.filter((date) => {
+      const key = date.substring(0, 7);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [snapshots, currentTRValue]);
 
   const data: StackedPoint[] = useMemo(() => {
     const base = snapshots.map((s): StackedPoint => ({

@@ -223,22 +223,28 @@ export function EvolutionChart({ height = 300, showBenchmark = false, showTotal:
 
   const [period, setPeriod] = useState<Period>("Todo");
 
-  // Deduplicate X-axis ticks to one per calendar month (BUG-06)
-  const uniqueMonthTicks = useMemo(() => {
-    const seen = new Set<string>();
-    return ([] as EvolutionPointExtended[])
-      .concat(snapshots.map((s) => ({ date: s.snapshot_date, value: 0, invested: 0, pl: 0 })))
-      .filter((p) => {
-        const key = p.date.substring(0, 7);
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      })
-      .map((p) => p.date);
-  }, [snapshots]);
-
   const currentTRValue = getTRInvestmentValue();
   const currentTRTotal = getTRCurrentValue(); // includes cash
+
+  // Deduplicate X-axis ticks to one per calendar month (BUG-06)
+  // Include today's date when it falls in a new month to avoid visual gap at chart end
+  const uniqueMonthTicks = useMemo(() => {
+    const seen = new Set<string>();
+    const dates = snapshots.map((s) => s.snapshot_date);
+    if (currentTRValue > 0) {
+      const today = new Date().toISOString().substring(0, 10);
+      const lastDate = snapshots[snapshots.length - 1]?.snapshot_date ?? "";
+      if (today.substring(0, 7) !== lastDate.substring(0, 7)) {
+        dates.push(today);
+      }
+    }
+    return dates.filter((date) => {
+      const key = date.substring(0, 7);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [snapshots, currentTRValue]);
 
   const data: EvolutionPointExtended[] = useMemo(() => {
     const cutoff = getCutoffDate(period);
