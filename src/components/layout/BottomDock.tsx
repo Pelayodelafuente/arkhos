@@ -397,7 +397,7 @@ export function BottomDock({
       const R = 110;
       if (dist < R) {
         const t = 1 - dist / R;
-        const s = 1 + 0.26 * Math.pow(t, 1.6);
+        const s = 1 + 0.22 * Math.pow(t, 1.6);
         const lift = (s - 1) * 16;
         el.style.transform = `scale(${s.toFixed(3)}) translateY(-${lift.toFixed(1)}px)`;
         el.style.boxShadow = `0 ${4 + lift}px ${18 + lift * 2}px ${el.dataset.glow ?? "rgba(0,0,0,0.4)"}, 0 1px 0 rgba(255,255,255,0.12) inset`;
@@ -435,9 +435,10 @@ export function BottomDock({
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <div
-      className="fixed bottom-0 left-1/2 z-40 hidden flex-col items-center lg:flex"
+      className="fixed left-1/2 z-40 hidden flex-col items-center lg:flex"
       style={{
-        transform: `translateX(-50%) translateY(${dockVisible ? "0px" : "calc(100% - 28px)"})`,
+        bottom: 16,
+        transform: `translateX(-50%) translateY(${dockVisible ? "0px" : "calc(100% + 24px)"})`,
         transition: "transform 0.42s cubic-bezier(0.34,1.56,0.64,1)",
         willChange: "transform",
       }}
@@ -451,13 +452,12 @@ export function BottomDock({
           display: "flex",
           alignItems: "center",
           gap: 8,
-          padding: "5px 20px 4px",
-          marginBottom: -1,
+          padding: "4px 18px",
+          marginBottom: 8,
           background: "rgba(16,10,5,0.80)",
           backdropFilter: "blur(16px)",
           border: "1px solid rgba(196,112,74,0.16)",
-          borderBottom: "none",
-          borderRadius: "12px 12px 0 0",
+          borderRadius: 12,
           cursor: "pointer",
           transition: "background 0.2s",
         }}
@@ -490,15 +490,13 @@ export function BottomDock({
         style={{
           display: "flex",
           alignItems: "flex-end",
-          gap: 8,
-          padding: "12px 18px 16px",
+          gap: 14,
+          padding: "14px 22px 18px",
           background: "rgba(13,8,3,0.82)",
           backdropFilter: "blur(32px) saturate(1.8)",
-          borderTop: "1px solid rgba(196,112,74,0.15)",
-          borderLeft: "1px solid rgba(255,255,255,0.05)",
-          borderRight: "1px solid rgba(255,255,255,0.05)",
-          borderRadius: "0 0 20px 20px",
-          boxShadow: "0 -1px 0 rgba(255,255,255,0.04) inset, 0 -24px 48px rgba(0,0,0,0.2)",
+          border: "1px solid rgba(196,112,74,0.14)",
+          borderRadius: 22,
+          boxShadow: "0 8px 40px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.05) inset",
           position: "relative",
         }}
       >
@@ -688,35 +686,6 @@ export function BottomDock({
 
         <DockSep />
 
-        {/* ── Settings ────────────────────────────────────────────────── */}
-        <div
-          style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer", flexShrink: 0, alignSelf: "center" }}
-          onMouseEnter={() => setHoveredKey("settings")}
-          onMouseLeave={() => setHoveredKey(null)}
-        >
-          <Link href="/settings" style={{ textDecoration: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 5 }}>
-            <div
-              ref={setIconRef(nextRefIdx())}
-              style={{
-                width: 38,
-                height: 38,
-                borderRadius: 11,
-                background: isActive("/settings") ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.05)",
-                border: `1px solid ${isActive("/settings") ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.07)"}`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                transition: "background 0.2s, transform 0.2s cubic-bezier(0.34,1.56,0.64,1)",
-                willChange: "transform",
-              }}
-            >
-              <IcoSettings />
-            </div>
-          </Link>
-        </div>
-
-        <DockSep />
-
         {/* ── Profile ─────────────────────────────────────────────────── */}
         <div
           style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer", flexShrink: 0 }}
@@ -810,6 +779,39 @@ export function BottomDock({
               <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#3ecc6e", boxShadow: "0 0 5px rgba(62,204,110,0.7)", flexShrink: 0 }} />
               <span style={{ fontSize: 11, color: "rgba(62,204,110,0.8)", fontWeight: 500 }}>Sesión activa</span>
             </div>
+
+            {/* Settings link */}
+            <Link
+              href="/settings"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                width: "100%",
+                padding: "7px 10px",
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: 9,
+                color: "rgba(255,255,255,0.5)",
+                fontSize: 12,
+                textDecoration: "none",
+                marginBottom: 6,
+                transition: "background 0.15s, color 0.15s",
+              }}
+              onMouseEnter={(e) => {
+                const el = e.currentTarget as HTMLAnchorElement;
+                el.style.background = "rgba(255,255,255,0.08)";
+                el.style.color = "rgba(255,255,255,0.8)";
+              }}
+              onMouseLeave={(e) => {
+                const el = e.currentTarget as HTMLAnchorElement;
+                el.style.background = "rgba(255,255,255,0.04)";
+                el.style.color = "rgba(255,255,255,0.5)";
+              }}
+            >
+              <IcoSettings />
+              Configuración
+            </Link>
 
             {/* Logout */}
             <form action={logout}>

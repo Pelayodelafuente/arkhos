@@ -59,7 +59,7 @@ export default async function DashboardLayout({
       {!mfaActive && <MfaBanner />}
 
       {/* Page content — full width on desktop */}
-      <main className="flex-1 overflow-y-auto px-4 py-4 pb-20 lg:px-8 lg:py-6 lg:pb-36">
+      <main className="flex-1 overflow-y-auto px-4 py-4 pb-20 lg:px-8 lg:py-6 lg:pb-28">
         {children}
       </main>
 
