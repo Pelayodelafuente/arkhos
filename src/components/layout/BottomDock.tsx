@@ -19,7 +19,7 @@ const SVG = {
 
 function IcoDashboard() {
   return (
-    <svg {...SVG} width={30} height={30} viewBox="0 0 24 24">
+    <svg {...SVG} width={22} height={22} viewBox="0 0 24 24">
       <rect x="3" y="3" width="7" height="7" rx="1.5" />
       <rect x="14" y="3" width="7" height="7" rx="1.5" />
       <rect x="3" y="14" width="7" height="7" rx="1.5" />
@@ -30,7 +30,7 @@ function IcoDashboard() {
 function IcoProyectos() {
   const c = "#E07848";
   return (
-    <svg fill="none" width="30" height="30" viewBox="0 0 24 24">
+    <svg fill="none" width="34" height="34" viewBox="0 0 24 24">
       <path
         d="M2 9.5C2 8.4 2.9 7.5 4 7.5h4.6l1.9 2.2H20a2 2 0 012 2V19a2 2 0 01-2 2H4a2 2 0 01-2-2V9.5z"
         fill={c} fillOpacity="0.18"
@@ -44,7 +44,7 @@ function IcoProyectos() {
 function IcoNotas() {
   const c = "#CC9040";
   return (
-    <svg fill="none" width="30" height="30" viewBox="0 0 24 24">
+    <svg fill="none" width="34" height="34" viewBox="0 0 24 24">
       <path d="M12 5.5C9.5 4.7 6 5 3.5 5.8v13C6 18 9.5 18.2 12 19V5.5z" fill={c} fillOpacity="0.22" />
       <path d="M12 5.5c2.5-.8 6-.5 8.5.3v13c-2.5-.8-6-1-8.5-.3V5.5z" fill={c} fillOpacity="0.14" />
       <rect x="11.5" y="5.5" width="1" height="13.5" rx="0.5" fill={c} fillOpacity="0.7" />
@@ -60,26 +60,26 @@ function IcoNotas() {
 function IcoMercados() {
   const c = "#9880E8";
   return (
-    <svg fill="none" width="30" height="30" viewBox="0 0 24 24">
-      <path
-        d="M2.5 19.5L7 13.5L11.5 16L16.5 8.5L21.5 4"
-        stroke={c} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
-      />
-      <path
-        d="M17.5 4L21.5 4L21.5 8"
-        stroke={c} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
-      />
-      <circle cx="7" cy="13.5" r="2.2" fill={c} />
-      <circle cx="11.5" cy="16" r="2.2" fill={c} fillOpacity="0.6" />
-      <circle cx="16.5" cy="8.5" r="2.2" fill={c} />
-      <line x1="2.5" y1="21" x2="21.5" y2="21" stroke={c} strokeOpacity="0.25" strokeWidth="1" strokeLinecap="round" />
+    <svg fill="none" width="34" height="34" viewBox="0 0 24 24">
+      {/* Candlestick 1 — left, bearish */}
+      <line x1="5.5" y1="13.5" x2="5.5" y2="15" stroke={c} strokeOpacity="0.55" strokeWidth="1.2" strokeLinecap="round" />
+      <rect x="3.5" y="15" width="4" height="4.5" rx="0.8" fill={c} fillOpacity="0.4" />
+      <line x1="5.5" y1="19.5" x2="5.5" y2="21" stroke={c} strokeOpacity="0.55" strokeWidth="1.2" strokeLinecap="round" />
+      {/* Candlestick 2 — center, neutral */}
+      <line x1="12" y1="8.5" x2="12" y2="10.5" stroke={c} strokeOpacity="0.7" strokeWidth="1.2" strokeLinecap="round" />
+      <rect x="10" y="10.5" width="4" height="5" rx="0.8" fill={c} fillOpacity="0.65" />
+      <line x1="12" y1="15.5" x2="12" y2="17.5" stroke={c} strokeOpacity="0.7" strokeWidth="1.2" strokeLinecap="round" />
+      {/* Candlestick 3 — right, bullish */}
+      <line x1="18.5" y1="4" x2="18.5" y2="6" stroke={c} strokeWidth="1.2" strokeLinecap="round" />
+      <rect x="16.5" y="6" width="4" height="5" rx="0.8" fill={c} />
+      <line x1="18.5" y1="11" x2="18.5" y2="13" stroke={c} strokeWidth="1.2" strokeLinecap="round" />
     </svg>
   );
 }
 function IcoPatrimonio() {
   const c = "#3AAA80";
   return (
-    <svg fill="none" width="30" height="30" viewBox="0 0 24 24">
+    <svg fill="none" width="34" height="34" viewBox="0 0 24 24">
       <rect x="2" y="2.5" width="18" height="19" rx="2.5" fill={c} fillOpacity="0.18" />
       <rect x="20.5" y="8" width="1.5" height="8" rx="0.75" fill={c} fillOpacity="0.6" />
       <circle cx="11" cy="12" r="5.8" stroke={c} strokeWidth="1.8" />
@@ -102,7 +102,7 @@ function IcoPatrimonio() {
 function IcoGastos() {
   const c = "#4A90CC";
   return (
-    <svg fill="none" width="30" height="30" viewBox="0 0 24 24">
+    <svg fill="none" width="34" height="34" viewBox="0 0 24 24">
       <rect x="1" y="4.5" width="22" height="15" rx="2.5" fill={c} fillOpacity="0.2" />
       <rect x="1" y="4.5" width="22" height="4" rx="2.5" fill={c} fillOpacity="0.35" />
       <rect x="3.5" y="11" width="5" height="4" rx="1" fill={c} fillOpacity="0.7" />
@@ -572,19 +572,6 @@ export function BottomDock({
             pointerEvents: "none",
           }} />
 
-          {/* ── Arkhos Logo ──────────────────────────────────────────── */}
-          <div style={{
-            width: 38, height: 38, borderRadius: 11,
-            background: "radial-gradient(ellipse at 40% 30%, rgba(196,112,74,0.38), rgba(80,20,10,0.55))",
-            border: "1px solid rgba(196,112,74,0.28)",
-            boxShadow: "0 0 20px rgba(196,112,74,0.12)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            flexShrink: 0, cursor: "default", alignSelf: "center",
-          }}>
-            <IcoArkhosLogo />
-          </div>
-
-          <DockSep />
 
           {/* ── Dashboard ───────────────────────────────────────────── */}
           <div
@@ -593,7 +580,7 @@ export function BottomDock({
             onMouseLeave={() => setHoveredKey(null)}
           >
             <Link href="/" style={{ textDecoration: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-              <AppIcon size={60} gradFrom="#D4895E" gradTo="#6B2010" glow="rgba(196,112,74,0.45)" iconRef={setIconRef(nextRefIdx())}>
+              <AppIcon size={48} gradFrom="#D4895E" gradTo="#6B2010" glow="rgba(196,112,74,0.45)" iconRef={setIconRef(nextRefIdx())}>
                 <IcoDashboard />
               </AppIcon>
               <span style={{ fontSize: 10, fontWeight: 500, color: isActive("/") ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.42)", transition: "color 0.2s", whiteSpace: "nowrap" }}>
