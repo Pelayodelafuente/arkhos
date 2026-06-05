@@ -574,157 +574,69 @@ export function BottomDock({
           }} />
 
 
-          {/* ── Dashboard ───────────────────────────────────────────── */}
-          <div
-            style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer", flexShrink: 0 }}
-            onMouseEnter={() => setHoveredKey("dashboard")}
-            onMouseLeave={() => setHoveredKey(null)}
-          >
-            <Link href="/" style={{ textDecoration: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-              <div
-                ref={setIconRef(nextRefIdx())}
-                style={{
-                  width: 48, height: 48,
-                  borderRadius: 14,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  flexShrink: 0,
-                  transition: "transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s",
-                  willChange: "transform",
-                }}
-              >
-                <IcoDashboard />
-              </div>
-              <span style={{ fontSize: 10, fontWeight: 500, color: isActive("/") ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.42)", transition: "color 0.2s", whiteSpace: "nowrap" }}>
-                Dashboard
-              </span>
-              <span style={{
-                position: "absolute", bottom: -8, left: "50%", transform: "translateX(-50%)",
-                width: 4, height: 4, borderRadius: "50%",
-                background: "#D4895E", boxShadow: "0 0 8px rgba(196,112,74,0.7)",
-                opacity: isActive("/") ? 1 : 0, transition: "opacity 0.2s",
-              }} />
-            </Link>
-            <PreviewCard visible={hoveredKey === "dashboard"}>
-              <PreviewHeader icon={<IcoDashboard />} name="Dashboard" sub="Centro de control" iconBg="rgba(196,112,74,0.25)" />
-              <PreviewChips chips={[
-                { val: "5", lbl: "Módulos" },
-                { val: String(projectCount), lbl: "Proyectos" },
-                { val: String(noteCount), lbl: "Notas" },
-              ]} />
-              <PreviewTags tags={["Resumen", "Actividad", "Métricas"]} accent="#D4895E" />
-            </PreviewCard>
-          </div>
-
-          <DockSep />
-
-          {/* ── Modules 0-1: Proyectos, Notas ───────────────────────── */}
-          {MODULES.slice(0, 2).map((mod) => {
+          {/* ── Izquierda: Proyectos · Notas · Gastos ───────────────── */}
+          {[MODULES[0], MODULES[1], MODULES[4]].map((mod) => {
             const active = isActive(mod.href);
             const count = getCount(mod.countKey);
             const Icon = mod.Icon;
             const ri = nextRefIdx();
-
             return (
-              <div
-                key={mod.key}
+              <div key={mod.key}
                 style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer", flexShrink: 0 }}
-                onMouseEnter={() => setHoveredKey(mod.key)}
-                onMouseLeave={() => setHoveredKey(null)}
-              >
+                onMouseEnter={() => setHoveredKey(mod.key)} onMouseLeave={() => setHoveredKey(null)}>
                 <Link href={mod.href} style={{ textDecoration: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
                   {count !== null && count > 0 && (
-                    <div style={{
-                      position: "absolute", top: -4, right: -4,
-                      minWidth: 17, height: 17,
-                      background: "#D84040", border: "2px solid rgba(13,8,3,0.9)",
-                      borderRadius: 99, fontSize: 9, fontWeight: 700, color: "#fff",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      padding: "0 3px", zIndex: 2, boxShadow: "0 1px 4px rgba(216,64,64,0.5)",
-                    }}>
+                    <div style={{ position: "absolute", top: -4, right: -4, minWidth: 17, height: 17, background: "#D84040", border: "2px solid rgba(13,8,3,0.9)", borderRadius: 99, fontSize: 9, fontWeight: 700, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 3px", zIndex: 2, boxShadow: "0 1px 4px rgba(216,64,64,0.5)" }}>
                       {count}
                     </div>
                   )}
-                  <div
-                    ref={(el) => {
-                      iconRefs.current[ri] = el;
-                      if (el) el.dataset.glow = mod.glow;
-                    }}
-                    style={{
-                      width: 52, height: 52,
-                      borderRadius: 14,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      flexShrink: 0,
-                      transition: "transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s",
-                      willChange: "transform",
-                    }}
-                  >
+                  <div ref={(el) => { iconRefs.current[ri] = el; if (el) el.dataset.glow = mod.glow; }}
+                    style={{ width: 52, height: 52, borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s", willChange: "transform" }}>
                     <Icon />
                   </div>
-                  <span style={{ fontSize: 10, fontWeight: 500, color: active ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.42)", transition: "color 0.2s", whiteSpace: "nowrap" }}>
-                    {mod.label}
-                  </span>
-                  <span style={{
-                    position: "absolute", bottom: -8, left: "50%", transform: "translateX(-50%)",
-                    width: 4, height: 4, borderRadius: "50%",
-                    background: mod.gradFrom, boxShadow: `0 0 8px ${mod.glow}`,
-                    opacity: active ? 1 : 0, transition: "opacity 0.2s",
-                  }} />
+                  <span style={{ fontSize: 10, fontWeight: 500, color: active ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.42)", transition: "color 0.2s", whiteSpace: "nowrap" }}>{mod.label}</span>
+                  <span style={{ position: "absolute", bottom: -8, left: "50%", transform: "translateX(-50%)", width: 4, height: 4, borderRadius: "50%", background: mod.gradFrom, boxShadow: `0 0 8px ${mod.glow}`, opacity: active ? 1 : 0, transition: "opacity 0.2s" }} />
                 </Link>
                 <PreviewCard visible={hoveredKey === mod.key}>
                   <PreviewHeader icon={<Icon />} name={mod.label} sub={mod.previewSub} iconBg={mod.previewBg} />
-                  {count !== null && (
-                    <PreviewChips chips={[
-                      { val: String(count), lbl: mod.key === "proyectos" ? "Activos" : "Total", color: mod.gradFrom },
-                      { val: "→", lbl: "Abrir" },
-                    ]} />
-                  )}
+                  {count !== null && <PreviewChips chips={[{ val: String(count), lbl: mod.key === "proyectos" ? "Activos" : "Total", color: mod.gradFrom }, { val: "→", lbl: "Abrir" }]} />}
                   <PreviewTags tags={mod.previewFeatures} accent={mod.gradFrom} />
                 </PreviewCard>
               </div>
             );
           })}
 
-          {/* ── HEIMER — IA central ──────────────────────────────────── */}
-          <div
-            style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}
-            onMouseEnter={() => setHoveredKey("heimer")}
-            onMouseLeave={() => setHoveredKey(null)}
-          >
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, cursor: "pointer" }}>
-              <div style={{
-                width: 60, height: 60,
-                borderRadius: "50%",
-                background: "radial-gradient(ellipse at 38% 28%, #F0C055, #7B3E00)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                flexShrink: 0,
-                animation: "heimer-pulse 2.8s ease-in-out infinite",
-                position: "relative",
-                overflow: "hidden",
-              }}>
-                <div style={{
-                  position: "absolute", top: 0, left: 0, right: 0, height: "50%",
-                  background: "linear-gradient(180deg, rgba(255,255,255,0.22), transparent)",
-                  borderRadius: "50% 50% 0 0",
-                  pointerEvents: "none",
-                }} />
-                <div style={{ position: "relative", zIndex: 1 }}>
-                  <IcoHeimer />
-                </div>
-              </div>
-              <span style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,210,100,0.8)", whiteSpace: "nowrap", letterSpacing: "0.03em" }}>
-                Heimer
-              </span>
-            </div>
+          <DockSep />
 
+          {/* ── Centro: Dashboard · Heimer ──────────────────────────── */}
+          <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer", flexShrink: 0 }}
+            onMouseEnter={() => setHoveredKey("dashboard")} onMouseLeave={() => setHoveredKey(null)}>
+            <Link href="/" style={{ textDecoration: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+              <div ref={setIconRef(nextRefIdx())} style={{ width: 48, height: 48, borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s", willChange: "transform" }}>
+                <IcoDashboard />
+              </div>
+              <span style={{ fontSize: 10, fontWeight: 500, color: isActive("/") ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.42)", transition: "color 0.2s", whiteSpace: "nowrap" }}>Dashboard</span>
+              <span style={{ position: "absolute", bottom: -8, left: "50%", transform: "translateX(-50%)", width: 4, height: 4, borderRadius: "50%", background: "#D4895E", boxShadow: "0 0 8px rgba(196,112,74,0.7)", opacity: isActive("/") ? 1 : 0, transition: "opacity 0.2s" }} />
+            </Link>
+            <PreviewCard visible={hoveredKey === "dashboard"}>
+              <PreviewHeader icon={<IcoDashboard />} name="Dashboard" sub="Centro de control" iconBg="rgba(196,112,74,0.25)" />
+              <PreviewChips chips={[{ val: "5", lbl: "Módulos" }, { val: String(projectCount), lbl: "Proyectos" }, { val: String(noteCount), lbl: "Notas" }]} />
+              <PreviewTags tags={["Resumen", "Actividad", "Métricas"]} accent="#D4895E" />
+            </PreviewCard>
+          </div>
+
+          <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}
+            onMouseEnter={() => setHoveredKey("heimer")} onMouseLeave={() => setHoveredKey(null)}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, cursor: "pointer" }}>
+              <div style={{ width: 60, height: 60, borderRadius: "50%", background: "radial-gradient(ellipse at 38% 28%, #F0C055, #7B3E00)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, animation: "heimer-pulse 2.8s ease-in-out infinite", position: "relative", overflow: "hidden" }}>
+                <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "50%", background: "linear-gradient(180deg, rgba(255,255,255,0.22), transparent)", borderRadius: "50% 50% 0 0", pointerEvents: "none" }} />
+                <div style={{ position: "relative", zIndex: 1 }}><IcoHeimer /></div>
+              </div>
+              <span style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,210,100,0.8)", whiteSpace: "nowrap", letterSpacing: "0.03em" }}>Heimer</span>
+            </div>
             <PreviewCard visible={hoveredKey === "heimer"} wide>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                <div style={{
-                  width: 34, height: 34, borderRadius: "50%",
-                  background: "radial-gradient(ellipse at 38% 28%, #F0C055, #7B3E00)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  flexShrink: 0,
-                  boxShadow: "0 2px 12px rgba(240,168,85,0.4)",
-                }}>
+                <div style={{ width: 34, height: 34, borderRadius: "50%", background: "radial-gradient(ellipse at 38% 28%, #F0C055, #7B3E00)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 2px 12px rgba(240,168,85,0.4)" }}>
                   <IcoHeimer />
                 </div>
                 <div>
@@ -732,20 +644,8 @@ export function BottomDock({
                   <div style={{ fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.33)", textTransform: "uppercase", letterSpacing: "0.07em" }}>IA Personal</div>
                 </div>
               </div>
-              <div style={{
-                display: "flex", alignItems: "center", gap: 6,
-                padding: "7px 10px",
-                background: "rgba(240,168,85,0.07)",
-                border: "1px solid rgba(240,168,85,0.16)",
-                borderRadius: 9, marginBottom: 8,
-              }}>
-                <div style={{
-                  width: 6, height: 6, borderRadius: "50%",
-                  background: "#F0A855",
-                  boxShadow: "0 0 7px rgba(240,168,85,0.8)",
-                  flexShrink: 0,
-                  animation: "heimer-dot-pulse 2s ease-in-out infinite",
-                }} />
+              <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 10px", background: "rgba(240,168,85,0.07)", border: "1px solid rgba(240,168,85,0.16)", borderRadius: 9, marginBottom: 8 }}>
+                <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#F0A855", boxShadow: "0 0 7px rgba(240,168,85,0.8)", flexShrink: 0, animation: "heimer-dot-pulse 2s ease-in-out infinite" }} />
                 <span style={{ fontSize: 11, color: "rgba(240,168,85,0.8)", fontWeight: 500 }}>Conectándose al VPS…</span>
               </div>
               <div style={{ fontSize: 11, color: "rgba(255,255,255,0.28)", textAlign: "center", lineHeight: 1.55 }}>
@@ -754,46 +654,25 @@ export function BottomDock({
             </PreviewCard>
           </div>
 
-          {/* ── Modules 2-4: Mercados, Patrimonio, Gastos ───────────── */}
-          {MODULES.slice(2).map((mod) => {
+          <DockSep />
+
+          {/* ── Derecha: Mercados · Patrimonio ──────────────────────── */}
+          {[MODULES[2], MODULES[3]].map((mod) => {
             const active = isActive(mod.href);
             const count = getCount(mod.countKey);
             const Icon = mod.Icon;
             const ri = nextRefIdx();
-
             return (
-              <div
-                key={mod.key}
+              <div key={mod.key}
                 style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer", flexShrink: 0 }}
-                onMouseEnter={() => setHoveredKey(mod.key)}
-                onMouseLeave={() => setHoveredKey(null)}
-              >
+                onMouseEnter={() => setHoveredKey(mod.key)} onMouseLeave={() => setHoveredKey(null)}>
                 <Link href={mod.href} style={{ textDecoration: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-                  <div
-                    ref={(el) => {
-                      iconRefs.current[ri] = el;
-                      if (el) el.dataset.glow = mod.glow;
-                    }}
-                    style={{
-                      width: 52, height: 52,
-                      borderRadius: 14,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      flexShrink: 0,
-                      transition: "transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s",
-                      willChange: "transform",
-                    }}
-                  >
+                  <div ref={(el) => { iconRefs.current[ri] = el; if (el) el.dataset.glow = mod.glow; }}
+                    style={{ width: 52, height: 52, borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s", willChange: "transform" }}>
                     <Icon />
                   </div>
-                  <span style={{ fontSize: 10, fontWeight: 500, color: active ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.42)", transition: "color 0.2s", whiteSpace: "nowrap" }}>
-                    {mod.label}
-                  </span>
-                  <span style={{
-                    position: "absolute", bottom: -8, left: "50%", transform: "translateX(-50%)",
-                    width: 4, height: 4, borderRadius: "50%",
-                    background: mod.gradFrom, boxShadow: `0 0 8px ${mod.glow}`,
-                    opacity: active ? 1 : 0, transition: "opacity 0.2s",
-                  }} />
+                  <span style={{ fontSize: 10, fontWeight: 500, color: active ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.42)", transition: "color 0.2s", whiteSpace: "nowrap" }}>{mod.label}</span>
+                  <span style={{ position: "absolute", bottom: -8, left: "50%", transform: "translateX(-50%)", width: 4, height: 4, borderRadius: "50%", background: mod.gradFrom, boxShadow: `0 0 8px ${mod.glow}`, opacity: active ? 1 : 0, transition: "opacity 0.2s" }} />
                 </Link>
                 <PreviewCard visible={hoveredKey === mod.key}>
                   <PreviewHeader icon={<Icon />} name={mod.label} sub={mod.previewSub} iconBg={mod.previewBg} />
