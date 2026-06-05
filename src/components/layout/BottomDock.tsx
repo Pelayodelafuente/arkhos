@@ -7,7 +7,7 @@ import { useProjectsStore } from "@/stores/projects-store";
 import { useNotesStore } from "@/stores/notes-store";
 import { logout } from "@/app/(auth)/actions";
 
-// ─── SVG Icon Components ──────────────────────────────────────────────────────
+// ─── SVG Icons ───────────────────────────────────────────────────────────────
 
 const SVG = {
   fill: "none" as const,
@@ -93,6 +93,17 @@ function IcoArkhosLogo() {
   );
 }
 
+function IcoHeimer() {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src="/heimerdinguer.jpg"
+      alt="Heimer"
+      style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+    />
+  );
+}
+
 // ─── Module config ────────────────────────────────────────────────────────────
 
 interface ModuleConfig {
@@ -105,6 +116,7 @@ interface ModuleConfig {
   previewBg: string;
   countKey?: "proyectos" | "notas";
   previewSub: string;
+  previewFeatures: string[];
   Icon: React.ComponentType;
 }
 
@@ -119,6 +131,7 @@ const MODULES: ModuleConfig[] = [
     previewBg: "rgba(196,112,74,0.22)",
     countKey: "proyectos",
     previewSub: "Gestión y kanban",
+    previewFeatures: ["Kanban", "Fases", "Tareas", "Links"],
     Icon: IcoProyectos,
   },
   {
@@ -131,6 +144,7 @@ const MODULES: ModuleConfig[] = [
     previewBg: "rgba(176,122,58,0.22)",
     countKey: "notas",
     previewSub: "Texto y canvas",
+    previewFeatures: ["Rich text", "Canvas", "IA", "Imágenes"],
     Icon: IcoNotas,
   },
   {
@@ -142,6 +156,7 @@ const MODULES: ModuleConfig[] = [
     glow: "rgba(114,96,196,0.4)",
     previewBg: "rgba(114,96,196,0.22)",
     previewSub: "Datos en tiempo real",
+    previewFeatures: ["Crypto", "Índices", "Forex", "Macro"],
     Icon: IcoMercados,
   },
   {
@@ -153,6 +168,7 @@ const MODULES: ModuleConfig[] = [
     glow: "rgba(46,125,107,0.4)",
     previewBg: "rgba(46,125,107,0.22)",
     previewSub: "Inversiones y activos",
+    previewFeatures: ["Cartera", "Cripto", "Fondos", "Cash"],
     Icon: IcoPatrimonio,
   },
   {
@@ -164,11 +180,12 @@ const MODULES: ModuleConfig[] = [
     glow: "rgba(59,120,176,0.4)",
     previewBg: "rgba(59,120,176,0.22)",
     previewSub: "Control financiero",
+    previewFeatures: ["Suscripciones", "Historial", "Tags", "Ciclos"],
     Icon: IcoGastos,
   },
 ];
 
-// ─── App Icon shell ───────────────────────────────────────────────────────────
+// ─── AppIcon shell ────────────────────────────────────────────────────────────
 
 interface AppIconProps {
   size: number;
@@ -200,13 +217,10 @@ function AppIcon({ size, gradFrom, gradTo, glow, children, iconRef }: AppIconPro
         willChange: "transform",
       }}
     >
-      {/* Gloss highlight */}
       <div
         style={{
           position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
+          top: 0, left: 0, right: 0,
           height: "50%",
           background: "linear-gradient(180deg, rgba(255,255,255,0.17), transparent)",
           borderRadius: `${radius}px ${radius}px 0 0`,
@@ -218,25 +232,22 @@ function AppIcon({ size, gradFrom, gradTo, glow, children, iconRef }: AppIconPro
   );
 }
 
-// ─── Separator ────────────────────────────────────────────────────────────────
+// ─── DockSep ──────────────────────────────────────────────────────────────────
 
 function DockSep() {
   return (
-    <div
-      style={{
-        width: 1,
-        height: 34,
-        background: "rgba(255,255,255,0.07)",
-        borderRadius: 1,
-        alignSelf: "center",
-        flexShrink: 0,
-        margin: "0 4px",
-      }}
-    />
+    <div style={{
+      width: 1, height: 34,
+      background: "rgba(255,255,255,0.07)",
+      borderRadius: 1,
+      alignSelf: "center",
+      flexShrink: 0,
+      margin: "0 4px",
+    }} />
   );
 }
 
-// ─── Preview Card ─────────────────────────────────────────────────────────────
+// ─── PreviewCard ──────────────────────────────────────────────────────────────
 
 interface PreviewCardProps {
   visible: boolean;
@@ -246,39 +257,31 @@ interface PreviewCardProps {
 
 function PreviewCard({ visible, children, wide = false }: PreviewCardProps) {
   return (
-    <div
-      style={{
-        position: "absolute",
-        bottom: "calc(100% + 12px)",
-        left: "50%",
-        width: wide ? 210 : 192,
-        background: "rgba(10,6,2,0.93)",
-        backdropFilter: "blur(24px) saturate(1.4)",
-        border: "1px solid rgba(255,255,255,0.09)",
-        borderRadius: 16,
-        padding: "12px 14px 10px",
-        pointerEvents: visible ? "auto" : "none",
-        zIndex: 100,
-        boxShadow: "0 8px 36px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.05) inset",
-        opacity: visible ? 1 : 0,
-        transform: `translateX(-50%) translateY(${visible ? "0px" : "6px"})`,
-        transition: "opacity 0.18s ease, transform 0.18s cubic-bezier(0.34,1.56,0.64,1)",
-      }}
-    >
-      {/* Arrow */}
-      <div
-        style={{
-          position: "absolute",
-          top: "100%",
-          left: "50%",
-          transform: "translateX(-50%)",
-          width: 0,
-          height: 0,
-          borderLeft: "5px solid transparent",
-          borderRight: "5px solid transparent",
-          borderTop: "5px solid rgba(255,255,255,0.07)",
-        }}
-      />
+    <div style={{
+      position: "absolute",
+      bottom: "calc(100% + 12px)",
+      left: "50%",
+      width: wide ? 216 : 196,
+      background: "rgba(10,6,2,0.93)",
+      backdropFilter: "blur(24px) saturate(1.4)",
+      border: "1px solid rgba(255,255,255,0.09)",
+      borderRadius: 16,
+      padding: "12px 14px 12px",
+      pointerEvents: visible ? "auto" : "none",
+      zIndex: 100,
+      boxShadow: "0 8px 36px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.05) inset",
+      opacity: visible ? 1 : 0,
+      transform: `translateX(-50%) translateY(${visible ? "0px" : "6px"})`,
+      transition: "opacity 0.18s ease, transform 0.18s cubic-bezier(0.34,1.56,0.64,1)",
+    }}>
+      <div style={{
+        position: "absolute", top: "100%", left: "50%",
+        transform: "translateX(-50%)",
+        width: 0, height: 0,
+        borderLeft: "5px solid transparent",
+        borderRight: "5px solid transparent",
+        borderTop: "5px solid rgba(255,255,255,0.07)",
+      }} />
       {children}
     </div>
   );
@@ -287,18 +290,12 @@ function PreviewCard({ visible, children, wide = false }: PreviewCardProps) {
 function PreviewHeader({ icon, name, sub, iconBg }: { icon: React.ReactNode; name: string; sub: string; iconBg: string }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-      <div
-        style={{
-          width: 30,
-          height: 30,
-          borderRadius: 9,
-          background: iconBg,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-        }}
-      >
+      <div style={{
+        width: 30, height: 30, borderRadius: 9,
+        background: iconBg,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        flexShrink: 0,
+      }}>
         {icon}
       </div>
       <div>
@@ -311,22 +308,36 @@ function PreviewHeader({ icon, name, sub, iconBg }: { icon: React.ReactNode; nam
 
 function PreviewChips({ chips }: { chips: { val: string; lbl: string; color?: string }[] }) {
   return (
-    <div style={{ display: "flex", gap: 6 }}>
+    <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
       {chips.map(({ val, lbl, color }) => (
-        <div
-          key={lbl}
-          style={{
-            flex: 1,
-            padding: "6px 8px",
-            background: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.07)",
-            borderRadius: 8,
-            textAlign: "center",
-          }}
-        >
+        <div key={lbl} style={{
+          flex: 1, padding: "6px 8px",
+          background: "rgba(255,255,255,0.04)",
+          border: "1px solid rgba(255,255,255,0.07)",
+          borderRadius: 8, textAlign: "center",
+        }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: color ?? "rgba(255,255,255,0.8)" }}>{val}</div>
           <div style={{ fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.3)", textTransform: "uppercase" }}>{lbl}</div>
         </div>
+      ))}
+    </div>
+  );
+}
+
+function PreviewTags({ tags, accent }: { tags: string[]; accent: string }) {
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+      {tags.map((t) => (
+        <span key={t} style={{
+          fontSize: 10, padding: "3px 8px",
+          background: "rgba(255,255,255,0.04)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: 6,
+          color: "rgba(255,255,255,0.45)",
+          fontFamily: "monospace",
+        }}>
+          {t}
+        </span>
       ))}
     </div>
   );
@@ -351,7 +362,6 @@ export function BottomDock({
 }: BottomDockProps) {
   const pathname = usePathname();
 
-  // Real-time counts from stores
   const storeProjectCount = useProjectsStore((s) =>
     s.initialized ? s.projects.filter((p) => p.status === "active").length : null
   );
@@ -361,10 +371,16 @@ export function BottomDock({
   const projectCount = storeProjectCount ?? initialProjectCount;
   const noteCount = storeNoteCount ?? initialNoteCount;
 
-  // Dock visibility (persisted)
   const [dockVisible, setDockVisible] = useState(true);
   useEffect(() => {
     try {
+      // Version bump: reset old hidden state so dock is always recoverable
+      if (localStorage.getItem("arkhos-dock-v") !== "2") {
+        localStorage.setItem("arkhos-dock-v", "2");
+        localStorage.setItem("arkhos-dock-visible", "true");
+        setDockVisible(true);
+        return;
+      }
       const saved = localStorage.getItem("arkhos-dock-visible");
       if (saved !== null) setDockVisible(JSON.parse(saved) as boolean);
     } catch { /* ignore */ }
@@ -378,10 +394,8 @@ export function BottomDock({
     });
   };
 
-  // Hovered item key for preview cards
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
 
-  // Magnification — refs point to the .app-icon divs
   const iconRefs = useRef<(HTMLDivElement | null)[]>([]);
   const setIconRef = (i: number) => (el: HTMLDivElement | null) => {
     iconRefs.current[i] = el;
@@ -417,438 +431,448 @@ export function BottomDock({
     setHoveredKey(null);
   }, []);
 
-  // Active route detection
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
 
-  // Count lookup
   const getCount = (key?: "proyectos" | "notas"): number | null => {
     if (key === "proyectos") return projectCount;
     if (key === "notas") return noteCount;
     return null;
   };
 
-  // Ref index tracker
   let refIdx = 0;
   const nextRefIdx = () => refIdx++;
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
-    <div
-      className="fixed left-1/2 z-40 hidden flex-col items-center lg:flex"
-      style={{
-        bottom: 16,
-        transform: `translateX(-50%) translateY(${dockVisible ? "0px" : "calc(100% + 24px)"})`,
-        transition: "transform 0.42s cubic-bezier(0.34,1.56,0.64,1)",
-        willChange: "transform",
-      }}
-    >
-      {/* ── Handle ──────────────────────────────────────────────────────── */}
-      <button
-        type="button"
-        onClick={toggleDock}
-        title={dockVisible ? "Ocultar dock" : "Mostrar dock"}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          padding: "4px 18px",
-          marginBottom: 8,
-          background: "rgba(16,10,5,0.80)",
-          backdropFilter: "blur(16px)",
-          border: "1px solid rgba(196,112,74,0.16)",
-          borderRadius: 12,
-          cursor: "pointer",
-          transition: "background 0.2s",
-        }}
-        onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(24,15,7,0.92)"; }}
-        onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(16,10,5,0.80)"; }}
+    <>
+      {/* Keyframes for Heimer pulse animation */}
+      <style>{`
+        @keyframes heimer-pulse {
+          0%, 100% { box-shadow: 0 4px 22px rgba(240,168,85,0.45), 0 0 0 0 rgba(240,168,85,0.2), 0 1px 0 rgba(255,255,255,0.12) inset; }
+          50%       { box-shadow: 0 6px 34px rgba(240,168,85,0.65), 0 0 0 10px rgba(240,168,85,0), 0 1px 0 rgba(255,255,255,0.12) inset; }
+        }
+        @keyframes heimer-dot-pulse {
+          0%, 100% { opacity: 0.7; }
+          50%       { opacity: 1; }
+        }
+      `}</style>
+
+      {/*
+        FIXED WRAPPER — only translateX centering, NO vertical animation.
+        This keeps the handle always visible even when dock is hidden.
+      */}
+      <div
+        className="fixed left-1/2 z-40 hidden flex-col items-center lg:flex"
+        style={{ bottom: 16, transform: "translateX(-50%)" }}
       >
-        <div style={{ width: 22, height: 3, borderRadius: 99, background: "rgba(255,255,255,0.18)" }} />
-        <svg
-          width={13}
-          height={13}
-          viewBox="0 0 16 16"
-          fill="none"
-          stroke="rgba(255,255,255,0.28)"
-          strokeWidth={2}
-          strokeLinecap="round"
+        {/* ── Handle — always visible ──────────────────────────────────── */}
+        <button
+          type="button"
+          onClick={toggleDock}
+          title={dockVisible ? "Ocultar dock" : "Mostrar dock"}
           style={{
-            transform: dockVisible ? "rotate(0deg)" : "rotate(180deg)",
-            transition: "transform 0.38s cubic-bezier(0.34,1.56,0.64,1)",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            padding: "4px 18px",
+            marginBottom: 8,
+            background: "rgba(16,10,5,0.80)",
+            backdropFilter: "blur(16px)",
+            border: "1px solid rgba(196,112,74,0.16)",
+            borderRadius: 12,
+            cursor: "pointer",
+            transition: "background 0.2s",
+          }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(24,15,7,0.92)"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(16,10,5,0.80)"; }}
+        >
+          <div style={{ width: 22, height: 3, borderRadius: 99, background: "rgba(255,255,255,0.18)" }} />
+          <svg
+            width={13} height={13} viewBox="0 0 16 16"
+            fill="none" stroke="rgba(255,255,255,0.28)" strokeWidth={2} strokeLinecap="round"
+            style={{
+              transform: dockVisible ? "rotate(0deg)" : "rotate(180deg)",
+              transition: "transform 0.38s cubic-bezier(0.34,1.56,0.64,1)",
+            }}
+          >
+            <polyline points="4,10 8,6 12,10" />
+          </svg>
+          <div style={{ width: 22, height: 3, borderRadius: 99, background: "rgba(255,255,255,0.18)" }} />
+        </button>
+
+        {/* ── Dock bar — THIS animates vertically ─────────────────────── */}
+        <div
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+          style={{
+            display: "flex",
+            alignItems: "flex-end",
+            gap: 14,
+            padding: "14px 22px 18px",
+            background: "rgba(13,8,3,0.82)",
+            backdropFilter: "blur(32px) saturate(1.8)",
+            border: "1px solid rgba(196,112,74,0.14)",
+            borderRadius: 22,
+            boxShadow: "0 8px 40px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.05) inset",
+            position: "relative",
+            transform: dockVisible ? "translateY(0px)" : "translateY(calc(100% + 32px))",
+            transition: "transform 0.42s cubic-bezier(0.34,1.56,0.64,1)",
+            willChange: "transform",
           }}
         >
-          <polyline points="4,10 8,6 12,10" />
-        </svg>
-        <div style={{ width: 22, height: 3, borderRadius: 99, background: "rgba(255,255,255,0.18)" }} />
-      </button>
-
-      {/* ── Dock bar ────────────────────────────────────────────────────── */}
-      <div
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        style={{
-          display: "flex",
-          alignItems: "flex-end",
-          gap: 14,
-          padding: "14px 22px 18px",
-          background: "rgba(13,8,3,0.82)",
-          backdropFilter: "blur(32px) saturate(1.8)",
-          border: "1px solid rgba(196,112,74,0.14)",
-          borderRadius: 22,
-          boxShadow: "0 8px 40px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.05) inset",
-          position: "relative",
-        }}
-      >
-        {/* Shimmer top border */}
-        <div
-          style={{
-            position: "absolute",
-            top: -1,
-            left: "8%",
-            right: "8%",
-            height: 1,
+          {/* Shimmer top border */}
+          <div style={{
+            position: "absolute", top: -1, left: "8%", right: "8%", height: 1,
             background: "linear-gradient(90deg, transparent, rgba(196,112,74,0.55) 30%, rgba(230,196,120,0.7) 50%, rgba(196,112,74,0.55) 70%, transparent)",
             pointerEvents: "none",
-          }}
-        />
+          }} />
 
-        {/* ── Arkhos Logo ────────────────────────────────────────────── */}
-        <div
-          style={{
-            width: 38,
-            height: 38,
-            borderRadius: 11,
+          {/* ── Arkhos Logo ──────────────────────────────────────────── */}
+          <div style={{
+            width: 38, height: 38, borderRadius: 11,
             background: "radial-gradient(ellipse at 40% 30%, rgba(196,112,74,0.38), rgba(80,20,10,0.55))",
             border: "1px solid rgba(196,112,74,0.28)",
             boxShadow: "0 0 20px rgba(196,112,74,0.12)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-            cursor: "default",
-            alignSelf: "center",
-          }}
-        >
-          <IcoArkhosLogo />
-        </div>
+            display: "flex", alignItems: "center", justifyContent: "center",
+            flexShrink: 0, cursor: "default", alignSelf: "center",
+          }}>
+            <IcoArkhosLogo />
+          </div>
 
-        <DockSep />
+          <DockSep />
 
-        {/* ── DASHBOARD — special ────────────────────────────────────── */}
-        <div
-          style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer", flexShrink: 0 }}
-          onMouseEnter={() => setHoveredKey("dashboard")}
-          onMouseLeave={() => setHoveredKey(null)}
-        >
-          <Link href="/" style={{ textDecoration: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-            <AppIcon
-              size={60}
-              gradFrom="#D4895E"
-              gradTo="#6B2010"
-              glow="rgba(196,112,74,0.45)"
-              iconRef={setIconRef(nextRefIdx())}
-            >
-              <IcoDashboard />
-            </AppIcon>
-            <span style={{ fontSize: 10, fontWeight: 500, color: isActive("/") ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.42)", transition: "color 0.2s", whiteSpace: "nowrap" }}>
-              Dashboard
-            </span>
-            {/* Active dot */}
-            <span style={{
-              position: "absolute",
-              bottom: -8,
-              left: "50%",
-              transform: "translateX(-50%)",
-              width: 4,
-              height: 4,
-              borderRadius: "50%",
-              background: "#D4895E",
-              boxShadow: "0 0 8px rgba(196,112,74,0.7)",
-              opacity: isActive("/") ? 1 : 0,
-              transition: "opacity 0.2s",
-            }} />
-          </Link>
+          {/* ── Dashboard ───────────────────────────────────────────── */}
+          <div
+            style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer", flexShrink: 0 }}
+            onMouseEnter={() => setHoveredKey("dashboard")}
+            onMouseLeave={() => setHoveredKey(null)}
+          >
+            <Link href="/" style={{ textDecoration: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+              <AppIcon size={60} gradFrom="#D4895E" gradTo="#6B2010" glow="rgba(196,112,74,0.45)" iconRef={setIconRef(nextRefIdx())}>
+                <IcoDashboard />
+              </AppIcon>
+              <span style={{ fontSize: 10, fontWeight: 500, color: isActive("/") ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.42)", transition: "color 0.2s", whiteSpace: "nowrap" }}>
+                Dashboard
+              </span>
+              <span style={{
+                position: "absolute", bottom: -8, left: "50%", transform: "translateX(-50%)",
+                width: 4, height: 4, borderRadius: "50%",
+                background: "#D4895E", boxShadow: "0 0 8px rgba(196,112,74,0.7)",
+                opacity: isActive("/") ? 1 : 0, transition: "opacity 0.2s",
+              }} />
+            </Link>
+            <PreviewCard visible={hoveredKey === "dashboard"}>
+              <PreviewHeader icon={<IcoDashboard />} name="Dashboard" sub="Centro de control" iconBg="rgba(196,112,74,0.25)" />
+              <PreviewChips chips={[
+                { val: "5", lbl: "Módulos" },
+                { val: String(projectCount), lbl: "Proyectos" },
+                { val: String(noteCount), lbl: "Notas" },
+              ]} />
+              <PreviewTags tags={["Resumen", "Actividad", "Métricas"]} accent="#D4895E" />
+            </PreviewCard>
+          </div>
 
-          {/* Preview card */}
-          <PreviewCard visible={hoveredKey === "dashboard"}>
-            <PreviewHeader
-              icon={<IcoDashboard />}
-              name="Dashboard"
-              sub="Centro de control"
-              iconBg="rgba(196,112,74,0.25)"
-            />
-            <PreviewChips chips={[
-              { val: "5", lbl: "Módulos" },
-              { val: String(projectCount), lbl: "Proyectos" },
-              { val: String(noteCount), lbl: "Notas" },
-            ]} />
-          </PreviewCard>
-        </div>
+          <DockSep />
 
-        <DockSep />
+          {/* ── Modules 0-1: Proyectos, Notas ───────────────────────── */}
+          {MODULES.slice(0, 2).map((mod) => {
+            const active = isActive(mod.href);
+            const count = getCount(mod.countKey);
+            const Icon = mod.Icon;
+            const ri = nextRefIdx();
 
-        {/* ── Module items ────────────────────────────────────────────── */}
-        {MODULES.map((mod) => {
-          const active = isActive(mod.href);
-          const count = getCount(mod.countKey);
-          const Icon = mod.Icon;
-          const ri = nextRefIdx();
-
-          return (
-            <div
-              key={mod.key}
-              style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer", flexShrink: 0 }}
-              onMouseEnter={() => setHoveredKey(mod.key)}
-              onMouseLeave={() => setHoveredKey(null)}
-            >
-              <Link href={mod.href} style={{ textDecoration: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-                {/* Badge */}
-                {count !== null && count > 0 && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: -4,
-                      right: -4,
-                      minWidth: 17,
-                      height: 17,
-                      background: "#D84040",
-                      border: "2px solid rgba(13,8,3,0.9)",
-                      borderRadius: 99,
-                      fontSize: 9,
-                      fontWeight: 700,
-                      color: "#fff",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      padding: "0 3px",
-                      zIndex: 2,
-                      boxShadow: "0 1px 4px rgba(216,64,64,0.5)",
+            return (
+              <div
+                key={mod.key}
+                style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer", flexShrink: 0 }}
+                onMouseEnter={() => setHoveredKey(mod.key)}
+                onMouseLeave={() => setHoveredKey(null)}
+              >
+                <Link href={mod.href} style={{ textDecoration: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+                  {count !== null && count > 0 && (
+                    <div style={{
+                      position: "absolute", top: -4, right: -4,
+                      minWidth: 17, height: 17,
+                      background: "#D84040", border: "2px solid rgba(13,8,3,0.9)",
+                      borderRadius: 99, fontSize: 9, fontWeight: 700, color: "#fff",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      padding: "0 3px", zIndex: 2, boxShadow: "0 1px 4px rgba(216,64,64,0.5)",
+                    }}>
+                      {count}
+                    </div>
+                  )}
+                  <AppIcon
+                    size={52}
+                    gradFrom={mod.gradFrom}
+                    gradTo={mod.gradTo}
+                    glow={mod.glow}
+                    iconRef={(el) => {
+                      iconRefs.current[ri] = el;
+                      if (el) el.dataset.glow = mod.glow;
                     }}
                   >
-                    {count}
-                  </div>
-                )}
+                    <Icon />
+                  </AppIcon>
+                  <span style={{ fontSize: 10, fontWeight: 500, color: active ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.42)", transition: "color 0.2s", whiteSpace: "nowrap" }}>
+                    {mod.label}
+                  </span>
+                  <span style={{
+                    position: "absolute", bottom: -8, left: "50%", transform: "translateX(-50%)",
+                    width: 4, height: 4, borderRadius: "50%",
+                    background: mod.gradFrom, boxShadow: `0 0 8px ${mod.glow}`,
+                    opacity: active ? 1 : 0, transition: "opacity 0.2s",
+                  }} />
+                </Link>
+                <PreviewCard visible={hoveredKey === mod.key}>
+                  <PreviewHeader icon={<Icon />} name={mod.label} sub={mod.previewSub} iconBg={mod.previewBg} />
+                  {count !== null && (
+                    <PreviewChips chips={[
+                      { val: String(count), lbl: mod.key === "proyectos" ? "Activos" : "Total", color: mod.gradFrom },
+                      { val: "→", lbl: "Abrir" },
+                    ]} />
+                  )}
+                  <PreviewTags tags={mod.previewFeatures} accent={mod.gradFrom} />
+                </PreviewCard>
+              </div>
+            );
+          })}
 
-                <AppIcon
-                  size={52}
-                  gradFrom={mod.gradFrom}
-                  gradTo={mod.gradTo}
-                  glow={mod.glow}
-                  iconRef={(el) => {
-                    iconRefs.current[ri] = el;
-                    if (el) el.dataset.glow = mod.glow;
-                  }}
-                >
-                  <Icon />
-                </AppIcon>
-                <span style={{ fontSize: 10, fontWeight: 500, color: active ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.42)", transition: "color 0.2s", whiteSpace: "nowrap" }}>
-                  {mod.label}
-                </span>
-                {/* Active dot */}
-                <span style={{
-                  position: "absolute",
-                  bottom: -8,
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                  width: 4,
-                  height: 4,
-                  borderRadius: "50%",
-                  background: mod.gradFrom,
-                  boxShadow: `0 0 8px ${mod.glow}`,
-                  opacity: active ? 1 : 0,
-                  transition: "opacity 0.2s",
-                }} />
-              </Link>
-
-              {/* Preview card */}
-              <PreviewCard visible={hoveredKey === mod.key}>
-                <PreviewHeader
-                  icon={<Icon />}
-                  name={mod.label}
-                  sub={mod.previewSub}
-                  iconBg={mod.previewBg}
-                />
-                {count !== null ? (
-                  <PreviewChips chips={[
-                    { val: String(count), lbl: mod.key === "proyectos" ? "Activos" : "Total", color: mod.gradFrom },
-                    { val: "→", lbl: "Abrir" },
-                  ]} />
-                ) : (
-                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", textAlign: "center", padding: "4px 0" }}>
-                    Click para acceder
-                  </div>
-                )}
-              </PreviewCard>
-            </div>
-          );
-        })}
-
-        <DockSep />
-
-        {/* ── Profile ─────────────────────────────────────────────────── */}
-        <div
-          style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer", flexShrink: 0 }}
-          onMouseEnter={() => setHoveredKey("profile")}
-          onMouseLeave={() => setHoveredKey(null)}
-        >
-          {/* Avatar */}
+          {/* ── HEIMER — IA central ──────────────────────────────────── */}
           <div
-            ref={setIconRef(nextRefIdx())}
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: "50%",
-              background: avatarUrl ? "transparent" : "linear-gradient(135deg, #C4704A, #7a2030)",
-              border: "2px solid rgba(196,112,74,0.4)",
-              boxShadow: "0 4px 16px rgba(0,0,0,0.4), 0 0 0 2px rgba(196,112,74,0.15)",
-              overflow: "hidden",
-              flexShrink: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              willChange: "transform",
-              transition: "transform 0.2s cubic-bezier(0.34,1.56,0.64,1)",
-              position: "relative",
-            }}
+            style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}
+            onMouseEnter={() => setHoveredKey("heimer")}
+            onMouseLeave={() => setHoveredKey(null)}
           >
-            {avatarUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={avatarUrl} alt={userName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-            ) : (
-              <span style={{ fontSize: 16, fontWeight: 700, color: "#fff" }}>
-                {userName.charAt(0).toUpperCase()}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, cursor: "pointer" }}>
+              <div style={{
+                width: 60, height: 60,
+                borderRadius: "50%",
+                background: "radial-gradient(ellipse at 38% 28%, #F0C055, #7B3E00)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                flexShrink: 0,
+                animation: "heimer-pulse 2.8s ease-in-out infinite",
+                position: "relative",
+                overflow: "hidden",
+              }}>
+                <div style={{
+                  position: "absolute", top: 0, left: 0, right: 0, height: "50%",
+                  background: "linear-gradient(180deg, rgba(255,255,255,0.22), transparent)",
+                  borderRadius: "50% 50% 0 0",
+                  pointerEvents: "none",
+                }} />
+                <div style={{ position: "relative", zIndex: 1 }}>
+                  <IcoHeimer />
+                </div>
+              </div>
+              <span style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,210,100,0.8)", whiteSpace: "nowrap", letterSpacing: "0.03em" }}>
+                Heimer
               </span>
-            )}
-            {/* Online dot */}
-            <div style={{
-              position: "absolute",
-              bottom: 2,
-              right: 2,
-              width: 9,
-              height: 9,
-              borderRadius: "50%",
-              background: "#3ecc6e",
-              border: "2px solid rgba(13,8,3,0.9)",
-              boxShadow: "0 0 5px rgba(62,204,110,0.6)",
-            }} />
-          </div>
-          <span style={{ fontSize: 10, fontWeight: 500, color: "rgba(255,255,255,0.42)", marginTop: 6, whiteSpace: "nowrap" }}>
-            {userName.split(" ")[0]}
-          </span>
+            </div>
 
-          {/* Profile preview card — interactive */}
+            <PreviewCard visible={hoveredKey === "heimer"} wide>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                <div style={{
+                  width: 34, height: 34, borderRadius: "50%",
+                  background: "radial-gradient(ellipse at 38% 28%, #F0C055, #7B3E00)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0,
+                  boxShadow: "0 2px 12px rgba(240,168,85,0.4)",
+                }}>
+                  <IcoHeimer />
+                </div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "rgba(255,210,100,0.95)" }}>Heimer</div>
+                  <div style={{ fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.33)", textTransform: "uppercase", letterSpacing: "0.07em" }}>IA Personal</div>
+                </div>
+              </div>
+              <div style={{
+                display: "flex", alignItems: "center", gap: 6,
+                padding: "7px 10px",
+                background: "rgba(240,168,85,0.07)",
+                border: "1px solid rgba(240,168,85,0.16)",
+                borderRadius: 9, marginBottom: 8,
+              }}>
+                <div style={{
+                  width: 6, height: 6, borderRadius: "50%",
+                  background: "#F0A855",
+                  boxShadow: "0 0 7px rgba(240,168,85,0.8)",
+                  flexShrink: 0,
+                  animation: "heimer-dot-pulse 2s ease-in-out infinite",
+                }} />
+                <span style={{ fontSize: 11, color: "rgba(240,168,85,0.8)", fontWeight: 500 }}>Conectándose al VPS…</span>
+              </div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.28)", textAlign: "center", lineHeight: 1.55 }}>
+                Tu asistente IA personal.<br />Integración en desarrollo.
+              </div>
+            </PreviewCard>
+          </div>
+
+          {/* ── Modules 2-4: Mercados, Patrimonio, Gastos ───────────── */}
+          {MODULES.slice(2).map((mod) => {
+            const active = isActive(mod.href);
+            const count = getCount(mod.countKey);
+            const Icon = mod.Icon;
+            const ri = nextRefIdx();
+
+            return (
+              <div
+                key={mod.key}
+                style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer", flexShrink: 0 }}
+                onMouseEnter={() => setHoveredKey(mod.key)}
+                onMouseLeave={() => setHoveredKey(null)}
+              >
+                <Link href={mod.href} style={{ textDecoration: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+                  <AppIcon
+                    size={52}
+                    gradFrom={mod.gradFrom}
+                    gradTo={mod.gradTo}
+                    glow={mod.glow}
+                    iconRef={(el) => {
+                      iconRefs.current[ri] = el;
+                      if (el) el.dataset.glow = mod.glow;
+                    }}
+                  >
+                    <Icon />
+                  </AppIcon>
+                  <span style={{ fontSize: 10, fontWeight: 500, color: active ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.42)", transition: "color 0.2s", whiteSpace: "nowrap" }}>
+                    {mod.label}
+                  </span>
+                  <span style={{
+                    position: "absolute", bottom: -8, left: "50%", transform: "translateX(-50%)",
+                    width: 4, height: 4, borderRadius: "50%",
+                    background: mod.gradFrom, boxShadow: `0 0 8px ${mod.glow}`,
+                    opacity: active ? 1 : 0, transition: "opacity 0.2s",
+                  }} />
+                </Link>
+                <PreviewCard visible={hoveredKey === mod.key}>
+                  <PreviewHeader icon={<Icon />} name={mod.label} sub={mod.previewSub} iconBg={mod.previewBg} />
+                  <PreviewTags tags={mod.previewFeatures} accent={mod.gradFrom} />
+                </PreviewCard>
+              </div>
+            );
+          })}
+
+          <DockSep />
+
+          {/* ── Profile ──────────────────────────────────────────────── */}
           <div
-            style={{
-              position: "absolute",
-              bottom: "calc(100% + 12px)",
-              left: "50%",
+            style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer", flexShrink: 0 }}
+            onMouseEnter={() => setHoveredKey("profile")}
+            onMouseLeave={() => setHoveredKey(null)}
+          >
+            <div
+              ref={setIconRef(nextRefIdx())}
+              style={{
+                width: 44, height: 44, borderRadius: "50%",
+                background: avatarUrl ? "transparent" : "linear-gradient(135deg, #C4704A, #7a2030)",
+                border: "2px solid rgba(196,112,74,0.4)",
+                boxShadow: "0 4px 16px rgba(0,0,0,0.4), 0 0 0 2px rgba(196,112,74,0.15)",
+                overflow: "hidden", flexShrink: 0,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                willChange: "transform",
+                transition: "transform 0.2s cubic-bezier(0.34,1.56,0.64,1)",
+                position: "relative",
+              }}
+            >
+              {avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={avatarUrl} alt={userName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              ) : (
+                <span style={{ fontSize: 16, fontWeight: 700, color: "#fff" }}>
+                  {userName.charAt(0).toUpperCase()}
+                </span>
+              )}
+              <div style={{
+                position: "absolute", bottom: 2, right: 2,
+                width: 9, height: 9, borderRadius: "50%",
+                background: "#3ecc6e", border: "2px solid rgba(13,8,3,0.9)",
+                boxShadow: "0 0 5px rgba(62,204,110,0.6)",
+              }} />
+            </div>
+            <span style={{ fontSize: 10, fontWeight: 500, color: "rgba(255,255,255,0.42)", marginTop: 6, whiteSpace: "nowrap" }}>
+              {userName.split(" ")[0]}
+            </span>
+
+            {/* Profile card */}
+            <div style={{
+              position: "absolute", bottom: "calc(100% + 12px)", left: "50%",
               width: 200,
               background: "rgba(10,6,2,0.93)",
               backdropFilter: "blur(24px) saturate(1.4)",
               border: "1px solid rgba(255,255,255,0.09)",
-              borderRadius: 16,
-              padding: "12px 14px 10px",
+              borderRadius: 16, padding: "12px 14px 10px",
               zIndex: 100,
               boxShadow: "0 8px 36px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.05) inset",
               opacity: hoveredKey === "profile" ? 1 : 0,
               transform: `translateX(-50%) translateY(${hoveredKey === "profile" ? "0px" : "6px"})`,
               transition: "opacity 0.18s ease, transform 0.18s cubic-bezier(0.34,1.56,0.64,1)",
               pointerEvents: hoveredKey === "profile" ? "auto" : "none",
-            }}
-          >
-            <div style={{ position: "absolute", top: "100%", left: "50%", transform: "translateX(-50%)", width: 0, height: 0, borderLeft: "5px solid transparent", borderRight: "5px solid transparent", borderTop: "5px solid rgba(255,255,255,0.07)" }} />
+            }}>
+              <div style={{ position: "absolute", top: "100%", left: "50%", transform: "translateX(-50%)", width: 0, height: 0, borderLeft: "5px solid transparent", borderRight: "5px solid transparent", borderTop: "5px solid rgba(255,255,255,0.07)" }} />
 
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-              <div style={{ width: 34, height: 34, borderRadius: "50%", background: avatarUrl ? "transparent" : "linear-gradient(135deg, #C4704A, #7a2030)", border: "1px solid rgba(196,112,74,0.35)", overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                {avatarUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={avatarUrl} alt={userName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                ) : (
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{userName.charAt(0).toUpperCase()}</span>
-                )}
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                <div style={{ width: 34, height: 34, borderRadius: "50%", background: avatarUrl ? "transparent" : "linear-gradient(135deg, #C4704A, #7a2030)", border: "1px solid rgba(196,112,74,0.35)", overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  {avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={avatarUrl} alt={userName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  ) : (
+                    <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{userName.charAt(0).toUpperCase()}</span>
+                  )}
+                </div>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.9)" }}>{userName}</div>
+                  <div style={{ fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.33)", textTransform: "uppercase", letterSpacing: "0.07em" }}>workspace · admin</div>
+                </div>
               </div>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.9)" }}>{userName}</div>
-                <div style={{ fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.33)", textTransform: "uppercase", letterSpacing: "0.07em" }}>workspace · admin</div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 10px", background: "rgba(62,204,110,0.06)", border: "1px solid rgba(62,204,110,0.14)", borderRadius: 9, marginBottom: 8 }}>
+                <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#3ecc6e", boxShadow: "0 0 5px rgba(62,204,110,0.7)", flexShrink: 0 }} />
+                <span style={{ fontSize: 11, color: "rgba(62,204,110,0.8)", fontWeight: 500 }}>Sesión activa</span>
               </div>
-            </div>
 
-            {/* Status */}
-            <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 10px", background: "rgba(62,204,110,0.06)", border: "1px solid rgba(62,204,110,0.14)", borderRadius: 9, marginBottom: 8 }}>
-              <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#3ecc6e", boxShadow: "0 0 5px rgba(62,204,110,0.7)", flexShrink: 0 }} />
-              <span style={{ fontSize: 11, color: "rgba(62,204,110,0.8)", fontWeight: 500 }}>Sesión activa</span>
-            </div>
-
-            {/* Settings link */}
-            <Link
-              href="/settings"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                width: "100%",
-                padding: "7px 10px",
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: 9,
-                color: "rgba(255,255,255,0.5)",
-                fontSize: 12,
-                textDecoration: "none",
-                marginBottom: 6,
-                transition: "background 0.15s, color 0.15s",
-              }}
-              onMouseEnter={(e) => {
-                const el = e.currentTarget as HTMLAnchorElement;
-                el.style.background = "rgba(255,255,255,0.08)";
-                el.style.color = "rgba(255,255,255,0.8)";
-              }}
-              onMouseLeave={(e) => {
-                const el = e.currentTarget as HTMLAnchorElement;
-                el.style.background = "rgba(255,255,255,0.04)";
-                el.style.color = "rgba(255,255,255,0.5)";
-              }}
-            >
-              <IcoSettings />
-              Configuración
-            </Link>
-
-            {/* Logout */}
-            <form action={logout}>
-              <button
-                type="submit"
+              <Link
+                href="/settings"
                 style={{
-                  width: "100%",
-                  padding: "7px 10px",
+                  display: "flex", alignItems: "center", gap: 8,
+                  width: "100%", padding: "7px 10px",
                   background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.09)",
-                  borderRadius: 9,
-                  color: "rgba(255,255,255,0.4)",
-                  fontSize: 12,
-                  cursor: "pointer",
-                  transition: "background 0.15s, color 0.15s, border-color 0.15s",
-                  fontFamily: "inherit",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  borderRadius: 9, color: "rgba(255,255,255,0.5)",
+                  fontSize: 12, textDecoration: "none",
+                  marginBottom: 6,
+                  transition: "background 0.15s, color 0.15s",
                 }}
-                onMouseEnter={(e) => {
-                  const b = e.currentTarget as HTMLButtonElement;
-                  b.style.background = "rgba(220,60,60,0.1)";
-                  b.style.borderColor = "rgba(220,60,60,0.25)";
-                  b.style.color = "rgba(255,130,130,0.7)";
-                }}
-                onMouseLeave={(e) => {
-                  const b = e.currentTarget as HTMLButtonElement;
-                  b.style.background = "rgba(255,255,255,0.04)";
-                  b.style.borderColor = "rgba(255,255,255,0.09)";
-                  b.style.color = "rgba(255,255,255,0.4)";
-                }}
+                onMouseEnter={(e) => { const el = e.currentTarget as HTMLAnchorElement; el.style.background = "rgba(255,255,255,0.08)"; el.style.color = "rgba(255,255,255,0.8)"; }}
+                onMouseLeave={(e) => { const el = e.currentTarget as HTMLAnchorElement; el.style.background = "rgba(255,255,255,0.04)"; el.style.color = "rgba(255,255,255,0.5)"; }}
               >
-                Cerrar sesión
-              </button>
-            </form>
-          </div>
-        </div>
+                <IcoSettings />
+                Configuración
+              </Link>
 
-      </div>{/* /dock bar */}
-    </div>
+              <form action={logout}>
+                <button
+                  type="submit"
+                  style={{
+                    width: "100%", padding: "7px 10px",
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid rgba(255,255,255,0.09)",
+                    borderRadius: 9, color: "rgba(255,255,255,0.4)",
+                    fontSize: 12, cursor: "pointer",
+                    transition: "background 0.15s, color 0.15s, border-color 0.15s",
+                    fontFamily: "inherit",
+                  }}
+                  onMouseEnter={(e) => { const b = e.currentTarget as HTMLButtonElement; b.style.background = "rgba(220,60,60,0.1)"; b.style.borderColor = "rgba(220,60,60,0.25)"; b.style.color = "rgba(255,130,130,0.7)"; }}
+                  onMouseLeave={(e) => { const b = e.currentTarget as HTMLButtonElement; b.style.background = "rgba(255,255,255,0.04)"; b.style.borderColor = "rgba(255,255,255,0.09)"; b.style.color = "rgba(255,255,255,0.4)"; }}
+                >
+                  Cerrar sesión
+                </button>
+              </form>
+            </div>
+          </div>
+
+        </div>{/* /dock bar */}
+      </div>
+    </>
   );
 }
