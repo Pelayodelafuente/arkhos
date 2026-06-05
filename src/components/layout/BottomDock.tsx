@@ -187,7 +187,6 @@ const MODULES: ModuleConfig[] = [
     gradTo: "#6B4010",
     glow: "rgba(176,122,58,0.4)",
     previewBg: "rgba(176,122,58,0.22)",
-    countKey: "notas",
     previewSub: "Texto y canvas",
     previewFeatures: ["Rich text", "Canvas", "IA", "Imágenes"],
     Icon: IcoNotas,
