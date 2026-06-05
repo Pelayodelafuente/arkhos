@@ -28,121 +28,93 @@ function IcoDashboard() {
   );
 }
 function IcoProyectos() {
+  const c = "#E07848";
   return (
-    <svg fill="none" width="28" height="28" viewBox="0 0 24 24">
-      {/* Folder body */}
+    <svg fill="none" width="30" height="30" viewBox="0 0 24 24">
       <path
         d="M2 9.5C2 8.4 2.9 7.5 4 7.5h4.6l1.9 2.2H20a2 2 0 012 2V19a2 2 0 01-2 2H4a2 2 0 01-2-2V9.5z"
-        fill="rgba(255,255,255,0.2)"
+        fill={c} fillOpacity="0.18"
       />
-      {/* Bar chart - left */}
-      <rect x="5.5" y="13.5" width="3" height="5.5" rx="1" fill="rgba(255,255,255,0.92)" />
-      {/* Bar chart - center, tallest */}
-      <rect x="10.5" y="11" width="3" height="8" rx="1" fill="rgba(255,255,255,0.92)" />
-      {/* Bar chart - right, shortest */}
-      <rect x="15.5" y="15.5" width="3" height="3.5" rx="1" fill="rgba(255,255,255,0.92)" />
+      <rect x="5.5" y="13.5" width="3" height="5.5" rx="1" fill={c} />
+      <rect x="10.5" y="11" width="3" height="8" rx="1" fill={c} />
+      <rect x="15.5" y="15.5" width="3" height="3.5" rx="1" fill={c} />
     </svg>
   );
 }
 function IcoNotas() {
+  const c = "#CC9040";
   return (
-    <svg fill="none" width="28" height="28" viewBox="0 0 24 24">
-      {/* Left page */}
-      <path d="M12 5.5C9.5 4.7 6 5 3.5 5.8v13C6 18 9.5 18.2 12 19V5.5z" fill="rgba(255,255,255,0.22)" />
-      {/* Right page */}
-      <path d="M12 5.5c2.5-.8 6-.5 8.5.3v13c-2.5-.8-6-1-8.5-.3V5.5z" fill="rgba(255,255,255,0.14)" />
-      {/* Spine */}
-      <rect x="11.5" y="5.5" width="1" height="13.5" rx="0.5" fill="rgba(255,255,255,0.55)" />
-      {/* Text lines — left page */}
-      <rect x="5" y="9" width="5" height="1.2" rx="0.6" fill="rgba(255,255,255,0.78)" />
-      <rect x="5" y="11.8" width="4" height="1.2" rx="0.6" fill="rgba(255,255,255,0.78)" />
-      <rect x="5" y="14.6" width="4.5" height="1.2" rx="0.6" fill="rgba(255,255,255,0.78)" />
-      {/* Text lines — right page */}
-      <rect x="13.5" y="9" width="5" height="1.2" rx="0.6" fill="rgba(255,255,255,0.55)" />
-      <rect x="13.5" y="11.8" width="3.5" height="1.2" rx="0.6" fill="rgba(255,255,255,0.55)" />
-      <rect x="13.5" y="14.6" width="4.5" height="1.2" rx="0.6" fill="rgba(255,255,255,0.55)" />
+    <svg fill="none" width="30" height="30" viewBox="0 0 24 24">
+      <path d="M12 5.5C9.5 4.7 6 5 3.5 5.8v13C6 18 9.5 18.2 12 19V5.5z" fill={c} fillOpacity="0.22" />
+      <path d="M12 5.5c2.5-.8 6-.5 8.5.3v13c-2.5-.8-6-1-8.5-.3V5.5z" fill={c} fillOpacity="0.14" />
+      <rect x="11.5" y="5.5" width="1" height="13.5" rx="0.5" fill={c} fillOpacity="0.7" />
+      <rect x="5" y="9" width="5" height="1.2" rx="0.6" fill={c} />
+      <rect x="5" y="11.8" width="4" height="1.2" rx="0.6" fill={c} />
+      <rect x="5" y="14.6" width="4.5" height="1.2" rx="0.6" fill={c} />
+      <rect x="13.5" y="9" width="5" height="1.2" rx="0.6" fill={c} fillOpacity="0.7" />
+      <rect x="13.5" y="11.8" width="3.5" height="1.2" rx="0.6" fill={c} fillOpacity="0.7" />
+      <rect x="13.5" y="14.6" width="4.5" height="1.2" rx="0.6" fill={c} fillOpacity="0.7" />
     </svg>
   );
 }
 function IcoMercados() {
+  const c = "#9880E8";
   return (
-    <svg fill="none" width="28" height="28" viewBox="0 0 24 24">
-      {/* Upward trend line */}
+    <svg fill="none" width="30" height="30" viewBox="0 0 24 24">
       <path
         d="M2.5 19.5L7 13.5L11.5 16L16.5 8.5L21.5 4"
-        stroke="rgba(255,255,255,0.88)"
-        strokeWidth="2.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        stroke={c} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
       />
-      {/* Arrow head */}
       <path
         d="M17.5 4L21.5 4L21.5 8"
-        stroke="rgba(255,255,255,0.88)"
-        strokeWidth="2.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        stroke={c} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
       />
-      {/* Data point dots */}
-      <circle cx="7" cy="13.5" r="2.2" fill="rgba(255,255,255,0.88)" />
-      <circle cx="11.5" cy="16" r="2.2" fill="rgba(255,255,255,0.65)" />
-      <circle cx="16.5" cy="8.5" r="2.2" fill="rgba(255,255,255,0.88)" />
-      {/* X axis */}
-      <line x1="2.5" y1="21" x2="21.5" y2="21" stroke="rgba(255,255,255,0.2)" strokeWidth="1" strokeLinecap="round" />
+      <circle cx="7" cy="13.5" r="2.2" fill={c} />
+      <circle cx="11.5" cy="16" r="2.2" fill={c} fillOpacity="0.6" />
+      <circle cx="16.5" cy="8.5" r="2.2" fill={c} />
+      <line x1="2.5" y1="21" x2="21.5" y2="21" stroke={c} strokeOpacity="0.25" strokeWidth="1" strokeLinecap="round" />
     </svg>
   );
 }
 function IcoPatrimonio() {
+  const c = "#3AAA80";
   return (
-    <svg fill="none" width="28" height="28" viewBox="0 0 24 24">
-      {/* Safe body */}
-      <rect x="2" y="2.5" width="18" height="19" rx="2.5" fill="rgba(255,255,255,0.2)" />
-      {/* Handle (right side) */}
-      <rect x="20.5" y="8" width="1.5" height="8" rx="0.75" fill="rgba(255,255,255,0.55)" />
-      {/* Outer lock ring */}
-      <circle cx="11" cy="12" r="5.8" stroke="rgba(255,255,255,0.88)" strokeWidth="1.8" />
-      {/* Inner disc */}
-      <circle cx="11" cy="12" r="3.4" fill="rgba(255,255,255,0.18)" />
-      {/* Dial tick marks — 6 positions */}
-      <line x1="11" y1="7" x2="11" y2="8.4" stroke="rgba(255,255,255,0.65)" strokeWidth="1.2" strokeLinecap="round" />
-      <line x1="15" y1="9" x2="14" y2="9.9" stroke="rgba(255,255,255,0.65)" strokeWidth="1.2" strokeLinecap="round" />
-      <line x1="15" y1="15" x2="14" y2="14.1" stroke="rgba(255,255,255,0.65)" strokeWidth="1.2" strokeLinecap="round" />
-      <line x1="11" y1="17" x2="11" y2="15.6" stroke="rgba(255,255,255,0.65)" strokeWidth="1.2" strokeLinecap="round" />
-      <line x1="7" y1="15" x2="8" y2="14.1" stroke="rgba(255,255,255,0.65)" strokeWidth="1.2" strokeLinecap="round" />
-      <line x1="7" y1="9" x2="8" y2="9.9" stroke="rgba(255,255,255,0.65)" strokeWidth="1.2" strokeLinecap="round" />
-      {/* Center hub */}
-      <circle cx="11" cy="12" r="1.4" fill="rgba(255,255,255,0.9)" />
-      {/* Dial pointer */}
-      <line x1="11" y1="12" x2="13.4" y2="9.8" stroke="rgba(255,255,255,0.9)" strokeWidth="1.5" strokeLinecap="round" />
-      {/* Corner bolts */}
-      <circle cx="4.5" cy="5" r="0.9" fill="rgba(255,255,255,0.4)" />
-      <circle cx="17.5" cy="5" r="0.9" fill="rgba(255,255,255,0.4)" />
-      <circle cx="4.5" cy="19" r="0.9" fill="rgba(255,255,255,0.4)" />
-      <circle cx="17.5" cy="19" r="0.9" fill="rgba(255,255,255,0.4)" />
+    <svg fill="none" width="30" height="30" viewBox="0 0 24 24">
+      <rect x="2" y="2.5" width="18" height="19" rx="2.5" fill={c} fillOpacity="0.18" />
+      <rect x="20.5" y="8" width="1.5" height="8" rx="0.75" fill={c} fillOpacity="0.6" />
+      <circle cx="11" cy="12" r="5.8" stroke={c} strokeWidth="1.8" />
+      <circle cx="11" cy="12" r="3.4" fill={c} fillOpacity="0.18" />
+      <line x1="11" y1="7" x2="11" y2="8.4" stroke={c} strokeWidth="1.2" strokeLinecap="round" />
+      <line x1="15" y1="9" x2="14" y2="9.9" stroke={c} strokeWidth="1.2" strokeLinecap="round" />
+      <line x1="15" y1="15" x2="14" y2="14.1" stroke={c} strokeWidth="1.2" strokeLinecap="round" />
+      <line x1="11" y1="17" x2="11" y2="15.6" stroke={c} strokeWidth="1.2" strokeLinecap="round" />
+      <line x1="7" y1="15" x2="8" y2="14.1" stroke={c} strokeWidth="1.2" strokeLinecap="round" />
+      <line x1="7" y1="9" x2="8" y2="9.9" stroke={c} strokeWidth="1.2" strokeLinecap="round" />
+      <circle cx="11" cy="12" r="1.4" fill={c} />
+      <line x1="11" y1="12" x2="13.4" y2="9.8" stroke={c} strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="4.5" cy="5" r="0.9" fill={c} fillOpacity="0.5" />
+      <circle cx="17.5" cy="5" r="0.9" fill={c} fillOpacity="0.5" />
+      <circle cx="4.5" cy="19" r="0.9" fill={c} fillOpacity="0.5" />
+      <circle cx="17.5" cy="19" r="0.9" fill={c} fillOpacity="0.5" />
     </svg>
   );
 }
 function IcoGastos() {
+  const c = "#4A90CC";
   return (
-    <svg fill="none" width="28" height="28" viewBox="0 0 24 24">
-      {/* Card body */}
-      <rect x="1" y="4.5" width="22" height="15" rx="2.5" fill="rgba(255,255,255,0.2)" />
-      {/* Header band */}
-      <rect x="1" y="4.5" width="22" height="4" rx="2.5" fill="rgba(255,255,255,0.1)" />
-      {/* EMV chip */}
-      <rect x="3.5" y="11" width="5" height="4" rx="1" fill="rgba(255,255,255,0.6)" />
+    <svg fill="none" width="30" height="30" viewBox="0 0 24 24">
+      <rect x="1" y="4.5" width="22" height="15" rx="2.5" fill={c} fillOpacity="0.2" />
+      <rect x="1" y="4.5" width="22" height="4" rx="2.5" fill={c} fillOpacity="0.35" />
+      <rect x="3.5" y="11" width="5" height="4" rx="1" fill={c} fillOpacity="0.7" />
       <line x1="6" y1="11" x2="6" y2="15" stroke="rgba(255,255,255,0.25)" strokeWidth="0.8" />
       <line x1="3.5" y1="13" x2="8.5" y2="13" stroke="rgba(255,255,255,0.25)" strokeWidth="0.8" />
-      {/* Contactless symbol */}
-      <path d="M18.5 10.5 Q20.5 11.5 20.5 13 Q20.5 14.5 18.5 15.5" stroke="rgba(255,255,255,0.7)" strokeWidth="1.4" strokeLinecap="round" fill="none" />
-      <path d="M16.8 11.5 Q18.2 12 18.2 13 Q18.2 14 16.8 14.5" stroke="rgba(255,255,255,0.45)" strokeWidth="1.4" strokeLinecap="round" fill="none" />
-      {/* Card number dots */}
-      <circle cx="4" cy="17.5" r="0.9" fill="rgba(255,255,255,0.7)" />
-      <circle cx="6.5" cy="17.5" r="0.9" fill="rgba(255,255,255,0.7)" />
-      <circle cx="9" cy="17.5" r="0.9" fill="rgba(255,255,255,0.7)" />
-      <circle cx="11.5" cy="17.5" r="0.9" fill="rgba(255,255,255,0.7)" />
-      {/* Last digits visible */}
-      <rect x="15" y="16.8" width="7" height="1.5" rx="0.75" fill="rgba(255,255,255,0.4)" />
+      <path d="M18.5 10.5 Q20.5 11.5 20.5 13 Q20.5 14.5 18.5 15.5" stroke={c} strokeWidth="1.5" strokeLinecap="round" fill="none" />
+      <path d="M16.8 11.5 Q18.2 12 18.2 13 Q18.2 14 16.8 14.5" stroke={c} strokeOpacity="0.6" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+      <circle cx="4" cy="17.5" r="0.9" fill={c} />
+      <circle cx="6.5" cy="17.5" r="0.9" fill={c} />
+      <circle cx="9" cy="17.5" r="0.9" fill={c} />
+      <circle cx="11.5" cy="17.5" r="0.9" fill={c} />
+      <rect x="15" y="16.8" width="7" height="1.5" rx="0.75" fill={c} fillOpacity="0.5" />
     </svg>
   );
 }
@@ -674,18 +646,22 @@ export function BottomDock({
                       {count}
                     </div>
                   )}
-                  <AppIcon
-                    size={52}
-                    gradFrom={mod.gradFrom}
-                    gradTo={mod.gradTo}
-                    glow={mod.glow}
-                    iconRef={(el) => {
+                  <div
+                    ref={(el) => {
                       iconRefs.current[ri] = el;
                       if (el) el.dataset.glow = mod.glow;
                     }}
+                    style={{
+                      width: 52, height: 52,
+                      borderRadius: 14,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      flexShrink: 0,
+                      transition: "transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s",
+                      willChange: "transform",
+                    }}
                   >
                     <Icon />
-                  </AppIcon>
+                  </div>
                   <span style={{ fontSize: 10, fontWeight: 500, color: active ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.42)", transition: "color 0.2s", whiteSpace: "nowrap" }}>
                     {mod.label}
                   </span>
@@ -795,18 +771,22 @@ export function BottomDock({
                 onMouseLeave={() => setHoveredKey(null)}
               >
                 <Link href={mod.href} style={{ textDecoration: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-                  <AppIcon
-                    size={52}
-                    gradFrom={mod.gradFrom}
-                    gradTo={mod.gradTo}
-                    glow={mod.glow}
-                    iconRef={(el) => {
+                  <div
+                    ref={(el) => {
                       iconRefs.current[ri] = el;
                       if (el) el.dataset.glow = mod.glow;
                     }}
+                    style={{
+                      width: 52, height: 52,
+                      borderRadius: 14,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      flexShrink: 0,
+                      transition: "transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s",
+                      willChange: "transform",
+                    }}
                   >
                     <Icon />
-                  </AppIcon>
+                  </div>
                   <span style={{ fontSize: 10, fontWeight: 500, color: active ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.42)", transition: "color 0.2s", whiteSpace: "nowrap" }}>
                     {mod.label}
                   </span>
