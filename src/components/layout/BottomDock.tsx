@@ -18,12 +18,13 @@ const SVG = {
 };
 
 function IcoDashboard() {
+  const c = "#D4895E";
   return (
-    <svg {...SVG} width={22} height={22} viewBox="0 0 24 24">
-      <rect x="3" y="3" width="7" height="7" rx="1.5" />
-      <rect x="14" y="3" width="7" height="7" rx="1.5" />
-      <rect x="3" y="14" width="7" height="7" rx="1.5" />
-      <rect x="14" y="14" width="7" height="7" rx="1.5" />
+    <svg fill="none" width="26" height="26" viewBox="0 0 24 24">
+      <rect x="3" y="3" width="7" height="7" rx="1.5" fill={c} />
+      <rect x="14" y="3" width="7" height="7" rx="1.5" fill={c} />
+      <rect x="3" y="14" width="7" height="7" rx="1.5" fill={c} />
+      <rect x="14" y="14" width="7" height="7" rx="1.5" fill={c} />
     </svg>
   );
 }
@@ -580,9 +581,19 @@ export function BottomDock({
             onMouseLeave={() => setHoveredKey(null)}
           >
             <Link href="/" style={{ textDecoration: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-              <AppIcon size={48} gradFrom="#D4895E" gradTo="#6B2010" glow="rgba(196,112,74,0.45)" iconRef={setIconRef(nextRefIdx())}>
+              <div
+                ref={setIconRef(nextRefIdx())}
+                style={{
+                  width: 48, height: 48,
+                  borderRadius: 14,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0,
+                  transition: "transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s",
+                  willChange: "transform",
+                }}
+              >
                 <IcoDashboard />
-              </AppIcon>
+              </div>
               <span style={{ fontSize: 10, fontWeight: 500, color: isActive("/") ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.42)", transition: "color 0.2s", whiteSpace: "nowrap" }}>
                 Dashboard
               </span>
