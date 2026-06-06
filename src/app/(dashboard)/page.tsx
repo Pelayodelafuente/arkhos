@@ -133,7 +133,7 @@ export default async function DashboardPage() {
 
   // ─── Market cache (VIX, US 10Y, EUR/USD, DXY, Gold) ──────────────────────
   // Read from market_data_cache populated by the Mercados module
-  let cacheMap: Record<string, number | null> = {}
+  const cacheMap: Record<string, number | null> = {}
   try {
     if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
       const admin = createAdminClient(
