@@ -55,6 +55,7 @@ export interface PlatformData {
   name: string
   slug: string
   current_value: number
+  total_invested: number
 }
 
 export interface ActivityData {
@@ -74,13 +75,6 @@ export interface NoteData {
   color: string | null
 }
 
-export interface AssetData {
-  platform_id: string | null
-  current_quantity: number
-  current_price_eur: number | null
-  total_invested: number
-}
-
 export interface DashboardViewProps {
   userName: string
   initialActivity: ActivityData[]
@@ -89,7 +83,6 @@ export interface DashboardViewProps {
   initialSubscriptions: SubscriptionData[]
   initialPlatforms: PlatformData[]
   initialNotes: NoteData[]
-  initialAssets: AssetData[]
   btcPrice?: number | null
   btcBalance?: number | null
 }
@@ -102,7 +95,6 @@ export function DashboardView({
   initialSubscriptions,
   initialPlatforms,
   initialNotes,
-  initialAssets,
   btcPrice,
   btcBalance,
 }: DashboardViewProps) {
@@ -139,7 +131,7 @@ export function DashboardView({
             <NotasRecientesPanel notes={initialNotes} />
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            <EvolucionPlataformasPanel platforms={initialPlatforms} assets={initialAssets} />
+            <EvolucionPlataformasPanel platforms={initialPlatforms} />
             <ProximosPagosPanel subscriptions={initialSubscriptions} />
           </div>
         </div>

@@ -27,8 +27,7 @@ function toMonthly(amount: number, cycle: string): number {
     monthly: 1,
     annual: 12,
     quarterly: 3,
-    biannual: 6,
-    weekly: 0.25,
+    semiannual: 6,
   }
   return amount / (map[cycle] ?? 1)
 }

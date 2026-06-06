@@ -1,37 +1,31 @@
 import { DashboardPanel, PanelHeader, ModuleChip } from './dashboard-view'
 import { formatCurrency } from '@/lib/utils/format'
-import type { PlatformData, AssetData } from './dashboard-view'
+import type { PlatformData } from './dashboard-view'
 
 interface EvolucionProps {
   platforms: PlatformData[]
-  assets: AssetData[]
 }
 
 const PLATFORM_COLORS: Record<string, string> = {
   'trade-republic': 'var(--platform-tr)',
   'indexa-capital': 'var(--platform-indexa)',
   'mintos':         'var(--module-notas)',
-  'bit2me':         '#F7931A',
+  'crypto':         '#F7931A',
+  'horos':          'var(--module-proyectos)',
 }
 
 function getPlatformColor(slug: string): string {
   return PLATFORM_COLORS[slug] ?? 'var(--module-patrimonio)'
 }
 
-export function EvolucionPlataformasPanel({ platforms, assets }: EvolucionProps) {
-  const investedMap: Record<string, number> = {}
-  for (const asset of assets) {
-    if (!asset.platform_id) continue
-    investedMap[asset.platform_id] = (investedMap[asset.platform_id] ?? 0) + asset.total_invested
-  }
-
+export function EvolucionPlataformasPanel({ platforms }: EvolucionProps) {
   const rows = platforms
     .filter((p) => p.current_value > 0)
     .map((p) => {
-      const invested = investedMap[p.id] ?? 0
+      const invested = p.total_invested
       const pl = p.current_value - invested
       const pct = invested > 0 ? (pl / invested) * 100 : 0
-      return { ...p, invested, pl, pct }
+      return { ...p, pl, pct }
     })
     .sort((a, b) => b.pct - a.pct)
 
@@ -58,11 +52,11 @@ export function EvolucionPlataformasPanel({ platforms, assets }: EvolucionProps)
                   <p className="text-[10px] text-text-tertiary font-mono">{formatCurrency(row.current_value, 'EUR')}</p>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <p className="text-[12px] font-mono font-semibold" style={{ color: plColor }}>
-                    {positive ? '+' : ''}{row.pct.toFixed(1)}%
+                  <p className="text-[12px] font-mono font-semibold" style={{ color: row.total_invested > 0 ? plColor : 'var(--text-tertiary)' }}>
+                    {row.total_invested > 0 ? `${positive ? '+' : ''}${row.pct.toFixed(1)}%` : '—'}
                   </p>
-                  <p className="text-[9px] font-mono" style={{ color: plColor }}>
-                    {positive ? '+' : ''}{formatCurrency(row.pl, 'EUR')}
+                  <p className="text-[9px] font-mono" style={{ color: row.total_invested > 0 ? plColor : 'var(--text-tertiary)' }}>
+                    {row.total_invested > 0 ? `${positive ? '+' : ''}${formatCurrency(row.pl, 'EUR')}` : 'sin coste base'}
                   </p>
                 </div>
               </div>
