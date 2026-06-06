@@ -12,9 +12,10 @@ interface PatrimonioPanelProps {
 
 const PLATFORM_COLORS: Record<string, string> = {
   'trade-republic': 'var(--platform-tr)',
-  'indexa-capital': 'var(--platform-indexa)',
-  'mintos': 'var(--module-notas)',
-  'bit2me': '#F7931A',
+  'indexa':         'var(--platform-indexa)',
+  'mintos':         'var(--module-notas)',
+  'crypto':         '#F7931A',
+  'horos':          'var(--module-proyectos)',
 }
 
 function getPlatformColor(slug: string): string {
@@ -55,10 +56,13 @@ export function PatrimonioPanel({ snapshots, platforms }: PatrimonioPanelProps) 
 
   const totalValue = platforms.reduce((s, p) => s + p.current_value, 0)
 
-  const platformsWithPct = platforms.map((p) => ({
-    ...p,
-    pct: totalValue > 0 ? (p.current_value / totalValue) * 100 : 0,
-  }))
+  const platformsWithPct = platforms
+    .filter((p) => p.current_value > 0)
+    .map((p) => ({
+      ...p,
+      pct: totalValue > 0 ? (p.current_value / totalValue) * 100 : 0,
+    }))
+    .sort((a, b) => b.current_value - a.current_value)
 
   return (
     <DashboardPanel>

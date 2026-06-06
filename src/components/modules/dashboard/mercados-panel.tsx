@@ -29,7 +29,14 @@ const STATUS_COLOR: Record<string, string> = {
 
 const DEMO_SPARK = [42, 38, 45, 40, 43, 41, 46, 44, 48, 45]
 
-export function MercadosPanel() {
+interface MercadosPanelProps {
+  btcPrice?: number | null
+}
+
+export function MercadosPanel({ btcPrice }: MercadosPanelProps) {
+  const btcDisplay = btcPrice && btcPrice > 0
+    ? new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(btcPrice)
+    : '—'
   return (
     <DashboardPanel>
       <PanelHeader
@@ -63,13 +70,10 @@ export function MercadosPanel() {
                   height={20}
                 />
                 <div className="text-right flex-shrink-0 w-16">
-                  <div className="font-mono text-xs text-foreground">{item.price}</div>
-                  <div
-                    className="font-mono text-[10px]"
-                    style={{ color: item.up ? 'var(--module-patrimonio)' : 'var(--urgency-critical)' }}
-                  >
-                    {item.chg}
+                  <div className="font-mono text-xs text-foreground">
+                    {item.sym === 'BTC' ? btcDisplay : item.price}
                   </div>
+                  <div className="font-mono text-[10px] text-text-muted">{item.chg}</div>
                 </div>
               </div>
             ))}

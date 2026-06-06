@@ -66,7 +66,10 @@ export function GastosPanel({ subscriptions }: GastosPanelProps) {
             <p className="text-[10px] font-semibold uppercase tracking-wider text-text-tertiary">
               Suscripciones más caras
             </p>
-            {subscriptions.slice(0, 5).map((sub) => {
+            {[...subscriptions]
+            .sort((a, b) => toMonthly(b.amount, b.cycle) - toMonthly(a.amount, a.cycle))
+            .slice(0, 5)
+            .map((sub) => {
               const monthly = toMonthly(sub.amount, sub.cycle)
               return (
                 <div key={sub.id} className="flex items-center justify-between gap-2">

@@ -51,8 +51,7 @@ export default async function DashboardPage() {
     supabase
       .from("investment_platforms")
       .select("id, name, slug")
-      .eq("user_id", user.id)
-      .eq("is_active", true),
+      .eq("user_id", user.id),
     supabase
       .from("portfolio_assets")
       .select("platform_id, current_quantity, current_price_eur, total_invested")

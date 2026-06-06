@@ -123,7 +123,7 @@ export function DashboardView({
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.8fr] gap-3">
             <ProyectosPanel projects={initialProjects} />
-            <MercadosPanel />
+            <MercadosPanel btcPrice={btcPrice} />
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
             <ActivityFeed activity={initialActivity} />
