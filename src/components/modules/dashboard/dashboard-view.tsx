@@ -75,6 +75,14 @@ export interface NoteData {
   color: string | null
 }
 
+export interface MarketData {
+  btcChange24h: number | null
+  ethPrice: number | null
+  ethChange24h: number | null
+  fearGreed: { value: number; label: string } | null
+  eurUsd: number | null
+}
+
 export interface DashboardViewProps {
   userName: string
   initialActivity: ActivityData[]
@@ -85,6 +93,7 @@ export interface DashboardViewProps {
   initialNotes: NoteData[]
   btcPrice?: number | null
   btcBalance?: number | null
+  marketData?: MarketData | null
 }
 
 export function DashboardView({
@@ -97,6 +106,7 @@ export function DashboardView({
   initialNotes,
   btcPrice,
   btcBalance,
+  marketData,
 }: DashboardViewProps) {
   return (
     <div className="absolute inset-0 flex flex-col overflow-hidden">
@@ -123,7 +133,7 @@ export function DashboardView({
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.8fr] gap-3">
             <ProyectosPanel projects={initialProjects} />
-            <MercadosPanel btcPrice={btcPrice} />
+            <MercadosPanel btcPrice={btcPrice} marketData={marketData} />
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
             <ActivityFeed activity={initialActivity} />

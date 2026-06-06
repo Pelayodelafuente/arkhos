@@ -10,14 +10,34 @@ interface GastosPanelProps {
 
 const PRESUPUESTO_MENSUAL = 2200
 
-function toMonthly(amount: number, cycle: string): number {
-  const map: Record<string, number> = {
-    monthly: 1,
-    annual: 12,
-    quarterly: 3,
-    semiannual: 6,
+const MONTHS_ES = [
+  'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+  'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
+]
+
+function isChargingThisMonth(sub: SubscriptionData): boolean {
+  const now = new Date()
+  if (sub.cycle === 'monthly') return true
+  if (!sub.started_at) return false
+  const start = new Date(sub.started_at)
+  const monthsFromStart =
+    (now.getFullYear() - start.getFullYear()) * 12 +
+    (now.getMonth() - start.getMonth())
+  if (monthsFromStart < 0) return false
+  if (sub.cycle === 'annual') return start.getMonth() === now.getMonth()
+  if (sub.cycle === 'quarterly') return monthsFromStart % 3 === 0
+  if (sub.cycle === 'semiannual') return monthsFromStart % 6 === 0
+  return false
+}
+
+function toAnnual(amount: number, cycle: string): number {
+  const multiplier: Record<string, number> = {
+    monthly: 12,
+    annual: 1,
+    quarterly: 4,
+    semiannual: 2,
   }
-  return amount / (map[cycle] ?? 1)
+  return amount * (multiplier[cycle] ?? 12)
 }
 
 function getBudgetColor(pct: number): string {
@@ -27,8 +47,14 @@ function getBudgetColor(pct: number): string {
 }
 
 export function GastosPanel({ subscriptions }: GastosPanelProps) {
-  const totalMonthly = subscriptions.reduce((s, sub) => s + toMonthly(sub.amount, sub.cycle), 0)
-  const budgetPct = Math.min((totalMonthly / PRESUPUESTO_MENSUAL) * 100, 100)
+  const now = new Date()
+  const monthLabel = MONTHS_ES[now.getMonth()]
+
+  const thisMonthTotal = subscriptions
+    .filter(isChargingThisMonth)
+    .reduce((s, sub) => s + sub.amount, 0)
+
+  const budgetPct = Math.min((thisMonthTotal / PRESUPUESTO_MENSUAL) * 100, 100)
   const barColor = getBudgetColor(budgetPct)
 
   return (
@@ -41,9 +67,9 @@ export function GastosPanel({ subscriptions }: GastosPanelProps) {
       <div className="px-4 pb-4 space-y-4">
         <div>
           <div className="flex items-end justify-between mb-1">
-            <span className="text-xs text-text-tertiary">Total mensual</span>
+            <span className="text-xs text-text-tertiary capitalize">{monthLabel}</span>
             <span className="font-mono text-lg font-semibold text-foreground">
-              {formatCurrency(totalMonthly, 'EUR').replace(',00', '')}
+              {formatCurrency(thisMonthTotal, 'EUR').replace(',00', '')}
             </span>
           </div>
           <div className="h-1.5 rounded-full overflow-hidden bg-sand">
@@ -67,19 +93,19 @@ export function GastosPanel({ subscriptions }: GastosPanelProps) {
               Suscripciones más caras
             </p>
             {[...subscriptions]
-            .sort((a, b) => toMonthly(b.amount, b.cycle) - toMonthly(a.amount, a.cycle))
-            .slice(0, 5)
-            .map((sub) => {
-              const monthly = toMonthly(sub.amount, sub.cycle)
-              return (
-                <div key={sub.id} className="flex items-center justify-between gap-2">
-                  <span className="text-xs text-foreground truncate flex-1">{sub.name}</span>
-                  <span className="font-mono text-xs text-text-tertiary flex-shrink-0">
-                    {formatCurrency(monthly, 'EUR').replace(',00', '')}/mes
-                  </span>
-                </div>
-              )
-            })}
+              .sort((a, b) => toAnnual(b.amount, b.cycle) - toAnnual(a.amount, a.cycle))
+              .slice(0, 5)
+              .map((sub) => {
+                const annual = toAnnual(sub.amount, sub.cycle)
+                return (
+                  <div key={sub.id} className="flex items-center justify-between gap-2">
+                    <span className="text-xs text-foreground truncate flex-1">{sub.name}</span>
+                    <span className="font-mono text-xs text-text-tertiary flex-shrink-0">
+                      {formatCurrency(annual, 'EUR').replace(',00', '')}/año
+                    </span>
+                  </div>
+                )
+              })}
           </div>
         )}
         {subscriptions.length === 0 && (

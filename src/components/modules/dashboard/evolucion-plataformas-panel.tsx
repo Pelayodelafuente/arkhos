@@ -27,7 +27,7 @@ export function EvolucionPlataformasPanel({ platforms }: EvolucionProps) {
       const pct = invested > 0 ? (pl / invested) * 100 : 0
       return { ...p, pl, pct }
     })
-    .sort((a, b) => b.pct - a.pct)
+    .sort((a, b) => b.current_value - a.current_value)
 
   return (
     <DashboardPanel className="flex flex-col">
@@ -53,10 +53,10 @@ export function EvolucionPlataformasPanel({ platforms }: EvolucionProps) {
                 </div>
                 <div className="text-right flex-shrink-0">
                   <p className="text-[12px] font-mono font-semibold" style={{ color: row.total_invested > 0 ? plColor : 'var(--text-tertiary)' }}>
-                    {row.total_invested > 0 ? `${positive ? '+' : ''}${row.pct.toFixed(1)}%` : '—'}
+                    {row.total_invested > 0 ? `${positive ? '+' : ''}${formatCurrency(row.pl, 'EUR')}` : '—'}
                   </p>
                   <p className="text-[9px] font-mono" style={{ color: row.total_invested > 0 ? plColor : 'var(--text-tertiary)' }}>
-                    {row.total_invested > 0 ? `${positive ? '+' : ''}${formatCurrency(row.pl, 'EUR')}` : 'sin coste base'}
+                    {row.total_invested > 0 ? `rentab. ${positive ? '+' : ''}${row.pct.toFixed(1)}%` : 'sin coste base'}
                   </p>
                 </div>
               </div>

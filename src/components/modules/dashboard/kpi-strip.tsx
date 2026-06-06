@@ -15,14 +15,24 @@ interface KPIStripProps {
   btcBalance?: number | null
 }
 
-function toMonthly(amount: number, cycle: string): number {
-  const map: Record<string, number> = {
-    monthly: 1,
-    annual: 12,
-    quarterly: 3,
-    semiannual: 6,
-  }
-  return amount / (map[cycle] ?? 1)
+const MONTHS_ES = [
+  'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+  'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
+]
+
+function isChargingThisMonth(sub: SubscriptionData): boolean {
+  const now = new Date()
+  if (sub.cycle === 'monthly') return true
+  if (!sub.started_at) return false
+  const start = new Date(sub.started_at)
+  const monthsFromStart =
+    (now.getFullYear() - start.getFullYear()) * 12 +
+    (now.getMonth() - start.getMonth())
+  if (monthsFromStart < 0) return false
+  if (sub.cycle === 'annual') return start.getMonth() === now.getMonth()
+  if (sub.cycle === 'quarterly') return monthsFromStart % 3 === 0
+  if (sub.cycle === 'semiannual') return monthsFromStart % 6 === 0
+  return false
 }
 
 function KPICell({
@@ -97,27 +107,31 @@ function PLKpi({ snapshots, platforms }: { snapshots: SnapshotData[]; platforms:
   return (
     <KPICell
       color={color}
-      label="P&L Total"
+      label="Ganancia Total"
       chip="P&L"
       value={(positive ? '+' : '') + formatCurrency(animated, 'EUR').replace(',00', '')}
-      subtext="ganancia / pérdida"
+      subtext="acumulado · todas las plataformas"
       sparkData={sparkData}
     />
   )
 }
 
 function GastosKPI({ subscriptions }: { subscriptions: SubscriptionData[] }) {
-  const monthly = subscriptions.reduce((s, sub) => s + toMonthly(sub.amount, sub.cycle), 0)
+  const now = new Date()
+  const monthLabel = MONTHS_ES[now.getMonth()]
+  const monthly = subscriptions
+    .filter(isChargingThisMonth)
+    .reduce((s, sub) => s + sub.amount, 0)
   const animated = useAnimatedCounter(monthly)
   const sparkData = [monthly * 0.82, monthly * 0.9, monthly * 0.95, monthly * 0.88, monthly]
 
   return (
     <KPICell
       color="var(--module-gastos)"
-      label="Gasto/mes"
+      label={`Gasto ${monthLabel}`}
       chip="GAS"
       value={formatCurrency(animated, 'EUR').replace(',00 €', ' €')}
-      subtext="suscripciones activas"
+      subtext="gasto real del mes"
       sparkData={sparkData}
     />
   )
