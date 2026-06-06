@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { createClient as createAdminClient } from "@supabase/supabase-js"
 import { DashboardView } from "@/components/modules/dashboard/dashboard-view"
 import type { PlatformData, NoteData, MarketData } from "@/components/modules/dashboard/dashboard-view"
 
@@ -17,6 +18,10 @@ interface FearGreedItem {
 }
 interface FearGreedResponse {
   data?: FearGreedItem[]
+}
+interface CacheRow {
+  metric: string
+  value: { current?: number; label?: string } | null
 }
 
 export default async function DashboardPage() {
@@ -73,9 +78,10 @@ export default async function DashboardPage() {
         .from("investment_platforms")
         .select("id, name, slug")
         .eq("user_id", user.id),
+      // category included to separate cash from invested positions
       supabase
         .from("portfolio_assets")
-        .select("platform_id, current_quantity, current_price_eur, total_invested")
+        .select("platform_id, current_quantity, current_price_eur, total_invested, category")
         .eq("user_id", user.id)
         .eq("is_active", true),
       supabase
@@ -125,16 +131,44 @@ export default async function DashboardPage() {
     ]),
   ])
 
+  // ─── Market cache (VIX, US 10Y, EUR/USD, DXY, Gold) ──────────────────────
+  // Read from market_data_cache populated by the Mercados module
+  let cacheMap: Record<string, number | null> = {}
+  try {
+    if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      const admin = createAdminClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+      )
+      const { data: cacheRows } = await admin
+        .from("market_data_cache")
+        .select("metric, value")
+        .in("metric", ["vix", "us10y", "eurusd", "dxy", "gold"])
+      for (const row of (cacheRows ?? []) as CacheRow[]) {
+        const v = row.value?.current ?? null
+        cacheMap[row.metric] = typeof v === "number" ? v : null
+      }
+    }
+  } catch {
+    // Cache unavailable — values remain null
+  }
+
   // ─── Platform values ───────────────────────────────────────────────────────
   const platformValueMap: Record<string, number> = {}
   const investedMap: Record<string, number> = {}
+  const cashValueMap: Record<string, number> = {}
 
   for (const asset of assets ?? []) {
     if (!asset.platform_id) continue
     const price = asset.current_price_eur ?? 0
     const qty = asset.current_quantity ?? 0
-    platformValueMap[asset.platform_id] = (platformValueMap[asset.platform_id] ?? 0) + price * qty
+    const val = price * qty
+    platformValueMap[asset.platform_id] = (platformValueMap[asset.platform_id] ?? 0) + val
     investedMap[asset.platform_id] = (investedMap[asset.platform_id] ?? 0) + (asset.total_invested ?? 0)
+    // Track cash separately — same logic as patrimonio module
+    if (asset.category === "cash") {
+      cashValueMap[asset.platform_id] = (cashValueMap[asset.platform_id] ?? 0) + val
+    }
   }
 
   const platformBySlug = new Map((platforms ?? []).map((p) => [p.slug, p]))
@@ -176,6 +210,7 @@ export default async function DashboardPage() {
     slug: p.slug,
     current_value: platformValueMap[p.id] ?? 0,
     total_invested: investedMap[p.id] ?? 0,
+    cash_value: cashValueMap[p.id] ?? 0,
   }))
 
   // ─── Snapshots ────────────────────────────────────────────────────────────
@@ -213,12 +248,14 @@ export default async function DashboardPage() {
   const btcPrice = btcData?.current_price_eur ?? null
   const btcBalance = btcData?.current_balance ?? null
 
-  // ─── Market data from external APIs ───────────────────────────────────────
+  // ─── Market data ──────────────────────────────────────────────────────────
   const cg = cgRaw as CoinGeckoResponse | null
   const fng = (fngRaw as FearGreedResponse | null)?.data?.[0] ?? null
 
   const btcEur = cg?.bitcoin?.eur ?? null
   const btcUsd = cg?.bitcoin?.usd ?? null
+  const cgEurUsd = btcEur && btcUsd ? Math.round((btcUsd / btcEur) * 10000) / 10000 : null
+
   const marketData: MarketData = {
     btcChange24h: cg?.bitcoin?.eur_24h_change ?? null,
     ethPrice: cg?.ethereum?.eur ?? null,
@@ -226,10 +263,12 @@ export default async function DashboardPage() {
     fearGreed: fng
       ? { value: Number(fng.value), label: fng.value_classification }
       : null,
-    eurUsd:
-      btcEur && btcUsd
-        ? Math.round((btcUsd / btcEur) * 10000) / 10000
-        : null,
+    // Prefer ExchangeRate cache; fall back to BTC cross-rate
+    eurUsd: (cacheMap["eurusd"] ?? null) ?? cgEurUsd,
+    vix: cacheMap["vix"] ?? null,
+    us10y: cacheMap["us10y"] ?? null,
+    dxy: cacheMap["dxy"] ?? null,
+    gold: cacheMap["gold"] ?? null,
   }
 
   const userName = user.email?.split("@")[0] ?? "Pelayo"

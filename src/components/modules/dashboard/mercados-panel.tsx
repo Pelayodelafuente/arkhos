@@ -13,11 +13,19 @@ const STATUS_COLOR: Record<string, string> = {
   neutral: 'var(--text-tertiary)',
 }
 
-function fmtPrice(v: number | null, decimals = 0): string {
+function fmtEur(v: number | null, decimals = 0): string {
   if (v === null || v === 0) return '—'
   return new Intl.NumberFormat('es-ES', {
     style: 'currency',
     currency: 'EUR',
+    maximumFractionDigits: decimals,
+    minimumFractionDigits: decimals,
+  }).format(v)
+}
+
+function fmtNum(v: number | null, decimals = 2): string {
+  if (v === null) return '—'
+  return new Intl.NumberFormat('es-ES', {
     maximumFractionDigits: decimals,
     minimumFractionDigits: decimals,
   }).format(v)
@@ -36,7 +44,6 @@ function changeColor(v: number | null): string {
 function fgStatus(value: number): string {
   if (value >= 75) return 'warning'
   if (value >= 55) return 'positive'
-  if (value <= 25) return 'negative'
   if (value <= 45) return 'negative'
   return 'neutral'
 }
@@ -54,7 +61,7 @@ export function MercadosPanel({ btcPrice, marketData }: MercadosPanelProps) {
       sym: 'BTC',
       name: 'Bitcoin',
       color: '#F7931A',
-      price: fmtPrice(btcPrice ?? null),
+      price: fmtEur(btcPrice ?? null),
       chg: fmtChange(md?.btcChange24h ?? null),
       chgColor: changeColor(md?.btcChange24h ?? null),
     },
@@ -62,7 +69,7 @@ export function MercadosPanel({ btcPrice, marketData }: MercadosPanelProps) {
       sym: 'ETH',
       name: 'Ethereum',
       color: '#627EEA',
-      price: fmtPrice(md?.ethPrice ?? null),
+      price: fmtEur(md?.ethPrice ?? null),
       chg: fmtChange(md?.ethChange24h ?? null),
       chgColor: changeColor(md?.ethChange24h ?? null),
     },
@@ -86,21 +93,25 @@ export function MercadosPanel({ btcPrice, marketData }: MercadosPanelProps) {
       sym: 'DXY',
       name: 'US Dollar',
       color: 'var(--module-gastos)',
-      price: '—',
+      price: md?.dxy !== null && md?.dxy !== undefined ? fmtNum(md.dxy, 2) : '—',
       chg: '—',
       chgColor: 'var(--text-muted)',
     },
   ]
 
   const fng = md?.fearGreed ?? null
+  const vix = md?.vix ?? null
+  const us10y = md?.us10y ?? null
+  const dxy = md?.dxy ?? null
+  const gold = md?.gold ?? null
   const eurUsd = md?.eurUsd ?? null
 
   const macro = [
     {
       label: 'VIX',
-      val: '—',
-      desc: 'vol. implícita',
-      status: 'neutral',
+      val: vix !== null ? fmtNum(vix, 1) : '—',
+      desc: vix !== null ? (vix < 20 ? 'baja volatilidad' : vix < 30 ? 'vol. moderada' : 'vol. alta') : 'vol. implícita',
+      status: vix !== null ? (vix < 20 ? 'positive' : vix < 30 ? 'warning' : 'negative') : 'neutral',
     },
     {
       label: 'Fear & Greed',
@@ -110,28 +121,26 @@ export function MercadosPanel({ btcPrice, marketData }: MercadosPanelProps) {
     },
     {
       label: 'US 10Y',
-      val: '—',
-      desc: 'bono 10 años',
-      status: 'neutral',
+      val: us10y !== null ? `${fmtNum(us10y, 2)}%` : '—',
+      desc: us10y !== null ? (us10y < 3 ? 'tipos bajos' : us10y < 5 ? 'tipos normales' : 'tipos altos') : 'bono 10 años',
+      status: us10y !== null ? (us10y < 3 ? 'positive' : us10y < 5 ? 'neutral' : 'warning') : 'neutral',
     },
     {
       label: 'DXY',
-      val: '—',
+      val: dxy !== null ? fmtNum(dxy, 2) : '—',
       desc: 'índice dólar',
-      status: 'neutral',
+      status: dxy !== null ? (dxy > 105 ? 'negative' : dxy < 95 ? 'positive' : 'neutral') : 'neutral',
     },
     {
       label: 'EUR/USD',
-      val: eurUsd ? eurUsd.toFixed(4) : '—',
+      val: eurUsd !== null ? fmtNum(eurUsd, 4) : '—',
       desc: 'tipo de cambio',
-      status: eurUsd
-        ? eurUsd >= 1.1 ? 'positive' : eurUsd <= 1.0 ? 'negative' : 'neutral'
-        : 'neutral',
+      status: eurUsd !== null ? (eurUsd >= 1.1 ? 'positive' : eurUsd <= 1.0 ? 'negative' : 'neutral') : 'neutral',
     },
     {
       label: 'Gold',
-      val: '—',
-      desc: 'oro spot',
+      val: gold !== null ? `$${fmtNum(gold, 0)}` : '—',
+      desc: 'USD/oz',
       status: 'neutral',
     },
   ]
@@ -207,7 +216,7 @@ export function MercadosPanel({ btcPrice, marketData }: MercadosPanelProps) {
       </div>
       <div className="px-4 pb-3 pt-1 border-t border-border flex items-center justify-between">
         <p className="text-[10px] text-text-muted">
-          BTC · ETH · F&G actualizados · resto en módulo Mercados
+          Cache del módulo Mercados · IGLN y CSPX en tiempo real allí
         </p>
         <a href="/mercados" className="text-[10px] font-medium hover:underline" style={{ color: 'var(--module-mercados)' }}>
           Ir a Mercados →

@@ -56,6 +56,7 @@ export interface PlatformData {
   slug: string
   current_value: number
   total_invested: number
+  cash_value: number
 }
 
 export interface ActivityData {
@@ -81,6 +82,10 @@ export interface MarketData {
   ethChange24h: number | null
   fearGreed: { value: number; label: string } | null
   eurUsd: number | null
+  vix: number | null
+  us10y: number | null
+  dxy: number | null
+  gold: number | null
 }
 
 export interface DashboardViewProps {

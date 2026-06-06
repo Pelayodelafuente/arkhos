@@ -22,9 +22,10 @@ export function EvolucionPlataformasPanel({ platforms }: EvolucionProps) {
   const rows = platforms
     .filter((p) => p.current_value > 0)
     .map((p) => {
-      const invested = p.total_invested
-      const pl = p.current_value - invested
-      const pct = invested > 0 ? (pl / invested) * 100 : 0
+      const pl = p.current_value - p.total_invested
+      // Exclude uninvested cash from the denominator, same as patrimonio module
+      const investedBase = p.total_invested - (p.cash_value ?? 0)
+      const pct = investedBase > 0 ? (pl / investedBase) * 100 : 0
       return { ...p, pl, pct }
     })
     .sort((a, b) => b.current_value - a.current_value)
