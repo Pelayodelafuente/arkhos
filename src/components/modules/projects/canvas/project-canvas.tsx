@@ -107,27 +107,27 @@ export function ProjectCanvas({ userId }: ProjectCanvasProps) {
       </div>
 
       {/* 3-column layout (stacks vertically below 1200px) */}
-      <div className="canvas-columns relative z-10 min-h-0 flex-1 gap-3 overflow-y-auto overflow-x-hidden p-3">
+      <div className="canvas-columns relative z-10 min-h-0 flex-1 gap-3 p-3">
         {/* Left column: Stats + Projects */}
-        <div className="canvas-col-left flex flex-col gap-3 overflow-y-auto">
+        <div className="canvas-col-left flex flex-col gap-3">
           <CanvasWindow id="stats" title={statsTitle}>
             <WindowStats />
           </CanvasWindow>
 
-          <CanvasWindow id="projects" title="Mis proyectos">
+          <CanvasWindow id="projects" title="Mis proyectos" className="flex-1 min-h-0">
             <WindowProjects userId={userId} />
           </CanvasWindow>
         </div>
 
         {/* Center column: Project detail */}
-        <div className="canvas-col-center flex min-w-0 flex-col overflow-y-auto">
-          <CanvasWindow id="detail" title="Detalle del proyecto" className="flex-1">
+        <div className="canvas-col-center flex min-w-0 flex-col">
+          <CanvasWindow id="detail" title="Detalle del proyecto" className="flex-1 min-h-0">
             <WindowDetail userId={userId} />
           </CanvasWindow>
         </div>
 
         {/* Right column: Context + AI placeholder + Focus */}
-        <div className="canvas-col-right flex flex-col gap-3 overflow-y-auto">
+        <div className="canvas-col-right flex flex-col gap-3">
           <CanvasWindow id="context" title="Contexto activo">
             <WindowContext />
           </CanvasWindow>
@@ -140,7 +140,7 @@ export function ProjectCanvas({ userId }: ProjectCanvasProps) {
             <WindowAIPlaceholder />
           </CanvasWindow>
 
-          <CanvasWindow id="focus" title="Focus — Tareas pendientes" className="flex-1">
+          <CanvasWindow id="focus" title="Focus — Tareas pendientes" className="flex-1 min-h-0">
             <WindowFocus userId={userId} />
           </CanvasWindow>
         </div>
@@ -159,10 +159,29 @@ export function ProjectCanvas({ userId }: ProjectCanvasProps) {
       <style>{`
         .canvas-columns {
           display: flex;
+          overflow: hidden;
         }
-        .canvas-col-left { width: 280px; flex-shrink: 0; }
-        .canvas-col-center { flex: 1; }
-        .canvas-col-right { width: 280px; flex-shrink: 0; }
+        .canvas-col-left {
+          width: 280px;
+          flex-shrink: 0;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+        }
+        .canvas-col-center {
+          flex: 1;
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+        }
+        .canvas-col-right {
+          width: 280px;
+          flex-shrink: 0;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+        }
 
         @media (max-width: 1199px) {
           .canvas-columns {
@@ -174,7 +193,8 @@ export function ProjectCanvas({ userId }: ProjectCanvasProps) {
           .canvas-col-right {
             width: 100%;
             flex-shrink: unset;
-            overflow-y: visible;
+            overflow: visible;
+            height: auto;
           }
         }
       `}</style>
