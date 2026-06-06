@@ -9,7 +9,10 @@ import { AlertasPanel } from './alertas-panel'
 import { ProyectosPanel } from './proyectos-panel'
 import { MercadosPanel } from './mercados-panel'
 import { ActivityFeed } from './activity-feed'
-import { AICopilotPanel } from './ai-copilot-panel'
+import { NotaRapidaPanel } from './nota-rapida-panel'
+import { NotasRecientesPanel } from './notas-recientes-panel'
+import { EvolucionPlataformasPanel } from './evolucion-plataformas-panel'
+import { ProximosPagosPanel } from './proximos-pagos-panel'
 
 export interface SnapshotData {
   snapshot_date: string
@@ -43,6 +46,8 @@ export interface SubscriptionData {
   cycle: string
   status: string
   category_id: string | null
+  billing_day?: number
+  started_at?: string | null
 }
 
 export interface PlatformData {
@@ -61,6 +66,21 @@ export interface ActivityData {
   created_at: string
 }
 
+export interface NoteData {
+  id: string
+  title: string
+  content: string
+  created_at: string
+  color: string | null
+}
+
+export interface AssetData {
+  platform_id: string | null
+  current_quantity: number
+  current_price_eur: number | null
+  total_invested: number
+}
+
 export interface DashboardViewProps {
   userName: string
   initialActivity: ActivityData[]
@@ -68,6 +88,10 @@ export interface DashboardViewProps {
   initialSnapshots: SnapshotData[]
   initialSubscriptions: SubscriptionData[]
   initialPlatforms: PlatformData[]
+  initialNotes: NoteData[]
+  initialAssets: AssetData[]
+  btcPrice?: number | null
+  btcBalance?: number | null
 }
 
 export function DashboardView({
@@ -77,12 +101,13 @@ export function DashboardView({
   initialSnapshots,
   initialSubscriptions,
   initialPlatforms,
+  initialNotes,
+  initialAssets,
+  btcPrice,
+  btcBalance,
 }: DashboardViewProps) {
   return (
-    <div
-      className="-mx-4 -mt-4 lg:-mx-8 lg:-mt-6 flex flex-col overflow-hidden"
-      style={{ height: 'calc(100% + 16px)' }}
-    >
+    <div className="absolute inset-0 flex flex-col overflow-hidden">
       <MarketTicker />
       <DashboardHeader userName={userName} />
       <KPIStrip
@@ -90,9 +115,11 @@ export function DashboardView({
         snapshots={initialSnapshots}
         subscriptions={initialSubscriptions}
         platforms={initialPlatforms}
+        btcPrice={btcPrice}
+        btcBalance={btcBalance}
       />
-      <div className="flex-1 overflow-y-auto">
-        <div className="p-3 space-y-3 pb-6">
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        <div className="p-3 space-y-3 pb-20 lg:pb-28">
           <div className="grid grid-cols-1 lg:grid-cols-[3fr_1.4fr_1.6fr] gap-3">
             <PatrimonioPanel snapshots={initialSnapshots} platforms={initialPlatforms} />
             <GastosPanel subscriptions={initialSubscriptions} />
@@ -106,13 +133,14 @@ export function DashboardView({
             <ProyectosPanel projects={initialProjects} />
             <MercadosPanel />
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.2fr] gap-3">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
             <ActivityFeed activity={initialActivity} />
-            <AICopilotPanel
-              projects={initialProjects}
-              snapshots={initialSnapshots}
-              subscriptions={initialSubscriptions}
-            />
+            <NotaRapidaPanel />
+            <NotasRecientesPanel notes={initialNotes} />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            <EvolucionPlataformasPanel platforms={initialPlatforms} assets={initialAssets} />
+            <ProximosPagosPanel subscriptions={initialSubscriptions} />
           </div>
         </div>
       </div>

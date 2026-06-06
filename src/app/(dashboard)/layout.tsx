@@ -31,7 +31,7 @@ export default async function DashboardLayout({
           .from("projects")
           .select("id", { count: "exact", head: true })
           .eq("user_id", user.id)
-          .eq("status", "active"),
+          .neq("status", "archived"),
         supabase
           .from("notes")
           .select("id", { count: "exact", head: true })

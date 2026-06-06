@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { DashboardView } from "@/components/modules/dashboard/dashboard-view"
-import type { PlatformData } from "@/components/modules/dashboard/dashboard-view"
+import type { PlatformData, NoteData, AssetData } from "@/components/modules/dashboard/dashboard-view"
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -16,6 +16,8 @@ export default async function DashboardPage() {
     { data: subscriptions },
     { data: platforms },
     { data: assets },
+    { data: btcData },
+    { data: notesData },
   ] = await Promise.all([
     supabase
       .from("activity_log")
@@ -38,11 +40,11 @@ export default async function DashboardPage() {
       .limit(12),
     supabase
       .from("subscriptions")
-      .select("id, name, amount, cycle, status, category_id")
+      .select("id, name, amount, cycle, status, category_id, billing_day, started_at")
       .eq("user_id", user.id)
       .eq("status", "active")
       .order("amount", { ascending: false })
-      .limit(5),
+      .limit(8),
     supabase
       .from("investment_platforms")
       .select("id, name, slug")
@@ -50,9 +52,24 @@ export default async function DashboardPage() {
       .eq("is_active", true),
     supabase
       .from("portfolio_assets")
-      .select("platform_id, current_quantity, current_price_eur")
+      .select("platform_id, current_quantity, current_price_eur, total_invested")
       .eq("user_id", user.id)
       .eq("is_active", true),
+    supabase
+      .from("crypto_assets")
+      .select("symbol, current_price_eur, current_balance")
+      .eq("user_id", user.id)
+      .eq("symbol", "BTC")
+      .eq("is_active", true)
+      .maybeSingle(),
+    supabase
+      .from("notes")
+      .select("id, title, content, created_at, color")
+      .eq("user_id", user.id)
+      .eq("archived", false)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false })
+      .limit(4),
   ])
 
   const platformValueMap: Record<string, number> = {}
@@ -82,6 +99,24 @@ export default async function DashboardPage() {
     created_at: a.created_at ?? new Date().toISOString(),
   }))
 
+  const initialAssets: AssetData[] = (assets ?? []).map((a) => ({
+    platform_id: a.platform_id,
+    current_quantity: a.current_quantity ?? 0,
+    current_price_eur: a.current_price_eur,
+    total_invested: a.total_invested ?? 0,
+  }))
+
+  const initialNotes: NoteData[] = (notesData ?? []).map((n) => ({
+    id: n.id,
+    title: n.title,
+    content: n.content ?? "",
+    created_at: n.created_at ?? new Date().toISOString(),
+    color: n.color,
+  }))
+
+  const btcPrice = btcData?.current_price_eur ?? null
+  const btcBalance = btcData?.current_balance ?? null
+
   const userName = user.email?.split("@")[0] ?? "Pelayo"
 
   return (
@@ -92,6 +127,10 @@ export default async function DashboardPage() {
       initialSnapshots={mappedSnapshots}
       initialSubscriptions={subscriptions ?? []}
       initialPlatforms={enrichedPlatforms}
+      initialAssets={initialAssets}
+      initialNotes={initialNotes}
+      btcPrice={btcPrice}
+      btcBalance={btcBalance}
     />
   )
 }

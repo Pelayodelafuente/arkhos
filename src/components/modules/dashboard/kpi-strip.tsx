@@ -2,7 +2,6 @@
 
 import { useAnimatedCounter } from '@/lib/hooks/use-animated-counter'
 import { formatCurrency } from '@/lib/utils/format'
-import { useCryptoStore } from '@/stores/crypto-store'
 import { DashboardSparkline } from './dashboard-sparkline'
 import { ModuleChip } from './dashboard-view'
 import type { ProjectData, SnapshotData, SubscriptionData, PlatformData } from './dashboard-view'
@@ -12,6 +11,8 @@ interface KPIStripProps {
   snapshots: SnapshotData[]
   subscriptions: SubscriptionData[]
   platforms: PlatformData[]
+  btcPrice?: number | null
+  btcBalance?: number | null
 }
 
 function toMonthly(amount: number, cycle: string): number {
@@ -138,12 +139,11 @@ function ProyectosKPI({ projects }: { projects: ProjectData[] }) {
   )
 }
 
-function BitcoinKPI() {
-  const assets = useCryptoStore((s) => s.assets)
-  const btc = assets.find((a) => a.symbol === 'BTC')
-  const price = btc?.current_price_eur ?? 0
+function BitcoinKPI({ btcPrice, btcBalance }: { btcPrice: number | null; btcBalance: number | null }) {
+  const price = btcPrice ?? 0
   const animated = useAnimatedCounter(price)
   const display = price > 0 ? formatCurrency(animated, 'EUR').replace(',00', '') : '—'
+  const sub = btcBalance && btcBalance > 0 ? `${btcBalance.toFixed(4)} BTC en cartera` : 'precio actual EUR'
 
   return (
     <KPICell
@@ -151,13 +151,13 @@ function BitcoinKPI() {
       label="Bitcoin"
       chip="BTC"
       value={display}
-      subtext="precio actual EUR"
+      subtext={sub}
       sparkData={[]}
     />
   )
 }
 
-export function KPIStrip({ projects, snapshots, subscriptions, platforms }: KPIStripProps) {
+export function KPIStrip({ projects, snapshots, subscriptions, platforms, btcPrice, btcBalance }: KPIStripProps) {
   return (
     <div
       className="flex-shrink-0 border-b border-border overflow-x-auto"
@@ -168,7 +168,7 @@ export function KPIStrip({ projects, snapshots, subscriptions, platforms }: KPIS
         <PLKpi snapshots={snapshots} />
         <GastosKPI subscriptions={subscriptions} />
         <ProyectosKPI projects={projects} />
-        <BitcoinKPI />
+        <BitcoinKPI btcPrice={btcPrice ?? null} btcBalance={btcBalance ?? null} />
       </div>
     </div>
   )

@@ -407,7 +407,7 @@ export function BottomDock({
   const pathname = usePathname();
 
   const storeProjectCount = useProjectsStore((s) =>
-    s.initialized ? s.projects.filter((p) => p.status === "active").length : null
+    s.initialized ? s.projects.filter((p) => p.status !== "archived").length : null
   );
   const storeNoteCount = useNotesStore((s) =>
     s.initialized ? s.notes.filter((n) => !n.archived).length : null
@@ -502,53 +502,57 @@ export function BottomDock({
         }
       `}</style>
 
-      {/*
-        FIXED WRAPPER — only translateX centering, NO vertical animation.
-        This keeps the handle always visible even when dock is hidden.
-      */}
-      <div
-        className="fixed left-1/2 z-40 hidden flex-col items-center lg:flex"
-        style={{ bottom: 16, transform: "translateX(-50%)" }}
+      {/* ── Handle — always fixed at bottom:16, z=41 ── */}
+      <button
+        type="button"
+        onClick={toggleDock}
+        title={dockVisible ? "Ocultar dock" : "Mostrar dock"}
+        className="fixed hidden lg:flex items-center gap-2"
+        style={{
+          bottom: 16,
+          left: "50%",
+          transform: "translateX(-50%)",
+          zIndex: 41,
+          padding: "4px 18px",
+          background: "rgba(16,10,5,0.80)",
+          backdropFilter: "blur(16px)",
+          border: "1px solid rgba(196,112,74,0.16)",
+          borderRadius: 12,
+          cursor: "pointer",
+          transition: "background 0.2s",
+        }}
+        onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(24,15,7,0.92)"; }}
+        onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(16,10,5,0.80)"; }}
       >
-        {/* ── Handle — always visible ──────────────────────────────────── */}
-        <button
-          type="button"
-          onClick={toggleDock}
-          title={dockVisible ? "Ocultar dock" : "Mostrar dock"}
+        <div style={{ width: 22, height: 3, borderRadius: 99, background: "rgba(255,255,255,0.18)" }} />
+        <svg
+          width={13} height={13} viewBox="0 0 16 16"
+          fill="none" stroke="rgba(255,255,255,0.28)" strokeWidth={2} strokeLinecap="round"
           style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            padding: "4px 18px",
-            marginBottom: 8,
-            background: "rgba(16,10,5,0.80)",
-            backdropFilter: "blur(16px)",
-            border: "1px solid rgba(196,112,74,0.16)",
-            borderRadius: 12,
-            cursor: "pointer",
-            transition: "background 0.2s",
+            transform: dockVisible ? "rotate(0deg)" : "rotate(180deg)",
+            transition: "transform 0.38s cubic-bezier(0.34,1.56,0.64,1)",
           }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(24,15,7,0.92)"; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(16,10,5,0.80)"; }}
         >
-          <div style={{ width: 22, height: 3, borderRadius: 99, background: "rgba(255,255,255,0.18)" }} />
-          <svg
-            width={13} height={13} viewBox="0 0 16 16"
-            fill="none" stroke="rgba(255,255,255,0.28)" strokeWidth={2} strokeLinecap="round"
-            style={{
-              transform: dockVisible ? "rotate(0deg)" : "rotate(180deg)",
-              transition: "transform 0.38s cubic-bezier(0.34,1.56,0.64,1)",
-            }}
-          >
-            <polyline points="4,10 8,6 12,10" />
-          </svg>
-          <div style={{ width: 22, height: 3, borderRadius: 99, background: "rgba(255,255,255,0.18)" }} />
-        </button>
+          <polyline points="4,10 8,6 12,10" />
+        </svg>
+        <div style={{ width: 22, height: 3, borderRadius: 99, background: "rgba(255,255,255,0.18)" }} />
+      </button>
 
-        {/* ── Dock bar — THIS animates vertically ─────────────────────── */}
+      {/* ── Dock bar — positioned above the handle, animates down when hidden ── */}
+      <div
+        className="fixed hidden lg:flex items-end"
+        style={{
+          bottom: 56,
+          left: "50%",
+          zIndex: 40,
+          transform: `translateX(-50%) translateY(${dockVisible ? "0px" : "calc(100% + 70px)"})`,
+          transition: "transform 0.42s cubic-bezier(0.34,1.56,0.64,1)",
+          willChange: "transform",
+        }}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+      >
         <div
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
           style={{
             display: "flex",
             alignItems: "flex-end",
@@ -560,9 +564,6 @@ export function BottomDock({
             borderRadius: 22,
             boxShadow: "0 8px 40px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.05) inset",
             position: "relative",
-            transform: dockVisible ? "translateY(0px)" : "translateY(calc(100% + 32px))",
-            transition: "transform 0.42s cubic-bezier(0.34,1.56,0.64,1)",
-            willChange: "transform",
           }}
         >
           {/* Shimmer top border */}
@@ -799,7 +800,7 @@ export function BottomDock({
             </div>
           </div>
 
-        </div>{/* /dock bar */}
+        </div>
       </div>
     </>
   );
