@@ -85,9 +85,10 @@ function PatrimonioKPI({ platforms, snapshots }: { platforms: PlatformData[]; sn
   )
 }
 
-function PLKpi({ snapshots }: { snapshots: SnapshotData[] }) {
-  const last = snapshots[snapshots.length - 1]
-  const pl = last ? last.total_value - last.invested_value : 0
+function PLKpi({ snapshots, platforms }: { snapshots: SnapshotData[]; platforms: PlatformData[] }) {
+  const totalValue = platforms.reduce((s, p) => s + p.current_value, 0)
+  const totalInvested = platforms.reduce((s, p) => s + p.total_invested, 0)
+  const pl = totalValue - totalInvested
   const animated = useAnimatedCounter(pl)
   const positive = pl >= 0
   const color = positive ? 'var(--color-gain)' : 'var(--color-loss)'
@@ -123,8 +124,7 @@ function GastosKPI({ subscriptions }: { subscriptions: SubscriptionData[] }) {
 }
 
 function ProyectosKPI({ projects }: { projects: ProjectData[] }) {
-  const active = projects.filter((p) => p.status === 'active' || p.status === 'in_progress').length
-  const animated = useAnimatedCounter(active)
+  const animated = useAnimatedCounter(projects.length)
 
   return (
     <KPICell
@@ -164,7 +164,7 @@ export function KPIStrip({ projects, snapshots, subscriptions, platforms, btcPri
     >
       <div className="flex lg:grid lg:grid-cols-5 min-w-max lg:min-w-0">
         <PatrimonioKPI platforms={platforms} snapshots={snapshots} />
-        <PLKpi snapshots={snapshots} />
+        <PLKpi snapshots={snapshots} platforms={platforms} />
         <GastosKPI subscriptions={subscriptions} />
         <ProyectosKPI projects={projects} />
         <BitcoinKPI btcPrice={btcPrice ?? null} btcBalance={btcBalance ?? null} />

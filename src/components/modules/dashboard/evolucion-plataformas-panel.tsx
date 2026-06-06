@@ -8,7 +8,7 @@ interface EvolucionProps {
 
 const PLATFORM_COLORS: Record<string, string> = {
   'trade-republic': 'var(--platform-tr)',
-  'indexa-capital': 'var(--platform-indexa)',
+  'indexa':         'var(--platform-indexa)',
   'mintos':         'var(--module-notas)',
   'crypto':         '#F7931A',
   'horos':          'var(--module-proyectos)',

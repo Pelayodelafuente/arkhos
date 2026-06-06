@@ -15,8 +15,7 @@ function toMonthly(amount: number, cycle: string): number {
     monthly: 1,
     annual: 12,
     quarterly: 3,
-    biannual: 6,
-    weekly: 0.25,
+    semiannual: 6,
   }
   return amount / (map[cycle] ?? 1)
 }
@@ -65,7 +64,7 @@ export function GastosPanel({ subscriptions }: GastosPanelProps) {
         {subscriptions.length > 0 && (
           <div className="space-y-2">
             <p className="text-[10px] font-semibold uppercase tracking-wider text-text-tertiary">
-              Top suscripciones
+              Suscripciones más caras
             </p>
             {subscriptions.slice(0, 5).map((sub) => {
               const monthly = toMonthly(sub.amount, sub.cycle)

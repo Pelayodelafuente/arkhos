@@ -18,6 +18,9 @@ export default async function DashboardPage() {
     { data: assets },
     { data: cryptoAssets },
     { data: notesData },
+    { data: horosData },
+    { data: mintosData },
+    { data: indexaPositions },
   ] = await Promise.all([
     supabase
       .from("activity_log")
@@ -68,40 +71,72 @@ export default async function DashboardPage() {
       .is("deleted_at", null)
       .order("created_at", { ascending: false })
       .limit(4),
+    // Dedicated platform tables — each has authoritative current value
+    supabase
+      .from("horos_position")
+      .select("total_value, total_cost")
+      .eq("user_id", user.id)
+      .maybeSingle(),
+    supabase
+      .from("mintos_overview")
+      .select("total_value, net_gain")
+      .eq("user_id", user.id)
+      .maybeSingle(),
+    supabase
+      .from("indexa_positions")
+      .select("total_value, total_cost")
+      .eq("user_id", user.id),
   ])
 
-  // Current value per platform from portfolio_assets (TR ETFs + placeholder assets for Indexa/Horos/Mintos)
+  // ─── Platform values ───────────────────────────────────────────────────────
+  // Start with portfolio_assets (correct for TR ETFs + cash)
   const platformValueMap: Record<string, number> = {}
+  const investedMap: Record<string, number> = {}
+
   for (const asset of assets ?? []) {
     if (!asset.platform_id) continue
     const price = asset.current_price_eur ?? 0
     const qty = asset.current_quantity ?? 0
     platformValueMap[asset.platform_id] = (platformValueMap[asset.platform_id] ?? 0) + price * qty
+    investedMap[asset.platform_id] = (investedMap[asset.platform_id] ?? 0) + (asset.total_invested ?? 0)
   }
 
-  // Add crypto total to the 'crypto' platform
+  // Override with authoritative values from each platform's dedicated table
+  const platformBySlug = new Map((platforms ?? []).map((p) => [p.slug, p]))
+
+  // Horos — horos_position.total_value / total_cost
+  const horosPlatform = platformBySlug.get("horos")
+  if (horosPlatform && horosData) {
+    platformValueMap[horosPlatform.id] = horosData.total_value ?? 0
+    investedMap[horosPlatform.id] = horosData.total_cost ?? 0
+  }
+
+  // Mintos — mintos_overview.total_value; invested = value - net_gain
+  const mintosPlatform = platformBySlug.get("mintos")
+  if (mintosPlatform && mintosData?.total_value) {
+    platformValueMap[mintosPlatform.id] = mintosData.total_value
+    investedMap[mintosPlatform.id] = mintosData.total_value - (mintosData.net_gain ?? 0)
+  }
+
+  // Indexa — sum of indexa_positions
+  const indexaPlatform = platformBySlug.get("indexa")
+  if (indexaPlatform && indexaPositions && indexaPositions.length > 0) {
+    platformValueMap[indexaPlatform.id] = indexaPositions.reduce((s, p) => s + (p.total_value ?? 0), 0)
+    investedMap[indexaPlatform.id] = indexaPositions.reduce((s, p) => s + (p.total_cost ?? 0), 0)
+  }
+
+  // Crypto — sum from crypto_assets (overrides any stale placeholder in portfolio_assets)
   const cryptoTotal = (cryptoAssets ?? []).reduce(
     (sum, a) => sum + (a.current_price_eur ?? 0) * (a.current_balance ?? 0),
     0
   )
-  const cryptoPlatform = (platforms ?? []).find((p) => p.slug === "crypto")
+  const cryptoPlatform = platformBySlug.get("crypto")
   if (cryptoPlatform && cryptoTotal > 0) {
-    platformValueMap[cryptoPlatform.id] = (platformValueMap[cryptoPlatform.id] ?? 0) + cryptoTotal
-  }
-
-  // Invested per platform from portfolio_assets
-  const investedMap: Record<string, number> = {}
-  for (const asset of assets ?? []) {
-    if (!asset.platform_id) continue
-    investedMap[asset.platform_id] = (investedMap[asset.platform_id] ?? 0) + (asset.total_invested ?? 0)
-  }
-  // Add crypto invested
-  if (cryptoPlatform) {
-    const cryptoInvested = (cryptoAssets ?? []).reduce(
+    platformValueMap[cryptoPlatform.id] = cryptoTotal
+    investedMap[cryptoPlatform.id] = (cryptoAssets ?? []).reduce(
       (sum, a) => sum + (a.total_invested_eur ?? 0),
       0
     )
-    investedMap[cryptoPlatform.id] = (investedMap[cryptoPlatform.id] ?? 0) + cryptoInvested
   }
 
   const enrichedPlatforms: PlatformData[] = (platforms ?? []).map((p) => ({
@@ -112,7 +147,7 @@ export default async function DashboardPage() {
     total_invested: investedMap[p.id] ?? 0,
   }))
 
-  // Aggregate snapshots by date (sum across platforms — ready for multi-platform snapshots)
+  // ─── Snapshots — aggregate by date across platforms ────────────────────────
   const snapshotsByDate = new Map<string, { total_value: number; total_invested: number }>()
   for (const s of snapshots ?? []) {
     const existing = snapshotsByDate.get(s.snapshot_date) ?? { total_value: 0, total_invested: 0 }

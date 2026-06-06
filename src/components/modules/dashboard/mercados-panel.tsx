@@ -8,16 +8,16 @@ const WATCHLIST = [
   { sym: 'ETH', name: 'Ethereum', price: '—', chg: '—', up: false, color: '#627EEA' },
   { sym: 'IGLN', name: 'Gold ETF', price: '—', chg: '—', up: true, color: 'var(--module-notas)' },
   { sym: 'CSPX', name: 'S&P 500 ETF', price: '—', chg: '—', up: true, color: 'var(--module-patrimonio)' },
-  { sym: 'DXY', name: 'US Dollar', price: '104.2', chg: '+0.1%', up: true, color: 'var(--module-gastos)' },
+  { sym: 'DXY', name: 'US Dollar', price: '—', chg: '—', up: true, color: 'var(--module-gastos)' },
 ] as const
 
 const MACRO_INDICATORS = [
-  { label: 'VIX', val: '18.4', desc: 'Baja vol.', status: 'positive' },
-  { label: 'Fear & Greed', val: '62', desc: 'Codicia', status: 'warning' },
-  { label: 'US 10Y', val: '4.28%', desc: 'Estable', status: 'neutral' },
-  { label: 'DXY', val: '104.2', desc: 'USD fuerte', status: 'negative' },
-  { label: 'EUR/USD', val: '1.0823', desc: '+0.12%', status: 'positive' },
-  { label: 'Gold', val: '$3,120', desc: '+0.63%', status: 'positive' },
+  { label: 'VIX', val: '—', desc: 'vol. implícita', status: 'neutral' },
+  { label: 'Fear & Greed', val: '—', desc: 'sentimiento', status: 'neutral' },
+  { label: 'US 10Y', val: '—', desc: 'bono 10 años', status: 'neutral' },
+  { label: 'DXY', val: '—', desc: 'índice dólar', status: 'neutral' },
+  { label: 'EUR/USD', val: '—', desc: 'tipo de cambio', status: 'neutral' },
+  { label: 'Gold', val: '—', desc: 'oro spot', status: 'neutral' },
 ] as const
 
 const STATUS_COLOR: Record<string, string> = {
@@ -102,10 +102,13 @@ export function MercadosPanel() {
           </div>
         </div>
       </div>
-      <div className="px-4 pb-3 pt-1 border-t border-border">
-        <p className="text-[10px] text-text-muted text-center">
-          Actualización manual · próximamente en tiempo real
+      <div className="px-4 pb-3 pt-1 border-t border-border flex items-center justify-between">
+        <p className="text-[10px] text-text-muted">
+          Datos en tiempo real en el módulo Mercados
         </p>
+        <a href="/mercados" className="text-[10px] font-medium hover:underline" style={{ color: 'var(--module-mercados)' }}>
+          Ir a Mercados →
+        </a>
       </div>
     </DashboardPanel>
   )
