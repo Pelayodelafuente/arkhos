@@ -69,7 +69,7 @@ export function ProjectCanvas({ userId }: ProjectCanvasProps) {
   const statsTitle = selectedProject ? selectedProject.name : 'Stats del proyecto';
 
   return (
-    <div className="relative flex h-full flex-col overflow-hidden">
+    <div className="flex flex-col overflow-hidden" style={{ position: 'absolute', inset: 0 }}>
       {/* Background grid */}
       <CanvasGrid />
 

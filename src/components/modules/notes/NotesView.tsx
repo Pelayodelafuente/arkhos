@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react"
 import { useSearchParams } from "next/navigation"
-import { Plus, BookOpen, Layout, Network } from "lucide-react"
+import { Plus, BookOpen, Layout } from "lucide-react"
 import { Button } from "@/components/ui"
 import { useNotesStore } from "@/stores/notes-store"
 import { NotesToolbar } from "./NotesToolbar"
@@ -11,7 +11,6 @@ import { NoteModal } from "./NoteModal"
 import { NotePane } from "./NotePane"
 import { NotesSidebar } from "./NotesSidebar"
 import { NotesCanvas } from "./canvas/NotesCanvas"
-import { NotesGraph } from "./NotesGraph"
 import type { Note, NoteCanvas } from "@/types/notes"
 
 interface Props {
@@ -125,18 +124,6 @@ export function NotesView({ initialNotes, initialCanvas, userId }: Props) {
     }
   }, [setViewMode, initCanvas, syncNotesToCanvas, userId])
 
-  // Switch to graph view
-  const handleSwitchToGraph = useCallback(() => {
-    setViewMode("graph")
-    setSelectedNoteId(null)
-  }, [setViewMode, setSelectedNoteId])
-
-  // Graph: click on node → open in split-pane
-  const handleGraphNodeClick = useCallback((noteId: string) => {
-    setViewMode("list")
-    setSelectedNoteId(noteId)
-  }, [setViewMode, setSelectedNoteId])
-
   // Keyboard shortcut: Ctrl+N = new note
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -150,7 +137,7 @@ export function NotesView({ initialNotes, initialCanvas, userId }: Props) {
   }, [handleNew])
 
   return (
-    <div className="flex h-full -mx-6 -mt-6">
+    <div className="absolute inset-0 flex">
       {/* Folder sidebar */}
       <NotesSidebar userId={userId} />
 
@@ -170,7 +157,7 @@ export function NotesView({ initialNotes, initialCanvas, userId }: Props) {
                 <button
                   onClick={() => { setViewMode("list"); setSelectedNoteId(null) }}
                   className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-                    viewMode === "list" ? "bg-foreground text-card shadow-sm" : "text-text-tertiary hover:text-text-secondary"
+                    viewMode === "list" ? "bg-[#B07A3A] text-white shadow-sm" : "text-text-tertiary hover:text-text-secondary"
                   }`}
                 >
                   <BookOpen size={13} strokeWidth={1.75} />
@@ -179,20 +166,11 @@ export function NotesView({ initialNotes, initialCanvas, userId }: Props) {
                 <button
                   onClick={handleSwitchToCanvas}
                   className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-                    viewMode === "canvas" ? "bg-foreground text-card shadow-sm" : "text-text-tertiary hover:text-text-secondary"
+                    viewMode === "canvas" ? "bg-[#B07A3A] text-white shadow-sm" : "text-text-tertiary hover:text-text-secondary"
                   }`}
                 >
                   <Layout size={13} strokeWidth={1.75} />
                   Canvas
-                </button>
-                <button
-                  onClick={handleSwitchToGraph}
-                  className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-                    viewMode === "graph" ? "bg-foreground text-card shadow-sm" : "text-text-tertiary hover:text-text-secondary"
-                  }`}
-                >
-                  <Network size={13} strokeWidth={1.75} />
-                  Grafo
                 </button>
               </div>
               <Button variant="primary" size="sm" onClick={handleNew}>
@@ -246,12 +224,6 @@ export function NotesView({ initialNotes, initialCanvas, userId }: Props) {
               onEditNote={handleCanvasEditNote}
               onNewNote={handleCanvasNewNote}
             />
-          </div>
-        )}
-
-        {viewMode === "graph" && (
-          <div className="flex-1 min-h-0 animate-fade-in-up" style={{ animationDelay: "100ms" }}>
-            <NotesGraph onNodeClick={handleGraphNodeClick} />
           </div>
         )}
 

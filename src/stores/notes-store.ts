@@ -55,7 +55,7 @@ interface NotesState {
   isLoading: boolean
   searchQuery: string
   activeTag: string | null
-  viewMode: 'list' | 'canvas' | 'graph'
+  viewMode: 'list' | 'canvas'
   sortMode: NoteSortMode
 
   // Canvas
@@ -109,9 +109,6 @@ interface NotesState {
   noteReferences: Record<string, Note[]>  // noteId → notas que menciona
   noteBacklinks: Record<string, Note[]>   // noteId → notas que la mencionan
 
-  // Graph view
-  graphBacklinks: Array<{ source_note_id: string; target_note_id: string }>
-
   // Split-pane selected note
   selectedNoteId: string | null
 
@@ -155,8 +152,7 @@ interface NotesActions {
   // List filters
   setSearchQuery: (q: string) => void
   setActiveTag: (tag: string | null) => void
-  setViewMode: (mode: 'list' | 'canvas' | 'graph') => void
-  loadGraphData: () => Promise<void>
+  setViewMode: (mode: 'list' | 'canvas') => void
   setSortMode: (mode: NoteSortMode) => void
 
   // Canvas node operations (optimistic)
@@ -288,10 +284,10 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
     if (typeof window === 'undefined') return 'list'
     try {
       const v = localStorage.getItem('arkhos:notes:viewMode')
-      if (v === 'canvas' || v === 'graph') return v
+      if (v === 'canvas') return v
     } catch { /* ignore */ }
     return 'list'
-  })() as 'list' | 'canvas' | 'graph',
+  })() as 'list' | 'canvas',
   sortMode: 'recent' as NoteSortMode,
   canvas: null,
   canvasNodes: [],
@@ -316,7 +312,6 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
   canvasFilters: { types: [], colors: [] },
   noteReferences: {},
   noteBacklinks: {},
-  graphBacklinks: [],
   selectedNoteId: null,
   notesOffset: 0,
   hasMoreNotes: true,
@@ -714,53 +709,6 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
   setViewMode: (mode) => {
     set({ viewMode: mode })
     try { localStorage.setItem('arkhos:notes:viewMode', mode) } catch { /* ignore */ }
-  },
-  loadGraphData: async () => {
-    try {
-      const backlinks = await notesApi.getAllBacklinksForGraph()
-
-      // Also include canvas edges between note-type nodes.
-      // If the canvas is not yet loaded in memory, fetch from DB.
-      const { canvasNodes: memNodes, canvasEdges: memEdges, canvas } = get()
-      let canvasNodes = memNodes
-      let canvasEdges = memEdges
-      if (canvas && canvasEdges.length === 0) {
-        const [dbNodes, dbEdges] = await Promise.all([
-          notesApi.getCanvasNodesForGraph(canvas.id),
-          notesApi.getCanvasEdgesForGraph(canvas.id),
-        ])
-        canvasNodes = dbNodes
-        canvasEdges = dbEdges
-      }
-
-      const nodeNoteMap = new Map<string, string>()
-      for (const n of canvasNodes) {
-        if (n.note_id) nodeNoteMap.set(n.id, n.note_id)
-      }
-      const canvasLinks: Array<{ source_note_id: string; target_note_id: string }> = []
-      for (const edge of canvasEdges) {
-        const srcNote = nodeNoteMap.get(edge.from_node_id)
-        const tgtNote = nodeNoteMap.get(edge.to_node_id)
-        if (srcNote && tgtNote && srcNote !== tgtNote) {
-          canvasLinks.push({ source_note_id: srcNote, target_note_id: tgtNote })
-        }
-      }
-
-      // Merge and deduplicate
-      const seen = new Set<string>()
-      const merged: Array<{ source_note_id: string; target_note_id: string }> = []
-      for (const bl of [...backlinks, ...canvasLinks]) {
-        const key = `${bl.source_note_id}→${bl.target_note_id}`
-        if (!seen.has(key)) {
-          seen.add(key)
-          merged.push(bl)
-        }
-      }
-
-      set({ graphBacklinks: merged })
-    } catch {
-      // Silent — graph renders with 0 edges if unavailable
-    }
   },
   setSortMode: (mode) => set({ sortMode: mode }),
   setSelectedNoteId: (id) => set({ selectedNoteId: id }),

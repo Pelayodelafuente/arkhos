@@ -129,7 +129,7 @@ export function NotesToolbar({ userId }: Props) {
                 onClick={() => setActiveTag(null)}
                 className={`rounded-md px-2 py-1 text-[11px] font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
                   !activeTag
-                    ? "bg-foreground text-card"
+                    ? "bg-[#B07A3A] text-white"
                     : "bg-sand text-text-secondary hover:bg-border"
                 }`}
               >
