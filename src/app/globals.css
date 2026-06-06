@@ -855,3 +855,16 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .patrimonio-privacy .font-mono:hover {
   filter: blur(0);
 }
+
+@keyframes ticker-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-33.333%); }
+}
+.animate-ticker {
+  animation: ticker-scroll 50s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-ticker {
+    animation: none;
+  }
+}

@@ -1,0 +1,190 @@
+'use client'
+
+import { MarketTicker } from './market-ticker'
+import { DashboardHeader } from './dashboard-header'
+import { KPIStrip } from './kpi-strip'
+import { PatrimonioPanel } from './patrimonio-panel'
+import { GastosPanel } from './gastos-panel'
+import { AlertasPanel } from './alertas-panel'
+import { ProyectosPanel } from './proyectos-panel'
+import { MercadosPanel } from './mercados-panel'
+import { ActivityFeed } from './activity-feed'
+import { AICopilotPanel } from './ai-copilot-panel'
+
+export interface SnapshotData {
+  snapshot_date: string
+  total_value: number
+  invested_value: number
+}
+
+export interface ProjectPhaseTask {
+  id: string
+  done: boolean
+}
+
+export interface ProjectPhase {
+  id: string
+  phase_tasks: ProjectPhaseTask[] | null
+}
+
+export interface ProjectData {
+  id: string
+  name: string
+  icon: string | null
+  status: string
+  updated_at: string
+  project_phases: ProjectPhase[] | null
+}
+
+export interface SubscriptionData {
+  id: string
+  name: string
+  amount: number
+  cycle: string
+  status: string
+  category_id: string | null
+}
+
+export interface PlatformData {
+  id: string
+  name: string
+  slug: string
+  current_value: number
+}
+
+export interface ActivityData {
+  id: string
+  module: string
+  action: string
+  entity_name: string | null
+  detail: string | null
+  created_at: string
+}
+
+export interface DashboardViewProps {
+  userName: string
+  initialActivity: ActivityData[]
+  initialProjects: ProjectData[]
+  initialSnapshots: SnapshotData[]
+  initialSubscriptions: SubscriptionData[]
+  initialPlatforms: PlatformData[]
+}
+
+export function DashboardView({
+  userName,
+  initialActivity,
+  initialProjects,
+  initialSnapshots,
+  initialSubscriptions,
+  initialPlatforms,
+}: DashboardViewProps) {
+  return (
+    <div
+      className="-mx-4 -mt-4 lg:-mx-8 lg:-mt-6 flex flex-col overflow-hidden"
+      style={{ height: 'calc(100% + 16px)' }}
+    >
+      <MarketTicker />
+      <DashboardHeader userName={userName} />
+      <KPIStrip
+        projects={initialProjects}
+        snapshots={initialSnapshots}
+        subscriptions={initialSubscriptions}
+        platforms={initialPlatforms}
+      />
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-3 space-y-3 pb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-[3fr_1.4fr_1.6fr] gap-3">
+            <PatrimonioPanel snapshots={initialSnapshots} platforms={initialPlatforms} />
+            <GastosPanel subscriptions={initialSubscriptions} />
+            <AlertasPanel
+              projects={initialProjects}
+              subscriptions={initialSubscriptions}
+              snapshots={initialSnapshots}
+            />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.8fr] gap-3">
+            <ProyectosPanel projects={initialProjects} />
+            <MercadosPanel />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.2fr] gap-3">
+            <ActivityFeed activity={initialActivity} />
+            <AICopilotPanel
+              projects={initialProjects}
+              snapshots={initialSnapshots}
+              subscriptions={initialSubscriptions}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Shared UI primitives ─────────────────────────────────────────────────────
+
+interface DashboardPanelProps {
+  children: React.ReactNode
+  className?: string
+}
+
+export function DashboardPanel({ children, className = '' }: DashboardPanelProps) {
+  return (
+    <div
+      className={`bg-card border border-border rounded-xl overflow-hidden ${className}`}
+    >
+      {children}
+    </div>
+  )
+}
+
+interface PanelHeaderProps {
+  color: string
+  title: string
+  chip?: React.ReactNode
+  right?: React.ReactNode
+}
+
+export function PanelHeader({ color, title, chip, right }: PanelHeaderProps) {
+  return (
+    <div className="relative">
+      <div className="h-[2px] w-full" style={{ backgroundColor: color }} />
+      <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-semibold text-foreground">{title}</span>
+          {chip}
+        </div>
+        {right && <div className="flex items-center gap-2">{right}</div>}
+      </div>
+    </div>
+  )
+}
+
+export function PanelDivider() {
+  return <div className="h-px bg-border mx-4" />
+}
+
+interface ModuleChipProps {
+  label: string
+  color: string
+}
+
+export function ModuleChip({ label, color }: ModuleChipProps) {
+  return (
+    <span
+      className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider"
+      style={{ color, backgroundColor: `${color}18` }}
+    >
+      {label}
+    </span>
+  )
+}
+
+export function LiveDot({ color = '#22C55E' }: { color?: string }) {
+  return (
+    <span
+      className="live-dot inline-block h-1.5 w-1.5 rounded-full flex-shrink-0"
+      style={{ backgroundColor: color }}
+      aria-hidden="true"
+    />
+  )
+}
