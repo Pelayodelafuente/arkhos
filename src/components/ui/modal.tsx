@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
+
+const FOCUSABLE =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 // Matches --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1)
 const EASE_OUT = [0.16, 1, 0.3, 1] as const;
@@ -40,10 +43,51 @@ interface ModalProps {
 const titleId = "modal-title";
 
 export function Modal({ open, onClose, title, children, footer, className = "" }: ModalProps) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
+
+  // Mover el foco al modal al abrir y restaurarlo al elemento previo al cerrar
+  useEffect(() => {
+    if (!open) return;
+    previousFocusRef.current = document.activeElement as HTMLElement | null;
+    const card = cardRef.current;
+    const first = card?.querySelector<HTMLElement>(FOCUSABLE);
+    (first ?? card)?.focus();
+    return () => {
+      previousFocusRef.current?.focus?.();
+    };
+  }, [open]);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+      // Focus trap: Tab nunca escapa del modal
+      if (e.key === "Tab") {
+        const card = cardRef.current;
+        if (!card) return;
+        const focusables = Array.from(card.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
+          (el) => el.offsetParent !== null
+        );
+        if (focusables.length === 0) {
+          e.preventDefault();
+          return;
+        }
+        const firstEl = focusables[0];
+        const lastEl = focusables[focusables.length - 1];
+        const active = document.activeElement as HTMLElement | null;
+        const inside = active ? card.contains(active) : false;
+        if (e.shiftKey && (!inside || active === firstEl)) {
+          e.preventDefault();
+          lastEl.focus();
+        } else if (!e.shiftKey && (!inside || active === lastEl)) {
+          e.preventDefault();
+          firstEl.focus();
+        }
+      }
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
@@ -64,6 +108,8 @@ export function Modal({ open, onClose, title, children, footer, className = "" }
           />
           {/* Card */}
           <motion.div
+            ref={cardRef}
+            tabIndex={-1}
             role="dialog"
             aria-modal="true"
             aria-labelledby={title ? titleId : undefined}
