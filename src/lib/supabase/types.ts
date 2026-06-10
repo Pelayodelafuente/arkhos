@@ -202,6 +202,7 @@ export type Database = {
           height: number
           id: string
           label: string | null
+          locked: boolean
           node_type: string
           note_id: string | null
           pos_x: number
@@ -219,6 +220,7 @@ export type Database = {
           height?: number
           id?: string
           label?: string | null
+          locked?: boolean
           node_type?: string
           note_id?: string | null
           pos_x?: number
@@ -236,6 +238,7 @@ export type Database = {
           height?: number
           id?: string
           label?: string | null
+          locked?: boolean
           node_type?: string
           note_id?: string | null
           pos_x?: number

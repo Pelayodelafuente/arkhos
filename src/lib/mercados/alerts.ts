@@ -45,10 +45,15 @@ export async function getUserAlerts(userId: string): Promise<MarketAlert[]> {
   return (data ?? []) as MarketAlert[];
 }
 
-export async function markAlertRead(alertId: string): Promise<void> {
+export async function markAlertRead(alertId: string, userId: string): Promise<void> {
   const admin = getAdmin();
   if (!admin) return;
-  await admin.from('market_alerts').update({ is_read: true }).eq('id', alertId);
+  // El cliente admin salta RLS: el filtro por user_id es obligatorio (evita IDOR)
+  await admin
+    .from('market_alerts')
+    .update({ is_read: true })
+    .eq('id', alertId)
+    .eq('user_id', userId);
 }
 
 export async function markAllAlertsRead(userId: string): Promise<void> {

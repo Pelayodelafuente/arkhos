@@ -1,3 +1,4 @@
+import { fetchWithTimeout } from '@/lib/utils/fetch-timeout';
 export type CoinGeckoPrices = Record<
   string,
   { eur: number; eur_24h_change: number }
@@ -16,7 +17,7 @@ export async function getCoinGeckoPrices(): Promise<CoinGeckoPrices | null> {
     url.searchParams.set('vs_currencies', 'eur');
     url.searchParams.set('include_24hr_change', 'true');
 
-    const response = await fetch(url.toString(), {
+    const response = await fetchWithTimeout(url.toString(), {
       headers: { Accept: 'application/json' },
       next: { revalidate: 0 },
     });

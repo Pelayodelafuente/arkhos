@@ -1,3 +1,4 @@
+import { fetchWithTimeout } from '@/lib/utils/fetch-timeout';
 import { getCachedMetric, setCachedMetric } from './cache';
 import type { CachedMetric } from './cache';
 import { PULSE_METRICS } from './constants';
@@ -70,7 +71,7 @@ async function getFearGreed(forceRefresh = false): Promise<CachedMetric['value']
   const cached = await getCachedMetric('alternative.me', 'fearGreed', forceRefresh);
   if (cached) return cached.value;
 
-  const res = await fetch('https://api.alternative.me/fng/?limit=14&format=json', {
+  const res = await fetchWithTimeout('https://api.alternative.me/fng/?limit=14&format=json', {
     cache: 'no-store',
   });
   if (!res.ok) throw new Error(`Fear & Greed API error ${res.status}`);
@@ -109,7 +110,7 @@ async function fetchYahooQuote(ticker: string): Promise<{
   history: Array<{ date: string; value: number }>;
 }> {
   const quoteUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=1mo`;
-  const res = await fetch(quoteUrl, {
+  const res = await fetchWithTimeout(quoteUrl, {
     headers: { 'User-Agent': 'Mozilla/5.0' },
     cache: 'no-store',
   });
@@ -186,7 +187,7 @@ async function getEURUSD(forceRefresh = false): Promise<CachedMetric['value']> {
   const cached = await getCachedMetric('ExchangeRate', 'eurusd', forceRefresh);
   if (cached) return cached.value;
 
-  const res = await fetch(
+  const res = await fetchWithTimeout(
     `https://v6.exchangerate-api.com/v6/${process.env.EXCHANGE_RATE_API_KEY}/pair/EUR/USD`,
     { cache: 'no-store' }
   );
@@ -226,7 +227,7 @@ async function getBitcoin(forceRefresh = false): Promise<CachedMetric['value']> 
     headers['x-cg-demo-api-key'] = process.env.COINGECKO_API_KEY;
   }
 
-  const res = await fetch(
+  const res = await fetchWithTimeout(
     'https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=14&interval=daily',
     { headers, cache: 'no-store' }
   );

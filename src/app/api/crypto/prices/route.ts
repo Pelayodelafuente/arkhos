@@ -60,8 +60,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       const priceData = prices[cgId];
       if (!priceData) continue;
       await supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('crypto_assets' as any)
+        .from('crypto_assets')
         .update({
           current_price_eur: priceData.eur,
           price_updated_at: updatedAt,
@@ -88,8 +87,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   for (const [symbol, balance] of onChainBalances) {
     if (balance === null) continue;
     await supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('crypto_assets' as any)
+      .from('crypto_assets')
       .update({ current_balance: balance, price_updated_at: updatedAt })
       .eq('user_id', user.id)
       .eq('symbol', symbol);
@@ -99,8 +97,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   if (aavePosition?.currentAmount != null) {
     // Read deposited_amount from DB to compute yield
     const { data: defiRow } = await supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('crypto_defi_positions' as any)
+      .from('crypto_defi_positions')
       .select('deposited_amount')
       .eq('user_id', user.id)
       .eq('protocol', 'aave')
@@ -111,8 +108,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     const yieldEarned = Math.max(0, aavePosition.currentAmount - depositedAmount);
 
     await supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('crypto_defi_positions' as any)
+      .from('crypto_defi_positions')
       .update({
         current_amount: aavePosition.currentAmount,
         yield_earned: yieldEarned,
@@ -128,8 +124,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   } else if (aavePosition?.apy != null) {
     // At minimum update APY even if balance fetch failed
     await supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('crypto_defi_positions' as any)
+      .from('crypto_defi_positions')
       .update({ apy: aavePosition.apy, last_updated: updatedAt })
       .eq('user_id', user.id)
       .eq('protocol', 'aave');

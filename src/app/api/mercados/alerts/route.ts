@@ -1,7 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod/v4';
 import { createClient } from '@/lib/supabase/server';
-import { getUserAlerts, markAlertRead, markAllAlertsRead } from '@/lib/mercados/alerts';
+import { getUserAlerts, markAlertRead, markAllAlertsRead, createRebalanceAlerts } from '@/lib/mercados/alerts';
 import { rateLimit } from '@/lib/rate-limit';
+
+const postSchema = z.discriminatedUnion('action', [
+  z.object({ action: z.literal('mark_all_read') }),
+  z.object({ action: z.literal('mark_read'), alertId: z.uuid() }),
+  z.object({
+    action: z.literal('create_rebalance'),
+    alerts: z
+      .array(
+        z.object({
+          assetClass: z.string().max(60),
+          currentPct: z.number(),
+          targetPct: z.number(),
+          deviation: z.number(),
+          action: z.enum(['reduce', 'increase']),
+          message: z.string().max(1000),
+          severity: z.enum(['info', 'warning', 'critical']),
+        })
+      )
+      .max(20),
+  }),
+]);
 
 export async function GET(req: NextRequest) {
   const { success } = await rateLimit(req, { limit: 20, window: 60 });
@@ -29,12 +51,28 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+  let rawBody: unknown;
   try {
-    const body = (await req.json()) as { action: string; alertId?: string };
+    rawBody = await req.json();
+  } catch {
+    return NextResponse.json({ error: 'Cuerpo de petición inválido' }, { status: 400 });
+  }
+
+  const parsed = postSchema.safeParse(rawBody);
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 });
+  }
+  const body = parsed.data;
+
+  try {
     if (body.action === 'mark_all_read') {
       await markAllAlertsRead(user.id);
-    } else if (body.action === 'mark_read' && body.alertId) {
-      await markAlertRead(body.alertId);
+    } else if (body.action === 'mark_read') {
+      await markAlertRead(body.alertId, user.id);
+    } else if (body.action === 'create_rebalance') {
+      // Antes esta acción se ignoraba silenciosamente — las alertas de
+      // rebalanceo que enviaba MercadosView nunca se persistían
+      await createRebalanceAlerts(user.id, body.alerts);
     }
     return NextResponse.json({ ok: true });
   } catch (error) {

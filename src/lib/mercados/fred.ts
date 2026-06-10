@@ -1,3 +1,4 @@
+import { fetchWithTimeout } from '@/lib/utils/fetch-timeout';
 export async function fetchFREDSeries(
   seriesId: string,
   limit = 60
@@ -9,7 +10,7 @@ export async function fetchFREDSeries(
   url.searchParams.set('sort_order', 'desc');
   url.searchParams.set('limit', String(limit));
 
-  const res = await fetch(url.toString(), { cache: 'no-store' });
+  const res = await fetchWithTimeout(url.toString(), { cache: 'no-store' });
   if (!res.ok) throw new Error(`FRED error ${res.status} for ${seriesId}`);
 
   const json = (await res.json()) as {

@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
-import { createClient as createAdminClient } from "@supabase/supabase-js"
+import { getCachedMetricValues } from "@/lib/mercados/cache"
+import { fetchWithTimeout } from "@/lib/utils/fetch-timeout"
 import { DashboardView } from "@/components/modules/dashboard/dashboard-view"
 import type { PlatformData, NoteData, MarketData } from "@/components/modules/dashboard/dashboard-view"
 
@@ -18,10 +19,6 @@ interface FearGreedItem {
 }
 interface FearGreedResponse {
   data?: FearGreedItem[]
-}
-interface CacheRow {
-  metric: string
-  value: { current?: number; label?: string } | null
 }
 
 export default async function DashboardPage() {
@@ -113,7 +110,7 @@ export default async function DashboardPage() {
         .eq("user_id", user.id),
     ]),
     Promise.all([
-      fetch(
+      fetchWithTimeout(
         "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=eur,usd&include_24hr_change=true",
         { next: { revalidate: 300 } }
       )
@@ -121,7 +118,7 @@ export default async function DashboardPage() {
           r.ok ? r.json() : Promise.resolve(null)
         )
         .catch(() => null),
-      fetch("https://api.alternative.me/fng/?limit=1", {
+      fetchWithTimeout("https://api.alternative.me/fng/?limit=1", {
         next: { revalidate: 3600 },
       })
         .then((r): Promise<FearGreedResponse | null> =>
@@ -132,26 +129,10 @@ export default async function DashboardPage() {
   ])
 
   // ─── Market cache (VIX, US 10Y, EUR/USD, DXY, Gold) ──────────────────────
-  // Read from market_data_cache populated by the Mercados module
-  const cacheMap: Record<string, number | null> = {}
-  try {
-    if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      const admin = createAdminClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY
-      )
-      const { data: cacheRows } = await admin
-        .from("market_data_cache")
-        .select("metric, value")
-        .in("metric", ["vix", "us10y", "eurusd", "dxy", "gold"])
-      for (const row of (cacheRows ?? []) as CacheRow[]) {
-        const v = row.value?.current ?? null
-        cacheMap[row.metric] = typeof v === "number" ? v : null
-      }
-    }
-  } catch {
-    // Cache unavailable — values remain null
-  }
+  // Poblada por el módulo Mercados; acceso centralizado en lib/mercados/cache
+  const cacheMap = await getCachedMetricValues(["vix", "us10y", "eurusd", "dxy", "gold"]).catch(
+    () => ({}) as Record<string, number | null>
+  )
 
   // ─── Platform values ───────────────────────────────────────────────────────
   const platformValueMap: Record<string, number> = {}

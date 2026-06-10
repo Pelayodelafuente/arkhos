@@ -65,8 +65,13 @@ export async function proxy(request: NextRequest) {
         url.pathname = "/verify-mfa";
         return NextResponse.redirect(url);
       }
-    } catch {
-      // fail-open: let the request proceed rather than returning 503
+    } catch (err) {
+      // fail-open: let the request proceed rather than returning 503.
+      // Logged because a sustained Auth outage silently disables the MFA gate.
+      console.error(
+        "[proxy] MFA AAL check failed — letting request through:",
+        err instanceof Error ? err.message : err
+      );
     }
   }
 

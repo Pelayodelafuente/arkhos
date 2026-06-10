@@ -1,18 +1,31 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod/v4';
 import { createClient } from '@/lib/supabase/server';
 import { rateLimit } from '@/lib/rate-limit';
 import { buildSystemPrompt, type MarketContext } from '@/lib/mercados/ai-prompts';
 
-interface ChatMessage {
-  role: 'user' | 'assistant';
-  content: string;
-}
-
-interface ChatRequestBody {
-  messages: ChatMessage[];
-  context: MarketContext;
-}
+const bodySchema = z.object({
+  messages: z
+    .array(
+      z.object({
+        role: z.enum(['user', 'assistant']),
+        content: z.string().min(1).max(8000),
+      })
+    )
+    .min(1)
+    .max(40),
+  // El contexto de mercado son los datos que el propio cliente ya cargó;
+  // se valida la forma y buildSystemPrompt interpola solo campos concretos
+  context: z
+    .object({
+      pulse: z.unknown().optional(),
+      macro: z.unknown().optional(),
+      assets: z.unknown().optional(),
+      portfolio: z.unknown().optional(),
+    })
+    .optional(),
+});
 
 export async function POST(req: NextRequest) {
   const { success } = await rateLimit(req, { limit: 30, window: 3600 });
@@ -27,18 +40,20 @@ export async function POST(req: NextRequest) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
 
-  let body: ChatRequestBody;
+  let rawBody: unknown;
   try {
-    body = (await req.json()) as ChatRequestBody;
+    rawBody = await req.json();
   } catch {
     return NextResponse.json({ error: 'Cuerpo de petición inválido' }, { status: 400 });
   }
 
-  if (!Array.isArray(body.messages) || body.messages.length === 0) {
-    return NextResponse.json({ error: 'messages requerido' }, { status: 400 });
+  const parsed = bodySchema.safeParse(rawBody);
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 });
   }
+  const body = parsed.data;
 
-  const systemPrompt = buildSystemPrompt(body.context ?? {});
+  const systemPrompt = buildSystemPrompt((body.context ?? {}) as MarketContext);
   const client = new Anthropic({ apiKey });
 
   try {

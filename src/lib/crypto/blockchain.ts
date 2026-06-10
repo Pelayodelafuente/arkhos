@@ -1,3 +1,4 @@
+import { fetchWithTimeout } from '@/lib/utils/fetch-timeout';
 interface BlockstreamAddressStats {
   funded_txo_sum: number;
   spent_txo_sum: number;
@@ -32,7 +33,7 @@ async function fetchEtherscanTokenBalance(
     url.searchParams.set('tag', 'latest');
     url.searchParams.set('apikey', apiKey);
 
-    const response = await fetch(url.toString(), {
+    const response = await fetchWithTimeout(url.toString(), {
       headers: { Accept: 'application/json' },
       next: { revalidate: 0 },
     });
@@ -79,7 +80,7 @@ export async function getAaveUSDCBalance(
 export async function getBTCBalance(address: string): Promise<number | null> {
   try {
     const url = `https://blockstream.info/api/address/${encodeURIComponent(address)}`;
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       headers: { Accept: 'application/json' },
       next: { revalidate: 0 },
     });
@@ -117,7 +118,7 @@ export async function getETHBalance(address: string): Promise<number | null> {
     url.searchParams.set('tag', 'latest');
     url.searchParams.set('apikey', apiKey);
 
-    const response = await fetch(url.toString(), {
+    const response = await fetchWithTimeout(url.toString(), {
       headers: { Accept: 'application/json' },
       next: { revalidate: 0 },
     });
@@ -162,7 +163,7 @@ export async function getUSDCBalance(address: string): Promise<number | null> {
     url.searchParams.set('tag', 'latest');
     url.searchParams.set('apikey', apiKey);
 
-    const response = await fetch(url.toString(), {
+    const response = await fetchWithTimeout(url.toString(), {
       headers: { Accept: 'application/json' },
       next: { revalidate: 0 },
     });

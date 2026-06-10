@@ -1,3 +1,4 @@
+import { fetchWithTimeout } from '@/lib/utils/fetch-timeout';
 import { createHash, createHmac } from 'crypto';
 
 const BIT2ME_BASE_URL = 'https://gateway.bit2me.com';
@@ -27,7 +28,7 @@ function buildHeaders(path: string): Record<string, string> {
 
 export async function bit2meGet<T>(path: string): Promise<T> {
   const headers = buildHeaders(path);
-  const response = await fetch(`${BIT2ME_BASE_URL}${path}`, { headers });
+  const response = await fetchWithTimeout(`${BIT2ME_BASE_URL}${path}`, { headers });
 
   if (!response.ok) {
     const body = await response.text();

@@ -1,3 +1,4 @@
+import { fetchWithTimeout } from '@/lib/utils/fetch-timeout';
 import { fetchFREDSeries } from './fred';
 import { getCachedMetric, setCachedMetric } from './cache';
 
@@ -187,7 +188,7 @@ async function getM2WithBTC(forceRefresh = false): Promise<MacroData['m2']> {
     if (process.env.COINGECKO_API_KEY) {
       headers['x-cg-demo-api-key'] = process.env.COINGECKO_API_KEY;
     }
-    const res = await fetch(
+    const res = await fetchWithTimeout(
       'https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=1825&interval=monthly',
       { headers, cache: 'no-store' }
     );

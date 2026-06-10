@@ -1,3 +1,4 @@
+import { fetchWithTimeout } from '@/lib/utils/fetch-timeout';
 import { fetchFREDSeries } from './fred';
 import { type CachedMetric, getCachedMetric, setCachedMetric } from './cache';
 
@@ -111,7 +112,7 @@ export async function fetchYahooHistory(
   const range = days <= 30 ? '1mo' : days <= 90 ? '3mo' : days <= 365 ? '1y' : '2y';
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=${range}`;
 
-  const res = await fetch(url, {
+  const res = await fetchWithTimeout(url, {
     headers: { 'User-Agent': 'Mozilla/5.0' },
     next: { revalidate: 0 },
   });
@@ -161,9 +162,9 @@ async function getCrypto(forceRefresh = false): Promise<CryptoData> {
   }
 
   const [globalRes, btcHistRes, ethHistRes] = await Promise.all([
-    fetch('https://api.coingecko.com/api/v3/global', { headers, next: { revalidate: 0 } }),
-    fetch('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=90&interval=daily', { headers, next: { revalidate: 0 } }),
-    fetch('https://api.coingecko.com/api/v3/coins/ethereum/market_chart?vs_currency=usd&days=90&interval=daily', { headers, next: { revalidate: 0 } }),
+    fetchWithTimeout('https://api.coingecko.com/api/v3/global', { headers, next: { revalidate: 0 } }),
+    fetchWithTimeout('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=90&interval=daily', { headers, next: { revalidate: 0 } }),
+    fetchWithTimeout('https://api.coingecko.com/api/v3/coins/ethereum/market_chart?vs_currency=usd&days=90&interval=daily', { headers, next: { revalidate: 0 } }),
   ]);
 
   const [globalJson, btcHistJson, ethHistJson] = await Promise.all([

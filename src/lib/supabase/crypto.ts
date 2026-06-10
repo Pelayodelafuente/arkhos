@@ -1,5 +1,4 @@
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { createClient } from './server';
 import type {
   CryptoAsset,
   CryptoTransaction,
@@ -7,25 +6,8 @@ import type {
   CryptoMonthlyPlan,
 } from '@/types/crypto';
 
-async function getClient() {
-  const cookieStore = await cookies();
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => cookieStore.getAll(),
-        setAll: (cookiesToSet) => {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            );
-          } catch {}
-        },
-      },
-    }
-  );
-}
+// Cliente tipado compartido — el tipado <Database> elimina los `as any` históricos
+const getClient = createClient;
 
 export async function getCryptoAssets(userId: string): Promise<CryptoAsset[]> {
   const supabase = await getClient();
@@ -94,8 +76,7 @@ export async function recalculateCryptoAssetTotals(
 ): Promise<void> {
   const supabase = await getClient();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let query = (supabase.from('crypto_transactions' as any) as any)
+  let query = supabase.from('crypto_transactions')
     .select('asset_id, amount_eur, quantity')
     .eq('user_id', userId)
     .eq('type', 'buy');
@@ -115,8 +96,7 @@ export async function recalculateCryptoAssetTotals(
   }
 
   for (const [aid, { invested, qty }] of byAsset) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase.from('crypto_assets' as any) as any)
+    await supabase.from('crypto_assets')
       .update({
         total_invested_eur: invested,
         avg_buy_price_eur: qty > 0 ? invested / qty : null,

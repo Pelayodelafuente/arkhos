@@ -3,7 +3,7 @@
 // Módulo Gastos: expense_categories + subscriptions + price_history + settings
 // ══════════════════════════════════════
 
-import { createUntypedClient as createClient } from './client'
+import { createClient } from './client'
 import type {
   ExpenseCategory,
   ExpenseCategoryInsert,

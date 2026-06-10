@@ -89,3 +89,29 @@ export async function getAllCachedPulse(): Promise<Record<string, CachedMetric>>
     return acc;
   }, {});
 }
+
+/**
+ * Lee varias métricas de la caché y devuelve { metric: valorActual | null }.
+ * Único punto de acceso a market_data_cache para consumidores server-side
+ * (p. ej. el dashboard) — evita repartir clientes service_role por las páginas.
+ */
+export async function getCachedMetricValues(
+  metrics: string[]
+): Promise<Record<string, number | null>> {
+  const result: Record<string, number | null> = {};
+  const admin = getAdmin();
+  if (!admin) return result;
+
+  const { data, error } = await admin
+    .from('market_data_cache')
+    .select('metric, value')
+    .in('metric', metrics);
+
+  if (error || !data) return result;
+
+  for (const row of data as Array<{ metric: string; value: { current?: number } | null }>) {
+    const v = row.value?.current ?? null;
+    result[row.metric] = typeof v === 'number' ? v : null;
+  }
+  return result;
+}

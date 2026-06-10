@@ -3,7 +3,7 @@
 // Módulo Notas: notes + canvases + nodes + edges
 // ══════════════════════════════════════
 
-import { createUntypedClient as createClient } from './client'
+import { createClient } from './client'
 import type {
   Note,
   NoteListItem,
@@ -22,12 +22,9 @@ import type {
 export const NOTES_PAGE_SIZE = 30
 
 /** Campos seleccionados en las queries de lista (sin content) */
-const NOTE_LIST_FIELDS = [
-  'id', 'user_id', 'title', 'color', 'icon', 'is_pinned',
-  'word_count', 'tags', 'sort_order', 'folder_id', 'archived',
-  'favorited', 'deleted_at', 'status', 'project_id', 'subscription_id',
-  'created_at', 'updated_at',
-].join(', ')
+// Literal (no .join) para que el cliente tipado de Supabase parsee los campos a nivel de tipo
+const NOTE_LIST_FIELDS =
+  'id, user_id, title, color, icon, is_pinned, word_count, tags, sort_order, folder_id, archived, favorited, deleted_at, status, project_id, subscription_id, created_at, updated_at' as const
 
 // ─── List item helper ─────────────────
 
@@ -252,7 +249,7 @@ export async function getNotesByTag(userId: string, tag: string): Promise<Note[]
     .limit(100)
 
   if (error) throw new NotesError('Error fetching notes by tag', error.message)
-  return (data ?? []) as Note[]
+  return toNoteListItems(data)
 }
 
 // ══════════════════════════════════════
@@ -327,7 +324,9 @@ export async function getNotesWithoutCanvasNode(
     .eq('canvas_id', canvasId)
     .not('note_id', 'is', null)
 
-  const existingNoteIds = new Set((existingNodes ?? []).map((n: { note_id: string }) => n.note_id))
+  const existingNoteIds = new Set(
+    (existingNodes ?? []).map((n) => n.note_id).filter((id): id is string => id !== null)
+  )
 
   // Get all user's active notes (no archivadas ni en papelera)
   const { data: allNotes, error } = await client
@@ -342,7 +341,7 @@ export async function getNotesWithoutCanvasNode(
 
   if (error) throw new NotesError('Error fetching notes for sync', error.message)
 
-  return ((allNotes ?? []) as Note[]).filter((n) => !existingNoteIds.has(n.id))
+  return toNoteListItems(allNotes).filter((n) => !existingNoteIds.has(n.id))
 }
 
 /**
@@ -947,7 +946,7 @@ export async function getNotesByProject(userId: string, projectId: string): Prom
     .order('updated_at', { ascending: false })
     .limit(100)
   if (error) throw new NotesError('Error fetching notes by project', error.message)
-  return (data ?? []) as Note[]
+  return toNoteListItems(data)
 }
 
 /** Notas vinculadas a una suscripción específica */
@@ -962,7 +961,7 @@ export async function getNotesBySubscription(userId: string, subscriptionId: str
     .order('updated_at', { ascending: false })
     .limit(100)
   if (error) throw new NotesError('Error fetching notes by subscription', error.message)
-  return (data ?? []) as Note[]
+  return toNoteListItems(data)
 }
 
 /** Vincula o desvincula una nota de un proyecto */

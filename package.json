@@ -38,6 +38,7 @@
     "@tiptap/starter-kit": "^3.21.0",
     "@types/d3": "^7.4.3",
     "@types/d3-sankey": "^0.12.5",
+    "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.37.0",
     "d3": "^7.9.0",
     "d3-sankey": "^0.12.3",

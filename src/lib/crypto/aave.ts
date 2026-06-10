@@ -1,3 +1,4 @@
+import { fetchWithTimeout } from '@/lib/utils/fetch-timeout';
 import { getAaveUSDCBalance } from './blockchain';
 
 export interface AavePosition {
@@ -30,7 +31,7 @@ interface DefiLlamaResponse {
 async function fetchAaveAPY(_version: 'v2' | 'v3'): Promise<number | null> {
   for (const poolId of DEFI_LLAMA_POOLS) {
     try {
-      const response = await fetch(`https://yields.llama.fi/pool/${poolId}`, {
+      const response = await fetchWithTimeout(`https://yields.llama.fi/pool/${poolId}`, {
         headers: { Accept: 'application/json' },
         next: { revalidate: 3600 }, // cache 1h
       });

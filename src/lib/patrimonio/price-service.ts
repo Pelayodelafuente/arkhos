@@ -1,3 +1,4 @@
+import { fetchWithTimeout } from '@/lib/utils/fetch-timeout';
 // ---------------------------------------------------------------------------
 // TICKER_CONFIG — fuente de verdad única: ISIN → ticker + divisa + fuente
 // Sin heurísticas, sin fallbacks de divisa, sin caché.
@@ -151,7 +152,7 @@ async function getForexRates(errors: string[]): Promise<ForexRates> {
   }
 
   try {
-    const res = await fetch(
+    const res = await fetchWithTimeout(
       `https://v6.exchangerate-api.com/v6/${key}/latest/USD`,
       { signal: AbortSignal.timeout(8_000) },
     );
@@ -253,7 +254,7 @@ async function fetchYahooSingle(
   forex: ForexRates,
 ): Promise<PriceData | null> {
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=1d`;
-  const res = await fetch(url, {
+  const res = await fetchWithTimeout(url, {
     signal: AbortSignal.timeout(8_000),
     headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Arkhos/1.0)' },
   });
@@ -293,7 +294,7 @@ async function fetchFinnhubSingle(
   if (!apiKey) return null;
 
   const url = `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(ticker)}&token=${apiKey}`;
-  const res = await fetch(url, { signal: AbortSignal.timeout(8_000) });
+  const res = await fetchWithTimeout(url, { signal: AbortSignal.timeout(8_000) });
   if (!res.ok) return null;
 
   const data = (await res.json()) as FinnhubQuote;
