@@ -127,16 +127,6 @@ function IcoSettings() {
     </svg>
   );
 }
-function IcoArkhosLogo() {
-  return (
-    <svg fill="none" stroke="rgba(230,180,120,0.88)" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" width={22} height={22} viewBox="0 0 24 24">
-      <polygon points="12,2 22,8 22,16 12,22 2,16 2,8" />
-      <line x1="12" y1="2" x2="12" y2="22" />
-      <line x1="2" y1="8" x2="22" y2="8" />
-      <line x1="2" y1="16" x2="22" y2="16" />
-    </svg>
-  );
-}
 
 function IcoHeimer() {
   return (
@@ -229,52 +219,6 @@ const MODULES: ModuleConfig[] = [
   },
 ];
 
-// ─── AppIcon shell ────────────────────────────────────────────────────────────
-
-interface AppIconProps {
-  size: number;
-  gradFrom: string;
-  gradTo: string;
-  glow: string;
-  children: React.ReactNode;
-  iconRef?: (el: HTMLDivElement | null) => void;
-}
-
-function AppIcon({ size, gradFrom, gradTo, glow, children, iconRef }: AppIconProps) {
-  const radius = size >= 60 ? 18 : 14;
-  return (
-    <div
-      ref={iconRef}
-      style={{
-        width: size,
-        height: size,
-        borderRadius: radius,
-        background: `radial-gradient(ellipse at 40% 25%, ${gradFrom}, ${gradTo})`,
-        boxShadow: `0 4px 18px ${glow}, 0 1px 0 rgba(255,255,255,0.12) inset`,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        position: "relative",
-        overflow: "hidden",
-        flexShrink: 0,
-        transition: "transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s",
-        willChange: "transform",
-      }}
-    >
-      <div
-        style={{
-          position: "absolute",
-          top: 0, left: 0, right: 0,
-          height: "50%",
-          background: "linear-gradient(180deg, rgba(255,255,255,0.17), transparent)",
-          borderRadius: `${radius}px ${radius}px 0 0`,
-          pointerEvents: "none",
-        }}
-      />
-      <div style={{ position: "relative", zIndex: 1 }}>{children}</div>
-    </div>
-  );
-}
 
 // ─── DockSep ──────────────────────────────────────────────────────────────────
 
@@ -368,7 +312,7 @@ function PreviewChips({ chips }: { chips: { val: string; lbl: string; color?: st
   );
 }
 
-function PreviewTags({ tags, accent }: { tags: string[]; accent: string }) {
+function PreviewTags({ tags }: { tags: string[]; accent: string }) {
   return (
     <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
       {tags.map((t) => (
@@ -440,10 +384,7 @@ export function BottomDock({
 
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
 
-  const iconRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const setIconRef = (i: number) => (el: HTMLDivElement | null) => {
-    iconRefs.current[i] = el;
-  };
+  const iconRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const mouseX = e.clientX;
@@ -483,9 +424,6 @@ export function BottomDock({
     if (key === "notas") return noteCount;
     return null;
   };
-
-  let refIdx = 0;
-  const nextRefIdx = () => refIdx++;
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
@@ -579,7 +517,6 @@ export function BottomDock({
             const active = isActive(mod.href);
             const count = getCount(mod.countKey);
             const Icon = mod.Icon;
-            const ri = nextRefIdx();
             return (
               <div key={mod.key}
                 style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer", flexShrink: 0 }}
@@ -590,7 +527,7 @@ export function BottomDock({
                       {count}
                     </div>
                   )}
-                  <div ref={(el) => { iconRefs.current[ri] = el; if (el) el.dataset.glow = mod.glow; }}
+                  <div ref={(el) => { if (el) { iconRefs.current.set(mod.key, el); el.dataset.glow = mod.glow; } else { iconRefs.current.delete(mod.key); } }}
                     style={{ width: 52, height: 52, borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s", willChange: "transform" }}>
                     <Icon />
                   </div>
@@ -612,7 +549,7 @@ export function BottomDock({
           <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer", flexShrink: 0 }}
             onMouseEnter={() => setHoveredKey("dashboard")} onMouseLeave={() => setHoveredKey(null)}>
             <Link href="/" style={{ textDecoration: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-              <div ref={setIconRef(nextRefIdx())} style={{ width: 48, height: 48, borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s", willChange: "transform" }}>
+              <div ref={(el) => { if (el) iconRefs.current.set("dashboard", el); else iconRefs.current.delete("dashboard"); }} style={{ width: 48, height: 48, borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s", willChange: "transform" }}>
                 <IcoDashboard />
               </div>
               <span style={{ fontSize: 10, fontWeight: 500, color: isActive("/") ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.42)", transition: "color 0.2s", whiteSpace: "nowrap" }}>Dashboard</span>
@@ -659,15 +596,13 @@ export function BottomDock({
           {/* ── Derecha: Mercados · Patrimonio ──────────────────────── */}
           {[MODULES[2], MODULES[3]].map((mod) => {
             const active = isActive(mod.href);
-            const count = getCount(mod.countKey);
             const Icon = mod.Icon;
-            const ri = nextRefIdx();
             return (
               <div key={mod.key}
                 style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer", flexShrink: 0 }}
                 onMouseEnter={() => setHoveredKey(mod.key)} onMouseLeave={() => setHoveredKey(null)}>
                 <Link href={mod.href} style={{ textDecoration: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-                  <div ref={(el) => { iconRefs.current[ri] = el; if (el) el.dataset.glow = mod.glow; }}
+                  <div ref={(el) => { if (el) { iconRefs.current.set(mod.key, el); el.dataset.glow = mod.glow; } else { iconRefs.current.delete(mod.key); } }}
                     style={{ width: 52, height: 52, borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s", willChange: "transform" }}>
                     <Icon />
                   </div>
@@ -691,7 +626,7 @@ export function BottomDock({
             onMouseLeave={() => setHoveredKey(null)}
           >
             <div
-              ref={setIconRef(nextRefIdx())}
+              ref={(el) => { if (el) iconRefs.current.set("profile", el); else iconRefs.current.delete("profile"); }}
               style={{
                 width: 44, height: 44, borderRadius: "50%",
                 background: avatarUrl ? "transparent" : "linear-gradient(135deg, #C4704A, #7a2030)",

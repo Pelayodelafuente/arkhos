@@ -241,8 +241,9 @@ export function CryptoDashboard() {
   const getOverview = useCryptoStore((s) => s.getOverview);
   const getAssetsWithPL = useCryptoStore((s) => s.getAssetsWithPL);
 
-  const overview = useMemo(() => getOverview(), [assets, defiPositions, monthlyPlan, getOverview]);
-  const assetsWithPL = useMemo(() => getAssetsWithPL(), [assets, getAssetsWithPL]);
+  // Las deps extra son triggers: el getter lee get() internamente y debe recomputar al cambiar el store
+  const overview = useMemo(() => { void assets; void defiPositions; void monthlyPlan; return getOverview() }, [assets, defiPositions, monthlyPlan, getOverview]);
+  const assetsWithPL = useMemo(() => { void assets; return getAssetsWithPL() }, [assets, getAssetsWithPL]);
 
   if (isLoading) {
     return (

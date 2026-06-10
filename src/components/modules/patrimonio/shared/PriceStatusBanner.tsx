@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { RefreshCw, CalendarClock } from "lucide-react";
 import { usePatrimonioPrices } from "@/lib/hooks/use-patrimonio-prices";
 import { useToast } from "@/stores/ui-store";
-import { usePatrimonioStore } from "@/stores/patrimonio-store";
 
 const formatDateTime = (date: Date) =>
   date.toLocaleDateString("es-ES", {
@@ -95,7 +94,7 @@ export function PriceStatusBanner() {
     } finally {
       setIsLoadingHistorical(false);
     }
-  }, [isLoadingHistorical, router, toast]);
+  }, [isLoadingHistorical, toast]);
 
   const btnDisabled = isRefreshing || cooldown > 0;
   const btnLabel = isRefreshing

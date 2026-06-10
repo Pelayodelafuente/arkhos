@@ -144,6 +144,19 @@ export function MercadosView({ initialTab }: MercadosViewProps) {
     }
   }, []);
 
+  const loadAlerts = useCallback(async () => {
+    try {
+      const res = await fetch('/api/mercados/alerts');
+      if (res.ok) {
+        const data = (await res.json()) as AlertsResponse;
+        setAlerts(data.alerts);
+        setUnreadAlertsCount(data.unreadCount);
+      }
+    } catch {
+      // Network error
+    }
+  }, []);
+
   const loadPortfolio = useCallback(async (forceRefresh = false) => {
     const url = forceRefresh ? "/api/mercados/portfolio?refresh=true" : "/api/mercados/portfolio";
     setIsPortfolioLoading(true);
@@ -169,20 +182,7 @@ export function MercadosView({ initialTab }: MercadosViewProps) {
     } finally {
       setIsPortfolioLoading(false);
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const loadAlerts = useCallback(async () => {
-    try {
-      const res = await fetch('/api/mercados/alerts');
-      if (res.ok) {
-        const data = (await res.json()) as AlertsResponse;
-        setAlerts(data.alerts);
-        setUnreadAlertsCount(data.unreadCount);
-      }
-    } catch {
-      // Network error
-    }
-  }, []);
+  }, [loadAlerts]);
 
   useEffect(() => {
     async function init() {

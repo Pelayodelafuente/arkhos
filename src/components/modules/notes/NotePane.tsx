@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react"
 import { X, Trash2, Archive, ArchiveRestore, History, RotateCcw, Link2, ArrowRight, Unlink, ChevronLeft, ChevronDown, FolderKanban, CreditCard, Star, FileText } from "lucide-react"
-import { getLucideIcon, getLucideIconOrDefault } from "@/lib/utils/icons"
+import { getLucideIcon, DynamicLucideIcon } from "@/lib/utils/icons"
 import { Button, SelectCustom } from "@/components/ui"
 import { useNotesStore, useAllTags } from "@/stores/notes-store"
 import { useToast } from "@/stores/ui-store"
@@ -291,7 +291,6 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
     }).slice(0, 6)
   }, [allNotes, note, title])
 
-  const SelectedIcon = getLucideIconOrDefault(icon, FileText)
 
   // IA — Sugerir tags
   const handleSuggestTags = async () => {
@@ -343,7 +342,7 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
           onClick={() => setShowIcons(!showIcons)}
           className="flex h-8 w-8 items-center justify-center rounded-lg border border-border hover:bg-sand transition-colors flex-shrink-0"
         >
-          <SelectedIcon size={16} strokeWidth={1.75} className="text-text-secondary" />
+          <DynamicLucideIcon name={icon} fallback={FileText} size={16} strokeWidth={1.75} className="text-text-secondary" />
         </button>
         <div className="flex-1 flex items-center gap-2 min-w-0">
           <input

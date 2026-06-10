@@ -120,7 +120,7 @@ export async function updateHorosNAV(
 
   if (!pos.data) return { ok: false, error: 'No hay posición registrada' };
 
-  const { shares, total_cost } = pos.data as { shares: number; total_cost: number };
+  const { shares } = pos.data as { shares: number; total_cost: number };
   const newTotalValue = parseFloat((shares * input.navPrice).toFixed(2));
 
   const { error } = await supabase

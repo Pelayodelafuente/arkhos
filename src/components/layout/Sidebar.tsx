@@ -106,7 +106,7 @@ export function Sidebar({ userName, initialProjectCount = 0, initialNoteCount = 
 
   useEffect(() => {
     if (prevCollapsed.current && !collapsed) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setIsAnimating(true);
       const t = setTimeout(() => setIsAnimating(false), 400);
       prevCollapsed.current = collapsed;

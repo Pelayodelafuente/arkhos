@@ -33,6 +33,12 @@ export function QuickCapture({ userId }: Props) {
     }
   }, [open, userId, fetchFolders])
 
+  const handleClose = useCallback(() => {
+    setOpen(false)
+    setTitle("")
+    setContent("")
+  }, [])
+
   // Close on Escape
   useEffect(() => {
     if (!open) return
@@ -41,13 +47,7 @@ export function QuickCapture({ userId }: Props) {
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
-  }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleClose = useCallback(() => {
-    setOpen(false)
-    setTitle("")
-    setContent("")
-  }, [])
+  }, [open, handleClose])
 
   const handleSave = async () => {
     const t = title.trim()

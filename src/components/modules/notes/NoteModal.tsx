@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react"
 import { Trash2, Maximize2, Minimize2, Archive, ArchiveRestore, History, X, RotateCcw, Link2, ArrowRight, Unlink, FileText } from "lucide-react"
-import { getLucideIcon, getLucideIconOrDefault } from "@/lib/utils/icons"
+import { getLucideIcon, DynamicLucideIcon } from "@/lib/utils/icons"
 import { Modal, Button } from "@/components/ui"
 import { useNotesStore, useAllTags } from "@/stores/notes-store"
 import { useToast } from "@/stores/ui-store"
@@ -267,7 +267,6 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
     }).slice(0, 6)
   }, [allNotes, note, title])
 
-  const SelectedIcon = getLucideIconOrDefault(icon, FileText)
 
   const modalSizeClass = isFullscreen
     ? 'max-w-[95vw] w-[95vw] h-[95vh] !max-h-[95vh]'
@@ -283,7 +282,7 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
             onClick={() => setShowIcons(!showIcons)}
             className="flex h-9 w-9 items-center justify-center rounded-lg border border-border hover:bg-sand transition-colors flex-shrink-0"
           >
-            <SelectedIcon size={18} strokeWidth={1.75} className="text-text-secondary" />
+            <DynamicLucideIcon name={icon} fallback={FileText} size={18} strokeWidth={1.75} className="text-text-secondary" />
           </button>
           <textarea
             value={title}

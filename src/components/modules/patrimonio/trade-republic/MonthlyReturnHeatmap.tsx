@@ -21,10 +21,6 @@ function getYear(dateStr: string): number {
   return parseInt(dateStr.substring(0, 4), 10);
 }
 
-function getMonth(dateStr: string): number {
-  return parseInt(dateStr.substring(5, 7), 10) - 1; // 0-indexed
-}
-
 // Returns the portfolio value for a snapshot (total_value is already portfolio-only)
 function investmentValue(s: PortfolioSnapshot): number {
   return s.total_value;

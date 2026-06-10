@@ -7,10 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint src",
+    "test": "vitest",
     "audit:visual": "tsx scripts/audit.ts"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.80.0",
+    "@anthropic-ai/sdk": "^0.104.1",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
@@ -37,33 +38,26 @@
     "@tiptap/starter-kit": "^3.21.0",
     "@types/d3": "^7.4.3",
     "@types/d3-sankey": "^0.12.5",
-    "@types/ws": "^8.18.1",
     "@upstash/redis": "^1.37.0",
     "d3": "^7.9.0",
     "d3-sankey": "^0.12.3",
     "date-fns": "^4.1.0",
+    "exceljs": "^4.4.0",
     "framer-motion": "^12.38.0",
     "html2canvas": "^1.4.1",
+    "isomorphic-dompurify": "^3.16.0",
     "lowlight": "^3.3.0",
     "lucide-react": "^0.577.0",
     "marked": "^17.0.5",
-    "next": "16.1.6",
+    "next": "16.2.9",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-force-graph-2d": "^1.29.1",
     "recharts": "^3.8.0",
-    "trapi": "github:NightOwl07/trade-republic-api",
     "vaul": "^1.1.2",
-    "ws": "^8.21.0",
-    "xlsx": "^0.18.5",
     "yahoo-finance2": "^3.15.2",
     "zod": "^4.3.6",
     "zustand": "^5.0.11"
-  },
-  "pnpm": {
-    "patchedDependencies": {
-      "trapi@0.0.1": "patches/trapi@0.0.1.patch"
-    }
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -75,7 +69,7 @@
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.0.1",
     "eslint": "^9",
-    "eslint-config-next": "16.1.6",
+    "eslint-config-next": "16.2.9",
     "jsdom": "^28.1.0",
     "puppeteer": "^25.1.0",
     "tailwindcss": "^4",

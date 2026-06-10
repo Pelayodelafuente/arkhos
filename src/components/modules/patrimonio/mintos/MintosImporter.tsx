@@ -3,7 +3,6 @@
 import { useState, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Upload,
   CheckCircle2,
   AlertTriangle,
   Eye,
@@ -610,16 +609,13 @@ export function MintosImporter() {
     setErrorMsg(null);
 
     try {
-      const [{ read, utils }, buffer] = await Promise.all([
-        import("xlsx"),
+      const [{ readExcelRows }, buffer] = await Promise.all([
+        import("@/lib/mintos/read-excel"),
         f.arrayBuffer(),
       ]);
 
-      const wb = read(buffer, { type: "array", cellDates: true });
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      if (!ws) throw new Error("Archivo Excel vacío");
-
-      const rows: unknown[][] = utils.sheet_to_json(ws, { header: 1, defval: "", raw: true });
+      const rows = await readExcelRows(buffer);
+      if (rows.length === 0) throw new Error("Archivo Excel vacío");
 
       const { parseMintosRows } = await import("@/lib/mintos/parse-excel");
       const parsed = parseMintosRows(rows);
@@ -642,8 +638,8 @@ export function MintosImporter() {
     (files: FileList | null) => {
       if (!files || files.length === 0) return;
       const f = files[0];
-      if (!f.name.match(/\.(xlsx|xls)$/i)) {
-        setErrorMsg("Formato no válido. Solo se aceptan archivos .xlsx o .xls");
+      if (!f.name.match(/\.xlsx$/i)) {
+        setErrorMsg("Formato no válido. Solo se aceptan archivos .xlsx (el formato que exporta Mintos)");
         setStatus("error");
         return;
       }
@@ -772,7 +768,7 @@ export function MintosImporter() {
           <input
             ref={inputRef}
             type="file"
-            accept=".xlsx,.xls"
+            accept=".xlsx"
             className="hidden"
             onChange={(e) => handleFiles(e.target.files)}
             aria-hidden="true"
@@ -810,7 +806,7 @@ export function MintosImporter() {
                   Arrastra el extracto aquí o haz clic para seleccionar
                 </p>
                 <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                  Acepta .xlsx y .xls — se mostrará vista previa antes de guardar
+                  Acepta .xlsx — se mostrará vista previa antes de guardar
                 </p>
               </div>
             </>

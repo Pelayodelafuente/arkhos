@@ -36,8 +36,8 @@ const nextConfig: NextConfig = {
             value: [
               "default-src 'self'",
               "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
-              "style-src 'self' 'unsafe-inline' https://fonts.bunny.net",
-              "font-src 'self' https://fonts.bunny.net",
+              "style-src 'self' 'unsafe-inline'",
+              "font-src 'self'",
               "img-src 'self' data: blob: https:",
               [
                 "connect-src 'self'",
@@ -53,7 +53,6 @@ const nextConfig: NextConfig = {
                 "https://yields.llama.fi",
                 "https://api.alternative.me",
                 "https://api.stlouisfed.org",
-                "https://api.alphavantage.co",
               ].join(" "),
             ].join("; "),
           },

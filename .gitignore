@@ -61,13 +61,22 @@ reports/
 # Claude Code local settings (puede contener permisos con secrets)
 .claude/settings.local.json
 
-# Screenshots de debug
-canvas-estado.png
+# Screenshots de debug e imágenes sueltas en raíz
+/*.png
+/*.jpg
+/*.jpeg
 
 # Supabase CLI temp
 supabase/.temp/
 
-# Datos locales de importación
+# Lockfile de npm — este proyecto usa SOLO pnpm
+package-lock.json
+
+# Datos personales — NUNCA versionar
 Mintos-datos/
 buscar-comisiones-bit2me/
 horos-datos/
+bit2me-historial/
+/*.csv
+docs/*.xlsx
+docs/*.docx

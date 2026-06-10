@@ -123,10 +123,11 @@ export function PatrimonioHero() {
   const cryptoRawDefi = useCryptoStore((s) => s.defiPositions);
   const cryptoRawPlan = useCryptoStore((s) => s.monthlyPlan);
   const getCryptoOverview = useCryptoStore((s) => s.getOverview);
-  const cryptoOverview = useMemo(
-    () => getCryptoOverview(),
-    [cryptoRawAssets, cryptoRawDefi, cryptoRawPlan, getCryptoOverview]
-  );
+  // Las deps extra son triggers: el getter lee get() internamente y debe recomputar al cambiar el store
+  const cryptoOverview = useMemo(() => {
+    void cryptoRawAssets; void cryptoRawDefi; void cryptoRawPlan
+    return getCryptoOverview()
+  }, [cryptoRawAssets, cryptoRawDefi, cryptoRawPlan, getCryptoOverview]);
 
   const cryptoValue = cryptoOverview?.total_value_eur ?? 0;
   const cryptoInvested = cryptoOverview?.total_invested_eur ?? 0;

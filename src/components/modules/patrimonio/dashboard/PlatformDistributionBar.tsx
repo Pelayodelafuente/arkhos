@@ -69,10 +69,11 @@ export function PlatformDistributionBar() {
   const cryptoRawAssets = useCryptoStore((s) => s.assets);
   const cryptoRawDefi = useCryptoStore((s) => s.defiPositions);
   const getCryptoOverview = useCryptoStore((s) => s.getOverview);
-  const cryptoOverview = useMemo(
-    () => getCryptoOverview(),
-    [cryptoRawAssets, cryptoRawDefi, getCryptoOverview]
-  );
+  // Las deps extra son triggers: el getter lee get() internamente y debe recomputar al cambiar el store
+  const cryptoOverview = useMemo(() => {
+    void cryptoRawAssets; void cryptoRawDefi
+    return getCryptoOverview()
+  }, [cryptoRawAssets, cryptoRawDefi, getCryptoOverview]);
 
   // ── Mintos ───────────────────────────────────────────────────────────────
   const mintosOverview = useMintosStore((s) => s.overview);

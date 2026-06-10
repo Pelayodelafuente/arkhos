@@ -180,6 +180,7 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
     fromX: number; fromY: number; toX: number; toY: number
   } | null>(null)
   const connectingSideRef = useRef<EdgeSide>("right")
+  const [connectingSide, setConnectingSide] = useState<EdgeSide>("right")
   const [connectionTargetId, setConnectionTargetId] = useState<string | null>(null)
   const [contextMenu, setContextMenu] = useState<{
     x: number; y: number; worldX: number; worldY: number
@@ -187,7 +188,8 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
     edgeId?: string | null
     edgeStyle?: import("@/types/notes").EdgeStyle
   } | null>(null)
-  const [isResizing, setIsResizing] = useState(false)
+  const [resizeHandle, setResizeHandle] = useState<string | null>(null)
+  const isResizing = resizeHandle !== null
   const resizeRef = useRef<{
     nodeId: string; handle: string; startX: number; startY: number
     origX: number; origY: number; origW: number; origH: number
@@ -323,16 +325,11 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canvas?.id])
 
-  useEffect(() => {
-    if (hasAutoFitted.current || nodes.length === 0 || containerSize.w === 0) return
-    hasAutoFitted.current = true
-    requestAnimationFrame(() => fitAllNodes())
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nodes.length, containerSize.w])
-
   // Wheel: always zoom, native event with passive:false
   const viewportRef = useRef(viewport)
-  viewportRef.current = viewport
+  useEffect(() => {
+    viewportRef.current = viewport
+  }, [viewport])
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
@@ -488,7 +485,7 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
     e.stopPropagation()
     const node = nodeMap.get(nodeId)
     if (!node || node.locked) return
-    setIsResizing(true)
+    setResizeHandle(handle)
     resizeRef.current = { nodeId, handle, startX: e.clientX, startY: e.clientY, origX: node.pos_x, origY: node.pos_y, origW: node.width, origH: node.height }
   }, [nodeMap])
 
@@ -507,12 +504,13 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
 
   const handleResizeEnd = useCallback(() => {
     if (resizeRef.current) pushHistory()
-    setIsResizing(false); resizeRef.current = null
+    setResizeHandle(null); resizeRef.current = null
   }, [pushHistory])
 
   const handleConnectionStart = useCallback((nodeId: string, side: string) => {
     setConnectingFrom(nodeId)
     connectingSideRef.current = side as EdgeSide
+    setConnectingSide(side as EdgeSide)
     const node = nodeMap.get(nodeId)
     if (!node) return
     const anchor = getScreenAnchor(node, side, viewport)
@@ -738,6 +736,13 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
     requestAnimationFrame(step)
   }, [nodes, setViewport])
 
+  // Auto-fit inicial — declarado tras fitAllNodes para no acceder antes de su declaración
+  useEffect(() => {
+    if (hasAutoFitted.current || nodes.length === 0 || containerSize.w === 0) return
+    hasAutoFitted.current = true
+    requestAnimationFrame(() => fitAllNodes())
+  }, [nodes.length, containerSize.w, fitAllNodes, nodes])
+
   const centerOnNode = useCallback((nodeId: string) => {
     const node = nodeMap.get(nodeId)
     if (!node) return
@@ -854,11 +859,11 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
     return () => window.removeEventListener("keydown", handler)
   }, [selectedNodeIds, selectedEdgeId, viewport.scale, nodes, showSearch, removeSelectedNodes, removeEdge, setSelectedEdge, deselectAll, setConnectingFrom, setEditingNode, setViewport, fitAllNodes, undo, redo, copySelectedNodes, pasteNodes, duplicateSelectedNodes, setCanvasSearch])
 
-  const resizeCursor = resizeRef.current?.handle
-    ? resizeRef.current.handle === "se" || resizeRef.current.handle === "nw" ? "nwse-resize"
-      : resizeRef.current.handle === "sw" || resizeRef.current.handle === "ne" ? "nesw-resize"
-      : resizeRef.current.handle === "n" || resizeRef.current.handle === "s" ? "ns-resize"
-      : resizeRef.current.handle === "e" || resizeRef.current.handle === "w" ? "ew-resize"
+  const resizeCursor = resizeHandle
+    ? resizeHandle === "se" || resizeHandle === "nw" ? "nwse-resize"
+      : resizeHandle === "sw" || resizeHandle === "ne" ? "nesw-resize"
+      : resizeHandle === "n" || resizeHandle === "s" ? "ns-resize"
+      : resizeHandle === "e" || resizeHandle === "w" ? "ew-resize"
       : "nwse-resize" : "nwse-resize"
 
   const cursor = isResizing ? resizeCursor : isDraggingNode ? "grabbing" : isPanning ? "grabbing"
@@ -976,9 +981,9 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
         </g>
         {connectingLine && (
           <>
-            <path d={calculateBezierPreview(connectingLine.fromX, connectingLine.fromY, connectingLine.toX, connectingLine.toY, connectingSideRef.current)}
+            <path d={calculateBezierPreview(connectingLine.fromX, connectingLine.fromY, connectingLine.toX, connectingLine.toY, connectingSide)}
               stroke="#B07A3A" strokeWidth={6} fill="none" opacity={0.15} strokeLinecap="round" />
-            <path d={calculateBezierPreview(connectingLine.fromX, connectingLine.fromY, connectingLine.toX, connectingLine.toY, connectingSideRef.current)}
+            <path d={calculateBezierPreview(connectingLine.fromX, connectingLine.fromY, connectingLine.toX, connectingLine.toY, connectingSide)}
               stroke="#B07A3A" strokeWidth={2 / viewport.scale} fill="none"
               strokeDasharray={`${6 / viewport.scale} ${4 / viewport.scale}`} opacity={0.7} />
             <circle cx={connectingLine.toX} cy={connectingLine.toY} r={4} fill="#B07A3A" opacity={0.85} />

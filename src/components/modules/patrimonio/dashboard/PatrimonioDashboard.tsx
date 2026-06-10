@@ -34,8 +34,6 @@ const SankeyDiagram = dynamic(
 import { FiscalidadPanel } from "@/components/modules/patrimonio/trade-republic/FiscalidadPanel";
 import { PatrimonioAlerts } from "@/components/modules/patrimonio/shared/PatrimonioAlerts";
 
-const formatEur = (value: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
 
 // ---------------------------------------------------------------------------
 // Stagger variants
@@ -314,10 +312,11 @@ export function PatrimonioDashboard() {
   const cryptoDefi = useCryptoStore((s) => s.defiPositions);
   const cryptoMonthlyPlan = useCryptoStore((s) => s.monthlyPlan);
   const getCryptoOverview = useCryptoStore((s) => s.getOverview);
-  const cryptoOverview = useMemo(
-    () => getCryptoOverview(),
-    [cryptoAssets, cryptoDefi, cryptoMonthlyPlan, getCryptoOverview]
-  );
+  // Las deps extra son triggers: el getter lee get() internamente y debe recomputar al cambiar el store
+  const cryptoOverview = useMemo(() => {
+    void cryptoAssets; void cryptoDefi; void cryptoMonthlyPlan
+    return getCryptoOverview()
+  }, [cryptoAssets, cryptoDefi, cryptoMonthlyPlan, getCryptoOverview]);
 
   const mintosOverview = useMintosStore((s) => s.overview);
   const mintosDeposits = useMintosStore((s) => s.deposits);

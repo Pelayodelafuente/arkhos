@@ -25,7 +25,6 @@ const formatEurShort = (value: number) => {
   return `${value.toFixed(0)}€`;
 };
 
-const MONTHS_ES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
 
 // 'YYYY-MM-DD' o 'YYYY-MM' → 'YYYY-MM'
 function toMonthKey(s: string): string { return s.substring(0, 7); }
@@ -104,7 +103,8 @@ export function GlobalEvolutionChart() {
   const cryptoAssets = useCryptoStore((s) => s.assets);
   const cryptoDefi = useCryptoStore((s) => s.defiPositions);
   const getCryptoOverview = useCryptoStore((s) => s.getOverview);
-  const cryptoOverview = useMemo(() => getCryptoOverview(), [cryptoAssets, cryptoDefi, getCryptoOverview]);
+  // Las deps extra son triggers: el getter lee get() internamente y debe recomputar al cambiar el store
+  const cryptoOverview = useMemo(() => { void cryptoAssets; void cryptoDefi; return getCryptoOverview() }, [cryptoAssets, cryptoDefi, getCryptoOverview]);
 
   // ── Mintos — snapshots mensuales con valor estimado ──────────────────────
   const mintosSnapshots = useMintosStore((s) => s.monthlySnapshots);
@@ -265,7 +265,9 @@ export function GlobalEvolutionChart() {
     const cryptoCurrentValue = cryptoOverview?.total_value_eur ?? 0;
     const mintosCurrentValue = mintosOverview?.total_value ?? 0;
 
-    return allKeys.map((key, idx) => {
+    const points: { key: string; label: string; value: number; invested: number }[] = [];
+    for (let idx = 0; idx < allKeys.length; idx++) {
+      const key = allKeys[idx];
       const tr = trByMonth.get(key) ?? { value: 0, invested: 0 };
       const indexa = indexaByMonth.get(key);
       if (indexa) lastIndexa = indexa;
@@ -292,7 +294,7 @@ export function GlobalEvolutionChart() {
       const historicalValue = tr.value + idxValue + horosValue + cryptoValue + mintosValue;
       const historicalInvested = tr.invested + idxCost + horosCost + lastCryptoCost + lastMintos.deposited;
 
-      return {
+      points.push({
         key,
         label: monthKeyLabel(key),
         // Último punto siempre usa datos live para coincidir con KPI cards
@@ -302,8 +304,9 @@ export function GlobalEvolutionChart() {
         invested: parseFloat(
           (isLastPoint && liveInvested > 0 ? liveInvested : historicalInvested).toFixed(2)
         ),
-      };
-    });
+      });
+    }
+    return points;
   }, [trByMonth, indexaByMonth, horosByMonth, cryptoByMonth, mintosByMonth, cryptoOverview, mintosOverview, liveInvested, liveTotalValue]);
 
   const cutoffDate = useMemo(() => {

@@ -13,7 +13,7 @@ export function NavigationProgress() {
   useEffect(() => {
     // Pathname changed — complete the bar
     if (prevPathname.current !== pathname) {
-      setProgress(100); // eslint-disable-line react-hooks/set-state-in-effect -- navigation progress animation
+      setProgress(100);  
       timerRef.current = setTimeout(() => {
         setVisible(false);
         setProgress(0);

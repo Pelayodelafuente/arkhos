@@ -63,7 +63,8 @@ export function GlobalAllocationDonut() {
   const cryptoAssets = useCryptoStore((s) => s.assets);
   const cryptoDefi = useCryptoStore((s) => s.defiPositions);
   const getCryptoOverview = useCryptoStore((s) => s.getOverview);
-  const cryptoOverview = useMemo(() => getCryptoOverview(), [cryptoAssets, cryptoDefi, getCryptoOverview]);
+  // Las deps extra son triggers: el getter lee get() internamente y debe recomputar al cambiar el store
+  const cryptoOverview = useMemo(() => { void cryptoAssets; void cryptoDefi; return getCryptoOverview() }, [cryptoAssets, cryptoDefi, getCryptoOverview]);
   const mintosOverview = useMintosStore((s) => s.overview);
 
   const segments = useMemo((): PlatformSegment[] => {

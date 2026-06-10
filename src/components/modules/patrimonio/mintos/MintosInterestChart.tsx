@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  BarChart,
   Bar,
   XAxis,
   YAxis,
@@ -10,7 +9,6 @@ import {
   ResponsiveContainer,
   Line,
   ComposedChart,
-  Legend,
 } from "recharts";
 import { formatCurrency } from "@/lib/utils/format";
 import type { MintosInterestPoint } from "@/types/mintos";

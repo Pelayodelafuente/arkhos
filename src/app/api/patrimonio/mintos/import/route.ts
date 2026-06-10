@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
-import { read as xlsxRead, utils as xlsxUtils } from 'xlsx';
+import { readExcelRows } from '@/lib/mintos/read-excel';
 import { parseMintosRows } from '@/lib/mintos/parse-excel';
 import type { MintosImportResult } from '@/types/mintos';
 
@@ -49,17 +49,15 @@ export async function POST(request: Request): Promise<Response> {
 
   // Parse Excel
   const buffer = await file.arrayBuffer();
-  const workbook = xlsxRead(buffer, { type: 'array', cellDates: true });
-  const sheetName = workbook.SheetNames[0];
-  if (!sheetName) {
+  let rows: unknown[][];
+  try {
+    rows = await readExcelRows(buffer);
+  } catch {
     return Response.json({ error: 'Excel vacío o inválido' }, { status: 400 });
   }
-
-  const rows: unknown[][] = xlsxUtils.sheet_to_json(workbook.Sheets[sheetName], {
-    header: 1,
-    defval: '',
-    raw: true,
-  });
+  if (rows.length === 0) {
+    return Response.json({ error: 'Excel vacío o inválido' }, { status: 400 });
+  }
 
   // Use shared parser
   const parsed = parseMintosRows(rows);

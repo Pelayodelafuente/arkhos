@@ -52,7 +52,8 @@ export function CryptoDistributionDonut() {
   const rawAssets = useCryptoStore((s) => s.assets);
   const getAssetsWithPL = useCryptoStore((s) => s.getAssetsWithPL);
 
-  const assets = useMemo(() => getAssetsWithPL(), [rawAssets, getAssetsWithPL]);
+  // Las deps extra son triggers: el getter lee get() internamente y debe recomputar al cambiar el store
+  const assets = useMemo(() => { void rawAssets; return getAssetsWithPL() }, [rawAssets, getAssetsWithPL]);
 
   if (isLoading) {
     return <Skeleton className="h-64 rounded-xl" />;

@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useId } from 'react'
+import { useId } from 'react'
 
 interface DashboardSparklineProps {
   data: number[]

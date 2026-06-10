@@ -33,7 +33,6 @@ export function MintosDashboard() {
   const [activeTab, setActiveTab] = useState<TabId>("dashboard");
 
   const isLoading = useMintosStore((s) => s.isLoading);
-  const overview = useMintosStore((s) => s.overview);
   const plan = useMintosStore((s) => s.plan);
   const portfolioHealth = useMintosStore((s) => s.portfolioHealth);
 
