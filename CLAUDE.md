@@ -3,33 +3,37 @@
 # URL: https://arkhos.pelayodelafuente.es | Repo: github.com/Pelayodelafuente/arkhos
 
 ## Estado actual
-- Fases 0-4 completadas al 100% (Auth, Layout, Proyectos, Gastos, Notas)
-- Auditoría total completada 2026-04-09 — ver `docs/AUDIT-REPORT.md`
-- Stack Cognitivo v2 instalado 2026-04-09 — agentes, skills, hooks, reglas modulares
-- Mercados completado + auditado 2026-05-04 v1.1 (bugs AI/Recharts/F&G/USD, ChartWrapper, DailySummary, tooltips)
-- Próximo: definir siguiente módulo (Dashboard global, Agenda, o mejoras UX)
+- Todos los módulos completados: Proyectos, Gastos, Notas, Patrimonio, Mercados, Dashboard
+- **Auditoría global 2026-06-10** — ver `AUDITORIA-GLOBAL.md` (raíz). Fases 0-2 ejecutadas:
+  Next 16.2.9, DOMPurify, exceljs, tipos DB regenerados (0 `as any`), error boundaries,
+  @upstash/ratelimit, fetchWithTimeout, Zod en rutas, historial git purgado, backup semanal DB
+- Pendiente del plan: Fase 3 (server fetch en Gastos/Proyectos/Notas, slices stores,
+  React Compiler, 28 warnings set-state-in-effect) y Fase 4 (IA v2, ⌘K, PWA, Agenda)
+- Próximo: continuar plan de `AUDITORIA-GLOBAL.md` sección 5
 
 ## Stack
 | Tecnología | Versión | Nota |
 |---|---|---|
-| Next.js | 16.1.6 | App Router, RSC por defecto |
+| Next.js | 16.2.9 | App Router, RSC por defecto |
 | TypeScript | ^5 | strict, 0 errores siempre |
 | Tailwind CSS | v4 | CSS variables en globals.css |
 | Supabase | @supabase/ssr ^0.9.0 | Auth + PostgreSQL + RLS |
 | Zustand | ^5.0.11 | estado global UI + módulos |
 | Zod | ^4.3.6 | importar de `'zod/v4'` |
-| Anthropic SDK | ^0.80.0 | IA en 4 API routes |
+| Anthropic SDK | ^0.104.x | IA en 7 API routes |
 | TipTap | v3.21.x | editor rich text Notas |
 | Framer Motion | ^12.38.0 | animaciones complejas |
 | Recharts | ^3.8.0 | gráficos Gastos |
-| marked | ^17.0.5 | markdown → HTML |
-| pnpm | — | gestor de paquetes |
+| marked + isomorphic-dompurify | — | markdown → HTML sanitizado |
+| exceljs | ^4.4.0 | import Excel Mintos (sustituye a xlsx) |
+| pnpm | — | gestor de paquetes (NUNCA npm) |
 
 ## Módulos
-- Proyectos ✅ — `src/components/modules/proyectos/`
+- Dashboard ✅ — `src/components/modules/dashboard/` — agregado global server-side
+- Proyectos ✅ — `src/components/modules/projects/`
 - Gastos ✅ — `src/components/modules/expenses/`
 - Notas ✅ — `src/components/modules/notes/`
-- Patrimonio ✅ — `src/components/modules/patrimonio/` — 18 componentes, store, migrations 022-023
+- Patrimonio ✅ — `src/components/modules/patrimonio/` — TR, Indexa, Horos, Crypto, Mintos
 - Mercados ✅ — `src/app/(dashboard)/mercados/` — Fases 0-5 + auditoría v1.1
 
 ## Reglas activas
@@ -37,7 +41,7 @@ Ver: `.claude/rules/reading-protocol.md` — lectura eficiente de archivos
 Ver: `.claude/rules/code-conventions.md` — TypeScript, React, Tailwind, commits
 Ver: `.claude/rules/security-rules.md` — secrets, RLS, API routes, XSS
 Ver: `.claude/rules/session-protocol.md` — inicio/cierre, mem_context, mem_session_summary
-Ver: `.claude/rules/supabase-rules.md` — migrations (próxima: 022_*), queries, RLS, storage
+Ver: `.claude/rules/supabase-rules.md` — migrations (formato timestamp desde la 053; ver `supabase/migrations/README.md`), queries, RLS, storage
 
 ## Agentes disponibles (.claude/agents/)
 `architect` · `database` · `frontend` · `security` · `tester` · `performance` · `api`

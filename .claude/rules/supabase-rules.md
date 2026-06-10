@@ -1,11 +1,11 @@
 # Reglas Supabase — Arkhos
 
 ## Migrations
-- Numeración: 3 dígitos con cero, nombre descriptivo: `022_nombre_accion.sql`
+- Formato desde la 053: timestamp del CLI — `YYYYMMDDHHMMSS_nombre_accion.sql` (ver `supabase/migrations/README.md`)
+- Aplicar SIEMPRE vía `mcp supabase apply_migration` (queda registrada en la DB) y versionar el mismo SQL en `supabase/migrations/`
 - Nunca modificar migraciones ya aplicadas en producción — crear nueva migración
 - Toda migración nueva incluye: tabla, RLS enable, políticas, índices relevantes
-- Tras crear migration: ejecutar `supabase gen types typescript` y actualizar src/lib/supabase/types.ts
-- Próxima migration: `022_*`
+- Tras crear migration: regenerar tipos (`mcp supabase generate_typescript_types`) → `src/lib/supabase/types.ts`
 
 ## Queries
 - Siempre usar el cliente typed: `createServerClient<Database>` o `createBrowserClient<Database>`
