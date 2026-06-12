@@ -5,6 +5,7 @@ import { BottomNav } from "@/components/layout/bottom-nav";
 import { NavigationProgress } from "@/components/layout/NavigationProgress";
 import { QuickCapture } from "@/components/modules/notes/QuickCapture";
 import { MfaBanner } from "@/components/layout/MfaBanner";
+import { CommandPalette } from "@/components/layout/CommandPalette";
 
 export default async function DashboardLayout({
   children,
@@ -75,6 +76,9 @@ export default async function DashboardLayout({
       />
 
       <QuickCapture userId={userId} />
+
+      {/* Command palette global — ⌘K / Ctrl+K */}
+      <CommandPalette userId={userId} />
     </div>
   );
 }

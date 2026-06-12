@@ -39,6 +39,7 @@ export async function proxy(request: NextRequest) {
     pathname !== "/register" &&
     pathname !== "/verify-mfa" &&
     pathname !== "/reset-password" &&
+    pathname !== "/offline" &&
     !pathname.startsWith("/auth/") &&
     !pathname.startsWith("/api/") &&
     !pathname.startsWith("/_next/")
@@ -80,6 +81,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|icons/|manifest.json|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|icons/|manifest.json|sw.js|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
