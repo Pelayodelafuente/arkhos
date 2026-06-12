@@ -86,6 +86,10 @@ export interface MarketData {
   us10y: number | null
   dxy: number | null
   gold: number | null
+  iglnPrice: number | null
+  iglnChangePct: number | null
+  cspxPrice: number | null
+  cspxChangePct: number | null
 }
 
 export interface DashboardViewProps {

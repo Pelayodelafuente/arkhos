@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { getCachedMetricValues } from "@/lib/mercados/cache"
+import { getWatchlistEtfQuotes } from "@/lib/mercados/watchlist"
 import { fetchWithTimeout } from "@/lib/utils/fetch-timeout"
 import { DashboardView } from "@/components/modules/dashboard/dashboard-view"
 import type { PlatformData, NoteData, MarketData } from "@/components/modules/dashboard/dashboard-view"
@@ -130,9 +131,15 @@ export default async function DashboardPage() {
 
   // ─── Market cache (VIX, US 10Y, EUR/USD, DXY, Gold) ──────────────────────
   // Poblada por el módulo Mercados; acceso centralizado en lib/mercados/cache
-  const cacheMap = await getCachedMetricValues(["vix", "us10y", "eurusd", "dxy", "gold"]).catch(
-    () => ({}) as Record<string, number | null>
-  )
+  const [cacheMap, etfQuotes] = await Promise.all([
+    getCachedMetricValues(["vix", "us10y", "eurusd", "dxy", "gold"]).catch(
+      () => ({}) as Record<string, number | null>
+    ),
+    getWatchlistEtfQuotes().catch(() => ({
+      igln: { price: null, changePct: null },
+      cspx: { price: null, changePct: null },
+    })),
+  ])
 
   // ─── Platform values ───────────────────────────────────────────────────────
   const platformValueMap: Record<string, number> = {}
@@ -250,6 +257,10 @@ export default async function DashboardPage() {
     us10y: cacheMap["us10y"] ?? null,
     dxy: cacheMap["dxy"] ?? null,
     gold: cacheMap["gold"] ?? null,
+    iglnPrice: etfQuotes.igln.price,
+    iglnChangePct: etfQuotes.igln.changePct,
+    cspxPrice: etfQuotes.cspx.price,
+    cspxChangePct: etfQuotes.cspx.changePct,
   }
 
   const userName = user.email?.split("@")[0] ?? "Pelayo"
