@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { useCanvasStore } from '@/stores/canvas-store';
@@ -35,13 +35,14 @@ interface ProjectCanvasProps {
 // ─── Component ───────────────────────
 
 export function ProjectCanvas({ userId, initialProjects }: ProjectCanvasProps) {
-  // Hidratación síncrona del store con el snapshot del servidor, antes de los
-  // selectores, para que el HTML SSR ya pinte la lista de proyectos.
-  const hydratedRef = useRef(false);
-  if (!hydratedRef.current && initialProjects) {
+  // Hidratación síncrona del store con el snapshot del servidor: el lazy
+  // initializer corre una sola vez y antes de los selectores, de modo que el
+  // HTML SSR ya pinte la lista de proyectos.
+  const [hydrated] = useState(() => {
+    if (!initialProjects) return false;
     useProjectsStore.getState().hydrateProjects(initialProjects);
-    hydratedRef.current = true;
-  }
+    return true;
+  });
 
   const selectedProjectId = useCanvasStore((s) => s.selectedProjectId);
   const fetchProjects = useProjectsStore((s) => s.fetchProjects);
@@ -53,8 +54,8 @@ export function ProjectCanvas({ userId, initialProjects }: ProjectCanvasProps) {
 
   // Load projects on mount (solo si no llegó snapshot del servidor)
   useEffect(() => {
-    if (!hydratedRef.current) fetchProjects(userId);
-  }, [userId, fetchProjects]);
+    if (!hydrated) fetchProjects(userId);
+  }, [userId, hydrated, fetchProjects]);
 
   // Load project types and statuses for the new-project modal
   useEffect(() => {

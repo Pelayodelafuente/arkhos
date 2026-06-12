@@ -36,13 +36,14 @@ interface ExpensesViewProps {
 }
 
 export function ExpensesView({ userId, initialData }: ExpensesViewProps) {
-  // Hidratación síncrona del store con el snapshot del servidor: debe ocurrir
-  // antes de los selectores para que el primer render (y el HTML SSR) tenga datos.
-  const hydratedRef = useRef(false)
-  if (!hydratedRef.current && initialData) {
+  // Hidratación síncrona del store con el snapshot del servidor: el lazy
+  // initializer corre una sola vez y antes de los selectores, de modo que el
+  // primer render (y el HTML SSR) ya tenga datos.
+  const [hydrated] = useState(() => {
+    if (!initialData) return false
     useExpensesStore.getState().hydrate(initialData)
-    hydratedRef.current = true
-  }
+    return true
+  })
 
   const fetchSubscriptions = useExpensesStore((s) => s.fetchSubscriptions)
   const fetchCategories = useExpensesStore((s) => s.fetchCategories)
@@ -70,7 +71,7 @@ export function ExpensesView({ userId, initialData }: ExpensesViewProps) {
   // (que ya refresca payments/monthlySpending si crea alguno)
   useEffect(() => {
     const loadData = async () => {
-      if (!hydratedRef.current) {
+      if (!hydrated) {
         await Promise.all([
           fetchSubscriptions(userId),
           fetchCategories(userId),
@@ -83,7 +84,7 @@ export function ExpensesView({ userId, initialData }: ExpensesViewProps) {
       }
     }
     loadData()
-  }, [userId, fetchSubscriptions, fetchCategories, fetchSettings, generateMissingPayments, fetchMonthlySpending])
+  }, [userId, hydrated, fetchSubscriptions, fetchCategories, fetchSettings, generateMissingPayments, fetchMonthlySpending])
 
   // Debounced search
   useEffect(() => {

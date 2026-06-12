@@ -20,15 +20,15 @@ interface Props {
 }
 
 export function NotesView({ initialNotes, initialCanvas, userId }: Props) {
-  // Hidratación síncrona del store con el snapshot del servidor, antes de los
-  // selectores, para que el HTML SSR ya pinte la lista de notas.
-  const hydratedRef = useRef(false)
-  if (!hydratedRef.current) {
+  // Hidratación síncrona del store con el snapshot del servidor: el lazy
+  // initializer corre una sola vez y antes de los selectores, de modo que el
+  // HTML SSR ya pinte la lista de notas.
+  useState(() => {
     const store = useNotesStore.getState()
     store.setNotes(initialNotes)
     store.setCanvas(initialCanvas)
-    hydratedRef.current = true
-  }
+    return true
+  })
 
   const setNotes = useNotesStore((s) => s.setNotes)
   const setCanvas = useNotesStore((s) => s.setCanvas)
