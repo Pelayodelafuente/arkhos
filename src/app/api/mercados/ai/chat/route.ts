@@ -1,3 +1,4 @@
+import { AI_MODEL } from '@/lib/ai/models'
 import Anthropic from '@anthropic-ai/sdk';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod/v4';
@@ -58,7 +59,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const stream = client.messages.stream({
-      model: 'claude-sonnet-4-20250514',
+      model: AI_MODEL,
       max_tokens: 1500,
       system: systemPrompt,
       messages: body.messages.map(m => ({ role: m.role, content: m.content })),

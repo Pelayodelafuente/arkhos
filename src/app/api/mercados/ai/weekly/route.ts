@@ -1,3 +1,4 @@
+import { AI_MODEL } from '@/lib/ai/models'
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
@@ -89,7 +90,7 @@ Sé específico con los datos actuales de mercado disponibles en tu contexto. M�
   try {
     const client = new Anthropic({ apiKey });
     const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: AI_MODEL,
       max_tokens: 1500,
       system: systemPrompt,
       messages: [{ role: 'user', content: weeklyPrompt }],

@@ -1,10 +1,10 @@
+import { AI_MODEL } from '@/lib/ai/models'
 import Anthropic from '@anthropic-ai/sdk'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { rateLimit } from '@/lib/rate-limit'
 import { z } from 'zod/v4'
-
-const client = new Anthropic()
+import { COPILOT_TOOLS, executeCopilotTool } from '@/lib/ai/copilot-tools'
 
 const bodySchema = z.object({
   message: z.string().min(1).max(2000),
@@ -16,6 +16,9 @@ const bodySchema = z.object({
     })
     .optional(),
 })
+
+// F4.2 — tool-use: límite del loop agéntico para evitar bucles infinitos
+const MAX_TOOL_ITERATIONS = 5
 
 export async function POST(req: NextRequest) {
   const { success } = await rateLimit(req, { limit: 20, window: 3600 })
@@ -51,54 +54,61 @@ Contexto actual:
 - Patrimonio total: ${context?.patrimonio != null ? `€${context.patrimonio.toLocaleString('es-ES', { maximumFractionDigits: 0 })}` : 'no disponible'}
 - Gasto mensual en suscripciones: ${context?.gastos != null ? `€${context.gastos.toFixed(0)}` : 'no disponible'}
 - Proyectos activos: ${context?.projects ?? 'desconocido'}
+Tienes herramientas para consultar los datos reales de Pelayo (gastos por mes,
+suscripciones, patrimonio, proyectos). Úsalas cuando la pregunta dependa de
+datos concretos en lugar de estimar.
 Responde siempre en español. Sé directo y específico. Máximo 200 palabras.`
 
   const anthropicClient = new Anthropic({ apiKey })
 
   try {
-    const stream = anthropicClient.messages.stream({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 500,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: message }],
-    })
+    // F4.2 — loop agéntico manual: las tools se ejecutan server-side con el
+    // cliente Supabase del usuario (RLS intacto) hasta la respuesta final.
+    const messages: Anthropic.MessageParam[] = [{ role: 'user', content: message }]
+    let finalText = ''
 
-    const readable = stream.toReadableStream()
-    const encoder = new TextEncoder()
-    const decoder = new TextDecoder()
+    for (let i = 0; i < MAX_TOOL_ITERATIONS; i++) {
+      const response = await anthropicClient.messages.create({
+        model: AI_MODEL,
+        max_tokens: 800,
+        system: systemPrompt,
+        tools: COPILOT_TOOLS,
+        messages,
+      })
 
-    const textStream = new ReadableStream({
-      async start(controller) {
-        const reader = readable.getReader()
-        try {
-          for (;;) {
-            const { done, value } = await reader.read()
-            if (done) break
-            const chunk = decoder.decode(value, { stream: true })
-            try {
-              const parsed = JSON.parse(chunk) as {
-                type: string
-                delta?: { type: string; text?: string }
-              }
-              if (
-                parsed.type === 'content_block_delta' &&
-                parsed.delta?.type === 'text_delta' &&
-                parsed.delta.text
-              ) {
-                controller.enqueue(encoder.encode(parsed.delta.text))
-              }
-            } catch {
-              // Non-JSON chunk — skip
-            }
-          }
-        } finally {
-          reader.releaseLock()
-          controller.close()
-        }
-      },
-    })
+      const toolUses = response.content.filter(
+        (b): b is Anthropic.ToolUseBlock => b.type === 'tool_use'
+      )
 
-    return new Response(textStream, {
+      if (response.stop_reason !== 'tool_use' || toolUses.length === 0) {
+        finalText = response.content
+          .filter((b): b is Anthropic.TextBlock => b.type === 'text')
+          .map((b) => b.text)
+          .join('')
+        break
+      }
+
+      messages.push({ role: 'assistant', content: response.content })
+
+      const results: Anthropic.ToolResultBlockParam[] = []
+      for (const toolUse of toolUses) {
+        const result = await executeCopilotTool(supabase, user.id, toolUse.name, toolUse.input)
+        results.push({
+          type: 'tool_result',
+          tool_use_id: toolUse.id,
+          content: result.content,
+          ...(result.isError && { is_error: true }),
+        })
+      }
+      messages.push({ role: 'user', content: results })
+    }
+
+    if (!finalText) {
+      finalText = 'No he podido completar la consulta. Inténtalo de nuevo.'
+    }
+
+    // El cliente lee un stream de texto plano; un único chunk es compatible
+    return new Response(finalText, {
       headers: {
         'Content-Type': 'text/plain; charset=utf-8',
         'Cache-Control': 'no-cache',
@@ -108,5 +118,3 @@ Responde siempre en español. Sé directo y específico. Máximo 200 palabras.`
     return NextResponse.json({ error: 'Error al procesar el mensaje' }, { status: 500 })
   }
 }
-
-void client

@@ -1,3 +1,4 @@
+import { AI_MODEL_FAST } from '@/lib/ai/models'
 import Anthropic from '@anthropic-ai/sdk'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod/v4'
@@ -58,7 +59,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const message = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+      model: AI_MODEL_FAST,
       max_tokens: 150,
       system: systemPrompt,
       messages: [{ role: 'user', content: userMessage }],
