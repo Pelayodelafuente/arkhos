@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Modal, Button, Input, Select, Textarea } from "@/components/ui";
 import { addTransaction, updateTransaction } from "@/app/actions/patrimonio";
 import { useUIStore } from "@/stores/ui-store";
@@ -69,12 +69,14 @@ export function TransactionFormModal({
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof FormValues, string>>>({});
 
-  useEffect(() => {
+  const [prevSync, setPrevSync] = useState({ isOpen, transaction });
+  if (isOpen !== prevSync.isOpen || transaction !== prevSync.transaction) {
+    setPrevSync({ isOpen, transaction });
     if (isOpen) {
       setForm(transaction ? txToForm(transaction) : emptyForm());
       setErrors({});
     }
-  }, [isOpen, transaction]);
+  }
 
   const isEdit = Boolean(transaction);
 

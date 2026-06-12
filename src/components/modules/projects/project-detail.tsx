@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useSyncExternalStore } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -69,6 +69,18 @@ import TableView from "./table-view";
 import ActivityView from "./activity-view";
 import NotesView from "./notes-view";
 import type { PhaseTask } from "@/types/projects";
+
+// ─── Mobile detection (external store: matchMedia) ──────────
+const MOBILE_QUERY = "(max-width: 640px)";
+
+function subscribeIsMobile(callback: () => void): () => void {
+  const mql = window.matchMedia(MOBILE_QUERY);
+  mql.addEventListener("change", callback);
+  return () => mql.removeEventListener("change", callback);
+}
+
+const getIsMobileSnapshot = () => window.matchMedia(MOBILE_QUERY).matches;
+const getIsMobileServerSnapshot = () => false;
 
 // ─── Framer Motion variants ──────────
 const EASE_OUT = [0.22, 1, 0.36, 1] as [number, number, number, number];
@@ -253,23 +265,20 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
     loadMeta();
   }, [userId]);
 
-  useEffect(() => {
+  // Expand in-progress phases when the loaded project changes
+  const [prevExpandSync, setPrevExpandSync] = useState<{ projectId: string | undefined } | null>(null);
+  if (!prevExpandSync || project?.id !== prevExpandSync.projectId) {
+    setPrevExpandSync({ projectId: project?.id });
     if (project) {
       const inProgress = project.phases
         .filter((p) => p.status === "in-progress")
         .map((p) => p.id);
       setExpandedPhases(new Set(inProgress));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [project?.id]);
+  }
 
-  // Mobile detection for dnd fallback — start false, set after mount to avoid hydration mismatch
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setIsMobile(window.matchMedia('(max-width: 640px)').matches);
-    }
-  }, []);
+  // Mobile detection for dnd fallback — server snapshot false avoids hydration mismatch
+  const isMobile = useSyncExternalStore(subscribeIsMobile, getIsMobileSnapshot, getIsMobileServerSnapshot);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),

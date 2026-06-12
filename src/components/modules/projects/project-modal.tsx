@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Modal, Button, Input } from "@/components/ui";
 import { useProjectsStore } from "@/stores/projects-store";
 import { useUIStore, useToast } from "@/stores/ui-store";
@@ -73,16 +73,36 @@ export function ProjectModal({
   const [localTypes, setLocalTypes] = useState(projectTypes);
   const [localStatuses, setLocalStatuses] = useState(projectStatuses);
 
-  useEffect(() => {
+  const [prevTypes, setPrevTypes] = useState(projectTypes);
+  if (projectTypes !== prevTypes) {
+    setPrevTypes(projectTypes);
     setLocalTypes(projectTypes);
-  }, [projectTypes]);
+  }
 
-  useEffect(() => {
+  const [prevStatuses, setPrevStatuses] = useState(projectStatuses);
+  if (projectStatuses !== prevStatuses) {
+    setPrevStatuses(projectStatuses);
     setLocalStatuses(projectStatuses);
-  }, [projectStatuses]);
+  }
 
   // Populate form when editing
-  useEffect(() => {
+  const [prevFormSync, setPrevFormSync] = useState<{
+    activeModal: typeof activeModal;
+    isEditing: boolean;
+    editProject: typeof editProject;
+    defaultType: string;
+    defaultStatus: string;
+  } | null>(null);
+
+  if (
+    !prevFormSync ||
+    prevFormSync.activeModal !== activeModal ||
+    prevFormSync.isEditing !== isEditing ||
+    prevFormSync.editProject !== editProject ||
+    prevFormSync.defaultType !== defaultType ||
+    prevFormSync.defaultStatus !== defaultStatus
+  ) {
+    setPrevFormSync({ activeModal, isEditing, editProject, defaultType, defaultStatus });
     if (isEditing && editProject) {
       setName(editProject.name);
       setDescription(editProject.description ?? "");
@@ -101,15 +121,27 @@ export function ProjectModal({
       setStack([]);
     }
     setErrors({});
-  }, [activeModal, isEditing, editProject, defaultType, defaultStatus]);
+  }
 
   // Auto-set icon based on type (only when creating)
-  useEffect(() => {
+  const [prevIconSync, setPrevIconSync] = useState<{
+    type: string;
+    isEditing: boolean;
+    localTypes: ProjectTypeRecord[];
+  } | null>(null);
+
+  if (
+    !prevIconSync ||
+    prevIconSync.type !== type ||
+    prevIconSync.isEditing !== isEditing ||
+    prevIconSync.localTypes !== localTypes
+  ) {
+    setPrevIconSync({ type, isEditing, localTypes });
     if (!isEditing) {
       const typeRecord = localTypes.find((t) => t.name === type);
       if (typeRecord) setIcon(typeRecord.icon);
     }
-  }, [type, isEditing, localTypes]);
+  }
 
   function handleStackKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if ((e.key === "Enter" || e.key === ",") && stackInput.trim()) {

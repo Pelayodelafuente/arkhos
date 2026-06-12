@@ -149,9 +149,14 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
   }, [note, open]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load versions when history panel opens
+  const [prevHistorySync, setPrevHistorySync] = useState<{ historyOpen: boolean; note: Note | null | undefined }>({ historyOpen: false, note: null })
+  if (historyOpen !== prevHistorySync.historyOpen || note !== prevHistorySync.note) {
+    setPrevHistorySync({ historyOpen, note })
+    if (historyOpen && note) setLoadingVersions(true)
+  }
+
   useEffect(() => {
     if (historyOpen && note) {
-      setLoadingVersions(true)
       notesApi.getNoteVersions(note.id)
         .then(setVersions)
         .catch(() => toast.error('Error al cargar el historial'))

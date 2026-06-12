@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { motion } from "framer-motion"
 import { Bell } from "lucide-react"
 import { Modal, Button, Input } from "@/components/ui"
@@ -16,18 +16,20 @@ export function AlertSettings({ open, onClose, userId }: AlertSettingsProps) {
   const settings = useExpensesStore((s) => s.settings)
   const updateSettings = useExpensesStore((s) => s.updateSettings)
 
-  const [daysBefore, setDaysBefore] = useState("1")
-  const [renewalDays, setRenewalDays] = useState("30")
-  const [enabled, setEnabled] = useState(true)
+  const [daysBefore, setDaysBefore] = useState(() => String(settings?.alert_days_before ?? 1))
+  const [renewalDays, setRenewalDays] = useState(() => String(settings?.alert_renewal_days ?? 30))
+  const [enabled, setEnabled] = useState(() => settings?.alert_enabled ?? true)
   const [saving, setSaving] = useState(false)
+  const [prevSync, setPrevSync] = useState({ settings, open })
 
-  useEffect(() => {
+  if (settings !== prevSync.settings || open !== prevSync.open) {
+    setPrevSync({ settings, open })
     if (settings) {
       setDaysBefore(String(settings.alert_days_before ?? 1))
       setRenewalDays(String(settings.alert_renewal_days ?? 30))
       setEnabled(settings.alert_enabled ?? true)
     }
-  }, [settings, open])
+  }
 
   const handleSave = async () => {
     const days = Math.max(1, Math.min(30, parseInt(daysBefore, 10) || 1))

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Modal, Button, Input } from "@/components/ui";
 import { updatePlatformValueAction } from "@/app/actions/patrimonio";
 import { useUIStore } from "@/stores/ui-store";
@@ -26,13 +26,15 @@ export function ManualPriceUpdateModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+  if (isOpen !== prevIsOpen) {
+    setPrevIsOpen(isOpen);
     if (isOpen) {
       setValue("");
       setDate(today());
       setError("");
     }
-  }, [isOpen]);
+  }
 
   async function handleSave() {
     const numValue = parseFloat(value);

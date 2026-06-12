@@ -113,10 +113,16 @@ export function WindowChat() {
   }, [messages]);
 
   // Reset chat when project changes
-  useEffect(() => {
+  const [prevProjectId, setPrevProjectId] = useState(selectedProjectId);
+  if (selectedProjectId !== prevProjectId) {
+    setPrevProjectId(selectedProjectId);
     setMessages([]);
     setInput('');
     setIsStreaming(false);
+  }
+
+  // Abort in-flight stream from the previous project
+  useEffect(() => {
     if (abortRef.current) {
       abortRef.current.abort();
       abortRef.current = null;

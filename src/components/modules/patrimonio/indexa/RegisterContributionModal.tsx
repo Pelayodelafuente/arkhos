@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { X, ArrowDownToLine, RefreshCw, CheckCircle2, AlertCircle } from "lucide-react";
 import type { IndexaFund, IndexaMonthlyPlan } from "@/types/indexa";
 
@@ -56,16 +56,20 @@ export function RegisterContributionModal({
   const [error, setError] = useState<string | null>(null);
 
   // Auto-calculate pricePerShare from amount ÷ shares
-  useEffect(() => {
+  const [prevCalc, setPrevCalc] = useState({ amount, shares });
+  if (amount !== prevCalc.amount || shares !== prevCalc.shares) {
+    setPrevCalc({ amount, shares });
     const amt = parseFloat(amount);
     const sh = parseFloat(shares);
     if (!isNaN(amt) && !isNaN(sh) && sh > 0) {
       setPricePerShare((amt / sh).toFixed(4));
     }
-  }, [amount, shares]);
+  }
 
   // Reset when modal opens
-  useEffect(() => {
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+  if (isOpen !== prevIsOpen) {
+    setPrevIsOpen(isOpen);
     if (isOpen) {
       setFundId(activeFunds[0]?.id ?? "");
       setDate(todayISO());
@@ -77,8 +81,7 @@ export function RegisterContributionModal({
       setError(null);
       setSubmitStatus("idle");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]);
+  }
 
   const parsedAmount = parseFloat(amount);
   const parsedShares = parseFloat(shares);

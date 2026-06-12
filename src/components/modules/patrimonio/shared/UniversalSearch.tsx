@@ -40,6 +40,13 @@ export function UniversalSearch({ isOpen, onClose }: UniversalSearchProps) {
 
   const assets = usePatrimonioStore((s) => s.assets);
 
+  // Reset query when closed
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+  if (isOpen !== prevIsOpen) {
+    setPrevIsOpen(isOpen);
+    if (!isOpen) setQuery("");
+  }
+
   // Focus input when opened
   useEffect(() => {
     if (isOpen) {
@@ -48,8 +55,6 @@ export function UniversalSearch({ isOpen, onClose }: UniversalSearchProps) {
         inputRef.current?.focus();
       }, 30);
       return () => clearTimeout(id);
-    } else {
-      setQuery("");
     }
   }, [isOpen]);
 

@@ -17,17 +17,19 @@ export function ServicesCombobox({
 }: ServicesComboboxProps) {
   const [query, setQuery] = useState(value)
   const [open, setOpen] = useState(false)
+  const [prevValue, setPrevValue] = useState(value)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  if (value !== prevValue) {
+    setPrevValue(value)
+    setQuery(value)
+  }
 
   const filtered = query
     ? subscriptionServices.filter((s) =>
         s.name.toLowerCase().includes(query.toLowerCase())
       )
     : subscriptionServices
-
-  useEffect(() => {
-    setQuery(value)
-  }, [value])
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {

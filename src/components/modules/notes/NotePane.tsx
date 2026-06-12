@@ -81,9 +81,16 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
   const [loadingLinks, setLoadingLinks] = useState(false)
 
   // Load projects + subscriptions when link section opens
+  const [prevLinkSync, setPrevLinkSync] = useState<{ linkSectionOpen: boolean; userId: string }>({ linkSectionOpen: false, userId })
+  if (linkSectionOpen !== prevLinkSync.linkSectionOpen || userId !== prevLinkSync.userId) {
+    setPrevLinkSync({ linkSectionOpen, userId })
+    if (linkSectionOpen && projects.length === 0 && subscriptions.length === 0) {
+      setLoadingLinks(true)
+    }
+  }
+
   useEffect(() => {
     if (!linkSectionOpen || projects.length > 0 || subscriptions.length > 0) return
-    setLoadingLinks(true)
     const client = createClient()
     Promise.all([
       getProjectsForSelect(client, userId),
@@ -169,9 +176,14 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
   }, [note?.contentLoaded]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load versions when history panel opens
+  const [prevHistorySync, setPrevHistorySync] = useState<{ historyOpen: boolean; note: Note | null }>({ historyOpen: false, note: null })
+  if (historyOpen !== prevHistorySync.historyOpen || note !== prevHistorySync.note) {
+    setPrevHistorySync({ historyOpen, note })
+    if (historyOpen && note) setLoadingVersions(true)
+  }
+
   useEffect(() => {
     if (historyOpen && note) {
-      setLoadingVersions(true)
       notesApi.getNoteVersions(note.id)
         .then(setVersions)
         .catch(() => toast.error('Error al cargar el historial'))

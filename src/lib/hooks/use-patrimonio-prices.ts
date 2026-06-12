@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback } from "react";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { updateLivePrices } from "@/app/actions/patrimonio";
 import type { PriceResult, ForexRates } from "@/lib/patrimonio/price-service";
@@ -45,13 +45,12 @@ export function usePatrimonioPrices(): UsePatrimonioPricesReturn {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const lastRefreshRef  = useRef<number>(0);
-  const initializedRef  = useRef(false);
+  const [initialized, setInitialized] = useState(false);
 
-  // On mount: derive lastUpdated from DB prices already in the store.
+  // First render with assets: derive lastUpdated from DB prices already in the store.
   // No API call — prices only update when the user clicks "Actualizar".
-  useEffect(() => {
-    if (initializedRef.current || assets.length === 0) return;
-    initializedRef.current = true;
+  if (!initialized && assets.length > 0) {
+    setInitialized(true);
 
     const pricedAssets = assets.filter(
       (a) => a.isin && a.category !== "cash" && a.price_updated_at,
@@ -67,7 +66,7 @@ export function usePatrimonioPrices(): UsePatrimonioPricesReturn {
         setStatus("live");
       }
     }
-  }, [assets]);
+  }
 
   // ---------------------------------------------------------------------------
   // Core fetch — only invoked by explicit user action

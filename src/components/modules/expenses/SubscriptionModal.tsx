@@ -106,7 +106,19 @@ export function SubscriptionModal({
 
   // ── Populate on edit ────────────────
 
-  useEffect(() => {
+  const [prevSync, setPrevSync] = useState<{
+    subscription: SubscriptionWithCategory | null | undefined
+    open: boolean
+    prefilledDay: number | null | undefined
+  } | null>(null)
+
+  if (
+    !prevSync ||
+    prevSync.subscription !== subscription ||
+    prevSync.open !== open ||
+    prevSync.prefilledDay !== prefilledDay
+  ) {
+    setPrevSync({ subscription, open, prefilledDay })
     if (subscription) {
       setName(subscription.name)
       setIcon(subscription.icon)
@@ -125,7 +137,7 @@ export function SubscriptionModal({
     if (prefilledDay !== null && prefilledDay !== undefined) {
       setBillingDay(String(prefilledDay))
     }
-  }, [subscription, open, prefilledDay, resetForm])
+  }
 
   // ── Service selection ───────────────
 

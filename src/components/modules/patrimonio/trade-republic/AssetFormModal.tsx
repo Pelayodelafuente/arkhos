@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Modal, Button, Input, Select } from "@/components/ui";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { createAsset, updateAsset } from "@/app/actions/patrimonio";
@@ -85,12 +85,14 @@ export function AssetFormModal({ isOpen, onClose, asset }: AssetFormModalProps) 
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
+  const [prevSync, setPrevSync] = useState({ isOpen, asset });
+  if (isOpen !== prevSync.isOpen || asset !== prevSync.asset) {
+    setPrevSync({ isOpen, asset });
     if (isOpen) {
       setForm(asset ? assetToForm(asset) : emptyForm());
       setErrors({});
     }
-  }, [isOpen, asset]);
+  }
 
   const isEdit = Boolean(asset);
 

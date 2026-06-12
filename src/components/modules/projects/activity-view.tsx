@@ -161,9 +161,6 @@ export default function ActivityView({ projectId, userId }: ActivityViewProps) {
 
   const fetchEntries = useCallback(
     async (offset = 0, append = false) => {
-      if (offset === 0) setLoading(true);
-      else setLoadingMore(true);
-
       try {
         const client = createClient();
         const result = await getProjectActivity(client, userId, projectId, PAGE_SIZE, offset);
@@ -182,11 +179,20 @@ export default function ActivityView({ projectId, userId }: ActivityViewProps) {
     [projectId, userId]
   );
 
+  // Re-fetch when project/user changes — show loading while it happens
+  // (loading ya arranca en true en el primer render)
+  const [prevFetchKey, setPrevFetchKey] = useState({ projectId, userId });
+  if (projectId !== prevFetchKey.projectId || userId !== prevFetchKey.userId) {
+    setPrevFetchKey({ projectId, userId });
+    setLoading(true);
+  }
+
   useEffect(() => {
     fetchEntries();
   }, [fetchEntries]);
 
   const handleLoadMore = () => {
+    setLoadingMore(true);
     fetchEntries(entries.length, true);
   };
 
@@ -198,6 +204,7 @@ export default function ActivityView({ projectId, userId }: ActivityViewProps) {
       const client = createClient();
       await logActivity(client, userId, 'proyectos', 'manual_note', trimmed, `project:${projectId}`);
       setNoteText('');
+      setLoading(true);
       await fetchEntries();
     } finally {
       setSavingNote(false);
