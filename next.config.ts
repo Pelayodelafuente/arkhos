@@ -8,6 +8,10 @@ import type { NextConfig } from "next";
 const isDev = process.env.NODE_ENV === "development";
 
 const nextConfig: NextConfig = {
+  // F3.5 — React Compiler: memoización automática; los useMemo/useCallback
+  // defensivos dejan de ser necesarios en componentes que compilan limpio
+  reactCompiler: true,
+
   serverExternalPackages: ["d3", "d3-sankey"],
 
   compress: true,
