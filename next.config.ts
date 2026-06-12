@@ -8,8 +8,6 @@ import type { NextConfig } from "next";
 const isDev = process.env.NODE_ENV === "development";
 
 const nextConfig: NextConfig = {
-  transpilePackages: ["react-force-graph-2d", "force-graph"],
-
   serverExternalPackages: ["d3", "d3-sankey"],
 
   compress: true,

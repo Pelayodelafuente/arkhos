@@ -20,10 +20,29 @@ import type { AssetsData } from "@/lib/mercados/assets";
 import type { PortfolioMarketData } from "@/lib/mercados/portfolio-market";
 import type { MarketAlert } from "@/lib/mercados/alerts";
 import { MarketPulseBar } from "./MarketPulseBar";
-import { MacroDashboard } from "./macro/MacroDashboard";
-import { AssetsDashboard } from "./assets/AssetsDashboard";
-import { PortfolioDashboard } from "./portfolio/PortfolioDashboard";
+import dynamic from "next/dynamic";
 import { AlertsFeed } from "./portfolio/AlertsFeed";
+
+// F3.7 — los dashboards de cada tab cargan recharts; se difieren para sacar
+// la librería de gráficos del First Load JS de /mercados
+const tabLoading = () => (
+  <div className="space-y-4">
+    <div className="h-40 animate-pulse rounded-xl border border-border bg-card" />
+    <div className="h-40 animate-pulse rounded-xl border border-border bg-card" />
+  </div>
+);
+const MacroDashboard = dynamic(
+  () => import("./macro/MacroDashboard").then((m) => ({ default: m.MacroDashboard })),
+  { ssr: false, loading: tabLoading }
+);
+const AssetsDashboard = dynamic(
+  () => import("./assets/AssetsDashboard").then((m) => ({ default: m.AssetsDashboard })),
+  { ssr: false, loading: tabLoading }
+);
+const PortfolioDashboard = dynamic(
+  () => import("./portfolio/PortfolioDashboard").then((m) => ({ default: m.PortfolioDashboard })),
+  { ssr: false, loading: tabLoading }
+);
 import { AIChatPanel } from "./AIChatPanel";
 import { DailySummary } from "./DailySummary";
 
