@@ -1,5 +1,12 @@
 import type { NextConfig } from "next";
 
+// F1.8 — CSP: 'unsafe-eval' solo en dev (React Refresh lo requiere); en
+// producción ningún bundle (d3, recharts, force-graph) usa eval. 'unsafe-inline'
+// en script-src sigue siendo necesario para los inline scripts de hidratación de
+// Next; migrar a nonces exige renderizado dinámico en todas las rutas (rompe las
+// páginas estáticas de auth) — pendiente de decisión, ver AUDITORIA-GLOBAL.md.
+const isDev = process.env.NODE_ENV === "development";
+
 const nextConfig: NextConfig = {
   transpilePackages: ["react-force-graph-2d", "force-graph"],
 
@@ -35,7 +42,9 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+              isDev
+                ? "script-src 'self' 'unsafe-eval' 'unsafe-inline'"
+                : "script-src 'self' 'unsafe-inline'",
               "style-src 'self' 'unsafe-inline'",
               "font-src 'self'",
               "img-src 'self' data: blob: https:",
