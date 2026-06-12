@@ -4,12 +4,14 @@
 
 ## Estado actual
 - Todos los módulos completados: Proyectos, Gastos, Notas, Patrimonio, Mercados, Dashboard
-- **Auditoría global 2026-06-10** — ver `AUDITORIA-GLOBAL.md` (raíz). Fases 0-2 ejecutadas:
-  Next 16.2.9, DOMPurify, exceljs, tipos DB regenerados (0 `as any`), error boundaries,
-  @upstash/ratelimit, fetchWithTimeout, Zod en rutas, historial git purgado, backup semanal DB
-- Pendiente del plan: Fase 3 (server fetch en Gastos/Proyectos/Notas, slices stores,
-  React Compiler, 28 warnings set-state-in-effect) y Fase 4 (IA v2, ⌘K, PWA, Agenda)
-- Próximo: continuar plan de `AUDITORIA-GLOBAL.md` sección 5
+- **Auditoría global** — ver `AUDITORIA-GLOBAL.md` (raíz). Fases 0-2 (2026-06-10) y
+  **Fase 3 completa + Fase 4 mayoría (2026-06-12)**: server fetch + hidratación en los
+  3 módulos, notes-store en slices (`src/stores/notes/`), React Compiler activo,
+  bundle audit, CSP sin unsafe-eval en prod, IA con `claude-sonnet-4-6` (constante
+  única en `src/lib/ai/models.ts`) + tool-use en copiloto, watchlist arreglada + cron
+  market-refresh, ⌘K global (`CommandPalette`), PWA (sw.js + /offline)
+- Pendiente: acciones de Pelayo (secrets GitHub/Vercel, Sentry DSN, FRED key) y
+  decisiones (historial IA, staging, módulo Agenda, CSP nonces) — ver `docs/PENDING-FIXES.md`
 
 ## Stack
 | Tecnología | Versión | Nota |
