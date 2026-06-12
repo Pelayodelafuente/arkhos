@@ -28,13 +28,22 @@ import { SmartAddModal } from "./SmartAddModal"
 import { ShortcutsModal } from "./ShortcutsModal"
 import { GastosLoading } from "./GastosLoading"
 import { exportToCSV } from "@/lib/gastos-utils"
-import type { SubscriptionWithCategory } from "@/types/expenses"
+import type { SubscriptionWithCategory, ExpensesSnapshot } from "@/types/expenses"
 
 interface ExpensesViewProps {
   userId: string
+  initialData?: ExpensesSnapshot | null
 }
 
-export function ExpensesView({ userId }: ExpensesViewProps) {
+export function ExpensesView({ userId, initialData }: ExpensesViewProps) {
+  // Hidratación síncrona del store con el snapshot del servidor: debe ocurrir
+  // antes de los selectores para que el primer render (y el HTML SSR) tenga datos.
+  const hydratedRef = useRef(false)
+  if (!hydratedRef.current && initialData) {
+    useExpensesStore.getState().hydrate(initialData)
+    hydratedRef.current = true
+  }
+
   const fetchSubscriptions = useExpensesStore((s) => s.fetchSubscriptions)
   const fetchCategories = useExpensesStore((s) => s.fetchCategories)
   const fetchSettings = useExpensesStore((s) => s.fetchSettings)
@@ -57,17 +66,21 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
 
   const searchRef = useRef<HTMLInputElement>(null)
 
-  // Fetch data
+  // Fetch data — si llegó snapshot del servidor solo genera pagos pendientes
+  // (que ya refresca payments/monthlySpending si crea alguno)
   useEffect(() => {
     const loadData = async () => {
-      await Promise.all([
-        fetchSubscriptions(userId),
-        fetchCategories(userId),
-        fetchSettings(userId),
-      ])
-      // After subscriptions are loaded, generate missing payments and fetch spending
-      await generateMissingPayments(userId)
-      await fetchMonthlySpending(userId)
+      if (!hydratedRef.current) {
+        await Promise.all([
+          fetchSubscriptions(userId),
+          fetchCategories(userId),
+          fetchSettings(userId),
+        ])
+        await generateMissingPayments(userId)
+        await fetchMonthlySpending(userId)
+      } else {
+        await generateMissingPayments(userId)
+      }
     }
     loadData()
   }, [userId, fetchSubscriptions, fetchCategories, fetchSettings, generateMissingPayments, fetchMonthlySpending])

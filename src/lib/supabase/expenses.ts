@@ -3,7 +3,9 @@
 // Módulo Gastos: expense_categories + subscriptions + price_history + settings
 // ══════════════════════════════════════
 
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from './client'
+import type { Database } from './types'
 import type {
   ExpenseCategory,
   ExpenseCategoryInsert,
@@ -22,6 +24,10 @@ import type {
   MonthlySpending,
 } from '@/types/expenses'
 
+// El cliente es parametrizable para poder reutilizar las lecturas del snapshot
+// inicial desde Server Components (se pasa el server client) sin duplicar queries.
+type Client = SupabaseClient<Database>
+
 // ─── Error helper ─────────────────────
 
 class ExpensesError extends Error {
@@ -35,8 +41,10 @@ class ExpensesError extends Error {
 // EXPENSE CATEGORIES
 // ══════════════════════════════════════
 
-export async function getExpenseCategories(userId: string): Promise<ExpenseCategory[]> {
-  const client = createClient()
+export async function getExpenseCategories(
+  userId: string,
+  client: Client = createClient()
+): Promise<ExpenseCategory[]> {
   const { data, error } = await client
     .from('expense_categories')
     .select('id, user_id, name, icon, color, sort_order, created_at, updated_at')
@@ -102,8 +110,10 @@ function mapSubscriptionWithCategory(row: Record<string, unknown>): Subscription
   }
 }
 
-export async function getSubscriptions(userId: string): Promise<SubscriptionWithCategory[]> {
-  const client = createClient()
+export async function getSubscriptions(
+  userId: string,
+  client: Client = createClient()
+): Promise<SubscriptionWithCategory[]> {
   const { data, error } = await client
     .from('subscriptions')
     .select('*, category:expense_categories(*)')
@@ -255,8 +265,10 @@ export async function getPriceHistory(subscriptionId: string): Promise<PriceHist
 // USER GASTOS SETTINGS
 // ══════════════════════════════════════
 
-export async function getUserGastosSettings(userId: string): Promise<UserGastosSettings | null> {
-  const client = createClient()
+export async function getUserGastosSettings(
+  userId: string,
+  client: Client = createClient()
+): Promise<UserGastosSettings | null> {
   const { data, error } = await client
     .from('user_gastos_settings')
     .select('user_id, monthly_budget, default_currency, show_annual_prices, list_view_mode, collapsed_categories, alert_days_before, alert_renewal_days, alert_enabled, created_at, updated_at')
@@ -296,9 +308,9 @@ export async function upsertUserGastosSettings(
 export async function getPayments(
   userId: string,
   from?: string,
-  to?: string
+  to?: string,
+  client: Client = createClient()
 ): Promise<SubscriptionPayment[]> {
-  const client = createClient()
   let query = client
     .from('subscription_payments')
     .select('id, subscription_id, user_id, amount, currency, paid_at, cycle, auto_generated, notes, created_at')
@@ -359,13 +371,14 @@ export async function deletePayment(id: string): Promise<void> {
 
 export async function getMonthlySpending(
   userId: string,
-  months: number = 6
+  months: number = 6,
+  client: Client = createClient()
 ): Promise<MonthlySpending[]> {
   const now = new Date()
   const fromDate = new Date(now.getFullYear(), now.getMonth() - months + 1, 1)
   const fromStr = fromDate.toISOString().split('T')[0]
 
-  const payments = await getPayments(userId, fromStr)
+  const payments = await getPayments(userId, fromStr, undefined, client)
 
   // Aggregate by month
   const map = new Map<string, { total: number; count: number }>()

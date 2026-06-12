@@ -219,3 +219,13 @@ export interface SmartAddParsed {
   billingDay: number | null
   category: string | null
 }
+
+// ─── Snapshot SSR (server fetch + hidratación del store) ─────────
+
+export interface ExpensesSnapshot {
+  subscriptions: SubscriptionWithCategory[]
+  categories: ExpenseCategory[]
+  settings: UserGastosSettings | null
+  payments: SubscriptionPayment[]
+  monthlySpending: MonthlySpending[]
+}

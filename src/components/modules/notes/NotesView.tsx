@@ -20,6 +20,16 @@ interface Props {
 }
 
 export function NotesView({ initialNotes, initialCanvas, userId }: Props) {
+  // Hidratación síncrona del store con el snapshot del servidor, antes de los
+  // selectores, para que el HTML SSR ya pinte la lista de notas.
+  const hydratedRef = useRef(false)
+  if (!hydratedRef.current) {
+    const store = useNotesStore.getState()
+    store.setNotes(initialNotes)
+    store.setCanvas(initialCanvas)
+    hydratedRef.current = true
+  }
+
   const setNotes = useNotesStore((s) => s.setNotes)
   const setCanvas = useNotesStore((s) => s.setCanvas)
   const initCanvas = useNotesStore((s) => s.initCanvas)
@@ -58,8 +68,14 @@ export function NotesView({ initialNotes, initialCanvas, userId }: Props) {
     }
   }, [notes, searchParams]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Hydrate store with server data
+  // Re-hidratar si Next refresca el RSC payload con props nuevas (router.refresh);
+  // la primera ejecución se salta porque ya se hidrató síncronamente en el render
+  const firstHydrationEffect = useRef(true)
   useEffect(() => {
+    if (firstHydrationEffect.current) {
+      firstHydrationEffect.current = false
+      return
+    }
     setNotes(initialNotes)
     setCanvas(initialCanvas)
   }, [initialNotes, initialCanvas, setNotes, setCanvas])

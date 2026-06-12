@@ -44,6 +44,7 @@ import type {
   SubscriptionPayment,
   SubscriptionPaymentInsert,
   MonthlySpending,
+  ExpensesSnapshot,
 } from '@/types/expenses'
 import { getSubscriptionsForDay } from '@/utils/expenses-calendar'
 import { useUIStore } from './ui-store'
@@ -76,6 +77,7 @@ interface ExpensesState {
 }
 
 interface ExpensesActions {
+  hydrate: (snapshot: ExpensesSnapshot) => void
   fetchSubscriptions: (userId: string) => Promise<void>
   fetchCategories: (userId: string) => Promise<void>
   addSubscription: (data: SubscriptionInsert) => Promise<void>
@@ -126,6 +128,25 @@ export const useExpensesStore = create<ExpensesStore>((set, get) => ({
   viewedMonth: new Date().getMonth() + 1,
   payments: [],
   monthlySpending: [],
+
+  // ── Hidratación SSR ─────────────────
+  // Recibe el snapshot fetcheado en el Server Component (page.tsx de /gastos)
+  // para que el HTML inicial ya pinte datos sin esperar al fetch del cliente.
+
+  hydrate: (snapshot) => {
+    set({
+      subscriptions: snapshot.subscriptions,
+      categories: snapshot.categories,
+      payments: snapshot.payments,
+      monthlySpending: snapshot.monthlySpending,
+      isLoading: false,
+      ...(snapshot.settings && {
+        settings: snapshot.settings,
+        listViewMode: snapshot.settings.list_view_mode,
+        collapsedCategories: new Set(snapshot.settings.collapsed_categories),
+      }),
+    })
+  },
 
   // ── Fetch ───────────────────────────
 
