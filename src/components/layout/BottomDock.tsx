@@ -619,8 +619,8 @@ export function BottomDock({
 
           <DockSep />
 
-          {/* ── Derecha: Mercados · Patrimonio ──────────────────────── */}
-          {[MODULES[2], MODULES[3]].map((mod) => {
+          {/* ── Derecha: Mercados · Patrimonio · Cronos ─────────────── */}
+          {[MODULES[2], MODULES[3], MODULES[5]].map((mod) => {
             const active = isActive(mod.href);
             const Icon = mod.Icon;
             return (

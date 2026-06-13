@@ -96,8 +96,11 @@ export function EventModal({
   // Resetear el formulario cada vez que se abre con un evento/fecha distinto
   useEffect(() => {
     if (open) {
+      // Reset deliberado del formulario al abrir con nuevas props (sync intencional)
+      /* eslint-disable react-hooks/set-state-in-effect */
       setForm(buildInitial(editing, defaultDate, prefillTitle, prefillTaskId))
       setError(null)
+      /* eslint-enable react-hooks/set-state-in-effect */
     }
   }, [open, editing, defaultDate, prefillTitle, prefillTaskId])
 

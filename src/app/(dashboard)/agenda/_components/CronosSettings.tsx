@@ -37,6 +37,7 @@ export function CronosSettings({ open, onClose, userId }: Props) {
       .catch(() => {})
 
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPushState("unsupported")
     } else {
       navigator.serviceWorker.ready
