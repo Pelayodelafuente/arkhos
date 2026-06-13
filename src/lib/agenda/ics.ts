@@ -39,6 +39,7 @@ function vevent(opts: {
   description?: string | null
   location?: string | null
   rrule?: string | null
+  reminders?: number[]
 }): string {
   const lines = ['BEGIN:VEVENT', `UID:${opts.uid}@arkhos-cronos`, `DTSTAMP:${dtUtc(new Date().toISOString())}`]
   if (opts.allDay) {
@@ -54,6 +55,18 @@ function vevent(opts: {
   if (opts.description) lines.push(`DESCRIPTION:${esc(opts.description)}`)
   if (opts.location) lines.push(`LOCATION:${esc(opts.location)}`)
   if (opts.rrule) lines.push(`RRULE:${opts.rrule}`)
+  // Recordatorios (VALARM) — solo en eventos con hora; Proton los dispara en el móvil
+  if (!opts.allDay && opts.reminders?.length) {
+    for (const r of opts.reminders) {
+      lines.push(
+        'BEGIN:VALARM',
+        'ACTION:DISPLAY',
+        `TRIGGER:-PT${Math.max(0, r)}M`,
+        `DESCRIPTION:${esc(opts.summary)}`,
+        'END:VALARM'
+      )
+    }
+  }
   lines.push('END:VEVENT')
   return lines.join('\r\n')
 }
@@ -80,6 +93,7 @@ export function buildCalendar(events: AgendaEvent[], aggregated: CronosItem[]): 
       description: e.description,
       location: e.location,
       rrule: e.recurrence_rule,
+      reminders: e.reminders,
     })
   )
 

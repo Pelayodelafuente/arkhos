@@ -4,10 +4,17 @@ import { configureWebPush, sendPush, type PushSub } from "@/lib/agenda/push"
 
 export const maxDuration = 60
 
-// Ventana de disparo: debe coincidir con la cadencia del cron (ver vercel.json).
-const WINDOW_MIN = 15
+// Digest diario (plan Hobby = crons diarios). Cada mañana envía un resumen push
+// con los eventos de las próximas 24h. Los recordatorios por evento (15 min antes,
+// etc.) los entrega el feed ICS vía VALARM → app de Proton en el móvil.
+const HORIZON_H = 24
 
-// Cron de recordatorios Web Push. Vercel envía Authorization: Bearer ${CRON_SECRET}.
+const timeFmt = new Intl.DateTimeFormat("es-ES", {
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: "Europe/Madrid",
+})
+
 export async function GET(req: NextRequest) {
   const cronSecret = process.env.CRON_SECRET
   if (!cronSecret) return NextResponse.json({ error: "Cron no configurado" }, { status: 503 })
@@ -21,11 +28,9 @@ export async function GET(req: NextRequest) {
   const admin = createAdminClient()
   if (!admin) return NextResponse.json({ error: "Sin service role" }, { status: 503 })
 
-  const now = Date.now()
-  const lower = now - WINDOW_MIN * 60000
-  const horizon = new Date(now + 24 * 60 * 60 * 1000).toISOString()
+  const now = new Date()
+  const horizon = new Date(now.getTime() + HORIZON_H * 60 * 60 * 1000).toISOString()
 
-  // Suscripciones agrupadas por usuario
   const { data: subs } = await admin
     .from("agenda_push_subscriptions")
     .select("user_id, endpoint, p256dh, auth")
@@ -41,36 +46,33 @@ export async function GET(req: NextRequest) {
   let sent = 0
 
   for (const [userId, userSubs] of byUser) {
-    // Eventos próximos no recurrentes con recordatorio (las recurrencias se omiten en v1)
     const { data: events } = await admin
       .from("agenda_events")
-      .select("title, start_time, reminders")
+      .select("title, start_time, is_all_day")
       .eq("user_id", userId)
       .is("recurrence_rule", null)
-      .gte("start_time", new Date(now).toISOString())
+      .gte("start_time", now.toISOString())
       .lte("start_time", horizon)
+      .order("start_time", { ascending: true })
 
-    for (const ev of events ?? []) {
-      const startMs = new Date(ev.start_time).getTime()
-      const fires = (ev.reminders ?? []).some((r) => {
-        const fireAt = startMs - r * 60000
-        return fireAt > lower && fireAt <= now
-      })
-      if (!fires) continue
+    if (!events?.length) continue
 
-      const minutes = Math.round((startMs - now) / 60000)
-      const body =
-        minutes <= 1 ? "Empieza ahora" : minutes < 60 ? `Empieza en ${minutes} min` : "Próximamente"
+    const lines = events.slice(0, 4).map((e) => {
+      const when = e.is_all_day ? "Todo el día" : timeFmt.format(new Date(e.start_time))
+      return `${when} ${e.title}`
+    })
+    const extra = events.length > 4 ? ` +${events.length - 4} más` : ""
+    const body = lines.join(" · ") + extra
+    const title = `Hoy: ${events.length} ${events.length === 1 ? "evento" : "eventos"}`
 
-      for (const sub of userSubs) {
-        const res = await sendPush(sub, { title: ev.title, body, url: "/agenda" })
-        if (res === "ok") sent++
-        else if (res === "gone") {
-          await admin.from("agenda_push_subscriptions").delete().eq("endpoint", sub.endpoint)
-        }
+    for (const sub of userSubs) {
+      const res = await sendPush(sub, { title, body, url: "/agenda" })
+      if (res === "ok") sent++
+      else if (res === "gone") {
+        await admin.from("agenda_push_subscriptions").delete().eq("endpoint", sub.endpoint)
       }
     }
   }
 
-  return NextResponse.json({ ok: true, sent, at: new Date().toISOString() })
+  return NextResponse.json({ ok: true, sent, at: now.toISOString() })
 }
