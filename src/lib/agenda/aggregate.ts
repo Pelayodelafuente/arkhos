@@ -19,7 +19,9 @@ function formatAmount(amount: number, currency: string): string {
   return `${amount} ${currency}`
 }
 
-const localMidnight = (dateStr: string) => new Date(`${dateStr}T00:00:00`)
+// Medianoche UTC del día (consistente entre SSR y cliente; los items de día
+// completo se anclan a 00:00Z para que el día renderizado no derive por zona).
+const localMidnight = (dateStr: string) => new Date(`${dateStr}T00:00:00Z`)
 const dateOnly = (d: Date) => d.toISOString().slice(0, 10)
 
 // ─── Gastos: renovaciones de suscripciones ───

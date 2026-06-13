@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react"
+import { Bell, ChevronLeft, ChevronRight, Plus } from "lucide-react"
 import { Button } from "@/components/ui"
 import { useAgendaStore } from "@/stores/agenda-store"
 import type {
@@ -21,6 +21,7 @@ import { TimeGrid } from "./TimeGrid"
 import { EventModal } from "./EventModal"
 import { UnscheduledStrip } from "./UnscheduledStrip"
 import { AICommandBar } from "./AICommandBar"
+import { CronosSettings } from "./CronosSettings"
 import { addDays } from "@/lib/agenda/range"
 
 interface Props {
@@ -70,6 +71,7 @@ export function CronosView({ initialEvents, initialAggregated, userId }: Props) 
   const [editing, setEditing] = useState<AgendaEvent | null>(null)
   const [createDate, setCreateDate] = useState<string | undefined>(undefined)
   const [prefill, setPrefill] = useState<{ title?: string; taskId?: string } | null>(null)
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   const cursor = useMemo(() => new Date(selectedDate), [selectedDate])
 
@@ -155,10 +157,19 @@ export function CronosView({ initialEvents, initialAggregated, userId }: Props) 
               Tu línea de tiempo: eventos, proyectos, gastos y mercados en un solo río.
             </p>
           </div>
-          <Button variant="primary" size="md" onClick={() => openCreate()}>
-            <Plus size={16} strokeWidth={2} />
-            Nuevo evento
-          </Button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSettingsOpen(true)}
+              aria-label="Notificaciones y sincronización"
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-border text-text-secondary transition-colors hover:bg-sand"
+            >
+              <Bell size={16} />
+            </button>
+            <Button variant="primary" size="md" onClick={() => openCreate()}>
+              <Plus size={16} strokeWidth={2} />
+              Nuevo evento
+            </Button>
+          </div>
         </div>
 
         {/* Controles */}
@@ -274,6 +285,8 @@ export function CronosView({ initialEvents, initialAggregated, userId }: Props) 
         prefillTitle={prefill?.title}
         prefillTaskId={prefill?.taskId ?? null}
       />
+
+      <CronosSettings open={settingsOpen} onClose={() => setSettingsOpen(false)} userId={userId} />
     </div>
   )
 }

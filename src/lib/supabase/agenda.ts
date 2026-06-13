@@ -137,3 +137,25 @@ export async function deleteEvent(id: string): Promise<void> {
   const { error } = await query
   if (error) throw new AgendaError('Error deleting event', error.message)
 }
+
+// ─── Feed ICS (Proton) ───
+
+/** Devuelve el token del feed del usuario, creándolo si no existe. */
+export async function getOrCreateFeedToken(userId: string): Promise<string> {
+  const client = createClient()
+  const { data } = await client
+    .from('agenda_feed_tokens')
+    .select('token')
+    .eq('user_id', userId)
+    .maybeSingle()
+  if (data?.token) return data.token
+
+  const token = `${crypto.randomUUID()}${crypto.randomUUID()}`.replace(/-/g, '')
+  const { data: inserted, error } = await client
+    .from('agenda_feed_tokens')
+    .insert({ user_id: userId, token })
+    .select('token')
+    .single()
+  if (error) throw new AgendaError('Error creating feed token', error.message)
+  return inserted.token
+}
