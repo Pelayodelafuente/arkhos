@@ -20,6 +20,7 @@ import { MonthGrid } from "./MonthGrid"
 import { TimeGrid } from "./TimeGrid"
 import { EventModal } from "./EventModal"
 import { UnscheduledStrip } from "./UnscheduledStrip"
+import { AICommandBar } from "./AICommandBar"
 import { addDays } from "@/lib/agenda/range"
 
 interface Props {
@@ -88,6 +89,11 @@ export function CronosView({ initialEvents, initialAggregated, userId }: Props) 
     const r = fetchRange(date, view)
     void fetchEvents(userId, r.start, r.end)
     void fetchAggregated(userId, r.start, r.end)
+  }
+
+  function reloadCurrent() {
+    loadFor(cursor, viewMode)
+    void useAgendaStore.getState().fetchUnscheduled(userId)
   }
 
   function navigate(dir: 1 | -1) {
@@ -230,6 +236,9 @@ export function CronosView({ initialEvents, initialAggregated, userId }: Props) 
           })}
         </div>
       </header>
+
+      {/* Barra de IA en lenguaje natural */}
+      <AICommandBar onMutated={reloadCurrent} />
 
       {/* Tareas sin programar (timeboxing) */}
       <UnscheduledStrip tasks={unscheduled} onTimebox={openTimebox} />
