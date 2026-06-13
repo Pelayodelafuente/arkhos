@@ -37,6 +37,7 @@
 - Notas ✅ — `src/components/modules/notes/`
 - Patrimonio ✅ — `src/components/modules/patrimonio/` — TR, Indexa, Horos, Crypto, Mintos
 - Mercados ✅ — `src/app/(dashboard)/mercados/` — Fases 0-5 + auditoría v1.1
+- Cronos (Agenda) ✅ — `src/app/(dashboard)/agenda/` — calendario mes/semana/día + agregación cross-módulo (Gastos/Proyectos/Mercados) + IA NL/auto-scheduling + feed ICS (Proton) + Web Push. Color `--module-agenda #8A5A7A`
 
 ## Reglas activas
 Ver: `.claude/rules/reading-protocol.md` — lectura eficiente de archivos
