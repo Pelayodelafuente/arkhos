@@ -11,7 +11,7 @@
 #            psql "$DB_URL" -f backup.sql
 
 name: DB Backup
-h
+
 on:
   schedule:
     - cron: '0 3 * * 1' # lunes 03:00 UTC
