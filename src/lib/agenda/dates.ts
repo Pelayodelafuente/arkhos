@@ -50,6 +50,11 @@ export function formatTimeRange(startIso: string, endIso: string, allDay: boolea
   return `${timeFmt.format(new Date(startIso))} – ${timeFmt.format(new Date(endIso))}`
 }
 
+/** "10:00" (hora local). */
+export function formatTime(iso: string): string {
+  return timeFmt.format(new Date(iso))
+}
+
 /** ¿La fecha cae hoy (hora local)? */
 export function isToday(iso: string): boolean {
   return dayKey(iso) === dayKey(new Date().toISOString())

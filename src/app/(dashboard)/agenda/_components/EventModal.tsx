@@ -5,6 +5,12 @@ import { Modal, Button, Input, Textarea, Select } from "@/components/ui"
 import { useAgendaStore } from "@/stores/agenda-store"
 import { AGENDA_COLOR, REMINDER_OPTIONS, type AgendaEvent, type EventFormData } from "@/types/agenda"
 import { isoToDateInput, isoToLocalInput, localInputToIso } from "@/lib/agenda/dates"
+import {
+  RECURRENCE_OPTIONS,
+  presetToRule,
+  ruleToPreset,
+  type RecurrencePreset,
+} from "@/lib/agenda/recurrence"
 
 const COLOR_SWATCHES = [
   AGENDA_COLOR, // ciruela (agenda)
@@ -36,6 +42,7 @@ function buildInitial(editing: AgendaEvent | null | undefined, defaultDate?: str
       location: editing.location ?? "",
       color: editing.color || AGENDA_COLOR,
       reminder: editing.reminders?.[0] ?? 15,
+      recurrence: ruleToPreset(editing.recurrence_rule),
     }
   }
   const base = defaultDate ? new Date(defaultDate) : new Date()
@@ -52,6 +59,7 @@ function buildInitial(editing: AgendaEvent | null | undefined, defaultDate?: str
     location: "",
     color: AGENDA_COLOR,
     reminder: 15,
+    recurrence: "none" as RecurrencePreset,
   }
 }
 
@@ -93,6 +101,7 @@ export function EventModal({ open, onClose, userId, editing, defaultDate }: Prop
       location: form.location.trim() || null,
       color: form.color,
       reminders: [form.reminder],
+      recurrence_rule: presetToRule(form.recurrence),
     }
     if (isEdit && editing) {
       await editEvent(editing.id, payload)
@@ -185,12 +194,22 @@ export function EventModal({ open, onClose, userId, editing, defaultDate }: Prop
           onChange={(e) => setForm({ ...form, description: e.target.value })}
         />
 
-        <Select
-          label="Recordatorio"
-          value={String(form.reminder)}
-          options={REMINDER_OPTIONS.map((o) => ({ value: String(o.value), label: o.label }))}
-          onChange={(e) => setForm({ ...form, reminder: Number(e.target.value) })}
-        />
+        <div className="grid grid-cols-2 gap-3">
+          <Select
+            label="Recordatorio"
+            value={String(form.reminder)}
+            options={REMINDER_OPTIONS.map((o) => ({ value: String(o.value), label: o.label }))}
+            onChange={(e) => setForm({ ...form, reminder: Number(e.target.value) })}
+          />
+          <Select
+            label="Repetición"
+            value={form.recurrence}
+            options={RECURRENCE_OPTIONS}
+            onChange={(e) =>
+              setForm({ ...form, recurrence: e.target.value as RecurrencePreset })
+            }
+          />
+        </div>
 
         <div className="flex flex-col gap-1.5">
           <span className="text-sm font-medium text-text-secondary">Color</span>
