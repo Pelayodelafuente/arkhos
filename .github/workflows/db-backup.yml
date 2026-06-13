@@ -14,7 +14,7 @@ name: DB Backup
 
 on:
   schedule:
-    - cron: '0 3 * * 1' # lunes 03:00 UTC
+    - cron: '0 2 * * 0' # domingo 02:00 UTC
   workflow_dispatch: {}
 
 jobs:
@@ -36,7 +36,7 @@ jobs:
             echo "::error::Falta el secret SUPABASE_DB_URL — backup no ejecutado"
             exit 1
           fi
-                          /usr/lib/postgresql/17/bin/pg_dump "$DB_URL" --no-owner --no-privileges --schema=public \
+          /usr/lib/postgresql/17/bin/pg_dump "$DB_URL" --no-owner --no-privileges --schema=public \
             -f "arkhos-backup-$(date +%Y%m%d).sql"
 
       - name: Encrypt dump

@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 // F1.8 — CSP: 'unsafe-eval' solo en dev (React Refresh lo requiere); en
 // producción ningún bundle (d3, recharts, force-graph) usa eval. 'unsafe-inline'
@@ -83,4 +84,12 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  silent: true,
+  widenClientFileUpload: true,
+  sourcemaps: {
+    deleteSourcemapsAfterUpload: true,
+  },
+  disableLogger: true,
+  automaticVercelMonitors: false,
+});
