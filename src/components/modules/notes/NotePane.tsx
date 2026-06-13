@@ -136,21 +136,17 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
     if (noteId) loadNoteLinks(noteId)
   }, [noteId, loadNoteLinks])
 
-  // Populate form when note changes
-  useEffect(() => {
-    if (!note) { onClose(); return }
-    // Cancel any pending save from the previous note
-    if (autoSaveTimer.current) { clearTimeout(autoSaveTimer.current); autoSaveTimer.current = null }
-    pendingSaveRef.current = null
-    setTitle(note.title)
-    setContent(note.content)
-    setColor(note.color)
-    setIcon(note.icon)
-    setTags([...note.tags])
-    setStatus(note.status ?? 'none')
-    snapshotRef.current = {
-      title: note.title, content: note.content, color: note.color,
-      icon: note.icon, tags: [...note.tags], status: note.status ?? 'none',
+  // Render-phase sync: populate form when note changes
+  const [prevNoteId, setPrevNoteId] = useState<string | null>(noteId ?? null)
+  if (prevNoteId !== (noteId ?? null)) {
+    setPrevNoteId(noteId ?? null)
+    if (note) {
+      setTitle(note.title)
+      setContent(note.content)
+      setColor(note.color)
+      setIcon(note.icon)
+      setTags([...note.tags])
+      setStatus(note.status ?? 'none')
     }
     setConfirmDelete(false)
     setShowIcons(false)
@@ -159,16 +155,34 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
     setSelectedVersion(null)
     setSaveStatus('idle')
     setAiSuggestedTags([])
+  }
+
+  // Side effects when note changes: close if gone, cancel pending timers, reset refs
+  useEffect(() => {
+    if (!note) { onClose(); return }
+    if (autoSaveTimer.current) { clearTimeout(autoSaveTimer.current); autoSaveTimer.current = null }
+    pendingSaveRef.current = null
+    snapshotRef.current = {
+      title: note.title, content: note.content, color: note.color,
+      icon: note.icon, tags: [...note.tags], status: note.status ?? 'none',
+    }
   }, [noteId]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Cuando el content se carga de forma lazy, actualizar el editor
+  // Render-phase sync: update content when lazy-loaded
+  const [prevContentLoaded, setPrevContentLoaded] = useState(note?.contentLoaded ?? false)
+  if (prevContentLoaded !== (note?.contentLoaded ?? false)) {
+    setPrevContentLoaded(note?.contentLoaded ?? false)
+    if (note?.contentLoaded) {
+      setContent(note.content)
+    }
+  }
+
+  // Update snapshot ref + auto-snapshot when content is lazy-loaded
   useEffect(() => {
     if (!note?.contentLoaded) return
-    setContent(note.content)
     if (snapshotRef.current) {
       snapshotRef.current = { ...snapshotRef.current, content: note.content }
     }
-    // Auto-snapshot ahora que tenemos el content
     const fiveMinutesAgo = Date.now() - 5 * 60 * 1000
     if (new Date(note.updated_at).getTime() < fiveMinutesAgo) {
       notesApi.saveNoteVersion(note.id, userId, note.title, note.content).catch(() => {})

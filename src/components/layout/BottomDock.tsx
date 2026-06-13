@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useProjectsStore } from "@/stores/projects-store";
@@ -359,20 +359,18 @@ export function BottomDock({
   const projectCount = storeProjectCount ?? initialProjectCount;
   const noteCount = storeNoteCount ?? initialNoteCount;
 
-  const [dockVisible, setDockVisible] = useState(true);
-  useEffect(() => {
+  const [dockVisible, setDockVisible] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true
     try {
-      // Version bump: reset old hidden state so dock is always recoverable
       if (localStorage.getItem("arkhos-dock-v") !== "2") {
-        localStorage.setItem("arkhos-dock-v", "2");
-        localStorage.setItem("arkhos-dock-visible", "true");
-        setDockVisible(true);
-        return;
+        localStorage.setItem("arkhos-dock-v", "2")
+        localStorage.setItem("arkhos-dock-visible", "true")
+        return true
       }
-      const saved = localStorage.getItem("arkhos-dock-visible");
-      if (saved !== null) setDockVisible(JSON.parse(saved) as boolean);
-    } catch { /* ignore */ }
-  }, []);
+      const saved = localStorage.getItem("arkhos-dock-visible")
+      return saved !== null ? (JSON.parse(saved) as boolean) : true
+    } catch { return true }
+  });
 
   const toggleDock = () => {
     setDockVisible((prev) => {

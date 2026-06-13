@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import { RefreshCw, CalendarClock } from "lucide-react";
 import { usePatrimonioPrices } from "@/lib/hooks/use-patrimonio-prices";
 import { useToast } from "@/stores/ui-store";
@@ -25,7 +24,6 @@ function getPriceAge(date: Date): { hours: number; days: number; isStale: boolea
 export function PriceStatusBanner() {
   const { lastUpdated, refreshPrices, isRefreshing } = usePatrimonioPrices();
   const toast = useToast();
-  const router = useRouter();
 
   const [cooldown, setCooldown] = useState(0);
   const [isLoadingHistorical, setIsLoadingHistorical] = useState(false);

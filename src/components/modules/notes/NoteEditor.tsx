@@ -363,8 +363,7 @@ export function NoteEditor({
       const incoming = markdownToHtml(content)
       if (currentHtml !== incoming) {
         editor.commands.setContent(incoming)
-        // Update word count after content sync
-        setEditorText(editor.getText())
+        // onUpdate fires automatically after setContent — editorText updates there
       }
     }
   }, [content, editor])

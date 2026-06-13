@@ -96,6 +96,33 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
   const backlinks = note?.id ? (noteBacklinks[note.id] ?? []) : []
   const hasLinks = references.length > 0 || backlinks.length > 0
 
+  // Render-phase sync: reset form when modal closes
+  const [prevOpen, setPrevOpen] = useState(open)
+  if (prevOpen !== open) {
+    setPrevOpen(open)
+    if (!open) {
+      setTitle("")
+      setContent("")
+      setColor("default")
+      setIcon("FileText")
+      setTags([])
+      setStatus('none')
+      setConfirmDelete(false)
+      setShowIcons(false)
+      setHistoryOpen(false)
+      setVersions([])
+      setSelectedVersion(null)
+    }
+  }
+
+  // Reset refs when modal closes (refs cannot be mutated during render)
+  useEffect(() => {
+    if (!open) {
+      snapshotRef.current = null
+      contentEditedRef.current = false
+    }
+  }, [open])
+
   // Populate form + capture snapshot (must set ref before auto-save effect can fire)
   useEffect(() => {
     const justOpened = open && !prevOpenRef.current
@@ -131,20 +158,6 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
           notesApi.saveNoteVersion(note.id, userId, note.title, note.content).catch(() => {})
         }
       }
-    } else if (!open) {
-      setTitle("")
-      setContent("")
-      setColor("default")
-      setIcon("FileText")
-      setTags([])
-      setStatus('none')
-      snapshotRef.current = null
-      contentEditedRef.current = false
-      setConfirmDelete(false)
-      setShowIcons(false)
-      setHistoryOpen(false)
-      setVersions([])
-      setSelectedVersion(null)
     }
   }, [note, open]) // eslint-disable-line react-hooks/exhaustive-deps
 
