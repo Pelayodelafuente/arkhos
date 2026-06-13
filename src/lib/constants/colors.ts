@@ -4,6 +4,7 @@ export const MODULE_COLORS = {
   patrimonio: '#2E7D6B',
   gastos:     '#3B78B0',
   notas:      '#B07A3A',
+  agenda:     '#8A5A7A',
 } as const
 
 export const COLOR_PRESETS = [

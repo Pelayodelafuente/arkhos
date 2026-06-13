@@ -10,6 +10,7 @@ import {
   TrendingUp,
   Wallet,
   CreditCard,
+  CalendarDays,
   Shield,
   BookOpen,
   PanelLeftClose,
@@ -65,6 +66,14 @@ const moduleItems = [
     dot: MODULE_COLORS.gastos,
     dotGlow: "0 0 6px rgba(59,120,176,0.50)",
     countKey: "gastos" as const,
+  },
+  {
+    label: "Cronos",
+    href: "/agenda",
+    icon: CalendarDays,
+    dot: MODULE_COLORS.agenda,
+    dotGlow: "0 0 6px rgba(138,90,122,0.50)",
+    countKey: "agenda" as const,
   },
 ] as const;
 
