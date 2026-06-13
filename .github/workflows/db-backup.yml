@@ -36,7 +36,7 @@ jobs:
             echo "::error::Falta el secret SUPABASE_DB_URL — backup no ejecutado"
             exit 1
           fi
-                  pg_dump "$DB_URL" --no-owner --no-privileges --schema=public --no-version-check \
+                          /usr/lib/postgresql/17/bin/pg_dump "$DB_URL" --no-owner --no-privileges --schema=public \
             -f "arkhos-backup-$(date +%Y%m%d).sql"
 
       - name: Encrypt dump
