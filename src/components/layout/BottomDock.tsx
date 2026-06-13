@@ -119,6 +119,22 @@ function IcoGastos() {
     </svg>
   );
 }
+function IcoAgenda() {
+  const c = "#B584C8";
+  return (
+    <svg fill="none" width="34" height="34" viewBox="0 0 24 24">
+      <rect x="3" y="4.5" width="18" height="16" rx="2.5" fill={c} fillOpacity="0.18" />
+      <rect x="3" y="4.5" width="18" height="4" rx="2.5" fill={c} fillOpacity="0.4" />
+      <line x1="7.5" y1="2.5" x2="7.5" y2="6" stroke={c} strokeWidth="1.6" strokeLinecap="round" />
+      <line x1="16.5" y1="2.5" x2="16.5" y2="6" stroke={c} strokeWidth="1.6" strokeLinecap="round" />
+      <rect x="6" y="11" width="3" height="3" rx="0.7" fill={c} />
+      <rect x="10.5" y="11" width="3" height="3" rx="0.7" fill={c} fillOpacity="0.7" />
+      <rect x="15" y="11" width="3" height="3" rx="0.7" fill={c} fillOpacity="0.5" />
+      <rect x="6" y="15.5" width="3" height="3" rx="0.7" fill={c} fillOpacity="0.7" />
+      <rect x="10.5" y="15.5" width="3" height="3" rx="0.7" fill={c} />
+    </svg>
+  );
+}
 function IcoSettings() {
   return (
     <svg {...SVG} width={20} height={20} viewBox="0 0 24 24" stroke="rgba(255,255,255,0.55)">
@@ -216,6 +232,18 @@ const MODULES: ModuleConfig[] = [
     previewSub: "Control financiero",
     previewFeatures: ["Suscripciones", "Historial", "Tags", "Ciclos"],
     Icon: IcoGastos,
+  },
+  {
+    key: "agenda",
+    label: "Cronos",
+    href: "/agenda",
+    gradFrom: "#B584C8",
+    gradTo: "#5A2E6B",
+    glow: "rgba(138,90,122,0.4)",
+    previewBg: "rgba(138,90,122,0.22)",
+    previewSub: "Línea de tiempo",
+    previewFeatures: ["Calendario", "Timeboxing", "IA", "Recordatorios"],
+    Icon: IcoAgenda,
   },
 ];
 

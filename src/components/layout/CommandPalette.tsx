@@ -10,6 +10,7 @@ import {
   StickyNote,
   Landmark,
   LineChart,
+  CalendarDays,
   Settings,
   CreditCard,
   ArrowRight,
@@ -39,6 +40,7 @@ const NAV_ITEMS: PaletteItem[] = [
   { id: "nav-notas", label: "Notas", hint: "Ir a", href: "/notas", icon: <StickyNote size={15} />, group: "Navegación" },
   { id: "nav-patrimonio", label: "Patrimonio", hint: "Ir a", href: "/patrimonio", icon: <Landmark size={15} />, group: "Navegación" },
   { id: "nav-mercados", label: "Mercados", hint: "Ir a", href: "/mercados", icon: <LineChart size={15} />, group: "Navegación" },
+  { id: "nav-agenda", label: "Cronos", hint: "Ir a", href: "/agenda", icon: <CalendarDays size={15} />, group: "Navegación" },
   { id: "nav-settings", label: "Ajustes", hint: "Ir a", href: "/settings", icon: <Settings size={15} />, group: "Navegación" },
 ]
 

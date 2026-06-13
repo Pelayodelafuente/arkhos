@@ -82,6 +82,7 @@
 
   --module-gastos:     #3B78B0;
   --module-notas:      #B07A3A;
+  --module-agenda:     #8A5A7A;
 
   /* SISTEMA DE URGENCIA */
   --urgency-critical:     #c0392b;
@@ -172,6 +173,7 @@
   --color-gastos: var(--module-gastos);
   --color-mercados: var(--module-mercados);
   --color-notas: var(--module-notas);
+  --color-agenda: var(--module-agenda);
 
   /* Estados */
   --color-success: var(--success);
