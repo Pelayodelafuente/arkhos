@@ -80,3 +80,5 @@ bit2me-historial/
 /*.csv
 docs/*.xlsx
 docs/*.docx
+
+.vercel
