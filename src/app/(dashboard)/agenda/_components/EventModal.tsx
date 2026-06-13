@@ -29,9 +29,18 @@ interface Props {
   editing?: AgendaEvent | null
   /** Fecha inicial sugerida (ISO) al crear. */
   defaultDate?: string
+  /** Título prefijado (timeboxing de una tarea). */
+  prefillTitle?: string
+  /** Tarea de Proyectos a enlazar (timeboxing). */
+  prefillTaskId?: string | null
 }
 
-function buildInitial(editing: AgendaEvent | null | undefined, defaultDate?: string) {
+function buildInitial(
+  editing: AgendaEvent | null | undefined,
+  defaultDate?: string,
+  prefillTitle?: string,
+  prefillTaskId?: string | null
+) {
   if (editing) {
     return {
       title: editing.title,
@@ -43,6 +52,7 @@ function buildInitial(editing: AgendaEvent | null | undefined, defaultDate?: str
       color: editing.color || AGENDA_COLOR,
       reminder: editing.reminders?.[0] ?? 15,
       recurrence: ruleToPreset(editing.recurrence_rule),
+      linkedTaskId: editing.linked_task_id,
     }
   }
   const base = defaultDate ? new Date(defaultDate) : new Date()
@@ -51,7 +61,7 @@ function buildInitial(editing: AgendaEvent | null | undefined, defaultDate?: str
   const startIso = base.toISOString()
   const endIso = new Date(base.getTime() + 60 * 60 * 1000).toISOString()
   return {
-    title: "",
+    title: prefillTitle ?? "",
     description: "",
     isAllDay: false,
     start: startIso,
@@ -60,25 +70,36 @@ function buildInitial(editing: AgendaEvent | null | undefined, defaultDate?: str
     color: AGENDA_COLOR,
     reminder: 15,
     recurrence: "none" as RecurrencePreset,
+    linkedTaskId: prefillTaskId ?? null,
   }
 }
 
-export function EventModal({ open, onClose, userId, editing, defaultDate }: Props) {
+export function EventModal({
+  open,
+  onClose,
+  userId,
+  editing,
+  defaultDate,
+  prefillTitle,
+  prefillTaskId,
+}: Props) {
   const addEvent = useAgendaStore((s) => s.addEvent)
   const editEvent = useAgendaStore((s) => s.editEvent)
   const removeEvent = useAgendaStore((s) => s.removeEvent)
 
-  const [form, setForm] = useState(() => buildInitial(editing, defaultDate))
+  const [form, setForm] = useState(() =>
+    buildInitial(editing, defaultDate, prefillTitle, prefillTaskId)
+  )
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   // Resetear el formulario cada vez que se abre con un evento/fecha distinto
   useEffect(() => {
     if (open) {
-      setForm(buildInitial(editing, defaultDate))
+      setForm(buildInitial(editing, defaultDate, prefillTitle, prefillTaskId))
       setError(null)
     }
-  }, [open, editing, defaultDate])
+  }, [open, editing, defaultDate, prefillTitle, prefillTaskId])
 
   const isEdit = Boolean(editing)
 
@@ -102,6 +123,7 @@ export function EventModal({ open, onClose, userId, editing, defaultDate }: Prop
       color: form.color,
       reminders: [form.reminder],
       recurrence_rule: presetToRule(form.recurrence),
+      linked_task_id: form.linkedTaskId ?? null,
     }
     if (isEdit && editing) {
       await editEvent(editing.id, payload)
@@ -153,6 +175,18 @@ export function EventModal({ open, onClose, userId, editing, defaultDate }: Prop
           placeholder="Comida con Marta…"
           onChange={(e) => setForm({ ...form, title: e.target.value })}
         />
+
+        {form.linkedTaskId && (
+          <span
+            className="inline-flex w-fit items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium"
+            style={{
+              backgroundColor: "color-mix(in srgb, var(--module-proyectos) 14%, transparent)",
+              color: "var(--module-proyectos)",
+            }}
+          >
+            ↳ Vinculado a tarea de Proyectos
+          </span>
+        )}
 
         <label className="flex cursor-pointer items-center gap-2 text-sm text-text-secondary">
           <input

@@ -5,6 +5,7 @@ import type {
   CronosItem,
   EventFormData,
   EventSource,
+  TimeboxTask,
 } from '@/types/agenda'
 import {
   createEvent,
@@ -13,11 +14,14 @@ import {
   getEvents,
   updateEvent,
 } from '@/lib/supabase/agenda'
+import { createClient } from '@/lib/supabase/client'
+import { getAggregatedItems, getUnscheduledTasks } from '@/lib/agenda/aggregate'
 
 interface AgendaStore {
   // ── Estado ──
   events: AgendaEvent[] // eventos nativos (fuente de verdad)
   aggregated: CronosItem[] // eventos virtuales de otros módulos (Fase 3)
+  unscheduled: TimeboxTask[] // tareas de Proyectos sin fecha (timeboxing)
   initialized: boolean
   isLoading: boolean
   viewMode: AgendaViewMode
@@ -25,8 +29,10 @@ interface AgendaStore {
   sourceFilter: Record<EventSource, boolean>
 
   // ── Hidratación / fetch ──
-  hydrate: (events: AgendaEvent[]) => void
+  hydrate: (events: AgendaEvent[], aggregated?: CronosItem[]) => void
   fetchEvents: (userId: string, rangeStart: string, rangeEnd: string) => Promise<void>
+  fetchAggregated: (userId: string, rangeStart: string, rangeEnd: string) => Promise<void>
+  fetchUnscheduled: (userId: string) => Promise<void>
 
   // ── CRUD ──
   addEvent: (userId: string, form: EventFormData) => Promise<AgendaEvent | null>
@@ -53,13 +59,15 @@ const ALL_SOURCES_ON: Record<EventSource, boolean> = {
 export const useAgendaStore = create<AgendaStore>((set, get) => ({
   events: [],
   aggregated: [],
+  unscheduled: [],
   initialized: false,
   isLoading: false,
   viewMode: 'month',
   selectedDate: new Date().toISOString(),
   sourceFilter: { ...ALL_SOURCES_ON },
 
-  hydrate: (events) => set({ events, initialized: true }),
+  hydrate: (events, aggregated) =>
+    set({ events, aggregated: aggregated ?? [], initialized: true }),
 
   fetchEvents: async (userId, rangeStart, rangeEnd) => {
     set({ isLoading: true })
@@ -70,6 +78,24 @@ export const useAgendaStore = create<AgendaStore>((set, get) => ({
       console.error('[agenda] fetchEvents', e)
     } finally {
       set({ isLoading: false })
+    }
+  },
+
+  fetchAggregated: async (userId, rangeStart, rangeEnd) => {
+    try {
+      const items = await getAggregatedItems(createClient(), userId, rangeStart, rangeEnd)
+      set({ aggregated: items })
+    } catch (e) {
+      console.error('[agenda] fetchAggregated', e)
+    }
+  },
+
+  fetchUnscheduled: async (userId) => {
+    try {
+      const tasks = await getUnscheduledTasks(createClient(), userId)
+      set({ unscheduled: tasks })
+    } catch (e) {
+      console.error('[agenda] fetchUnscheduled', e)
     }
   },
 

@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { CronosView } from "./_components/CronosView"
+import { getAggregatedItems } from "@/lib/agenda/aggregate"
 import type { AgendaEvent } from "@/types/agenda"
 
 const EVENT_FIELDS = [
@@ -22,14 +23,21 @@ export default async function AgendaPage() {
   const start = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString()
   const end = new Date(now.getFullYear(), now.getMonth() + 2, 0, 23, 59, 59).toISOString()
 
-  const { data: eventsRaw } = await supabase
-    .from("agenda_events")
-    .select(EVENT_FIELDS)
-    .eq("user_id", user.id)
-    .or(`and(start_time.lte.${end},end_time.gte.${start}),recurrence_rule.not.is.null`)
-    .order("start_time", { ascending: true })
+  const [{ data: eventsRaw }, aggregated] = await Promise.all([
+    supabase
+      .from("agenda_events")
+      .select(EVENT_FIELDS)
+      .eq("user_id", user.id)
+      .or(`and(start_time.lte.${end},end_time.gte.${start}),recurrence_rule.not.is.null`)
+      .order("start_time", { ascending: true }),
+    getAggregatedItems(supabase, user.id, start, end),
+  ])
 
   return (
-    <CronosView initialEvents={(eventsRaw ?? []) as unknown as AgendaEvent[]} userId={user.id} />
+    <CronosView
+      initialEvents={(eventsRaw ?? []) as unknown as AgendaEvent[]}
+      initialAggregated={aggregated}
+      userId={user.id}
+    />
   )
 }

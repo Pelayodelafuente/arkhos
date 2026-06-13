@@ -67,6 +67,14 @@ export interface CronosItem {
   recurring?: boolean
 }
 
+/** Tarea de Proyectos sin programar (candidata a timeboxing). */
+export interface TimeboxTask {
+  id: string
+  text: string
+  projectName: string | null
+  color: string | null
+}
+
 /** Recordatorios disponibles (minutos antes del evento). */
 export const REMINDER_OPTIONS: { value: number; label: string }[] = [
   { value: 0, label: 'En el momento' },
