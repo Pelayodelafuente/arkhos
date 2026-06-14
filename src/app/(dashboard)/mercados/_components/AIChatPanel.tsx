@@ -314,13 +314,13 @@ export function AIChatPanel({
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: 500, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="fixed right-0 top-0 z-50 flex h-full w-[500px] flex-col border-l border-border bg-white"
+            className="fixed right-0 top-0 z-50 flex h-dvh w-full flex-col border-l border-border bg-white sm:w-[500px]"
             role="dialog"
             aria-modal="true"
             aria-label="Arkhos Intelligence — Chat IA"
           >
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-border px-5 py-4">
+            <div className="flex items-center justify-between border-b border-border px-5 py-4 pt-[calc(1rem+env(safe-area-inset-top))]">
               <div className="flex items-center gap-3">
                 <div className="flex h-8 w-8 items-center justify-center rounded-md bg-mercados">
                   <Bot size={16} strokeWidth={1.75} className="text-white" />
@@ -460,7 +460,7 @@ export function AIChatPanel({
             </div>
 
             {/* Input area */}
-            <div className="border-t border-border px-4 py-3">
+            <div className="border-t border-border px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
               <div className="flex items-end gap-2 rounded-xl border border-border bg-sand px-3 py-2 focus-within:border-mercados transition-colors">
                 <textarea
                   ref={textareaRef}
