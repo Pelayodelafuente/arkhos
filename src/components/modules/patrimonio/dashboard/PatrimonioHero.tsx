@@ -64,9 +64,9 @@ interface SubMetricProps {
 
 function SubMetric({ label, value, subtext, color }: SubMetricProps) {
   return (
-    <div className="px-5 py-4">
+    <div className="px-2.5 py-4 sm:px-5">
       <p className="text-xs" style={{ color: "var(--text-muted)" }}>{label}</p>
-      <p className="font-mono text-xl font-semibold mt-0.5" style={{ color }}>{value}</p>
+      <p className="font-mono text-[13px] font-semibold mt-0.5 sm:text-xl" style={{ color }}>{value}</p>
       {subtext && (
         <p className="font-mono text-xs mt-0.5" style={{ color: "var(--text-tertiary)" }}>{subtext}</p>
       )}

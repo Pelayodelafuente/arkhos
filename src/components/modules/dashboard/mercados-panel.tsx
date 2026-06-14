@@ -215,10 +215,10 @@ export function MercadosPanel({ btcPrice, marketData }: MercadosPanelProps) {
         </div>
       </div>
       <div className="px-4 pb-3 pt-1 border-t border-border flex items-center justify-between">
-        <p className="text-[10px] text-text-muted">
+        <p className="min-w-0 text-[10px] text-text-muted">
           Cache del módulo Mercados · IGLN y CSPX en tiempo real allí
         </p>
-        <a href="/mercados" className="text-[10px] font-medium hover:underline" style={{ color: 'var(--module-mercados)' }}>
+        <a href="/mercados" className="ml-2 flex-shrink-0 whitespace-nowrap text-[10px] font-medium hover:underline" style={{ color: 'var(--module-mercados)' }}>
           Ir a Mercados →
         </a>
       </div>
