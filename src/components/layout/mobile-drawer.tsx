@@ -73,7 +73,7 @@ export function MobileDrawer({ open, onClose, userName }: MobileDrawerProps) {
             : "slide-in-left 250ms var(--ease-out-expo) forwards",
         }}
       >
-        <div className="flex items-center justify-between px-5 py-6">
+        <div className="flex items-center justify-between px-5 py-6 pt-[calc(1.5rem+env(safe-area-inset-top))]">
           <ArkhosLogo size="sm" />
           <button
             onClick={handleClose}

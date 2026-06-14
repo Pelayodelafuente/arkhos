@@ -50,7 +50,7 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-transparent">
+    <div className="flex h-dvh flex-col overflow-hidden bg-transparent">
       <NavigationProgress />
 
       {/* Mobile topbar */}
@@ -60,7 +60,7 @@ export default async function DashboardLayout({
       {!mfaActive && <MfaBanner />}
 
       {/* Page content — full width on desktop */}
-      <main className="relative flex-1 overflow-y-auto px-4 py-4 pb-20 lg:px-8 lg:py-6 lg:pb-28">
+      <main className="relative flex-1 overflow-y-auto px-4 py-4 pb-[calc(5rem+env(safe-area-inset-bottom))] lg:px-8 lg:py-6 lg:pb-28">
         {children}
       </main>
 

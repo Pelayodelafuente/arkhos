@@ -21,7 +21,7 @@ export default function AuthLayout({
 
   return (
     <div
-      className="auth-dark relative flex min-h-screen flex-col items-center justify-center overflow-hidden"
+      className="auth-dark relative flex min-h-dvh flex-col items-center justify-center overflow-hidden"
       style={{ backgroundColor: "var(--auth-bg)" }}
     >
       {/* Ambient gradient overlays */}
