@@ -161,7 +161,7 @@ export function CronosView({ initialEvents, initialAggregated, userId }: Props) 
             <button
               onClick={() => setSettingsOpen(true)}
               aria-label="Notificaciones y sincronización"
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-border text-text-secondary transition-colors hover:bg-sand"
+              className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border border-border text-text-secondary transition-colors hover:bg-sand lg:h-10 lg:w-10"
             >
               <Bell size={16} />
             </button>
@@ -178,7 +178,7 @@ export function CronosView({ initialEvents, initialAggregated, userId }: Props) 
             <button
               onClick={() => navigate(-1)}
               aria-label="Anterior"
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-text-secondary transition-colors hover:bg-sand"
+              className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg border border-border text-text-secondary transition-colors hover:bg-sand lg:h-8 lg:w-8"
             >
               <ChevronLeft size={16} />
             </button>
@@ -191,7 +191,7 @@ export function CronosView({ initialEvents, initialAggregated, userId }: Props) 
             <button
               onClick={() => navigate(1)}
               aria-label="Siguiente"
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-text-secondary transition-colors hover:bg-sand"
+              className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg border border-border text-text-secondary transition-colors hover:bg-sand lg:h-8 lg:w-8"
             >
               <ChevronRight size={16} />
             </button>

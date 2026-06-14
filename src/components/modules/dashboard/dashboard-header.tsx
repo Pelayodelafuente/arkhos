@@ -58,7 +58,7 @@ export function DashboardHeader({ userName }: DashboardHeaderProps) {
             </span>
           </div>
           <button
-            className="p-1.5 rounded-lg border border-border text-text-tertiary hover:text-foreground hover:bg-sand transition-colors"
+            className="flex h-11 w-11 items-center justify-center rounded-lg border border-border text-text-tertiary hover:text-foreground hover:bg-sand transition-colors lg:h-7 lg:w-7"
             aria-label="Notificaciones"
           >
             <Bell size={15} strokeWidth={1.75} />
