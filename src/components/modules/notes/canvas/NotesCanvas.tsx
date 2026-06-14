@@ -879,7 +879,7 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
   const isSearchActive = showSearch && searchMatchingIds !== null
 
   return (
-    <div className="relative w-full" style={{ height: "calc(100vh - 200px)" }}>
+    <div className="relative w-full" style={{ height: "calc(100dvh - 200px)" }}>
     {/* Node properties panel — outside overflow:hidden canvas */}
     {selectedNodeIds.size === 1 && (() => {
       const selectedId = [...selectedNodeIds][0]
