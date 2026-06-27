@@ -82,3 +82,8 @@ docs/*.xlsx
 docs/*.docx
 
 .vercel
+
+# Reconciliación Patrimonio — datos personales y artefactos (NUNCA versionar)
+/data/
+.playwright-mcp/
+chrome-arkhos/
