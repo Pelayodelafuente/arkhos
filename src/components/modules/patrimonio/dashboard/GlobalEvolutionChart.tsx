@@ -73,7 +73,7 @@ export function GlobalEvolutionChart() {
   const mintosOverview = useMintosStore((s) => s.overview);
   const mintosDeposits = useMintosStore((s) => s.deposits);
 
-  // ── Total invertido live (misma fórmula que GlobalKPIs card) ─────────────
+  // ── Total invertido live (misma fórmula que las tarjetas KPI) ────────────
   const liveInvested = useMemo(() => {
     const trInv = trOverview ? trOverview.total_invested - trOverview.total_cash : 0;
     const idxCost = indexaOverview?.total_cost ?? 0;

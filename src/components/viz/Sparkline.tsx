@@ -1,8 +1,8 @@
 /**
  * Sparkline SVG unificada (Fase 0.2 — fundación viz).
  *
- * Sustituye a las ≥3 mini-gráficas SVG duplicadas (GlobalKPIs, OverviewKPIs,
- * PatrimonioHero, etc.). Una sola implementación, sin dependencias,
+ * Sustituye a las ≥3 mini-gráficas SVG duplicadas (PatrimonioHero, tarjetas KPI,
+ * PlatformCard, MarketPulseCard). Una sola implementación, sin dependencias,
  * con modo línea o área. Sin hooks → compatible con Server Components.
  *
  * Misma matemática de normalización que las versiones previas (min/max con
