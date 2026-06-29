@@ -1,9 +1,7 @@
 "use client";
 
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
-
-const fmt = (v: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(v);
+import { formatEur } from "@/lib/utils/format";
+import { Donut } from "@/components/viz";
 
 interface DistributionItem {
   name: string;
@@ -12,38 +10,14 @@ interface DistributionItem {
   color: string;
 }
 
-interface TooltipProps {
-  active?: boolean;
-  payload?: Array<{ payload: DistributionItem }>;
-}
-
-function CustomTooltip({ active, payload }: TooltipProps) {
-  if (!active || !payload?.length) return null;
-  const d = payload[0].payload;
-  return (
-    <div
-      className="rounded-xl p-3 text-xs"
-      style={{
-        backgroundColor: "var(--bg-card)",
-        border: "1px solid var(--border-stone, rgba(160,120,80,0.25))",
-        boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-      }}
-    >
-      <p className="font-medium mb-1 text-foreground">{d.name}</p>
-      <div className="font-mono space-y-0.5">
-        <div style={{ color: d.color }}>{d.pct.toFixed(1)}%</div>
-        <div style={{ color: "var(--text-muted)" }}>{fmt(d.value)}</div>
-      </div>
-    </div>
-  );
-}
-
 interface HorosSectorDonutProps {
   data: DistributionItem[];
 }
 
 export function HorosSectorDonut({ data }: HorosSectorDonutProps) {
   if (data.length === 0) return null;
+
+  const donutData = data.map((d) => ({ name: d.name, value: d.value, color: d.color }));
 
   return (
     <div
@@ -58,52 +32,7 @@ export function HorosSectorDonut({ data }: HorosSectorDonutProps) {
         Exposición por sector del fondo
       </p>
 
-      <div className="flex items-center gap-4">
-        <div className="relative flex-shrink-0">
-          <ResponsiveContainer width={140} height={140}>
-            <PieChart>
-              <Pie
-                data={data}
-                cx="50%"
-                cy="50%"
-                innerRadius={42}
-                outerRadius={65}
-                dataKey="value"
-                paddingAngle={2}
-              >
-                {data.map((entry) => (
-                  <Cell key={entry.name} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip content={<CustomTooltip />} />
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <span className="text-xs font-medium text-center leading-tight" style={{ color: "var(--text-muted)" }}>
-              Value<br />Portfolio
-            </span>
-          </div>
-        </div>
-
-        <div className="flex-1 space-y-1.5">
-          {data.map((d) => (
-            <div key={d.name} className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-1.5 min-w-0">
-                <span
-                  className="h-2 w-2 flex-shrink-0 rounded-full"
-                  style={{ backgroundColor: d.color }}
-                />
-                <span className="text-xs truncate" style={{ color: "var(--text-secondary)" }}>
-                  {d.name}
-                </span>
-              </div>
-              <span className="font-mono text-xs flex-shrink-0" style={{ color: "var(--text-primary)" }}>
-                {d.pct.toFixed(1)}%
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
+      <Donut data={donutData} valueFormatter={formatEur} />
     </div>
   );
 }
