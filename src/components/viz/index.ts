@@ -4,3 +4,5 @@ export { ChartShell } from "./ChartShell";
 export { ChartTooltip, ChartTooltipFrame } from "./ChartTooltip";
 export type { ChartTooltipProps, ChartTooltipRow } from "./ChartTooltip";
 export { Sparkline } from "./Sparkline";
+export { Donut } from "./Donut";
+export type { DonutDatum } from "./Donut";
