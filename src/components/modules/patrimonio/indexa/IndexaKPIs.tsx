@@ -1,56 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Info } from "lucide-react";
-import { Skeleton, Tooltip } from "@/components/ui";
+import { Skeleton } from "@/components/ui";
 import type { IndexaOverview } from "@/types/indexa";
-
 import { formatEur, formatPct } from "@/lib/utils/format";
+import { KPICard } from "@/components/viz";
 
-interface KPICardProps {
-  label: string;
-  value: React.ReactNode;
-  tooltip?: string;
-  accent?: "positive" | "negative" | "neutral";
-}
-
-function KPICard({ label, value, tooltip, accent = "neutral" }: KPICardProps) {
-  const accentColor =
-    accent === "positive"
-      ? "var(--platform-tr, #2E7D6B)"
-      : accent === "negative"
-      ? "#A32D2D"
-      : "var(--text-primary)";
-
-  return (
-    <div
-      className="rounded-xl p-4 flex flex-col gap-2"
-      style={{
-        backgroundColor: "var(--bg-card)",
-        border: "1px solid var(--border-stone, rgba(160,120,80,0.25))",
-      }}
-    >
-      <div className="flex items-center gap-1.5">
-        <span className="text-xs font-medium uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
-          {label}
-        </span>
-        {tooltip && (
-          <Tooltip content={tooltip}>
-            <Info
-              size={12}
-              strokeWidth={1.75}
-              className="flex-shrink-0 cursor-help"
-              style={{ color: "var(--text-muted)" }}
-              aria-label={`Información sobre ${label}`}
-            />
-          </Tooltip>
-        )}
-      </div>
-      <div className="font-mono text-xl font-semibold tabular-nums leading-tight" style={{ color: accentColor }}>
-        {value}
-      </div>
-    </div>
-  );
+function accentColor(accent: "positive" | "negative" | "neutral"): string | undefined {
+  return accent === "positive" ? "#2E7D6B" : accent === "negative" ? "#A32D2D" : undefined;
 }
 
 interface IndexaKPIsProps {
@@ -84,30 +41,34 @@ export function IndexaKPIs({ overview, isLoading }: IndexaKPIsProps) {
       <KPICard
         label="Valor total"
         value={formatEur(overview.total_value)}
+        numericValue={overview.total_value}
+        format={formatEur}
+        description="Valor total de la cartera Indexa"
       />
       <KPICard
         label="Ganancia total"
-        accent={gainAccent}
-        value={
-          <span>
-            {formatEur(overview.total_gain)}{" "}
-            <span className="text-sm opacity-75">
-              ({formatPct(overview.total_gain_pct, true)})
-            </span>
-          </span>
-        }
+        value={formatEur(overview.total_gain)}
+        numericValue={overview.total_gain}
+        format={formatEur}
+        valueColor={accentColor(gainAccent)}
+        delta={formatPct(overview.total_gain_pct, true)}
+        deltaColor={accentColor(gainAccent)}
+        description="Ganancia total sobre el capital aportado"
       />
       <KPICard
         label="Rentabilidad TWR"
-        accent={twrAccent}
-        tooltip="Rentabilidad ponderada por tiempo — elimina el efecto de las aportaciones"
         value={overview.twr_pct === null ? "—" : formatPct(overview.twr_pct, true)}
+        numericValue={overview.twr_pct}
+        format={(n) => formatPct(n, true)}
+        valueColor={accentColor(twrAccent)}
+        description="Rentabilidad ponderada por tiempo — elimina el efecto de las aportaciones"
       />
       <KPICard
         label="Volatilidad"
-        accent="neutral"
-        tooltip="Desviación estándar mensual × √12"
-        value={overview.volatility_pct !== null ? `${overview.volatility_pct.toFixed(2)}%` : "—"}
+        value={overview.volatility_pct !== null ? formatPct(overview.volatility_pct, false, 2) : "—"}
+        numericValue={overview.volatility_pct}
+        format={(n) => formatPct(n, false, 2)}
+        description="Desviación estándar mensual × √12"
       />
     </motion.div>
   );
