@@ -1,10 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { largestRemainder, formatEur } from "@/lib/utils/format";
-import { ChartTooltip } from "./ChartTooltip";
-import type { ChartTooltipProps } from "./ChartTooltip";
 
 /**
  * Donut unificado (Fase 0.2 — fundación viz).
@@ -85,15 +83,6 @@ export function Donut({
       <div className="relative">
         <ResponsiveContainer width="100%" height={height}>
           <PieChart>
-            <Tooltip
-              content={(props) => (
-                <ChartTooltip
-                  {...(props as unknown as ChartTooltipProps)}
-                  hideLabel
-                  valueFormatter={(v) => valueFormatter(v)}
-                />
-              )}
-            />
             <Pie
               data={data}
               cx="50%"
@@ -130,9 +119,6 @@ export function Donut({
               </span>
               <span className="mt-0.5 font-mono text-sm font-semibold tabular-nums text-foreground">
                 {valueFormatter(active.value)}
-              </span>
-              <span className="font-mono text-[10px] text-text-tertiary">
-                {fmtPctComma(active.percentage)}
               </span>
             </>
           ) : (
