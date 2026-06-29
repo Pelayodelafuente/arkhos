@@ -16,8 +16,8 @@ import type { CryptoDCAPoint } from "@/types/crypto";
 
 import { formatEur } from "@/lib/utils/format";
 
-const COLOR_BELOW = "#2E7D6B"; // Verde: comprado por debajo del precio actual
-const COLOR_ABOVE = "#B07A3A"; // Naranja crypto: comprado por encima
+const COLOR_BELOW = "#2E7D6B"; // Verde: comprado por debajo del precio actual (barato)
+const COLOR_ABOVE = "#A32D2D"; // Rojo: comprado por encima del precio actual (caro)
 
 interface CustomTooltipProps {
   active?: boolean;
@@ -137,7 +137,7 @@ export function CryptoDCAChart() {
             {data.map((entry, index) => (
               <Cell
                 key={`cell-${index}`}
-                fill={entry.is_above_current ? COLOR_BELOW : COLOR_ABOVE}
+                fill={entry.is_above_current ? COLOR_ABOVE : COLOR_BELOW}
               />
             ))}
           </Bar>
