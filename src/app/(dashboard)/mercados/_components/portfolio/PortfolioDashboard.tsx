@@ -2,6 +2,7 @@
 
 import type { PortfolioMarketData } from "@/lib/mercados/portfolio-market";
 import { RiskMetricsCard } from "./RiskMetricsCard";
+import { CurrencyExposureDonut } from "./CurrencyExposureDonut";
 import { AssetAllocationChart } from "./AssetAllocationChart";
 import { RebalancePanel } from "./RebalancePanel";
 import { BenchmarkChart } from "./BenchmarkChart";
@@ -48,6 +49,11 @@ export function PortfolioDashboard({ data, isLoading }: Props) {
 
       {/* Fila 1: Métricas de riesgo */}
       <RiskMetricsCard data={data?.riskMetrics} isLoading={isLoading} />
+
+      {/* Fila 1b: Exposición por divisa */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <CurrencyExposureDonut usdExposurePct={data?.riskMetrics?.usdExposurePct} />
+      </div>
 
       {/* Fila 2: Asignación + Rebalanceo */}
       <div className="grid gap-4 lg:grid-cols-2">
