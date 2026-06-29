@@ -171,30 +171,15 @@ export function GlobalKPIs() {
   const totalInvested = trInvested + indexaCost + horosCost + cryptoInvested + mintosInvested;
   const totalPL = trPL + indexaPL + horosPL + (cryptoPL ?? 0) + mintosPL;
 
-  const combinedReturnPct = useMemo(() => {
-    if (totalInvested <= 0) return null;
-
-    const trReturnPct = trCAGR !== null ? trCAGR * 100 : null;
-    const indexaReturnPct = indexaOverview?.twr_pct ?? null;
-    const horosReturnPct = horosPosition?.unrealized_gain_pct ?? null;
-    const cryptoReturnPct = (cryptoOverview?.pl_pct !== null && cryptoOverview?.pl_pct !== undefined)
-      ? cryptoOverview.pl_pct
-      : null;
-
-    const weightedReturns: Array<{ ret: number; weight: number }> = [];
-    if (trReturnPct !== null && trInvested > 0) weightedReturns.push({ ret: trReturnPct, weight: trInvested });
-    if (indexaReturnPct !== null && indexaCost > 0) weightedReturns.push({ ret: indexaReturnPct, weight: indexaCost });
-    if (horosReturnPct !== null && horosCost > 0) weightedReturns.push({ ret: horosReturnPct, weight: horosCost });
-    if (cryptoReturnPct !== null && cryptoInvested > 0) weightedReturns.push({ ret: cryptoReturnPct, weight: cryptoInvested });
-    if (mintosXirr !== null && mintosInvested > 0) weightedReturns.push({ ret: mintosXirr, weight: mintosInvested });
-
-    if (weightedReturns.length === 0) return null;
-
-    const totalWeight = weightedReturns.reduce((s, w) => s + w.weight, 0);
-    if (totalWeight <= 0) return null;
-
-    return weightedReturns.reduce((s, w) => s + w.ret * (w.weight / totalWeight), 0);
-  }, [trCAGR, indexaOverview, horosPosition, cryptoOverview, mintosXirr, trInvested, indexaCost, horosCost, cryptoInvested, mintosInvested, totalInvested]);
+  // Bug #1: NO se promedian métricas heterogéneas (CAGR/TWR/P&L%/XIRR) en una sola
+  // cifra. Se muestra el desglose real por plataforma. Cada valor ya viene en % (o null).
+  const platformReturns: Array<{ name: string; color: string; metric: string; value: number | null }> = [
+    { name: "Trade Republic", color: "var(--platform-tr)", metric: "CAGR", value: trCAGR !== null ? trCAGR * 100 : null },
+    { name: "Indexa", color: "#3B78B0", metric: "TWR", value: indexaOverview?.twr_pct ?? null },
+    { name: "Horos", color: "#7260C4", metric: "P&L", value: horosPosition?.unrealized_gain_pct ?? null },
+    { name: "Cripto", color: "#B07A3A", metric: "P&L", value: cryptoOverview?.pl_pct ?? null },
+    { name: "Mintos", color: "#C4704A", metric: "XIRR", value: mintosXirr },
+  ];
 
   // Deltas vs mes anterior
   const deltaTotal = useMemo(() => {
@@ -224,7 +209,6 @@ export function GlobalKPIs() {
   const animatedTotal = useAnimatedCounter(totalValue);
   const animatedCapital = useAnimatedCounter(totalInvested);
   const animatedPL = useAnimatedCounter(totalPL);
-  const animatedReturn = useAnimatedCounter(combinedReturnPct ?? 0);
 
   const plColor = totalPL >= 0 ? "var(--platform-tr)" : "#A32D2D";
 
@@ -262,14 +246,46 @@ export function GlobalKPIs() {
         borderTopColor={plColor}
         sparklineValues={trSparklines.plAmount}
       />
-      <KPICard
-        label="Rentabilidad media ponderada"
-        displayValue={combinedReturnPct !== null ? formatPct(animatedReturn, true) : "—"}
-        icon={<Percent size={14} strokeWidth={1.75} />}
-        accentColor="#7260C4"
-        borderTopColor="#7260C4"
-        subtitle="TR: CAGR · Indexa: TWR · Horos/Crypto: P&L% · Mintos: XIRR"
-      />
+      <div
+        className="relative overflow-hidden rounded-xl p-4"
+        style={{
+          backgroundColor: "var(--bg-card)",
+          border: "1px solid var(--border-stone, rgba(160,120,80,0.25))",
+          borderTop: "2px solid #7260C4",
+        }}
+      >
+        <div className="mb-3 flex items-center gap-2">
+          <span
+            className="flex h-7 w-7 items-center justify-center rounded-lg"
+            style={{ backgroundColor: "color-mix(in srgb, #7260C4 12%, transparent)", color: "#7260C4" }}
+            aria-hidden="true"
+          >
+            <Percent size={14} strokeWidth={1.75} />
+          </span>
+          <span className="text-xs text-muted-foreground">Rentabilidad por plataforma</span>
+        </div>
+        <ul className="space-y-1.5">
+          {platformReturns.map((r) => (
+            <li key={r.name} className="flex items-center justify-between gap-2">
+              <div className="flex min-w-0 items-center gap-2">
+                <span
+                  className="h-2.5 w-2.5 flex-shrink-0 rounded-[3px]"
+                  style={{ backgroundColor: r.color }}
+                  aria-hidden="true"
+                />
+                <span className="truncate text-xs" style={{ color: "var(--text-secondary)" }}>{r.name}</span>
+                <span className="text-[10px] uppercase tracking-wide" style={{ color: "var(--text-tertiary)" }}>{r.metric}</span>
+              </div>
+              <span
+                className="font-mono text-xs font-semibold tabular-nums"
+                style={{ color: r.value === null ? "var(--text-tertiary)" : r.value >= 0 ? "#2E7D6B" : "#A32D2D" }}
+              >
+                {r.value === null ? "—" : formatPct(r.value, true)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
