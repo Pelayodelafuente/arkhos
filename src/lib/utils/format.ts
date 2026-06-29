@@ -51,3 +51,38 @@ export function relativeTime(date: Date): string {
   if (days < 30) return `hace ${days} ${days === 1 ? 'día' : 'días'}`
   return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })
 }
+
+/**
+ * Format a EUR amount in es-ES. Fuente única — sustituye a los `formatEur` locales.
+ * @example formatEur(1234.5) → '1.234,50 €' · formatEur(1234.5, 0) → '1.235 €'
+ */
+export function formatEur(value: number, maxFractionDigits = 2): string {
+  return new Intl.NumberFormat('es-ES', {
+    style: 'currency',
+    currency: 'EUR',
+    minimumFractionDigits: maxFractionDigits,
+    maximumFractionDigits: maxFractionDigits,
+  }).format(value)
+}
+
+/**
+ * Compact EUR for chart axes / tight spaces. Fuente única — sustituye a los
+ * `formatEurShort` / `formatCompact` locales.
+ * @example formatEurShort(12345) → '12,3k€' · formatEurShort(2_500_000) → '2,5M€' · formatEurShort(950) → '950€'
+ */
+export function formatEurShort(value: number): string {
+  const abs = Math.abs(value)
+  if (abs >= 1_000_000) return `${(value / 1_000_000).toFixed(1).replace('.', ',')}M€`
+  if (abs >= 1_000) return `${(value / 1_000).toFixed(1).replace('.', ',')}k€`
+  return `${value.toFixed(0)}€`
+}
+
+/**
+ * Format a percentage value already expressed in % (e.g. 12.34 → '12,34%').
+ * Fuente única — sustituye a los `formatPct` / `fmtPct` locales.
+ * @example formatPct(12.345) → '12,35%' · formatPct(12.3, true) → '+12,30%'
+ */
+export function formatPct(value: number, signed = false, decimals = 2): string {
+  const sign = signed && value >= 0 ? '+' : ''
+  return `${sign}${value.toFixed(decimals).replace('.', ',')}%`
+}
