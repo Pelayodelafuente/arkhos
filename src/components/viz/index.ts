@@ -9,3 +9,4 @@ export type { DonutDatum } from "./Donut";
 export { Heatmap } from "./Heatmap";
 export type { HeatmapRow, HeatmapCell } from "./Heatmap";
 export { KPICard } from "./KPICard";
+export { useCrosshair } from "./useCrosshair";

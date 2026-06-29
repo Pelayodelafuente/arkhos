@@ -18,7 +18,7 @@ import { useHorosStore } from "@/stores/horos-store";
 import { useCryptoStore } from "@/stores/crypto-store";
 import { useMintosStore } from "@/stores/mintos-store";
 import { formatEur, formatEurShort } from "@/lib/utils/format";
-import { ChartShell, ChartTooltip } from "@/components/viz";
+import { ChartShell, ChartTooltip, useCrosshair } from "@/components/viz";
 import type { ChartTooltipProps } from "@/components/viz";
 
 
@@ -295,6 +295,8 @@ export function GlobalEvolutionChart() {
   const showMarketCaveat =
     (cryptoOverview?.total_value_eur ?? 0) > 0 || (mintosOverview?.total_value ?? 0) > 0;
 
+  const { activeIndex, chartProps } = useCrosshair();
+
   if (data.length === 0) return <EmptyState />;
 
   return (
@@ -324,7 +326,7 @@ export function GlobalEvolutionChart() {
       }
     >
       <ResponsiveContainer width="100%" height={310}>
-        <AreaChart data={filteredData} margin={{ top: 4, right: 4, left: 0, bottom: 8 }}>
+        <AreaChart data={filteredData} margin={{ top: 4, right: 4, left: 0, bottom: 8 }} {...chartProps}>
           <defs>
             <linearGradient id="gradValue" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#2E7D6B" stopOpacity={0.25} />
@@ -364,6 +366,7 @@ export function GlobalEvolutionChart() {
                 valueFormatter={(v) => formatEur(v)}
               />
             )}
+            cursor={false}
           />
 
           <Area
@@ -394,6 +397,14 @@ export function GlobalEvolutionChart() {
               strokeDasharray="3 3"
               strokeOpacity={0.6}
               label={{ value: "mercado", position: "insideTopRight", fontSize: 9, fill: "var(--text-tertiary)" }}
+            />
+          )}
+          {activeIndex != null && filteredData[activeIndex] && (
+            <ReferenceLine
+              x={filteredData[activeIndex].label}
+              stroke="var(--text-tertiary)"
+              strokeWidth={1}
+              strokeDasharray="3 3"
             />
           )}
           <Brush
