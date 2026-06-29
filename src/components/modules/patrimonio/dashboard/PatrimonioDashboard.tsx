@@ -288,15 +288,21 @@ function SyncPlatformsPanel() {
 // ---------------------------------------------------------------------------
 
 export function PatrimonioDashboard() {
-  const [viewMode, setViewMode] = useState<"quick" | "detailed">(() => {
-    if (typeof window === "undefined") return "detailed";
+  // Default estable para SSR y primer render cliente → evita hydration mismatch
+  // (el toggle activo, y por tanto su backgroundColor, coincide server/cliente).
+  const [viewMode, setViewMode] = useState<"quick" | "detailed">("detailed");
+  const [hydrated, setHydrated] = useState(false);
+
+  // Tras montar, aplica la preferencia guardada (ya no afecta a la hidratación).
+  useEffect(() => {
     const stored = localStorage.getItem("patrimonio-view-mode");
-    return stored === "quick" || stored === "detailed" ? stored : "detailed";
-  });
+    if (stored === "quick" || stored === "detailed") setViewMode(stored);
+    setHydrated(true);
+  }, []);
 
   useEffect(() => {
-    localStorage.setItem("patrimonio-view-mode", viewMode);
-  }, [viewMode]);
+    if (hydrated) localStorage.setItem("patrimonio-view-mode", viewMode);
+  }, [viewMode, hydrated]);
 
   const assets = usePatrimonioStore((s) => s.assets);
   const platforms = usePatrimonioStore((s) => s.platforms);
