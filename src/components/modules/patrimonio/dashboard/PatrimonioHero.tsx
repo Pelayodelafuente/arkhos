@@ -13,8 +13,10 @@ import { useAnimatedCounter } from "@/lib/hooks/use-animated-counter";
 // Formatters
 // ---------------------------------------------------------------------------
 
-import { formatEur, formatPct } from "@/lib/utils/format";
+import { formatEur } from "@/lib/utils/format";
 import { Sparkline } from "@/components/viz";
+import { PlatformReturnsPanel } from "@/components/modules/patrimonio/dashboard/PlatformReturnsPanel";
+import type { PlatformReturn } from "@/components/modules/patrimonio/dashboard/PlatformReturnsPanel";
 
 // ---------------------------------------------------------------------------
 // SubMetric — tarjeta interna de la fila inferior
@@ -77,11 +79,13 @@ export function PatrimonioHero() {
   // ── Horos ────────────────────────────────────────────────────────────────
   const horosPosition = useHorosStore((s) => s.position);
   const getHorosLastMonthContribution = useHorosStore((s) => s.getLastMonthContribution);
+  const getHorosValueDelta = useHorosStore((s) => s.getLastMonthValueDelta);
 
   const horosValue = horosPosition?.total_value ?? 0;
   const horosCost = horosPosition?.total_cost ?? 0;
   const horosPL = horosPosition?.unrealized_gain ?? 0;
   const horosContrib = getHorosLastMonthContribution();
+  const horosValueDelta = getHorosValueDelta();
 
   // ── Crypto ───────────────────────────────────────────────────────────────
   const cryptoRawAssets = useCryptoStore((s) => s.assets);
@@ -117,66 +121,31 @@ export function PatrimonioHero() {
   const totalInvested = trInvested + indexaCost + horosCost + cryptoInvested + mintosInvested;
   const totalPL = trPL + indexaPL + horosPL + (cryptoPL ?? 0) + mintosPL;
 
-  const combinedReturnPct = useMemo(() => {
-    if (totalInvested <= 0) return null;
-
-    const trReturnPct = trCAGR !== null ? trCAGR * 100 : null;
-    const indexaReturnPct = indexaOverview?.twr_pct ?? null;
-    const horosReturnPct = horosPosition?.unrealized_gain_pct ?? null;
-    const cryptoReturnPct =
-      cryptoOverview?.pl_pct !== null && cryptoOverview?.pl_pct !== undefined
-        ? cryptoOverview.pl_pct
-        : null;
-
-    const weightedReturns: Array<{ ret: number; weight: number }> = [];
-    if (trReturnPct !== null && trInvested > 0)
-      weightedReturns.push({ ret: trReturnPct, weight: trInvested });
-    if (indexaReturnPct !== null && indexaCost > 0)
-      weightedReturns.push({ ret: indexaReturnPct, weight: indexaCost });
-    if (horosReturnPct !== null && horosCost > 0)
-      weightedReturns.push({ ret: horosReturnPct, weight: horosCost });
-    if (cryptoReturnPct !== null && cryptoInvested > 0)
-      weightedReturns.push({ ret: cryptoReturnPct, weight: cryptoInvested });
-    if (mintosXirr !== null && mintosInvested > 0)
-      weightedReturns.push({ ret: mintosXirr, weight: mintosInvested });
-
-    if (weightedReturns.length === 0) return null;
-    const totalWeight = weightedReturns.reduce((s, w) => s + w.weight, 0);
-    if (totalWeight <= 0) return null;
-    return weightedReturns.reduce((s, w) => s + w.ret * (w.weight / totalWeight), 0);
-  }, [
-    trCAGR,
-    indexaOverview,
-    horosPosition,
-    cryptoOverview,
-    mintosXirr,
-    trInvested,
-    indexaCost,
-    horosCost,
-    cryptoInvested,
-    mintosInvested,
-    totalInvested,
-  ]);
+  // Bug #1: NO se promedian métricas heterogéneas (CAGR/TWR/P&L%/XIRR). Se muestra
+  // el desglose real por plataforma (cada valor ya en %, o null).
+  const platformReturns: PlatformReturn[] = [
+    { name: "Trade Republic", color: "var(--platform-tr)", metric: "CAGR", value: trCAGR !== null ? trCAGR * 100 : null },
+    { name: "Indexa", color: "#3B78B0", metric: "TWR", value: indexaOverview?.twr_pct ?? null },
+    { name: "Horos", color: "#7260C4", metric: "P&L", value: horosPosition?.unrealized_gain_pct ?? null },
+    { name: "Cripto", color: "#B07A3A", metric: "P&L", value: cryptoOverview?.pl_pct ?? null },
+    { name: "Mintos", color: "#C4704A", metric: "XIRR", value: mintosXirr },
+  ];
 
   // ── Deltas ────────────────────────────────────────────────────────────────
   const deltaTotal = useMemo(() => {
-    const trDelta = trDeltas.totalValue ?? 0;
-    const indexaDelta = indexaValueDelta ?? 0;
-    const mintosDelta = mintosValueDelta ?? 0;
-    const combined = trDelta + indexaDelta + mintosDelta;
-    if (
-      combined === 0 &&
-      trDeltas.totalValue === null &&
-      indexaValueDelta === null &&
-      mintosValueDelta === null
-    )
-      return null;
-    return `${combined >= 0 ? "+" : ""}${formatEur(combined)} este mes`;
-  }, [trDeltas.totalValue, indexaValueDelta, mintosValueDelta]);
+    // TR + Indexa + Horos + Mintos tienen histórico mensual de valor. Crypto no
+    // (sin snapshots mensuales) → se excluye con etiqueta explícita, no se inventa.
+    const knownDeltas = [trDeltas.totalValue, indexaValueDelta, horosValueDelta, mintosValueDelta]
+      .filter((d): d is number => d !== null);
+    if (knownDeltas.length === 0) return null;
+    const combined = knownDeltas.reduce((s, d) => s + d, 0);
+    const suffix = cryptoValue > 0 ? " este mes · sin Crypto" : " este mes";
+    return `${combined >= 0 ? "+" : ""}${formatEur(combined)}${suffix}`;
+  }, [trDeltas.totalValue, indexaValueDelta, horosValueDelta, mintosValueDelta, cryptoValue]);
 
   const deltaTotalNumeric = useMemo(() => {
-    return (trDeltas.totalValue ?? 0) + (indexaValueDelta ?? 0) + (mintosValueDelta ?? 0);
-  }, [trDeltas.totalValue, indexaValueDelta, mintosValueDelta]);
+    return (trDeltas.totalValue ?? 0) + (indexaValueDelta ?? 0) + (horosValueDelta ?? 0) + (mintosValueDelta ?? 0);
+  }, [trDeltas.totalValue, indexaValueDelta, horosValueDelta, mintosValueDelta]);
 
   const deltaCapital = useMemo(() => {
     const trDelta = trDeltas.capitalInvertido ?? 0;
@@ -207,7 +176,6 @@ export function PatrimonioHero() {
   // ── Animated counters ─────────────────────────────────────────────────────
   const animatedTotal = useAnimatedCounter(totalValue);
   const animatedPL = useAnimatedCounter(totalPL);
-  const animatedReturn = useAnimatedCounter(combinedReturnPct ?? 0);
   const animatedCapital = useAnimatedCounter(totalInvested);
 
   // ── Colores semánticos ────────────────────────────────────────────────────
@@ -221,12 +189,6 @@ export function PatrimonioHero() {
       : "var(--color-loss)";
 
   const plColor = totalPL >= 0 ? "var(--color-gain)" : "var(--color-loss)";
-  const returnColor =
-    combinedReturnPct === null
-      ? "var(--text-secondary)"
-      : combinedReturnPct >= 0
-      ? "var(--color-gain)"
-      : "var(--color-loss)";
 
   if (isLoading) {
     return (
@@ -367,14 +329,8 @@ export function PatrimonioHero() {
       {/* ── Divider ── */}
       <div style={{ borderTop: "1px solid var(--border-stone, rgba(160,120,80,0.12))" }} />
 
-      {/* ── 3 sub-métricas ── */}
-      <div
-        className="grid grid-cols-3"
-        style={{
-          borderTop: "0",
-          // divide-x via inline border-right en las primeras celdas
-        }}
-      >
+      {/* ── 2 sub-métricas ── */}
+      <div className="grid grid-cols-2">
         <div style={{ borderRight: "1px solid var(--border-stone, rgba(160,120,80,0.12))" }}>
           <SubMetric
             label="P&L Total"
@@ -389,16 +345,6 @@ export function PatrimonioHero() {
             color={plColor}
           />
         </div>
-        <div style={{ borderRight: "1px solid var(--border-stone, rgba(160,120,80,0.12))" }}>
-          <SubMetric
-            label="Rentabilidad"
-            value={
-              combinedReturnPct !== null ? formatPct(animatedReturn, true) : "—"
-            }
-            subtext="anualizado"
-            color={returnColor}
-          />
-        </div>
         <div>
           <SubMetric
             label="Capital invertido"
@@ -407,6 +353,11 @@ export function PatrimonioHero() {
             color="var(--text-secondary)"
           />
         </div>
+      </div>
+
+      {/* ── Rentabilidad por plataforma (Bug #1: desglose, no media heterogénea) ── */}
+      <div style={{ borderTop: "1px solid var(--border-stone, rgba(160,120,80,0.12))" }}>
+        <PlatformReturnsPanel returns={platformReturns} />
       </div>
     </div>
   );
