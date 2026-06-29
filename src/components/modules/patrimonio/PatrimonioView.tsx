@@ -191,9 +191,14 @@ export function PatrimonioView({
       setHorosPlan(data.plan);
     });
 
-    // Load full Crypto data (transactions, defi positions, monthly plan)
+    // Load full Crypto data (transactions, defi positions, monthly plan).
+    // Un refresh transitorio vacío (sesión/RLS no propagada en la server action)
+    // NO debe pisar los datos válidos ya hidratados desde SSR: si el refresh no
+    // trae assets pero ya tenemos en store, lo ignoramos (evita card "pendiente"
+    // intermitente y que el patrimonio total caiga al excluir Crypto).
     loadCryptoData().then((data) => {
       if (!data) return;
+      if (data.assets.length === 0 && useCryptoStore.getState().assets.length > 0) return;
       setCryptoAssets(data.assets);
       setCryptoTransactions(data.transactions);
       setCryptoDefiPositions(data.defiPositions);

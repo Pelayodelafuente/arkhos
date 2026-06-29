@@ -296,6 +296,9 @@ export function PatrimonioDashboard() {
   // Tras montar, aplica la preferencia guardada (ya no afecta a la hidratación).
   useEffect(() => {
     const stored = localStorage.getItem("patrimonio-view-mode");
+    // setState post-montaje intencionado: aplica la preferencia guardada sin afectar
+    // a la hidratación (el primer render usa el default estable). Un único ciclo.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (stored === "quick" || stored === "detailed") setViewMode(stored);
     setHydrated(true);
   }, []);
@@ -318,11 +321,15 @@ export function PatrimonioDashboard() {
   const cryptoDefi = useCryptoStore((s) => s.defiPositions);
   const cryptoMonthlyPlan = useCryptoStore((s) => s.monthlyPlan);
   const getCryptoOverview = useCryptoStore((s) => s.getOverview);
-  // Las deps extra son triggers: el getter lee get() internamente y debe recomputar al cambiar el store
-  const cryptoOverview = useMemo(() => {
-    void cryptoAssets; void cryptoDefi; void cryptoMonthlyPlan
-    return getCryptoOverview()
-  }, [cryptoAssets, cryptoDefi, cryptoMonthlyPlan, getCryptoOverview]);
+  // El cuerpo del memo NO debe contener `void x`: React Compiler los elimina como
+  // dead-code y deja de tratar assets/defi/plan como dependencias reales → overview
+  // obsoleto (la card de Crypto quedaba "PENDIENTE" con los datos ya en el store).
+  // Mismo patrón que SankeyDiagram (que sí reacciona).
+  const cryptoOverview = useMemo(
+    () => getCryptoOverview(),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [cryptoAssets, cryptoDefi, cryptoMonthlyPlan, getCryptoOverview]
+  );
 
   const mintosOverview = useMintosStore((s) => s.overview);
   const mintosDeposits = useMintosStore((s) => s.deposits);

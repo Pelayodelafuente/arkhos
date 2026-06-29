@@ -66,7 +66,9 @@ export function GlobalEvolutionChart() {
   const cryptoDefi = useCryptoStore((s) => s.defiPositions);
   const getCryptoOverview = useCryptoStore((s) => s.getOverview);
   // Las deps extra son triggers: el getter lee get() internamente y debe recomputar al cambiar el store
-  const cryptoOverview = useMemo(() => { void cryptoAssets; void cryptoDefi; return getCryptoOverview() }, [cryptoAssets, cryptoDefi, getCryptoOverview]);
+  // Sin `void x` en el cuerpo: React Compiler los elimina y dejaría de reaccionar al store.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const cryptoOverview = useMemo(() => getCryptoOverview(), [cryptoAssets, cryptoDefi, getCryptoOverview]);
 
   // ── Mintos — snapshots mensuales con valor estimado ──────────────────────
   const mintosSnapshots = useMintosStore((s) => s.monthlySnapshots);

@@ -92,11 +92,10 @@ export function PatrimonioHero() {
   const cryptoRawDefi = useCryptoStore((s) => s.defiPositions);
   const cryptoRawPlan = useCryptoStore((s) => s.monthlyPlan);
   const getCryptoOverview = useCryptoStore((s) => s.getOverview);
-  // Las deps extra son triggers: el getter lee get() internamente y debe recomputar al cambiar el store
-  const cryptoOverview = useMemo(() => {
-    void cryptoRawAssets; void cryptoRawDefi; void cryptoRawPlan
-    return getCryptoOverview()
-  }, [cryptoRawAssets, cryptoRawDefi, cryptoRawPlan, getCryptoOverview]);
+  // Sin `void x` en el cuerpo: React Compiler los elimina como dead-code y el memo
+  // dejaría de reaccionar al store → overview obsoleto (Crypto no contaba en el total).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const cryptoOverview = useMemo(() => getCryptoOverview(), [cryptoRawAssets, cryptoRawDefi, cryptoRawPlan, getCryptoOverview]);
 
   const cryptoValue = cryptoOverview?.total_value_eur ?? 0;
   const cryptoInvested = cryptoOverview?.total_invested_eur ?? 0;

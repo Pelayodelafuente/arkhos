@@ -17,11 +17,9 @@ export function CryptoDistributionDonut() {
   const rawAssets = useCryptoStore((s) => s.assets);
   const getAssetsWithPL = useCryptoStore((s) => s.getAssetsWithPL);
 
-  // Las deps extra son triggers: el getter lee get() internamente y debe recomputar al cambiar el store
-  const assets = useMemo(() => {
-    void rawAssets;
-    return getAssetsWithPL();
-  }, [rawAssets, getAssetsWithPL]);
+  // Sin `void x` en el cuerpo: React Compiler lo elimina y el memo dejaría de reaccionar al store.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const assets = useMemo(() => getAssetsWithPL(), [rawAssets, getAssetsWithPL]);
 
   if (isLoading) {
     return <Skeleton className="h-64 rounded-xl" />;

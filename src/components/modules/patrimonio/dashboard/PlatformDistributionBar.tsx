@@ -68,11 +68,9 @@ export function PlatformDistributionBar() {
   const cryptoRawAssets = useCryptoStore((s) => s.assets);
   const cryptoRawDefi = useCryptoStore((s) => s.defiPositions);
   const getCryptoOverview = useCryptoStore((s) => s.getOverview);
-  // Las deps extra son triggers: el getter lee get() internamente y debe recomputar al cambiar el store
-  const cryptoOverview = useMemo(() => {
-    void cryptoRawAssets; void cryptoRawDefi
-    return getCryptoOverview()
-  }, [cryptoRawAssets, cryptoRawDefi, getCryptoOverview]);
+  // Sin `void x` en el cuerpo: React Compiler los elimina y el memo dejaría de reaccionar al store.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const cryptoOverview = useMemo(() => getCryptoOverview(), [cryptoRawAssets, cryptoRawDefi, getCryptoOverview]);
 
   // ── Mintos ───────────────────────────────────────────────────────────────
   const mintosOverview = useMintosStore((s) => s.overview);
