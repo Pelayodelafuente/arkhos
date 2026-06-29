@@ -12,8 +12,7 @@ import { useMintosStore } from "@/stores/mintos-store";
 // Formatters
 // ---------------------------------------------------------------------------
 
-const formatEur = (value: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
+import { formatEur } from "@/lib/utils/format";
 
 // ---------------------------------------------------------------------------
 // Platform config (hex values son parte de la config, no del JSX)

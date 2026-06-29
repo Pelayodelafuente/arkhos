@@ -4,8 +4,7 @@ import { useMemo } from "react";
 import { Treemap, Tooltip, ResponsiveContainer } from "recharts";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 
-const formatEur = (value: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
+import { formatEur } from "@/lib/utils/format";
 
 function getPLColor(pl: number): string {
   if (pl >= 15) return "#1B5E4A";

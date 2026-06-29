@@ -4,8 +4,7 @@ import { useMemo, useState } from "react";
 import { largestRemainder } from "@/lib/utils/format";
 import type { AllocationSlice } from "@/types/patrimonio";
 
-const formatEur = (value: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
+import { formatEur } from "@/lib/utils/format";
 
 interface AllocationBarsProps {
   data: AllocationSlice[];

@@ -6,11 +6,7 @@ import type { CryptoOverview } from "@/types/crypto";
 
 const CRYPTO_COLOR = "var(--platform-crypto)";
 
-const formatEur = (v: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(v);
-
-const formatPct = (v: number) =>
-  `${v >= 0 ? "+" : ""}${v.toFixed(2)}%`;
+import { formatEur, formatPct } from "@/lib/utils/format";
 
 interface KPICardProps {
   label: string;
@@ -87,7 +83,7 @@ export function CryptoKPIs({ overview, isLoading }: CryptoKPIsProps) {
               {(overview.pl_eur as number) >= 0 ? "+" : ""}
               {formatEur(overview.pl_eur as number)}{" "}
               <span className="text-sm opacity-75">
-                ({formatPct(overview.pl_pct as number)})
+                ({formatPct(overview.pl_pct as number, true)})
               </span>
             </span>
           ) : (

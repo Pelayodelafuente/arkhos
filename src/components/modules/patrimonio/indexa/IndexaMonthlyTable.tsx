@@ -18,11 +18,7 @@ function getCellStyle(value: number | null): React.CSSProperties {
   }
 }
 
-function formatPct(v: number | null): string {
-  if (v === null) return "—";
-  const sign = v >= 0 ? "+" : "";
-  return `${sign}${v.toFixed(1)}%`;
-}
+import { formatPct } from "@/lib/utils/format";
 
 interface IndexaMonthlyTableProps {
   rows: IndexaMonthlyTableRow[];
@@ -150,7 +146,7 @@ export function IndexaMonthlyTable({ rows, isLoading, onAdd }: IndexaMonthlyTabl
                         backgroundColor: cellStyle.backgroundColor,
                       }}
                     >
-                      {val === null ? "—" : `${val >= 0 ? "+" : ""}${val.toFixed(1)}%`}
+                      {val === null ? "—" : formatPct(val, true, 1)}
                     </td>
                   );
                 })}
@@ -158,7 +154,7 @@ export function IndexaMonthlyTable({ rows, isLoading, onAdd }: IndexaMonthlyTabl
                   className="pl-2 pr-4 py-2 text-center tabular-nums font-semibold"
                   style={row.total !== null ? getCellStyle(row.total) : { color: "var(--text-muted)" }}
                 >
-                  {formatPct(row.total)}
+                  {row.total === null ? "—" : formatPct(row.total, true, 1)}
                 </td>
               </tr>
             ))}

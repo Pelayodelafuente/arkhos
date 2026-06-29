@@ -5,11 +5,7 @@ import { Info } from "lucide-react";
 import { Skeleton, Tooltip } from "@/components/ui";
 import type { IndexaOverview } from "@/types/indexa";
 
-const formatEur = (v: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(v);
-
-const formatPct = (v: number | null, decimals = 2) =>
-  v === null ? "—" : `${v >= 0 ? "+" : ""}${v.toFixed(decimals)}%`;
+import { formatEur, formatPct } from "@/lib/utils/format";
 
 interface KPICardProps {
   label: string;
@@ -96,7 +92,7 @@ export function IndexaKPIs({ overview, isLoading }: IndexaKPIsProps) {
           <span>
             {formatEur(overview.total_gain)}{" "}
             <span className="text-sm opacity-75">
-              ({formatPct(overview.total_gain_pct)})
+              ({formatPct(overview.total_gain_pct, true)})
             </span>
           </span>
         }
@@ -105,7 +101,7 @@ export function IndexaKPIs({ overview, isLoading }: IndexaKPIsProps) {
         label="Rentabilidad TWR"
         accent={twrAccent}
         tooltip="Rentabilidad ponderada por tiempo — elimina el efecto de las aportaciones"
-        value={formatPct(overview.twr_pct)}
+        value={overview.twr_pct === null ? "—" : formatPct(overview.twr_pct, true)}
       />
       <KPICard
         label="Volatilidad"

@@ -78,8 +78,7 @@ function YearFilter() {
   );
 }
 
-const formatEur = (value: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
+import { formatEur } from "@/lib/utils/format";
 
 function TopPerformers() {
   const getTopGainers = usePatrimonioStore((s) => s.getTopGainers);

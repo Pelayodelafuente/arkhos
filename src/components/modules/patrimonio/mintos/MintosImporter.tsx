@@ -20,8 +20,7 @@ import type { MintosParseResult } from "@/lib/mintos/parse-excel";
 
 type ImportStatus = "idle" | "parsing" | "preview" | "processing" | "success" | "error";
 
-const formatEur = (v: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR", minimumFractionDigits: 2 }).format(v);
+import { formatEur } from "@/lib/utils/format";
 
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit", year: "numeric" });

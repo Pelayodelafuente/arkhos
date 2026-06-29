@@ -27,8 +27,7 @@ const TABS = [
   { id: "fiscal" as const, label: "Fiscal" },
 ];
 
-const formatEur = (v: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(v);
+import { formatEur } from "@/lib/utils/format";
 
 // Donut chart for allocation
 const FUND_TYPE_COLOR: Record<string, string> = {

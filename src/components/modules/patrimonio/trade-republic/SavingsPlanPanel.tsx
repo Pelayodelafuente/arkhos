@@ -6,8 +6,7 @@ import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { updateSavingsPlanAmount } from "@/app/actions/patrimonio";
 import type { SavingsPlanItem } from "@/types/patrimonio";
 
-const formatEur = (value: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
+import { formatEur } from "@/lib/utils/format";
 
 function EditableAmount({ item }: { item: SavingsPlanItem }) {
   const [editing, setEditing] = useState(false);

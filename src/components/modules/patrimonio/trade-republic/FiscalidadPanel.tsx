@@ -6,8 +6,7 @@ import type { PortfolioTransaction, PortfolioAsset } from "@/types/patrimonio";
 
 type TLHStatusValue = "pendiente" | "revisado" | "aplicado";
 
-const formatEur = (value: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
+import { formatEur } from "@/lib/utils/format";
 
 const YEAR = new Date().getFullYear().toString();
 

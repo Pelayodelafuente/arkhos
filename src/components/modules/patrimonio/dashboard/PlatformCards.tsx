@@ -4,8 +4,7 @@ import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { PLBadge } from "@/components/modules/patrimonio/shared/PLBadge";
 import type { PlatformSlug } from "@/types/patrimonio";
 
-const formatEur = (value: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
+import { formatEur } from "@/lib/utils/format";
 
 export function PlatformCards() {
   const overview = usePatrimonioStore((s) => s.overview);

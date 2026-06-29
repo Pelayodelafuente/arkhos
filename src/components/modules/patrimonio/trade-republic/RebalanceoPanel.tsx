@@ -8,10 +8,7 @@ import { usePatrimonioStore } from "@/stores/patrimonio-store";
 // Helpers
 // ---------------------------------------------------------------------------
 
-const formatPct = (value: number, withSign = false) => {
-  const sign = withSign && value > 0 ? "+" : "";
-  return `${sign}${value.toFixed(2)}%`;
-};
+import { formatPct } from "@/lib/utils/format";
 
 // ---------------------------------------------------------------------------
 // Types

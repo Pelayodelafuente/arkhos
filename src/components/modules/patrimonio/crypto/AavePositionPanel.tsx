@@ -6,8 +6,7 @@ import { Skeleton } from "@/components/ui";
 import { useCryptoStore } from "@/stores/crypto-store";
 import { loadCryptoData } from "@/app/actions/crypto";
 
-const formatEur = (v: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(v);
+import { formatEur } from "@/lib/utils/format";
 
 const formatUsdc = (v: number) =>
   new Intl.NumberFormat("es-ES", {

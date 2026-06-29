@@ -5,8 +5,7 @@ import { TrendingUp, TrendingDown, Banknote, BarChart2, Calendar } from "lucide-
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { PLBadge } from "@/components/modules/patrimonio/shared/PLBadge";
 
-const formatEur = (value: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
+import { formatEur } from "@/lib/utils/format";
 
 interface StatRowProps {
   label: string;

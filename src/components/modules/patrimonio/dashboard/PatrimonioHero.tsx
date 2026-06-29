@@ -13,43 +13,8 @@ import { useAnimatedCounter } from "@/lib/hooks/use-animated-counter";
 // Formatters
 // ---------------------------------------------------------------------------
 
-const formatEur = (value: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
-
-const formatPct = (value: number, signed = false) =>
-  `${signed && value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
-
-// ---------------------------------------------------------------------------
-// MiniSparkline — inline SVG
-// ---------------------------------------------------------------------------
-
-function MiniSparkline({ values, color }: { values: number[]; color: string }) {
-  if (values.length < 2) return null;
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const range = max - min || 1;
-  const W = 60;
-  const H = 24;
-  const points = values
-    .map((v, i) => {
-      const x = (i / (values.length - 1)) * W;
-      const y = H - ((v - min) / range) * (H - 4) - 2;
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(" ");
-  return (
-    <svg width={W} height={H} aria-hidden="true" className="flex-shrink-0 opacity-70 self-end mb-2">
-      <polyline
-        points={points}
-        fill="none"
-        stroke={color}
-        strokeWidth={1.5}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
+import { formatEur, formatPct } from "@/lib/utils/format";
+import { Sparkline } from "@/components/viz";
 
 // ---------------------------------------------------------------------------
 // SubMetric — tarjeta interna de la fila inferior
@@ -333,7 +298,14 @@ export function PatrimonioHero() {
             >
               {formatEur(animatedTotal)}
             </p>
-            <MiniSparkline values={sparklineValues} color="var(--module-patrimonio)" />
+            <Sparkline
+              values={sparklineValues}
+              color="var(--module-patrimonio)"
+              width={60}
+              height={24}
+              className="flex-shrink-0 self-end mb-2"
+              opacity={0.7}
+            />
           </div>
 
           {/* Delta mensual */}

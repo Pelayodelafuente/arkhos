@@ -14,8 +14,7 @@ import { Skeleton } from "@/components/ui";
 import { useCryptoStore } from "@/stores/crypto-store";
 import type { CryptoDCAPoint } from "@/types/crypto";
 
-const formatEur = (v: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(v);
+import { formatEur } from "@/lib/utils/format";
 
 const COLOR_BELOW = "#2E7D6B"; // Verde: comprado por debajo del precio actual
 const COLOR_ABOVE = "#B07A3A"; // Naranja crypto: comprado por encima

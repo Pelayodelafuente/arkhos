@@ -17,8 +17,7 @@ import { C } from "@/lib/patrimonio/chart-colors";
 // Helpers
 // ---------------------------------------------------------------------------
 
-const formatEur = (value: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
+import { formatEur } from "@/lib/utils/format";
 
 const formatCompact = (value: number) => {
   if (Math.abs(value) >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;

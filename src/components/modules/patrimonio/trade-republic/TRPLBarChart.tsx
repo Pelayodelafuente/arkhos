@@ -16,11 +16,7 @@ import {
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import type { PLBarItem } from "@/types/patrimonio";
 
-const formatEur = (value: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
-
-const formatPct = (value: number) =>
-  `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
+import { formatEur, formatPct } from "@/lib/utils/format";
 
 interface PLBarItemExtended extends PLBarItem {
   fullName: string;
@@ -61,7 +57,7 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
             className="font-mono font-medium"
             style={{ color: item.pl_percentage >= 0 ? C.green : C.red }}
           >
-            {formatPct(item.pl_percentage)}
+            {formatPct(item.pl_percentage, true)}
           </span>
         </div>
       </div>

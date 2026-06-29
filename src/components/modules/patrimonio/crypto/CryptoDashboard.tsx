@@ -24,8 +24,7 @@ const TABS = [
   { id: "costs" as const, label: "Costes" },
 ] as const;
 
-const formatEur = (v: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(v);
+import { formatEur } from "@/lib/utils/format";
 
 // ── Costs panel ───────────────────────────────────────────────────────────────
 

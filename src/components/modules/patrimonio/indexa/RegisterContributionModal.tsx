@@ -10,8 +10,7 @@ const FUND_TYPE_COLOR: Record<string, string> = {
   cash: "#888780",
 };
 
-const formatEur = (v: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(v);
+import { formatEur } from "@/lib/utils/format";
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);

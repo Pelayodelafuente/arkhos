@@ -11,8 +11,7 @@ interface PlaceholderPlatformProps {
   assets: PortfolioAsset[];
 }
 
-const formatEur = (value: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
+import { formatEur } from "@/lib/utils/format";
 
 export function PlaceholderPlatform({ platform, assets }: PlaceholderPlatformProps) {
   const [modalOpen, setModalOpen] = useState(false);

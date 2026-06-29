@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { Upload, FileText, AlertCircle } from "lucide-react";
 import { Modal, Button } from "@/components/ui";
 import type { IndexaFund, IndexaTransaction, IndexaTransactionType } from "@/types/indexa";
+import { formatEur } from "@/lib/utils/format";
 
 export interface ImportCSVModalProps {
   isOpen: boolean;
@@ -158,9 +159,6 @@ export function ImportCSVModal({ isOpen, onClose, onImport, funds }: ImportCSVMo
     transfer_in: "TRASPASO ENT.",
     transfer_out: "TRASPASO SAL.",
   };
-
-  const formatEur = (v: number) =>
-    new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(v);
 
   return (
     <Modal

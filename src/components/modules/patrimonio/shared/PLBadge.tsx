@@ -8,11 +8,7 @@ interface PLBadgeProps {
   size?: "sm" | "md";
 }
 
-const formatEur = (value: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
-
-const formatPct = (value: number) =>
-  `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
+import { formatEur, formatPct } from "@/lib/utils/format";
 
 export function PLBadge({
   amount,
@@ -50,7 +46,7 @@ export function PLBadge({
 
   const parts: string[] = [];
   if (showAmount) parts.push(formatEur(safeAmount));
-  if (showPercentage) parts.push(formatPct(safePct));
+  if (showPercentage) parts.push(formatPct(safePct, true));
 
   return (
     <span

@@ -13,8 +13,7 @@ import {
 } from "recharts";
 import { Skeleton } from "@/components/ui";
 
-const formatEur = (v: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(v);
+import { formatEur } from "@/lib/utils/format";
 
 const formatYAxis = (v: number) => {
   if (v >= 1000) return `${(v / 1000).toFixed(0)}k€`;

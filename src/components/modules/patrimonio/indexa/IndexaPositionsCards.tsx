@@ -4,8 +4,7 @@ import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui";
 import type { IndexaPosition } from "@/types/indexa";
 
-const formatEur = (v: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(v);
+import { formatEur } from "@/lib/utils/format";
 
 const formatNum = (v: number | null, dec = 4) =>
   v === null ? "—" : new Intl.NumberFormat("es-ES", { minimumFractionDigits: dec, maximumFractionDigits: dec }).format(v);

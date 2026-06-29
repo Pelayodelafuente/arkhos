@@ -9,11 +9,7 @@ import { PLBadge } from "@/components/modules/patrimonio/shared/PLBadge";
 import { Skeleton } from "@/components/ui";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 
-const formatEur = (value: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
-
-const formatPct = (value: number) =>
-  `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
+import { formatEur, formatPct } from "@/lib/utils/format";
 
 interface TRKPICardProps {
   label: string;
@@ -127,7 +123,7 @@ function TRSectionKPIs() {
       />
       <TRKPICard
         label="Rentabilidad %"
-        value={formatPct(portfolioPLPct)}
+        value={formatPct(portfolioPLPct, true)}
         icon={<BarChart2 size={14} strokeWidth={1.75} />}
         accentColor={plColor}
         sub={

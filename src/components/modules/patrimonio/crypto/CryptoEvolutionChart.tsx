@@ -15,8 +15,7 @@ import { Skeleton } from "@/components/ui";
 import { useCryptoStore } from "@/stores/crypto-store";
 import type { CryptoAsset } from "@/types/crypto";
 
-const formatEur = (v: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(v);
+import { formatEur } from "@/lib/utils/format";
 
 const formatCompact = (v: number) =>
   new Intl.NumberFormat("es-ES", { notation: "compact", maximumFractionDigits: 0 }).format(v);

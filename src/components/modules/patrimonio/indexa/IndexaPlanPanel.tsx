@@ -8,8 +8,7 @@ import { RegisterContributionModal } from "./RegisterContributionModal";
 import type { ContributionFormData } from "./RegisterContributionModal";
 import type { IndexaMonthlyPlan, IndexaTransaction, IndexaFund } from "@/types/indexa";
 
-const formatEur = (v: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(v);
+import { formatEur } from "@/lib/utils/format";
 
 const TX_TYPE_LABEL: Record<string, string> = {
   subscription: "SUSCRIPCIÓN",

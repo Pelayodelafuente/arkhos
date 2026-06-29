@@ -5,8 +5,7 @@ import { ArrowRight } from "lucide-react";
 import type { PlatformSlug } from "@/types/patrimonio";
 import { PLBadge } from "@/components/modules/patrimonio/shared/PLBadge";
 
-const formatEur = (value: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
+import { formatEur } from "@/lib/utils/format";
 
 export interface PlatformCardProps {
   slug: PlatformSlug;

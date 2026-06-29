@@ -6,8 +6,7 @@ import { Skeleton } from "@/components/ui";
 import { useCryptoStore } from "@/stores/crypto-store";
 import { ImportBit2MeCSVModal } from "./ImportBit2MeCSVModal";
 
-const formatEur = (v: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(v);
+import { formatEur } from "@/lib/utils/format";
 
 const WALLET_LABELS: Record<string, string> = {
   trust_wallet: "Trust Wallet",

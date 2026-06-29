@@ -38,8 +38,7 @@ function futureValue(initial: number, monthly: number, annualRate: number, years
   return initial * growth + monthly * ((growth - 1) / monthlyRate);
 }
 
-const formatEur = (value: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value);
+import { formatEur } from "@/lib/utils/format";
 
 const formatCompact = (value: number) => {
   if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
@@ -75,15 +74,15 @@ function SimTooltip({ active, payload, label }: SimTooltipProps) {
       <div className="space-y-1">
         <div className="flex justify-between gap-6">
           <span style={{ color: C.green }}>Optimista</span>
-          <span className="font-mono font-medium text-foreground">{formatEur(point.optimista)}</span>
+          <span className="font-mono font-medium text-foreground">{formatEur(point.optimista, 0)}</span>
         </div>
         <div className="flex justify-between gap-6">
           <span style={{ color: C.blue }}>Base</span>
-          <span className="font-mono font-medium text-foreground">{formatEur(point.base)}</span>
+          <span className="font-mono font-medium text-foreground">{formatEur(point.base, 0)}</span>
         </div>
         <div className="flex justify-between gap-6">
           <span style={{ color: C.amber }}>Pesimista</span>
-          <span className="font-mono font-medium text-foreground">{formatEur(point.pesimista)}</span>
+          <span className="font-mono font-medium text-foreground">{formatEur(point.pesimista, 0)}</span>
         </div>
       </div>
     </div>
@@ -355,25 +354,25 @@ export function SimuladorProyeccion() {
           <div className="rounded-lg border border-border bg-sand px-3 py-2.5 text-center">
             <p className="text-xs text-text-tertiary">Aportado total</p>
             <p className="mt-0.5 font-mono text-sm font-semibold text-foreground">
-              {formatEur(totalContributed)}
+              {formatEur(totalContributed, 0)}
             </p>
           </div>
           <div className="rounded-lg border border-border bg-sand px-3 py-2.5 text-center">
             <p className="text-xs" style={{ color: C.amber }}>Pesimista</p>
             <p className="mt-0.5 font-mono text-sm font-semibold text-foreground">
-              {formatEur(finalPoint.pesimista)}
+              {formatEur(finalPoint.pesimista, 0)}
             </p>
           </div>
           <div className="rounded-lg border border-border bg-sand px-3 py-2.5 text-center">
             <p className="text-xs" style={{ color: C.blue }}>Base</p>
             <p className="mt-0.5 font-mono text-sm font-semibold text-foreground">
-              {formatEur(finalPoint.base)}
+              {formatEur(finalPoint.base, 0)}
             </p>
           </div>
           <div className="rounded-lg border border-border bg-sand px-3 py-2.5 text-center">
             <p className="text-xs" style={{ color: C.green }}>Optimista</p>
             <p className="mt-0.5 font-mono text-sm font-semibold text-foreground">
-              {formatEur(finalPoint.optimista)}
+              {formatEur(finalPoint.optimista, 0)}
             </p>
           </div>
           <div className="rounded-lg border border-border bg-sand px-3 py-2.5 text-center">

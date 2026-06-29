@@ -14,8 +14,7 @@ import { AssetFormModal } from "./AssetFormModal";
 
 const TODAY_MS = Date.now();
 
-const formatEur = (value: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
+import { formatEur } from "@/lib/utils/format";
 
 const formatQty = (value: number) => {
   if (value === Math.floor(value)) return value.toLocaleString("es-ES");

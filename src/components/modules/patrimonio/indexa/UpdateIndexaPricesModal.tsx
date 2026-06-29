@@ -6,8 +6,7 @@ import { useIndexaStore } from "@/stores/indexa-store";
 import { updateIndexaPrices, loadIndexaData } from "@/app/actions/indexa";
 import type { IndexaPosition } from "@/types/indexa";
 
-const formatEur = (v: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(v);
+import { formatEur } from "@/lib/utils/format";
 
 const formatNum = (v: number, decimals = 4) =>
   new Intl.NumberFormat("es-ES", { minimumFractionDigits: decimals, maximumFractionDigits: decimals }).format(v);

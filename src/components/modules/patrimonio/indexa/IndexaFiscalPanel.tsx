@@ -6,8 +6,7 @@ import { AlertTriangle, Copy, Check } from "lucide-react";
 import { Button, Skeleton } from "@/components/ui";
 import type { IndexaOverview, IndexaFund, IndexaPosition } from "@/types/indexa";
 
-const formatEur = (v: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(v);
+import { formatEur } from "@/lib/utils/format";
 
 // Valor real a 31/12/2025
 const VALUE_31_DEC_2025 = 6491.94;

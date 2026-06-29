@@ -18,8 +18,7 @@ import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { C } from "@/lib/patrimonio/chart-colors";
 import type { EvolutionPoint } from "@/types/patrimonio";
 
-const formatEur = (value: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
+import { formatEur } from "@/lib/utils/format";
 
 const formatCompact = (value: number) => {
   if (value >= 1000) return `${(value / 1000).toFixed(0)}k`;

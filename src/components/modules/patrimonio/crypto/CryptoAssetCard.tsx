@@ -4,11 +4,7 @@ import { motion } from "framer-motion";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import type { CryptoAssetWithPL } from "@/types/crypto";
 
-const formatEur = (v: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(v);
-
-const formatPct = (v: number) =>
-  `${v >= 0 ? "+" : ""}${v.toFixed(2)}%`;
+import { formatEur, formatPct } from "@/lib/utils/format";
 
 function abbreviateAddress(addr: string): string {
   if (addr.length < 12) return addr;
@@ -125,7 +121,7 @@ export function CryptoAssetCard({ asset }: CryptoAssetCardProps) {
                 : "1px solid rgba(163,45,45,0.20)",
             }}
           >
-            {formatPct(asset.pl_pct as number)}
+            {formatPct(asset.pl_pct as number, true)}
           </span>
           {asset.symbol === "USDC" && (
             <span

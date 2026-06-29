@@ -4,11 +4,7 @@ import { Skeleton } from "@/components/ui";
 import { useCryptoStore } from "@/stores/crypto-store";
 import type { CryptoTransactionType } from "@/types/crypto";
 
-const formatEur = (v: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(v);
-
-const formatPct = (v: number) =>
-  `${v >= 0 ? "+" : ""}${v.toFixed(2)}%`;
+import { formatEur, formatPct } from "@/lib/utils/format";
 
 const TX_TYPE_LABELS: Record<CryptoTransactionType, string> = {
   buy: "Compra",
@@ -250,7 +246,7 @@ export function CryptoTransactionTable() {
                               {formatEur(tx.pl_since_buy_eur)}
                               {tx.pl_since_buy_pct != null && (
                                 <span className="opacity-70 ml-1">
-                                  ({formatPct(tx.pl_since_buy_pct)})
+                                  ({formatPct(tx.pl_since_buy_pct, true)})
                                 </span>
                               )}
                             </span>

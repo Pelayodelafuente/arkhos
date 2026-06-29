@@ -24,13 +24,7 @@ const QUICK_ACTIONS: QuickAction[] = [
   { label: "Ir a Fiscalidad", description: "FIFO y plusvalías" },
 ];
 
-const formatEur = (value: number) =>
-  new Intl.NumberFormat("es-ES", {
-    style: "currency",
-    currency: "EUR",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value);
+import { formatEur } from "@/lib/utils/format";
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
@@ -234,7 +228,7 @@ export function UniversalSearch({ isOpen, onClose }: UniversalSearchProps) {
                       className="font-mono text-sm font-medium flex-shrink-0"
                       style={{ color: "var(--text-secondary)" }}
                     >
-                      {formatEur(asset.current_value)}
+                      {formatEur(asset.current_value, 0)}
                     </span>
                   )}
                 </button>
