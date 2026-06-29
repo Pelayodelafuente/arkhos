@@ -4,47 +4,8 @@ import { useMemo } from "react";
 import { TrendingUp, TrendingDown, Wallet, PiggyBank, DollarSign, BarChart2 } from "lucide-react";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { PLBadge } from "@/components/modules/patrimonio/shared/PLBadge";
-
-const formatEur = (value: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
-
-const formatPct = (value: number, signed = false) =>
-  `${signed && value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
-
-// ---------------------------------------------------------------------------
-// Mini sparkline (inline SVG)
-// ---------------------------------------------------------------------------
-
-function MiniSparkline({ values }: { values: number[] }) {
-  if (values.length < 2) return null;
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const range = max - min || 1;
-  const W = 56;
-  const H = 22;
-  const points = values
-    .map((v, i) => {
-      const x = (i / (values.length - 1)) * W;
-      const y = H - ((v - min) / range) * (H - 2) - 1;
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(" ");
-  const isPositive = values[values.length - 1] >= values[0];
-  const color = isPositive ? "#2E7D6B" : "#A32D2D";
-  return (
-    <svg width={W} height={H} aria-hidden="true" className="flex-shrink-0">
-      <polyline
-        points={points}
-        fill="none"
-        stroke={color}
-        strokeWidth={1.5}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        opacity={0.8}
-      />
-    </svg>
-  );
-}
+import { formatEur, formatPct } from "@/lib/utils/format";
+import { Sparkline } from "@/components/viz";
 
 // ---------------------------------------------------------------------------
 // Delta badge
@@ -97,7 +58,16 @@ function KPICard({ label, value, badge, delta, sparkline, icon, accentColor }: K
       </div>
       <div className="mt-3 flex items-end justify-between gap-2">
         <p className="font-mono text-2xl font-semibold text-foreground leading-none">{value}</p>
-        {sparkline && sparkline.length >= 2 && <MiniSparkline values={sparkline} />}
+        {sparkline && sparkline.length >= 2 && (
+          <Sparkline
+            values={sparkline}
+            color={sparkline[sparkline.length - 1] >= sparkline[0] ? "#2E7D6B" : "#A32D2D"}
+            width={56}
+            height={22}
+            className="flex-shrink-0"
+            opacity={0.8}
+          />
+        )}
       </div>
       {badge && <div className="mt-2">{badge}</div>}
       {delta && <div className="mt-1">{delta}</div>}

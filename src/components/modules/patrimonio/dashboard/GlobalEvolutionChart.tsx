@@ -16,14 +16,9 @@ import { useIndexaStore } from "@/stores/indexa-store";
 import { useHorosStore } from "@/stores/horos-store";
 import { useCryptoStore } from "@/stores/crypto-store";
 import { useMintosStore } from "@/stores/mintos-store";
-
-const formatEur = (value: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
-
-const formatEurShort = (value: number) => {
-  if (Math.abs(value) >= 1000) return `${(value / 1000).toFixed(1)}k€`;
-  return `${value.toFixed(0)}€`;
-};
+import { formatEur, formatEurShort } from "@/lib/utils/format";
+import { ChartShell, ChartTooltip } from "@/components/viz";
+import type { ChartTooltipProps } from "@/components/viz";
 
 
 // 'YYYY-MM-DD' o 'YYYY-MM' → 'YYYY-MM'
@@ -33,40 +28,6 @@ function toMonthKey(s: string): string { return s.substring(0, 7); }
 function monthKeyLabel(key: string): string {
   const [y, m] = key.split("-");
   return `${m}/${(y ?? "").slice(-2)}`;
-}
-
-// ---------------------------------------------------------------------------
-// Tooltip
-// ---------------------------------------------------------------------------
-
-interface TooltipEntry { value: number; name: string; color: string }
-interface CustomTooltipProps { active?: boolean; payload?: readonly TooltipEntry[]; label?: string }
-
-function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
-  if (!active || !payload?.length) return null;
-  return (
-    <div
-      className="rounded-xl p-3"
-      style={{
-        backgroundColor: "var(--bg-card)",
-        border: "1px solid var(--border-stone, rgba(160,120,80,0.25))",
-        boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-        minWidth: 160,
-      }}
-    >
-      <p className="text-xs text-muted-foreground mb-2">{label}</p>
-      {payload.map((entry) => (
-        <div key={entry.name} className="flex items-center justify-between gap-4">
-          <span className="text-xs" style={{ color: entry.color }}>
-            {entry.name === "value" ? "Patrimonio" : "Invertido"}
-          </span>
-          <span className="font-mono text-sm font-semibold" style={{ color: entry.color }}>
-            {formatEur(entry.value)}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
 }
 
 function EmptyState() {
@@ -327,22 +288,11 @@ export function GlobalEvolutionChart() {
   if (data.length === 0) return <EmptyState />;
 
   return (
-    <div
-      className="overflow-hidden rounded-xl p-4"
-      style={{
-        backgroundColor: "var(--bg-card)",
-        border: "1px solid var(--border-stone, rgba(160,120,80,0.25))",
-      }}
-    >
-      <div className="mb-3 flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
-            Evolución del patrimonio
-          </p>
-          <p className="mt-0.5 text-xs" style={{ color: "var(--text-tertiary)" }}>
-            TR · Indexa · Horos · Mintos · Crypto — histórico acumulado
-          </p>
-        </div>
+    <ChartShell
+      title="Evolución del patrimonio"
+      subtitle="TR · Indexa · Horos · Mintos · Crypto — histórico acumulado"
+      className="overflow-hidden"
+      actions={
         <div className="flex gap-1">
           {(["3M", "6M", "1A", "Todo"] as const).map((p) => (
             <button
@@ -361,8 +311,8 @@ export function GlobalEvolutionChart() {
             </button>
           ))}
         </div>
-      </div>
-
+      }
+    >
       <ResponsiveContainer width="100%" height={310}>
         <AreaChart data={filteredData} margin={{ top: 4, right: 4, left: 0, bottom: 8 }}>
           <defs>
@@ -398,10 +348,10 @@ export function GlobalEvolutionChart() {
 
           <Tooltip
             content={(props) => (
-              <CustomTooltip
-                active={props.active}
-                payload={props.payload as readonly TooltipEntry[] | undefined}
-                label={props.label as string | undefined}
+              <ChartTooltip
+                {...(props as unknown as ChartTooltipProps)}
+                nameFormatter={(name) => (name === "value" ? "Patrimonio" : "Invertido")}
+                valueFormatter={(v) => formatEur(v)}
               />
             )}
           />
@@ -436,6 +386,6 @@ export function GlobalEvolutionChart() {
           />
         </AreaChart>
       </ResponsiveContainer>
-    </div>
+    </ChartShell>
   );
 }
