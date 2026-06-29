@@ -11,6 +11,7 @@ import {
   ReferenceLine,
 } from "recharts";
 import { formatCurrency } from "@/lib/utils/format";
+import { useCrosshair } from "@/components/viz";
 import type { MintosEvolutionPoint } from "@/types/mintos";
 
 const MINTOS_COLOR = "#C4704A";
@@ -77,6 +78,8 @@ interface MintosEvolutionChartProps {
 }
 
 export function MintosEvolutionChart({ data }: MintosEvolutionChartProps) {
+  const { activeIndex, chartProps } = useCrosshair();
+
   if (data.length === 0) {
     return (
       <div
@@ -106,7 +109,7 @@ export function MintosEvolutionChart({ data }: MintosEvolutionChartProps) {
       </h3>
 
       <ResponsiveContainer width="100%" height={240}>
-        <AreaChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+        <AreaChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} {...chartProps}>
           <defs>
             <linearGradient id="mintosValueFill" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor={MINTOS_COLOR} stopOpacity={0.18} />
@@ -132,7 +135,15 @@ export function MintosEvolutionChart({ data }: MintosEvolutionChartProps) {
             tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`}
             width={40}
           />
-          <Tooltip content={<CustomTooltip />} />
+          <Tooltip content={<CustomTooltip />} cursor={false} />
+          {activeIndex != null && data[activeIndex] && (
+            <ReferenceLine
+              x={data[activeIndex].label}
+              stroke="var(--text-tertiary)"
+              strokeWidth={1}
+              strokeDasharray="3 3"
+            />
+          )}
           {/* Capital depositado — dashed line */}
           <Area
             type="monotone"
