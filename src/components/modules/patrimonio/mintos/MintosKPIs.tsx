@@ -2,54 +2,14 @@
 
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui";
-import { formatCurrency } from "@/lib/utils/format";
+import { formatCurrency, formatEur, formatPct } from "@/lib/utils/format";
+import { KPICard } from "@/components/viz";
 import type { MintosKPIs } from "@/types/mintos";
 
 const MINTOS_COLOR = "var(--platform-mintos)";
 
 function fmt(v: number) {
   return formatCurrency(v, "EUR");
-}
-
-function fmtPct(v: number, signed = true) {
-  return `${signed && v >= 0 ? "+" : ""}${v.toFixed(2)}%`;
-}
-
-interface KPICardProps {
-  label: string;
-  value: React.ReactNode;
-  sub?: React.ReactNode;
-  accent?: string;
-}
-
-function KPICard({ label, value, sub, accent }: KPICardProps) {
-  return (
-    <div
-      className="rounded-xl p-4 flex flex-col gap-2"
-      style={{
-        backgroundColor: "var(--bg-card)",
-        border: "1px solid var(--border-stone, rgba(160,120,80,0.25))",
-      }}
-    >
-      <span
-        className="text-xs font-medium uppercase tracking-wide"
-        style={{ color: "var(--text-muted)" }}
-      >
-        {label}
-      </span>
-      <div
-        className="font-mono text-xl font-semibold tabular-nums leading-tight"
-        style={{ color: accent ?? "var(--text-primary)" }}
-      >
-        {value}
-      </div>
-      {sub && (
-        <div className="text-xs" style={{ color: "var(--text-muted)" }}>
-          {sub}
-        </div>
-      )}
-    </div>
-  );
 }
 
 interface StatPillProps {
@@ -114,30 +74,36 @@ export function MintosKPIs({ kpis, isLoading }: MintosKPIsProps) {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <KPICard
           label="Valor total"
-          value={fmt(kpis.total_value)}
-          accent={MINTOS_COLOR}
+          value={formatEur(kpis.total_value)}
+          numericValue={kpis.total_value}
+          format={formatEur}
+          valueColor={MINTOS_COLOR}
+          description="Valor total de la cartera Mintos"
         />
         <KPICard
           label="Ganancia neta"
-          value={
-            <span>
-              {kpis.net_gain >= 0 ? "+" : ""}
-              {fmt(kpis.net_gain)}{" "}
-              <span className="text-sm opacity-75">({fmtPct(kpis.net_gain_pct)})</span>
-            </span>
-          }
-          accent={gainColor}
+          value={`${kpis.net_gain >= 0 ? "+" : ""}${formatEur(kpis.net_gain)}`}
+          numericValue={kpis.net_gain}
+          format={(n) => `${n >= 0 ? "+" : ""}${formatEur(n)}`}
+          valueColor={gainColor}
+          delta={formatPct(kpis.net_gain_pct, true)}
+          deltaColor={gainColor}
+          description="Ganancia neta sobre el capital depositado"
         />
         <KPICard
           label="XIRR anual"
-          value={xirrValue !== null ? `${fmtPct(xirrValue, false)}` : "—"}
-          sub="rentabilidad real"
-          accent={MINTOS_COLOR}
+          value={xirrValue !== null ? formatPct(xirrValue, false) : "—"}
+          numericValue={xirrValue}
+          format={(n) => formatPct(n, false)}
+          valueColor={MINTOS_COLOR}
+          description="XIRR anual · rentabilidad real ponderada en el tiempo"
         />
         <KPICard
           label="Interés medio"
-          value={kpis.avg_interest_rate !== null ? `${kpis.avg_interest_rate.toFixed(2)}%` : "—"}
-          sub="ponderado cartera"
+          value={kpis.avg_interest_rate !== null ? formatPct(kpis.avg_interest_rate, false) : "—"}
+          numericValue={kpis.avg_interest_rate}
+          format={(n) => formatPct(n, false)}
+          description="Interés medio ponderado de la cartera"
         />
       </div>
 
