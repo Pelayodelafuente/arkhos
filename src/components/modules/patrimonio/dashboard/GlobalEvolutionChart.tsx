@@ -10,6 +10,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   Brush,
+  ReferenceLine,
 } from "recharts";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { useIndexaStore } from "@/stores/indexa-store";
@@ -285,6 +286,13 @@ export function GlobalEvolutionChart() {
     return data.filter(p => p.key >= cutoffDate);
   }, [data, cutoffDate]);
 
+  // Bug #6: Crypto y Mintos no tienen histórico de valor de mercado: los meses
+  // previos muestran coste y solo el último punto usa valor de mercado live.
+  // Se anota el límite en vez de alterar el dato.
+  const lastLabel = filteredData[filteredData.length - 1]?.label ?? null;
+  const showMarketCaveat =
+    (cryptoOverview?.total_value_eur ?? 0) > 0 || (mintosOverview?.total_value ?? 0) > 0;
+
   if (data.length === 0) return <EmptyState />;
 
   return (
@@ -377,6 +385,15 @@ export function GlobalEvolutionChart() {
             activeDot={{ r: 4, fill: "#2E7D6B" }}
             name="value"
           />
+          {showMarketCaveat && lastLabel && (
+            <ReferenceLine
+              x={lastLabel}
+              stroke="var(--text-tertiary)"
+              strokeDasharray="3 3"
+              strokeOpacity={0.6}
+              label={{ value: "mercado", position: "insideTopRight", fontSize: 9, fill: "var(--text-tertiary)" }}
+            />
+          )}
           <Brush
             dataKey="label"
             height={20}
@@ -386,6 +403,13 @@ export function GlobalEvolutionChart() {
           />
         </AreaChart>
       </ResponsiveContainer>
+      {showMarketCaveat && (
+        <p className="mt-2 text-[10px] leading-snug" style={{ color: "var(--text-tertiary)" }}>
+          El valor de Cripto y Mintos refleja precio de mercado actual desde el último punto
+          («mercado»); los meses anteriores muestran el capital aportado de esas plataformas,
+          al no existir histórico de valor de mercado.
+        </p>
+      )}
     </ChartShell>
   );
 }
