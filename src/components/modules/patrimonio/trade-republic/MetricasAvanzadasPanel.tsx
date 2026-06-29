@@ -3,61 +3,13 @@
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { C } from "@/lib/patrimonio/chart-colors";
 import { formatPct } from "@/lib/utils/format";
+import { KPICard } from "@/components/viz";
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
-
-function fmtPct(v: number | null, sign = true): string | null {
-  if (v === null) return null;
-  const pct = (v * 100).toFixed(1);
-  return sign && v >= 0 ? `+${pct}%` : `${pct}%`;
-}
 
 function fmtFixed(v: number | null, decimals = 2): string | null {
   if (v === null) return null;
   return v.toFixed(decimals);
-}
-
-// ─── Metric card ────────────────────────────────────────────────────────────
-
-interface MetricCardProps {
-  label: string;
-  value: string | null;
-  subtext: string;
-  accentColor?: string;
-  badge?: string;
-  badgeColor?: string;
-}
-
-function MetricCard({ label, value, subtext, accentColor, badge, badgeColor }: MetricCardProps) {
-  return (
-    <div className="flex flex-col gap-1.5 rounded-xl border border-border bg-card p-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">{label}</p>
-      {value === null ? (
-        <p className="font-mono text-lg text-text-tertiary">—</p>
-      ) : (
-        <div className="flex items-baseline gap-2">
-          <p
-            className="font-mono text-xl font-semibold"
-            style={{ color: accentColor ?? "var(--text-foreground)" }}
-          >
-            {value}
-          </p>
-          {badge && (
-            <span
-              className="rounded-full px-2 py-0.5 text-xs font-medium"
-              style={{
-                backgroundColor: `${badgeColor ?? C.gray}20`,
-                color: badgeColor ?? C.gray,
-              }}
-            >
-              {badge}
-            </span>
-          )}
-        </div>
-      )}
-      <p className="text-xs text-text-tertiary">{subtext}</p>
-    </div>
-  );
 }
 
 // ─── Semaphore helpers ───────────────────────────────────────────────────────
@@ -127,37 +79,45 @@ export function MetricasAvanzadasPanel() {
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        <MetricCard
+        <KPICard
           label="TWR total"
-          value={fmtPct(twr)}
-          subtext="Time-Weighted Return desde inicio"
-          accentColor={twr !== null ? (twr >= 0 ? C.green : C.red) : undefined}
+          value={twr !== null ? formatPct(twr * 100, true, 1) : "—"}
+          numericValue={twr !== null ? twr * 100 : null}
+          format={(n) => formatPct(n, true, 1)}
+          valueColor={twr !== null ? (twr >= 0 ? C.green : C.red) : undefined}
+          description="Time-Weighted Return desde inicio"
         />
-        <MetricCard
+        <KPICard
           label="CAGR"
-          value={fmtPct(cagr)}
-          subtext={cagrPeriod ?? "Rentabilidad anualizada compuesta"}
-          accentColor={cagr !== null ? (cagr >= 0 ? C.green : C.red) : undefined}
+          value={cagr !== null ? formatPct(cagr * 100, true, 1) : "—"}
+          numericValue={cagr !== null ? cagr * 100 : null}
+          format={(n) => formatPct(n, true, 1)}
+          valueColor={cagr !== null ? (cagr >= 0 ? C.green : C.red) : undefined}
+          description={cagrPeriod ?? "Rentabilidad anualizada compuesta"}
         />
-        <MetricCard
+        <KPICard
           label="Volatilidad"
-          value={vol !== null ? `${(vol * 100).toFixed(1)}%` : null}
-          subtext="Desviación estándar anualizada"
-          accentColor={volColor(vol)}
+          value={vol !== null ? formatPct(vol * 100, false, 1) : "—"}
+          numericValue={vol !== null ? vol * 100 : null}
+          format={(n) => formatPct(n, false, 1)}
+          valueColor={volColor(vol)}
+          description="Desviación estándar anualizada"
         />
-        <MetricCard
+        <KPICard
           label="Sharpe"
-          value={fmtFixed(sharpe)}
-          subtext="Retorno ajustado al riesgo vs 3% RF"
-          accentColor={sharpeColor(sharpe)}
-          badge={sharpeMeta?.badge}
-          badgeColor={sharpeMeta?.color}
+          value={fmtFixed(sharpe) ?? "—"}
+          numericValue={sharpe}
+          format={(n) => n.toFixed(2)}
+          valueColor={sharpeColor(sharpe)}
+          description={`Retorno ajustado al riesgo vs 3% RF${sharpeMeta ? ` · ${sharpeMeta.badge}` : ""}`}
         />
-        <MetricCard
+        <KPICard
           label="Max Drawdown"
-          value={maxDrawdown !== null ? formatPct(maxDrawdown, true) : null}
-          subtext="Caída máxima desde máximo histórico (curva TWR)"
-          accentColor={maxDrawdown !== null && maxDrawdown < 0 ? C.red : undefined}
+          value={maxDrawdown !== null ? formatPct(maxDrawdown, true) : "—"}
+          numericValue={maxDrawdown}
+          format={(n) => formatPct(n, true)}
+          valueColor={maxDrawdown !== null && maxDrawdown < 0 ? C.red : undefined}
+          description="Caída máxima desde máximo histórico (curva TWR)"
         />
       </div>
     </div>
