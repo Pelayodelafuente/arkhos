@@ -12,6 +12,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Skeleton } from "@/components/ui";
+import { useCrosshair } from "@/components/viz";
 
 interface TWRDataPoint {
   label: string;
@@ -64,6 +65,7 @@ interface IndexaTWRChartProps {
 
 export function IndexaTWRChart({ data, isLoading }: IndexaTWRChartProps) {
   const hasBenchmark = data.some((d) => d.benchmark != null);
+  const { activeIndex, chartProps } = useCrosshair();
 
   if (isLoading) {
     return <Skeleton className="h-64 rounded-xl" />;
@@ -117,7 +119,7 @@ export function IndexaTWRChart({ data, isLoading }: IndexaTWRChartProps) {
         )}
       </div>
       <ResponsiveContainer width="100%" height={220}>
-        <LineChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+        <LineChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} {...chartProps}>
           <CartesianGrid
             strokeDasharray="3 3"
             stroke="rgba(160,120,80,0.12)"
@@ -138,8 +140,16 @@ export function IndexaTWRChart({ data, isLoading }: IndexaTWRChartProps) {
             style={{ fill: "var(--text-muted)" }}
             width={52}
           />
-          <Tooltip content={<CustomTooltip />} />
+          <Tooltip content={<CustomTooltip />} cursor={false} />
           <ReferenceLine y={0} stroke="rgba(160,120,80,0.4)" strokeDasharray="3 3" />
+          {activeIndex != null && data[activeIndex] && (
+            <ReferenceLine
+              x={data[activeIndex].label}
+              stroke="var(--text-tertiary)"
+              strokeWidth={1}
+              strokeDasharray="3 3"
+            />
+          )}
           <Line
             type="monotone"
             dataKey="twr"
