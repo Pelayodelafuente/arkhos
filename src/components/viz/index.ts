@@ -6,3 +6,5 @@ export type { ChartTooltipProps, ChartTooltipRow } from "./ChartTooltip";
 export { Sparkline } from "./Sparkline";
 export { Donut } from "./Donut";
 export type { DonutDatum } from "./Donut";
+export { Heatmap } from "./Heatmap";
+export type { HeatmapRow, HeatmapCell } from "./Heatmap";
