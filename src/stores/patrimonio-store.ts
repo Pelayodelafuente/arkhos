@@ -87,6 +87,7 @@ interface PatrimonioStore {
   getPassiveIncomeYTD: () => number;
   getCAGR: () => number | null;
   getMaxDrawdown: () => number | null;
+  getDrawdownSeries: () => Array<{ date: string; label: string; value: number }>;
   getTWR: () => number | null;
   getAnnualizedVolatility: () => number | null;
   getSharpeRatio: () => number | null;
@@ -415,32 +416,53 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
   },
 
   getMaxDrawdown: () => {
+    // Derivado de la serie de drawdown para que el KPI coincida exactamente con el
+    // mínimo de la curva underwater que se pinta.
+    const series = get().getDrawdownSeries();
+    if (series.length < 2) return null;
+    const min = Math.min(...series.map((p) => p.value));
+    return isFinite(min) ? min : null;
+  },
+
+  getDrawdownSeries: () => {
     const { snapshots } = get();
-    if (snapshots.length < 2) return null;
+    if (snapshots.length < 2) return [];
     const sorted = [...snapshots].sort((a, b) => a.snapshot_date.localeCompare(b.snapshot_date));
-    // Build TWR curve (same logic as getTWR) then find max peak-to-trough on that curve.
-    // Using absolute value always rises with monthly contributions → always 0% drawdown.
+    // Un punto por mes (último snapshot de cada mes) para una curva limpia.
+    const byMonth = new Map<string, (typeof sorted)[number]>();
+    for (const s of sorted) byMonth.set(s.snapshot_date.substring(0, 7), s);
+    const monthly = Array.from(byMonth.values()).sort((a, b) =>
+      a.snapshot_date.localeCompare(b.snapshot_date)
+    );
+    if (monthly.length < 2) return [];
+
+    const fmt = (d: string) =>
+      new Date(`${d}T00:00:00`).toLocaleDateString('es-ES', { month: 'short', year: '2-digit' });
+
+    // Curva TWR (misma lógica que getTWR/getMaxDrawdown): drawdown = twr/peak − 1.
+    // El valor absoluto siempre sube con aportaciones → daría 0% siempre; por eso TWR.
+    const series: Array<{ date: string; label: string; value: number }> = [
+      { date: monthly[0].snapshot_date, label: fmt(monthly[0].snapshot_date), value: 0 },
+    ];
     let twr = 1;
     let peak = 1;
-    let maxDrawdown = 0;
-    for (let i = 1; i < sorted.length; i++) {
-      const prev = sorted[i - 1];
-      const curr = sorted[i];
-      const prevInv = prev.total_value;
-      const currInv = curr.total_value;
-      const cashFlow = curr.total_invested - prev.total_invested;
-      const denominator = prevInv + cashFlow;
+    for (let i = 1; i < monthly.length; i++) {
+      const prev = monthly[i - 1];
+      const curr = monthly[i];
+      const denominator = prev.total_value + (curr.total_invested - prev.total_invested);
       if (denominator <= 0) continue;
-      const periodReturn = currInv / denominator;
+      const periodReturn = curr.total_value / denominator;
       if (!isFinite(periodReturn) || Math.abs(periodReturn - 1) > 0.5) continue;
       twr *= periodReturn;
       if (twr > peak) peak = twr;
-      const dd = (twr - peak) / peak;
-      if (dd < maxDrawdown) maxDrawdown = dd;
+      const dd = (twr / peak - 1) * 100;
+      series.push({
+        date: curr.snapshot_date,
+        label: fmt(curr.snapshot_date),
+        value: parseFloat(dd.toFixed(2)),
+      });
     }
-    const result = maxDrawdown * 100;
-    if (!isFinite(result) || result === 0) return result === 0 ? 0 : null;
-    return result;
+    return series;
   },
 
   getTWR: () => {

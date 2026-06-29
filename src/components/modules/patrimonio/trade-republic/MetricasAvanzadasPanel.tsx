@@ -2,6 +2,7 @@
 
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { C } from "@/lib/patrimonio/chart-colors";
+import { formatPct } from "@/lib/utils/format";
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
@@ -92,12 +93,14 @@ export function MetricasAvanzadasPanel() {
   const getCAGR = usePatrimonioStore((s) => s.getCAGR);
   const getAnnualizedVolatility = usePatrimonioStore((s) => s.getAnnualizedVolatility);
   const getSharpeRatio = usePatrimonioStore((s) => s.getSharpeRatio);
+  const getMaxDrawdown = usePatrimonioStore((s) => s.getMaxDrawdown);
   const snapshots = usePatrimonioStore((s) => s.snapshots);
 
   const twr = getTWR();
   const cagr = getCAGR();
   const vol = getAnnualizedVolatility();
   const sharpe = getSharpeRatio();
+  const maxDrawdown = getMaxDrawdown(); // ya en % (≤ 0)
 
   const sharpeMeta = sharpeLabel(sharpe);
 
@@ -123,7 +126,7 @@ export function MetricasAvanzadasPanel() {
           </p>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         <MetricCard
           label="TWR total"
           value={fmtPct(twr)}
@@ -149,6 +152,12 @@ export function MetricasAvanzadasPanel() {
           accentColor={sharpeColor(sharpe)}
           badge={sharpeMeta?.badge}
           badgeColor={sharpeMeta?.color}
+        />
+        <MetricCard
+          label="Max Drawdown"
+          value={maxDrawdown !== null ? formatPct(maxDrawdown, true) : null}
+          subtext="Caída máxima desde máximo histórico (curva TWR)"
+          accentColor={maxDrawdown !== null && maxDrawdown < 0 ? C.red : undefined}
         />
       </div>
     </div>
