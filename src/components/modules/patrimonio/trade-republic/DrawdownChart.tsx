@@ -13,7 +13,7 @@ import {
 } from "recharts";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { formatPct } from "@/lib/utils/format";
-import { ChartShell, ChartTooltip } from "@/components/viz";
+import { ChartShell, ChartTooltip, useCrosshair } from "@/components/viz";
 import type { ChartTooltipProps } from "@/components/viz";
 
 /**
@@ -28,6 +28,8 @@ export function DrawdownChart() {
   // Patrón reactivo seguro (sin `void x` en el cuerpo, que React Compiler eliminaría).
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const data = useMemo(() => getDrawdownSeries(), [snapshots, getDrawdownSeries]);
+
+  const { activeIndex, chartProps } = useCrosshair();
 
   if (data.length < 2) {
     return (
@@ -54,7 +56,7 @@ export function DrawdownChart() {
       }
     >
       <ResponsiveContainer width="100%" height={220}>
-        <AreaChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 4 }}>
+        <AreaChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 4 }} {...chartProps}>
           <defs>
             <linearGradient id="gradDrawdown" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#A32D2D" stopOpacity={0} />
@@ -85,8 +87,17 @@ export function DrawdownChart() {
                 valueFormatter={(v) => formatPct(v, true)}
               />
             )}
+            cursor={false}
           />
           <ReferenceLine y={0} stroke="var(--border)" strokeWidth={1} />
+          {activeIndex != null && data[activeIndex] && (
+            <ReferenceLine
+              x={data[activeIndex].label}
+              stroke="var(--text-tertiary)"
+              strokeWidth={1}
+              strokeDasharray="3 3"
+            />
+          )}
           <Area
             type="monotone"
             dataKey="value"
