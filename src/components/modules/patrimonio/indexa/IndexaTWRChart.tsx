@@ -13,6 +13,7 @@ import {
 } from "recharts";
 import { Skeleton } from "@/components/ui";
 import { useCrosshair } from "@/components/viz";
+import { usePrefersReducedMotion } from "@/lib/hooks/use-prefers-reduced-motion";
 
 interface TWRDataPoint {
   label: string;
@@ -66,6 +67,7 @@ interface IndexaTWRChartProps {
 export function IndexaTWRChart({ data, isLoading }: IndexaTWRChartProps) {
   const hasBenchmark = data.some((d) => d.benchmark != null);
   const { activeIndex, chartProps } = useCrosshair();
+  const reduced = usePrefersReducedMotion();
 
   if (isLoading) {
     return <Skeleton className="h-64 rounded-xl" />;
@@ -153,6 +155,8 @@ export function IndexaTWRChart({ data, isLoading }: IndexaTWRChartProps) {
           <Line
             type="monotone"
             dataKey="twr"
+            isAnimationActive={!reduced}
+            animationDuration={500}
             stroke="#3B78B0"
             strokeWidth={2}
             dot={false}
@@ -163,6 +167,8 @@ export function IndexaTWRChart({ data, isLoading }: IndexaTWRChartProps) {
             <Line
               type="monotone"
               dataKey="benchmark"
+              isAnimationActive={!reduced}
+              animationDuration={500}
               stroke="#888780"
               strokeWidth={1.5}
               strokeDasharray="4 3"

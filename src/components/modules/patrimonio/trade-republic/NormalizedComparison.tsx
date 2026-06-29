@@ -16,6 +16,7 @@ import { loadAssetPriceHistory } from "@/app/actions/patrimonio";
 import type { AssetPricePoint } from "@/lib/supabase/patrimonio";
 import { ChartShell, ChartTooltip, useCrosshair } from "@/components/viz";
 import type { ChartTooltipProps } from "@/components/viz";
+import { usePrefersReducedMotion } from "@/lib/hooks/use-prefers-reduced-motion";
 
 /**
  * Comparación normalizada (base 100) — Fase 2.4.
@@ -121,6 +122,7 @@ export function NormalizedComparison() {
   const data = useMemo(() => buildNormalized(active, history), [active, history]);
 
   const { activeIndex, chartProps } = useCrosshair();
+  const reduced = usePrefersReducedMotion();
 
   const toggle = (isin: string) => {
     const base = selected.length > 0 ? selected : defaultSel;
@@ -212,6 +214,8 @@ export function NormalizedComparison() {
                 key={isin}
                 type="monotone"
                 dataKey={isin}
+                isAnimationActive={!reduced}
+                animationDuration={500}
                 stroke={COLORS[i % COLORS.length]}
                 strokeWidth={1.75}
                 dot={false}

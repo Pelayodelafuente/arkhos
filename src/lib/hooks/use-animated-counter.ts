@@ -1,7 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
+import { usePrefersReducedMotion } from "@/lib/hooks/use-prefers-reduced-motion";
 
 export function useAnimatedCounter(target: number, duration = 1200): number {
+  const reduced = usePrefersReducedMotion();
   const [value, setValue] = useState(0);
 
   // Reset inmediato cuando el target pasa a 0 (ajuste de estado en render)
@@ -12,6 +14,10 @@ export function useAnimatedCounter(target: number, duration = 1200): number {
   }
 
   useEffect(() => {
+    // prefers-reduced-motion: sin animación (el valor final se resuelve en el return).
+    if (reduced) {
+      return;
+    }
     if (target === 0) {
       return;
     }
@@ -25,7 +31,7 @@ export function useAnimatedCounter(target: number, duration = 1200): number {
     };
     const raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [target, duration]);
+  }, [target, duration, reduced]);
 
-  return value;
+  return reduced ? target : value;
 }

@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import { formatCurrency } from "@/lib/utils/format";
 import { useCrosshair } from "@/components/viz";
+import { usePrefersReducedMotion } from "@/lib/hooks/use-prefers-reduced-motion";
 import type { MintosEvolutionPoint } from "@/types/mintos";
 
 const MINTOS_COLOR = "#C4704A";
@@ -79,6 +80,7 @@ interface MintosEvolutionChartProps {
 
 export function MintosEvolutionChart({ data }: MintosEvolutionChartProps) {
   const { activeIndex, chartProps } = useCrosshair();
+  const reduced = usePrefersReducedMotion();
 
   if (data.length === 0) {
     return (
@@ -148,6 +150,8 @@ export function MintosEvolutionChart({ data }: MintosEvolutionChartProps) {
           <Area
             type="monotone"
             dataKey="total_deposited"
+            isAnimationActive={!reduced}
+            animationDuration={500}
             name="total_deposited"
             stroke="#888780"
             strokeWidth={1.5}
@@ -160,6 +164,8 @@ export function MintosEvolutionChart({ data }: MintosEvolutionChartProps) {
           <Area
             type="monotone"
             dataKey="total_value"
+            isAnimationActive={!reduced}
+            animationDuration={500}
             name="total_value"
             stroke={MINTOS_COLOR}
             strokeWidth={2}

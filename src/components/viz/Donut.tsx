@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { largestRemainder, formatEur } from "@/lib/utils/format";
+import { usePrefersReducedMotion } from "@/lib/hooks/use-prefers-reduced-motion";
 
 /**
  * Donut unificado (Fase 0.2 — fundación viz).
@@ -52,6 +53,7 @@ export function Donut({
   className = "",
 }: DonutProps) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const reduced = usePrefersReducedMotion();
 
   const total = useMemo(() => data.reduce((s, d) => s + d.value, 0), [data]);
   const withPct = useMemo(
@@ -92,6 +94,8 @@ export function Donut({
               paddingAngle={2}
               dataKey="value"
               strokeWidth={0}
+              isAnimationActive={!reduced}
+              animationDuration={500}
               onMouseEnter={(_, i) => setActiveIndex(i)}
               onMouseLeave={() => setActiveIndex(null)}
             >

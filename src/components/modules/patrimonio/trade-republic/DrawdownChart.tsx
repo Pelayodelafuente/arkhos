@@ -15,6 +15,7 @@ import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { formatPct } from "@/lib/utils/format";
 import { ChartShell, ChartTooltip, useCrosshair } from "@/components/viz";
 import type { ChartTooltipProps } from "@/components/viz";
+import { usePrefersReducedMotion } from "@/lib/hooks/use-prefers-reduced-motion";
 
 /**
  * Curva de drawdown (underwater) — Fase 2.1.
@@ -30,6 +31,7 @@ export function DrawdownChart() {
   const data = useMemo(() => getDrawdownSeries(), [snapshots, getDrawdownSeries]);
 
   const { activeIndex, chartProps } = useCrosshair();
+  const reduced = usePrefersReducedMotion();
 
   if (data.length < 2) {
     return (
@@ -101,6 +103,8 @@ export function DrawdownChart() {
           <Area
             type="monotone"
             dataKey="value"
+            isAnimationActive={!reduced}
+            animationDuration={500}
             stroke="#A32D2D"
             strokeWidth={1.5}
             fill="url(#gradDrawdown)"

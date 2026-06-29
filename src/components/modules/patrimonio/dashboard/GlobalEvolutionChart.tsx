@@ -19,6 +19,7 @@ import { useCryptoStore } from "@/stores/crypto-store";
 import { useMintosStore } from "@/stores/mintos-store";
 import { formatEur, formatEurShort } from "@/lib/utils/format";
 import { ChartShell, ChartTooltip, useCrosshair } from "@/components/viz";
+import { usePrefersReducedMotion } from "@/lib/hooks/use-prefers-reduced-motion";
 import type { ChartTooltipProps } from "@/components/viz";
 
 
@@ -296,6 +297,8 @@ export function GlobalEvolutionChart() {
     (cryptoOverview?.total_value_eur ?? 0) > 0 || (mintosOverview?.total_value ?? 0) > 0;
 
   const { activeIndex, chartProps } = useCrosshair();
+  const reduced = usePrefersReducedMotion();
+  const anim = { isAnimationActive: !reduced, animationDuration: 500 } as const;
 
   if (data.length === 0) return <EmptyState />;
 
@@ -372,6 +375,7 @@ export function GlobalEvolutionChart() {
           <Area
             type="monotone"
             dataKey="invested"
+            {...anim}
             stroke="#3B78B0"
             strokeWidth={1.5}
             fill="url(#gradInvested)"
@@ -383,6 +387,7 @@ export function GlobalEvolutionChart() {
           <Area
             type="monotone"
             dataKey="value"
+            {...anim}
             stroke="#2E7D6B"
             strokeWidth={2}
             fill="url(#gradValue)"
