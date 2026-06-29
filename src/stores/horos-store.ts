@@ -48,6 +48,7 @@ interface HorosStore {
   getGeoData: () => Array<{ name: string; value: number; pct: number; color: string }>;
   getProjection: (years: number, annualReturn: number, monthlyContrib: number) => HorosProjectionPoint[];
   getLastMonthContribution: () => number | null;
+  getLastMonthValueDelta: () => number | null;
 }
 
 const SECTOR_COLORS = [
@@ -209,4 +210,35 @@ export const useHorosStore = create<HorosStore>((set, get) => ({
   },
 
   getLastMonthContribution: () => get().plan?.monthly_amount ?? null,
+
+  // Variación de valor (cartera = cumShares × nav) del último mes con dato vs el
+  // mes anterior. Incluye aportaciones, misma semántica que el delta de TR.
+  getLastMonthValueDelta: () => {
+    const { navHistory, transactions } = get();
+    if (navHistory.length === 0 || transactions.length === 0) return null;
+
+    const now = new Date();
+    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const prevMonth = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
+
+    const sorted = [...navHistory].sort((a, b) => a.nav_date.localeCompare(b.nav_date));
+    const valueAt = (navDate: string, navPrice: number) => {
+      const cumShares = transactions
+        .filter((tx) => tx.value_date <= navDate)
+        .reduce((s, tx) => s + tx.shares, 0);
+      return cumShares * navPrice;
+    };
+
+    const prevNav = [...sorted].reverse().find((h) => h.nav_date.startsWith(prevMonth));
+    const currNav =
+      [...sorted].reverse().find((h) => h.nav_date.startsWith(currentMonth)) ??
+      sorted[sorted.length - 1];
+    if (!prevNav || !currNav) return null;
+
+    const delta = parseFloat(
+      (valueAt(currNav.nav_date, currNav.nav_price) - valueAt(prevNav.nav_date, prevNav.nav_price)).toFixed(2)
+    );
+    return Number.isFinite(delta) ? delta : null;
+  },
 }));

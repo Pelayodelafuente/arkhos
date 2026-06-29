@@ -131,11 +131,13 @@ export function GlobalKPIs() {
   // ── Horos ────────────────────────────────────────────────────────────────
   const horosPosition = useHorosStore((s) => s.position);
   const getHorosLastMonthContribution = useHorosStore((s) => s.getLastMonthContribution);
+  const getHorosValueDelta = useHorosStore((s) => s.getLastMonthValueDelta);
 
   const horosValue = horosPosition?.total_value ?? 0;
   const horosCost = horosPosition?.total_cost ?? 0;
   const horosPL = horosPosition?.unrealized_gain ?? 0;
   const horosContrib = getHorosLastMonthContribution();
+  const horosValueDelta = getHorosValueDelta();
 
   // ── Crypto ───────────────────────────────────────────────────────────────
   const cryptoRawAssets = useCryptoStore((s) => s.assets);
@@ -196,13 +198,15 @@ export function GlobalKPIs() {
 
   // Deltas vs mes anterior
   const deltaTotal = useMemo(() => {
-    const trDelta = trDeltas.totalValue ?? 0;
-    const indexaDelta = indexaValueDelta ?? 0;
-    const mintosDelta = mintosValueDelta ?? 0;
-    const combined = trDelta + indexaDelta + mintosDelta;
-    if (combined === 0 && trDeltas.totalValue === null && indexaValueDelta === null && mintosValueDelta === null) return null;
-    return `${combined >= 0 ? "+" : ""}${formatEur(combined)} vs mes anterior`;
-  }, [trDeltas.totalValue, indexaValueDelta, mintosValueDelta]);
+    // Plataformas con histórico mensual de valor: TR, Indexa, Horos, Mintos.
+    // Crypto no tiene snapshots mensuales → se excluye de forma explícita (no se inventa).
+    const knownDeltas = [trDeltas.totalValue, indexaValueDelta, horosValueDelta, mintosValueDelta]
+      .filter((d): d is number => d !== null);
+    if (knownDeltas.length === 0) return null;
+    const combined = knownDeltas.reduce((s, d) => s + d, 0);
+    const suffix = cryptoValue > 0 ? " vs mes anterior · sin Crypto" : " vs mes anterior";
+    return `${combined >= 0 ? "+" : ""}${formatEur(combined)}${suffix}`;
+  }, [trDeltas.totalValue, indexaValueDelta, horosValueDelta, mintosValueDelta, cryptoValue]);
 
 
   const deltaCapital = useMemo(() => {
@@ -235,7 +239,7 @@ export function GlobalKPIs() {
         sparklineValues={trSparklines.totalValue}
         deltaLabel={deltaTotal}
         deltaColor={
-          (trDeltas.totalValue ?? 0) + (indexaValueDelta ?? 0) + (mintosValueDelta ?? 0) >= 0
+          (trDeltas.totalValue ?? 0) + (indexaValueDelta ?? 0) + (horosValueDelta ?? 0) + (mintosValueDelta ?? 0) >= 0
             ? "var(--platform-tr)"
             : "#A32D2D"
         }
