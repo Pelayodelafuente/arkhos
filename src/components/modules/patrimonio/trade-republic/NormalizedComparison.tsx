@@ -14,7 +14,7 @@ import {
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { loadAssetPriceHistory } from "@/app/actions/patrimonio";
 import type { AssetPricePoint } from "@/lib/supabase/patrimonio";
-import { ChartShell, ChartTooltip } from "@/components/viz";
+import { ChartShell, ChartTooltip, useCrosshair } from "@/components/viz";
 import type { ChartTooltipProps } from "@/components/viz";
 
 /**
@@ -120,6 +120,8 @@ export function NormalizedComparison() {
 
   const data = useMemo(() => buildNormalized(active, history), [active, history]);
 
+  const { activeIndex, chartProps } = useCrosshair();
+
   const toggle = (isin: string) => {
     const base = selected.length > 0 ? selected : defaultSel;
     setSelected(
@@ -168,7 +170,7 @@ export function NormalizedComparison() {
         </div>
       ) : (
         <ResponsiveContainer width="100%" height={260}>
-          <LineChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 4 }}>
+          <LineChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 4 }} {...chartProps}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
             <XAxis
               dataKey="date"
@@ -194,8 +196,17 @@ export function NormalizedComparison() {
                   valueFormatter={(v) => v.toFixed(1)}
                 />
               )}
+              cursor={false}
             />
             <ReferenceLine y={100} stroke="var(--border)" strokeDasharray="4 2" />
+            {activeIndex != null && data[activeIndex] && (
+              <ReferenceLine
+                x={data[activeIndex].date}
+                stroke="var(--text-tertiary)"
+                strokeWidth={1}
+                strokeDasharray="3 3"
+              />
+            )}
             {active.map((isin, i) => (
               <Line
                 key={isin}
