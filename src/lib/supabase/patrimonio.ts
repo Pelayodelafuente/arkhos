@@ -65,6 +65,26 @@ export async function getAllAssets(userId: string): Promise<PortfolioAsset[]> {
   return ((data ?? []) as PortfolioAsset[]).map(computeAssetFields);
 }
 
+export interface AssetPricePoint {
+  isin: string;
+  price_date: string;
+  price_eur: number;
+}
+
+/** Histórico de precios por activo (tabla asset_price_history, ~mensual). */
+export async function getAssetPriceHistory(userId: string): Promise<AssetPricePoint[]> {
+  const supabase = await getClient();
+  const { data, error } = await supabase
+    .from('asset_price_history')
+    .select('isin, price_date, price_eur')
+    .eq('user_id', userId)
+    .order('price_date', { ascending: true });
+  if (error) return [];
+  return ((data ?? []) as Array<{ isin: string; price_date: string; price_eur: number | string }>).map(
+    (r) => ({ isin: r.isin, price_date: r.price_date, price_eur: Number(r.price_eur) })
+  );
+}
+
 export async function getAssetsByPlatform(
   userId: string,
   platformId: string

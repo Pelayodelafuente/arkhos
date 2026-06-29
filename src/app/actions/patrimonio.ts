@@ -4,6 +4,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import type { AssetCategory, RiskLevel, TransactionType } from '@/types/patrimonio';
+import { getAssetPriceHistory, type AssetPricePoint } from '@/lib/supabase/patrimonio';
 
 async function createClient() {
   const cookieStore = await cookies();
@@ -23,6 +24,16 @@ async function createClient() {
       },
     }
   );
+}
+
+/** Carga el histórico de precios por activo (asset_price_history) para comparación normalizada. */
+export async function loadAssetPriceHistory(): Promise<AssetPricePoint[]> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+  return getAssetPriceHistory(user.id);
 }
 
 export interface AssetFormData {

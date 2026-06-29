@@ -13,6 +13,8 @@ import { MonthlyContributionChart } from "./MonthlyContributionChart";
 import { PositionTreemap } from "./PositionTreemap";
 import { FiscalidadPanel } from "./FiscalidadPanel";
 import { MetricasAvanzadasPanel } from "./MetricasAvanzadasPanel";
+import { DrawdownChart } from "./DrawdownChart";
+import { NormalizedComparison } from "./NormalizedComparison";
 import { SimuladorProyeccion } from "./SimuladorProyeccion";
 import { CapitalVsReturnChart } from "./CapitalVsReturnChart";
 import dynamic from "next/dynamic";
@@ -249,6 +251,9 @@ export function TRDashboard() {
           {/* F3 + F6 — Métricas avanzadas */}
           <MetricasAvanzadasPanel />
 
+          {/* Fase 2.1 — Curva de drawdown (underwater) */}
+          <DrawdownChart />
+
           {/* P&L Waterfall */}
           <div className="rounded-xl border border-border bg-card p-5">
             <h3 className="mb-1 text-sm font-semibold text-foreground">Cascada de P&amp;L</h3>
@@ -262,6 +267,9 @@ export function TRDashboard() {
             <p className="mb-4 text-xs text-text-tertiary">Cada punto = un activo. Tamaño = peso en cartera</p>
             <RiskReturnScatter />
           </div>
+
+          {/* Fase 2.4 — Comparación normalizada (base 100) con histórico por activo */}
+          <NormalizedComparison />
 
           {/* F3 — Evolución vs benchmark MSCI World */}
           <div className="rounded-xl border border-border bg-card p-5">
