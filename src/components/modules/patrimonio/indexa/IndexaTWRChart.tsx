@@ -28,6 +28,7 @@ interface CustomTooltipProps {
 function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (!active || !payload || payload.length === 0) return null;
   const twr = payload.find((p) => p.name === "twr")?.value ?? 0;
+  const benchEntry = payload.find((p) => p.name === "benchmark");
 
   return (
     <div
@@ -43,9 +44,15 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
         {label}
       </p>
       <p style={{ color: twr >= 0 ? "var(--platform-tr, #2E7D6B)" : "#A32D2D" }}>
-        TWR acumulada: {twr >= 0 ? "+" : ""}
+        TWR cartera: {twr >= 0 ? "+" : ""}
         {twr.toFixed(2)}%
       </p>
+      {benchEntry && benchEntry.value != null && (
+        <p style={{ color: "#888780" }}>
+          Benchmark: {benchEntry.value >= 0 ? "+" : ""}
+          {benchEntry.value.toFixed(2)}%
+        </p>
+      )}
     </div>
   );
 }
@@ -56,6 +63,8 @@ interface IndexaTWRChartProps {
 }
 
 export function IndexaTWRChart({ data, isLoading }: IndexaTWRChartProps) {
+  const hasBenchmark = data.some((d) => d.benchmark != null);
+
   if (isLoading) {
     return <Skeleton className="h-64 rounded-xl" />;
   }
@@ -90,9 +99,23 @@ export function IndexaTWRChart({ data, isLoading }: IndexaTWRChartProps) {
         border: "1px solid var(--border-stone, rgba(160,120,80,0.25))",
       }}
     >
-      <p className="text-sm font-semibold mb-4" style={{ color: "var(--text-primary)" }}>
-        TWR acumulada
-      </p>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+          TWR acumulada
+        </p>
+        {hasBenchmark && (
+          <div className="flex items-center gap-3 text-xs" style={{ color: "var(--text-muted)" }}>
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block h-0.5 w-4 rounded-full" style={{ backgroundColor: "#3B78B0" }} />
+              TWR cartera
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block w-4" style={{ borderTop: "2px dashed #888780" }} />
+              Benchmark
+            </span>
+          </div>
+        )}
+      </div>
       <ResponsiveContainer width="100%" height={220}>
         <LineChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
           <CartesianGrid
@@ -126,6 +149,18 @@ export function IndexaTWRChart({ data, isLoading }: IndexaTWRChartProps) {
             activeDot={{ r: 4, fill: "#3B78B0", strokeWidth: 0 }}
             name="twr"
           />
+          {hasBenchmark && (
+            <Line
+              type="monotone"
+              dataKey="benchmark"
+              stroke="#888780"
+              strokeWidth={1.5}
+              strokeDasharray="4 3"
+              dot={false}
+              connectNulls
+              name="benchmark"
+            />
+          )}
         </LineChart>
       </ResponsiveContainer>
     </motion.div>

@@ -91,12 +91,23 @@ export const useIndexaStore = create<IndexaStore>((set, get) => ({
   },
 
   getTWRChartData: () => {
-    return get().monthlyReturns.map((r) => {
+    // Benchmark acumulado real: compone los benchmark_pct mensuales (antes devolvía
+    // por error el propio cumulative_twr de la cartera, solapando ambas líneas).
+    const rows = [...get().monthlyReturns].sort((a, b) =>
+      a.year !== b.year ? a.year - b.year : a.month - b.month
+    );
+    let cumBench = 1;
+    let started = false;
+    return rows.map((r) => {
       const name = get().getMonthName(r.month);
+      if (r.benchmark_pct !== null && r.benchmark_pct !== undefined) {
+        cumBench *= 1 + r.benchmark_pct / 100;
+        started = true;
+      }
       return {
         label: `${name} ${r.year}`,
         twr: r.cumulative_twr ?? 0,
-        benchmark: r.benchmark_pct !== null ? r.cumulative_twr : null,
+        benchmark: started ? parseFloat(((cumBench - 1) * 100).toFixed(2)) : null,
       };
     });
   },
