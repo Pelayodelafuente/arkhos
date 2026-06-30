@@ -187,7 +187,7 @@ async function getM2WithBTC(forceRefresh = false): Promise<MacroData['m2']> {
   // Primary: Binance monthly klines (free, no key, 60 months)
   try {
     const binanceRes = await fetchWithTimeout(
-      'https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1M&limit=60',
+      'https://api.binance.us/api/v3/klines?symbol=BTCUSDT&interval=1M&limit=60',
       { cache: 'no-store' }
     );
     if (binanceRes.ok) {
