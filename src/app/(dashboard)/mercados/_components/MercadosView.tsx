@@ -3,7 +3,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  TrendingUp,
   Bell,
   RefreshCw,
   Activity,
@@ -208,11 +207,11 @@ export function MercadosView() {
     <div className="flex flex-col gap-6">
       {/* Header */}
       <div className="animate-fade-in-up relative z-10 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-md bg-mercados">
-            <TrendingUp size={20} strokeWidth={1.75} className="text-white" />
-          </div>
+        <div>
           <h1 className="font-heading text-2xl text-foreground">Mercados</h1>
+          <p className="mt-1 text-sm text-text-tertiary">
+            Datos en tiempo real
+          </p>
         </div>
         <div className="flex items-center gap-2">
           {/* Bell icon con AlertsFeed */}
