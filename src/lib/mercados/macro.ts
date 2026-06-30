@@ -183,24 +183,47 @@ async function getM2WithBTC(forceRefresh = false): Promise<MacroData['m2']> {
     : 0;
 
   let btcHistory: Array<{ date: string; value: number }> = [];
+
+  // Primary: Binance monthly klines (free, no key, 60 months)
   try {
-    const headers: Record<string, string> = {};
-    if (process.env.COINGECKO_API_KEY) {
-      headers['x-cg-demo-api-key'] = process.env.COINGECKO_API_KEY;
-    }
-    const res = await fetchWithTimeout(
-      'https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=1825&interval=monthly',
-      { headers, cache: 'no-store' }
+    const binanceRes = await fetchWithTimeout(
+      'https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1M&limit=60',
+      { cache: 'no-store' }
     );
-    if (res.ok) {
-      const json = (await res.json()) as { prices: [number, number][] };
-      btcHistory = json.prices.map(([ts, price]) => ({
-        date: new Date(ts).toISOString().split('T')[0].slice(0, 7),
-        value: Math.round(price),
+    if (binanceRes.ok) {
+      const klines = (await binanceRes.json()) as [number, string, string, string, string, ...unknown[]][];
+      btcHistory = klines.map(([openTime, , , , close]) => ({
+        date: new Date(openTime).toISOString().slice(0, 7),
+        value: Math.round(parseFloat(close)),
       }));
     }
   } catch {
-    // BTC overlay es opcional
+    // fallback below
+  }
+
+  // Fallback: CoinGecko (free tier supports up to 365 days)
+  if (btcHistory.length === 0) {
+    try {
+      const headers: Record<string, string> = {};
+      if (process.env.COINGECKO_API_KEY) {
+        headers['x-cg-demo-api-key'] = process.env.COINGECKO_API_KEY;
+      }
+      const cgRes = await fetchWithTimeout(
+        'https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=365',
+        { headers, cache: 'no-store' }
+      );
+      if (cgRes.ok) {
+        const json = (await cgRes.json()) as { prices: [number, number][] };
+        // Group by month taking last daily price per month
+        const byMonth = new Map<string, number>();
+        for (const [ts, price] of json.prices) {
+          byMonth.set(new Date(ts).toISOString().slice(0, 7), Math.round(price));
+        }
+        btcHistory = [...byMonth.entries()].map(([date, value]) => ({ date, value })).sort((a, b) => a.date.localeCompare(b.date));
+      }
+    } catch {
+      // BTC overlay es opcional
+    }
   }
 
   const currentTrillions = parseFloat((yoyLast.value / 1000).toFixed(2));
@@ -211,7 +234,11 @@ async function getM2WithBTC(forceRefresh = false): Promise<MacroData['m2']> {
     btcHistory,
   };
 
-  await setCachedMetric('FRED', 'm2macro', { current: currentTrillions, raw: value }, 24);
+  // Only cache if BTC data arrived — empty btcHistory means CoinGecko was rate-limited;
+  // skipping cache forces a retry on the next request instead of persisting empty data.
+  if (btcHistory.length > 0) {
+    await setCachedMetric('FRED', 'm2macro', { current: currentTrillions, raw: value }, 24);
+  }
   return value;
 }
 
