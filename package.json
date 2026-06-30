@@ -65,7 +65,7 @@
   "pnpm": {
     "overrides": {
       "esbuild": ">=0.28.1",
-      "undici": ">=7.28.0",
+      "undici": ">=7.28.0 <8.0.0",
       "linkify-it": ">=5.0.1"
     }
   },
