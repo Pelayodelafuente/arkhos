@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useProjectsStore } from "@/stores/projects-store";
@@ -387,18 +387,23 @@ export function BottomDock({
   const projectCount = storeProjectCount ?? initialProjectCount;
   const noteCount = storeNoteCount ?? initialNoteCount;
 
-  const [dockVisible, setDockVisible] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return true
+  // Default estable para SSR y primer render cliente → evita hydration mismatch
+  // (el `title` y el `transform` del dock dependían del valor de localStorage).
+  const [dockVisible, setDockVisible] = useState<boolean>(true);
+
+  // La preferencia guardada se aplica tras montar (ya no afecta a la hidratación).
+  useEffect(() => {
     try {
       if (localStorage.getItem("arkhos-dock-v") !== "2") {
-        localStorage.setItem("arkhos-dock-v", "2")
-        localStorage.setItem("arkhos-dock-visible", "true")
-        return true
+        localStorage.setItem("arkhos-dock-v", "2");
+        localStorage.setItem("arkhos-dock-visible", "true");
+        return;
       }
-      const saved = localStorage.getItem("arkhos-dock-visible")
-      return saved !== null ? (JSON.parse(saved) as boolean) : true
-    } catch { return true }
-  });
+      const saved = localStorage.getItem("arkhos-dock-visible");
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (saved !== null) setDockVisible(JSON.parse(saved) as boolean);
+    } catch { /* ignore */ }
+  }, []);
 
   const toggleDock = () => {
     setDockVisible((prev) => {
