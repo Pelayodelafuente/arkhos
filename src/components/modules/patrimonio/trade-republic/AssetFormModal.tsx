@@ -79,6 +79,9 @@ export function AssetFormModal({ isOpen, onClose, asset }: AssetFormModalProps) 
   const platforms = usePatrimonioStore((s) => s.platforms);
   const assets = usePatrimonioStore((s) => s.assets);
   const setAssets = usePatrimonioStore((s) => s.setAssets);
+  const setTransactions = usePatrimonioStore((s) => s.setTransactions);
+  const setSnapshots = usePatrimonioStore((s) => s.setSnapshots);
+  const setOverview = usePatrimonioStore((s) => s.setOverview);
   const addToast = useUIStore((s) => s.addToast);
 
   const [form, setForm] = useState<FormValues>(asset ? assetToForm(asset) : emptyForm());
@@ -180,12 +183,24 @@ export function AssetFormModal({ isOpen, onClose, asset }: AssetFormModalProps) 
           addToast(result.error ?? "Error al actualizar el activo", "error");
           return;
         }
+        if (result.data) {
+          setAssets(result.data.assets);
+          setTransactions(result.data.transactions);
+          setSnapshots(result.data.snapshots);
+          if (result.data.overview) setOverview(result.data.overview);
+        }
         addToast("Activo actualizado correctamente", "success");
       } else {
         const result = await createAsset(data);
         if (!result.success) {
           addToast(result.error ?? "Error al crear el activo", "error");
           return;
+        }
+        if (result.data) {
+          setAssets(result.data.assets);
+          setTransactions(result.data.transactions);
+          setSnapshots(result.data.snapshots);
+          if (result.data.overview) setOverview(result.data.overview);
         }
         addToast("Activo creado correctamente", "success");
       }

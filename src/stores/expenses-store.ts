@@ -58,6 +58,10 @@ function toast(message: string, variant: 'success' | 'error') {
 // ─── Store interface ──────────────────
 
 interface ExpensesState {
+  // true cuando el store fue poblado por la megacarga (`AppDataLoader` →
+  // `hydrateAllStores` → `hydrate()`). Si el módulo `gastos` vino degradado
+  // a `{ error }`, queda en false y `ExpensesView` recurre al fetch cliente.
+  hydrated: boolean
   subscriptions: SubscriptionWithCategory[]
   categories: ExpenseCategory[]
   cycleFilter: CycleFilter
@@ -112,6 +116,7 @@ type ExpensesStore = ExpensesState & ExpensesActions
 
 export const useExpensesStore = create<ExpensesStore>((set, get) => ({
   // State
+  hydrated: false,
   subscriptions: [],
   categories: [],
   cycleFilter: 'all',
@@ -135,6 +140,7 @@ export const useExpensesStore = create<ExpensesStore>((set, get) => ({
 
   hydrate: (snapshot) => {
     set({
+      hydrated: true,
       subscriptions: snapshot.subscriptions,
       categories: snapshot.categories,
       payments: snapshot.payments,

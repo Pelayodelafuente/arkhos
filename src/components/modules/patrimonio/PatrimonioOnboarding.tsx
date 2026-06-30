@@ -4,11 +4,20 @@ import { useState } from "react";
 import { TrendingUp, CheckCircle, ArrowRight } from "lucide-react";
 import { importPatrimonioData } from "@/app/actions/patrimonio";
 import { Button } from "@/components/ui";
+import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import Link from "next/link";
 
 export function PatrimonioOnboarding() {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
+  const setOnboarding = usePatrimonioStore((s) => s.setOnboarding);
+  const setOverview = usePatrimonioStore((s) => s.setOverview);
+  const setPlatforms = usePatrimonioStore((s) => s.setPlatforms);
+  const setAssets = usePatrimonioStore((s) => s.setAssets);
+  const setTransactions = usePatrimonioStore((s) => s.setTransactions);
+  const setSavingsPlan = usePatrimonioStore((s) => s.setSavingsPlan);
+  const setSnapshots = usePatrimonioStore((s) => s.setSnapshots);
+  const setPassiveIncome = usePatrimonioStore((s) => s.setPassiveIncome);
 
   async function handleImport() {
     setStatus("loading");
@@ -16,6 +25,16 @@ export function PatrimonioOnboarding() {
     if (result.success) {
       setStatus("success");
       setMessage(result.message);
+      if (result.data) {
+        setPlatforms(result.data.platforms);
+        setAssets(result.data.assets);
+        setTransactions(result.data.transactions);
+        setSavingsPlan(result.data.savingsPlan);
+        setSnapshots(result.data.snapshots);
+        setPassiveIncome(result.data.passiveIncome);
+        if (result.data.overview) setOverview(result.data.overview);
+        setOnboarding(false);
+      }
     } else {
       setStatus("error");
       setMessage(result.message);

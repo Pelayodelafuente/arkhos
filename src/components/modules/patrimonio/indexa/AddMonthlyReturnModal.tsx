@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { X, PlusCircle, CheckCircle2, AlertCircle, RefreshCw } from "lucide-react";
 import { useIndexaStore } from "@/stores/indexa-store";
-import { addIndexaMonthlyReturn, loadIndexaData } from "@/app/actions/indexa";
+import { addIndexaMonthlyReturn } from "@/app/actions/indexa";
 
 const MONTH_NAMES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
 const MONTH_FULL = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
@@ -85,11 +85,10 @@ export function AddMonthlyReturnModal({ onClose }: AddMonthlyReturnModalProps) {
       return;
     }
 
-    // Reload store
-    const fresh = await loadIndexaData();
-    if (fresh) {
-      setMonthlyReturns(fresh.monthlyReturns);
-      setOverview(fresh.overview);
+    // Update store with the fresh data returned by the action
+    if (result.data) {
+      setMonthlyReturns(result.data.monthlyReturns);
+      setOverview(result.data.overview);
     }
 
     setStatus("success");

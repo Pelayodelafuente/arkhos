@@ -51,40 +51,40 @@ export interface HorosFullData {
 
 // ── Full data load ───────────────────────────────────────────────────────────
 
-export async function loadHorosData(): Promise<HorosFullData | null> {
-  const { supabase, user } = await getAuthUser();
-  if (!user) return null;
-
+async function fetchHorosFullData(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string
+): Promise<HorosFullData> {
   const [posRes, txRes, navRes, distRes, costsRes, planRes] = await Promise.all([
     supabase
       .from('horos_position')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .maybeSingle(),
     supabase
       .from('horos_transactions')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .order('value_date', { ascending: true }),
     supabase
       .from('horos_nav_history')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .order('nav_date', { ascending: true }),
     supabase
       .from('horos_fund_distribution')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .order('report_date', { ascending: false }),
     supabase
       .from('horos_annual_costs')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .order('year', { ascending: false }),
     supabase
       .from('horos_monthly_plan')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .eq('is_active', true)
       .maybeSingle(),
   ]);
@@ -99,6 +99,13 @@ export async function loadHorosData(): Promise<HorosFullData | null> {
   };
 }
 
+export async function loadHorosData(): Promise<HorosFullData | null> {
+  const { supabase, user } = await getAuthUser();
+  if (!user) return null;
+
+  return fetchHorosFullData(supabase, user.id);
+}
+
 // ── Update NAV ───────────────────────────────────────────────────────────────
 
 export interface UpdateNAVInput {
@@ -108,7 +115,7 @@ export interface UpdateNAVInput {
 
 export async function updateHorosNAV(
   input: UpdateNAVInput
-): Promise<{ ok: boolean; error?: string }> {
+): Promise<{ ok: boolean; error?: string; data?: HorosFullData }> {
   const { supabase, user } = await getAuthUser();
   if (!user) return { ok: false, error: 'No autenticado' };
 
@@ -146,8 +153,10 @@ export async function updateHorosNAV(
     { onConflict: 'user_id,nav_date' }
   );
 
+  const data = await fetchHorosFullData(supabase, user.id);
+
   revalidatePath('/patrimonio');
-  return { ok: true };
+  return { ok: true, data };
 }
 
 // ── Register contribution ────────────────────────────────────────────────────
@@ -162,7 +171,7 @@ export interface RegisterHorosContributionInput {
 
 export async function registerHorosContribution(
   input: RegisterHorosContributionInput
-): Promise<{ ok: boolean; error?: string }> {
+): Promise<{ ok: boolean; error?: string; data?: HorosFullData }> {
   const { supabase, user } = await getAuthUser();
   if (!user) return { ok: false, error: 'No autenticado' };
 
@@ -223,18 +232,23 @@ export async function registerHorosContribution(
     );
   }
 
+  const data = await fetchHorosFullData(supabase, user.id);
+
   revalidatePath('/patrimonio');
-  return { ok: true };
+  return { ok: true, data };
 }
 
 // ── Seed ─────────────────────────────────────────────────────────────────────
 
-export async function seedHorosDataAction(): Promise<{ ok: boolean; error?: string }> {
+export async function seedHorosDataAction(): Promise<{ ok: boolean; error?: string; data?: HorosFullData }> {
   const { supabase, user } = await getAuthUser();
   if (!user) return { ok: false, error: 'No autenticado' };
 
   const { error } = await supabase.rpc('seed_horos_for_user', { p_user_id: user.id });
   if (error) return { ok: false, error: error.message };
+
+  const data = await fetchHorosFullData(supabase, user.id);
+
   revalidatePath('/patrimonio');
-  return { ok: true };
+  return { ok: true, data };
 }

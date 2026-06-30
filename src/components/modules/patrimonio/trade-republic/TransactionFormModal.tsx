@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Modal, Button, Input, Select, Textarea } from "@/components/ui";
 import { addTransaction, updateTransaction } from "@/app/actions/patrimonio";
 import { useUIStore } from "@/stores/ui-store";
+import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import type { PortfolioTransaction, TransactionType } from "@/types/patrimonio";
 
 interface TransactionFormModalProps {
@@ -65,6 +66,10 @@ export function TransactionFormModal({
   transaction,
 }: TransactionFormModalProps) {
   const addToast = useUIStore((s) => s.addToast);
+  const setAssets = usePatrimonioStore((s) => s.setAssets);
+  const setTransactions = usePatrimonioStore((s) => s.setTransactions);
+  const setSnapshots = usePatrimonioStore((s) => s.setSnapshots);
+  const setOverview = usePatrimonioStore((s) => s.setOverview);
   const [form, setForm] = useState<FormValues>(transaction ? txToForm(transaction) : emptyForm());
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof FormValues, string>>>({});
@@ -132,6 +137,12 @@ export function TransactionFormModal({
           addToast(result.error ?? "Error al actualizar la transacción", "error");
           return;
         }
+        if (result.data) {
+          setAssets(result.data.assets);
+          setTransactions(result.data.transactions);
+          setSnapshots(result.data.snapshots);
+          if (result.data.overview) setOverview(result.data.overview);
+        }
         addToast("Transacción actualizada", "success");
       } else {
         const result = await addTransaction({
@@ -147,6 +158,12 @@ export function TransactionFormModal({
         if (!result.success) {
           addToast(result.error ?? "Error al añadir la transacción", "error");
           return;
+        }
+        if (result.data) {
+          setAssets(result.data.assets);
+          setTransactions(result.data.transactions);
+          setSnapshots(result.data.snapshots);
+          if (result.data.overview) setOverview(result.data.overview);
         }
         addToast("Transacción añadida", "success");
       }

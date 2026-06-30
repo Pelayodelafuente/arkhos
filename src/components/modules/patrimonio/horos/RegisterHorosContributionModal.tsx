@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { X, Plus } from "lucide-react";
 import { registerHorosContribution } from "@/app/actions/horos";
+import { useHorosStore } from "@/stores/horos-store";
 
 const HOROS_COLOR = "#7260C4";
 
@@ -28,6 +29,10 @@ export function RegisterHorosContributionModal({
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const setPosition = useHorosStore((s) => s.setPosition);
+  const setTransactions = useHorosStore((s) => s.setTransactions);
+  const setNavHistory = useHorosStore((s) => s.setNavHistory);
 
   const parsedNav = parseFloat(navApplied.replace(",", "."));
   const parsedAmount = parseFloat(amount.replace(",", "."));
@@ -61,6 +66,12 @@ export function RegisterHorosContributionModal({
       setError(result.error ?? "Error al registrar");
       setLoading(false);
       return;
+    }
+    // Update store with the fresh data returned by the action
+    if (result.data) {
+      setPosition(result.data.position);
+      setTransactions(result.data.transactions);
+      setNavHistory(result.data.navHistory);
     }
     onSuccess();
     onClose();

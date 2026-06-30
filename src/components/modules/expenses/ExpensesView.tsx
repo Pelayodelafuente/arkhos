@@ -28,22 +28,18 @@ import { SmartAddModal } from "./SmartAddModal"
 import { ShortcutsModal } from "./ShortcutsModal"
 import { GastosLoading } from "./GastosLoading"
 import { exportToCSV } from "@/lib/gastos-utils"
-import type { SubscriptionWithCategory, ExpensesSnapshot } from "@/types/expenses"
+import type { SubscriptionWithCategory } from "@/types/expenses"
 
 interface ExpensesViewProps {
   userId: string
-  initialData?: ExpensesSnapshot | null
 }
 
-export function ExpensesView({ userId, initialData }: ExpensesViewProps) {
-  // Hidratación síncrona del store con el snapshot del servidor: el lazy
-  // initializer corre una sola vez y antes de los selectores, de modo que el
-  // primer render (y el HTML SSR) ya tenga datos.
-  const [hydrated] = useState(() => {
-    if (!initialData) return false
-    useExpensesStore.getState().hydrate(initialData)
-    return true
-  })
+export function ExpensesView({ userId }: ExpensesViewProps) {
+  // El store ya viene poblado por la megacarga (`AppDataLoader` →
+  // `hydrateAllStores`) antes de que este componente monte. Si el módulo
+  // `gastos` vino degradado a `{ error }`, `hydrated` queda en false y el
+  // efecto de abajo hace el fetch cliente como red de seguridad.
+  const hydrated = useExpensesStore((s) => s.hydrated)
 
   const fetchSubscriptions = useExpensesStore((s) => s.fetchSubscriptions)
   const fetchCategories = useExpensesStore((s) => s.fetchCategories)

@@ -21,6 +21,12 @@ import { CATEGORY_COLORS, CATEGORY_LABELS } from '@/types/patrimonio';
 
 interface PatrimonioStore {
   // State
+  // `onboarding`: resuelto server-side por `getAppData` (Patrimonio.hasPlatforms)
+  // y volcado aquí por `hydrateAllStores` — decide si `PatrimonioGate` renderiza
+  // `PatrimonioOnboarding` o `PatrimonioView`. `error`: módulo degradado a
+  // `{ error }` en la megacarga (ver `lib/app-data/get-app-data.ts`).
+  onboarding: boolean;
+  error: string | null;
   overview: PortfolioOverview | null;
   platforms: InvestmentPlatform[];
   assets: PortfolioAsset[];
@@ -49,6 +55,8 @@ interface PatrimonioStore {
   togglePrivacyMode: () => void;
 
   // Actions
+  setOnboarding: (onboarding: boolean) => void;
+  setError: (error: string | null) => void;
   setOverview: (overview: PortfolioOverview) => void;
   setPlatforms: (platforms: InvestmentPlatform[]) => void;
   setAssets: (assets: PortfolioAsset[]) => void;
@@ -96,6 +104,8 @@ interface PatrimonioStore {
 }
 
 export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
+  onboarding: false,
+  error: null,
   overview: null,
   platforms: [],
   assets: [],
@@ -113,6 +123,8 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
   privacyMode: false,
   togglePrivacyMode: () => set((s) => ({ privacyMode: !s.privacyMode })),
 
+  setOnboarding: (onboarding) => set({ onboarding }),
+  setError: (error) => set({ error }),
   setOverview: (overview) => set({ overview }),
   setPlatforms: (platforms) => set({ platforms }),
   setAssets: (assets) => set({ assets }),

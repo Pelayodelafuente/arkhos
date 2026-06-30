@@ -5,8 +5,7 @@ import { Upload, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Modal, Button } from "@/components/ui";
 import { addCryptoTransactionAction } from "@/app/actions/crypto";
 import { useCryptoStore } from "@/stores/crypto-store";
-import { loadCryptoData } from "@/app/actions/crypto";
-import type { CryptoTransactionType } from "@/types/crypto";
+import type { CryptoAsset, CryptoTransaction, CryptoTransactionType } from "@/types/crypto";
 
 interface ParsedRow {
   date: string;
@@ -89,8 +88,6 @@ export function ImportBit2MeCSVModal({ onClose, onSuccess }: ImportBit2MeCSVModa
   const transactions = useCryptoStore((s) => s.transactions);
   const setAssets = useCryptoStore((s) => s.setAssets);
   const setTransactions = useCryptoStore((s) => s.setTransactions);
-  const setDefiPositions = useCryptoStore((s) => s.setDefiPositions);
-  const setMonthlyPlan = useCryptoStore((s) => s.setMonthlyPlan);
 
   const [rows, setRows] = useState<ParsedRow[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -132,6 +129,8 @@ export function ImportBit2MeCSVModal({ onClose, onSuccess }: ImportBit2MeCSVModa
     setIsImporting(true);
     let imported = 0;
     let skipped = 0;
+    const newTransactions: CryptoTransaction[] = [];
+    const updatedAssets = new Map<string, CryptoAsset>();
 
     for (const row of toImport) {
       const asset = assets.find((a) => a.symbol === row.symbol);
@@ -157,18 +156,28 @@ export function ImportBit2MeCSVModal({ onClose, onSuccess }: ImportBit2MeCSVModa
         external_id: externalId,
       });
 
-      if (result.ok) imported++;
-      else skipped++;
+      if (result.ok) {
+        imported++;
+        if (result.transaction) newTransactions.push(result.transaction);
+        if (result.asset) updatedAssets.set(result.asset.id, result.asset);
+      } else {
+        skipped++;
+      }
     }
 
     setImportResult({ imported, skipped });
 
-    const data = await loadCryptoData();
-    if (data) {
-      setAssets(data.assets);
-      setTransactions(data.transactions);
-      setDefiPositions(data.defiPositions);
-      setMonthlyPlan(data.monthlyPlan);
+    // Actualiza el store directamente con lo devuelto por cada transacción
+    // (sin volver a pedir todos los datos — la megacarga ya no se repite al navegar)
+    if (newTransactions.length > 0) {
+      setTransactions(
+        [...transactions, ...newTransactions].sort(
+          (a, b) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime()
+        )
+      );
+    }
+    if (updatedAssets.size > 0) {
+      setAssets(assets.map((a) => updatedAssets.get(a.id) ?? a));
     }
 
     setIsImporting(false);

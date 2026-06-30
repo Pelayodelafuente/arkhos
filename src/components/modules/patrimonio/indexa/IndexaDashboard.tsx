@@ -6,7 +6,7 @@ import { RefreshCw } from "lucide-react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { Skeleton } from "@/components/ui";
 import { useIndexaStore } from "@/stores/indexa-store";
-import { registerIndexaContribution, loadIndexaData } from "@/app/actions/indexa";
+import { registerIndexaContribution } from "@/app/actions/indexa";
 import type { ContributionFormData } from "./RegisterContributionModal";
 import { IndexaKPIs } from "./IndexaKPIs";
 import { IndexaPositionsCards } from "./IndexaPositionsCards";
@@ -105,14 +105,13 @@ export function IndexaDashboard() {
   const handleContributionConfirm = async (data: ContributionFormData) => {
     const result = await registerIndexaContribution(data);
     if (!result.ok) throw new Error(result.error ?? "Error al registrar la aportación");
-    const fresh = await loadIndexaData();
-    if (fresh) {
-      setFunds(fresh.funds);
-      setPositions(fresh.positions);
-      setTransactions(fresh.transactions);
-      setMonthlyReturns(fresh.monthlyReturns);
-      setPlan(fresh.plan);
-      setOverview(fresh.overview);
+    if (result.data) {
+      setFunds(result.data.funds);
+      setPositions(result.data.positions);
+      setTransactions(result.data.transactions);
+      setMonthlyReturns(result.data.monthlyReturns);
+      setPlan(result.data.plan);
+      setOverview(result.data.overview);
     }
   };
 

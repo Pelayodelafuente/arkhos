@@ -68,9 +68,18 @@ export async function loadCryptoData(): Promise<CryptoFullData | null> {
 
 // ── Add transaction ───────────────────────────────────────────────────────────
 
+export interface AddCryptoTransactionResult {
+  ok: boolean;
+  transaction?: CryptoTransaction;
+  // Activo recalculado (total_invested_eur/avg_buy_price_eur) tras la transacción —
+  // permite al call-site actualizar el store sin un refetch completo.
+  asset?: CryptoAsset;
+  error?: string;
+}
+
 export async function addCryptoTransactionAction(
   tx: Omit<CryptoTransaction, 'id' | 'user_id' | 'created_at'>
-): Promise<{ ok: boolean; data?: CryptoTransaction; error?: string }> {
+): Promise<AddCryptoTransactionResult> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -78,9 +87,15 @@ export async function addCryptoTransactionAction(
 
   if (!user) return { ok: false, error: 'No autenticado' };
 
-  const result = await addCryptoTransaction(user.id, tx);
-  if (!result) return { ok: false, error: 'Error al insertar la transacción' };
+  const transaction = await addCryptoTransaction(user.id, tx);
+  if (!transaction) return { ok: false, error: 'Error al insertar la transacción' };
+
+  let asset: CryptoAsset | undefined;
+  if (tx.asset_id) {
+    const assets = await getCryptoAssets(user.id);
+    asset = assets.find((a) => a.id === tx.asset_id);
+  }
 
   revalidatePath('/patrimonio');
-  return { ok: true, data: result };
+  return { ok: true, transaction, asset };
 }

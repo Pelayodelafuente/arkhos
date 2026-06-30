@@ -78,22 +78,24 @@ export async function updateMintosOverview(data: {
   avg_interest_rate?: number | null;
   active_loans_count?: number;
   snapshot_date?: string;
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<{ success: boolean; overview?: MintosOverview; error?: string }> {
   const { supabase, user } = await getAuthUser();
   if (!user) return { success: false, error: 'No autenticado' };
 
-  const { error } = await supabase
+  const { data: overview, error } = await supabase
     .from('mintos_overview')
     .upsert({
       user_id: user.id,
       ...data,
       updated_at: new Date().toISOString(),
-    }, { onConflict: 'user_id' });
+    }, { onConflict: 'user_id' })
+    .select('id, user_id, total_value, invested_in_loans, cash_balance, pending_payments, net_gain, xirr, avg_interest_rate, active_loans_count, originators_count, countries_count, snapshot_date, updated_at')
+    .maybeSingle();
 
   if (error) return { success: false, error: error.message };
 
   revalidatePath('/patrimonio');
-  return { success: true };
+  return { success: true, overview: (overview as MintosOverview | null) ?? undefined };
 }
 
 // ── Update portfolio health ───────────────────────────────────────────────────
@@ -112,22 +114,24 @@ export async function updateMintosPortfolioHealth(data: {
   late_31_60_count?: number;
   default_count?: number;
   snapshot_date?: string;
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<{ success: boolean; portfolioHealth?: MintosPortfolioHealth; error?: string }> {
   const { supabase, user } = await getAuthUser();
   if (!user) return { success: false, error: 'No autenticado' };
 
-  const { error } = await supabase
+  const { data: portfolioHealth, error } = await supabase
     .from('mintos_portfolio_health')
     .upsert({
       user_id: user.id,
       ...data,
       updated_at: new Date().toISOString(),
-    }, { onConflict: 'user_id' });
+    }, { onConflict: 'user_id' })
+    .select('id, user_id, on_track_amount, grace_period_amount, late_1_15_amount, late_16_30_amount, late_31_60_amount, default_amount, on_track_count, grace_period_count, late_1_15_count, late_16_30_count, late_31_60_count, default_count, snapshot_date, updated_at')
+    .maybeSingle();
 
   if (error) return { success: false, error: error.message };
 
   revalidatePath('/patrimonio');
-  return { success: true };
+  return { success: true, portfolioHealth: (portfolioHealth as MintosPortfolioHealth | null) ?? undefined };
 }
 
 // ── Add deposit ───────────────────────────────────────────────────────────────
@@ -136,25 +140,27 @@ export async function addMintosDeposit(data: {
   deposit_date: string;
   amount: number;
   notes?: string;
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<{ success: boolean; deposit?: MintosDeposit; error?: string }> {
   const { supabase, user } = await getAuthUser();
   if (!user) return { success: false, error: 'No autenticado' };
 
-  const { error } = await supabase
+  const { data: deposit, error } = await supabase
     .from('mintos_deposits')
-    .insert({ user_id: user.id, ...data });
+    .insert({ user_id: user.id, ...data })
+    .select('id, user_id, deposit_date, amount, notes, created_at')
+    .maybeSingle();
 
   if (error) return { success: false, error: error.message };
 
   revalidatePath('/patrimonio');
-  return { success: true };
+  return { success: true, deposit: (deposit as MintosDeposit | null) ?? undefined };
 }
 
 // ── Upsert monthly snapshots (called after Excel import) ──────────────────────
 
 export async function upsertMintosMonthlySnapshots(
   snapshots: Omit<MintosMonthlySnapshot, 'id' | 'user_id' | 'created_at' | 'updated_at'>[]
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; snapshots?: MintosMonthlySnapshot[]; error?: string }> {
   const { supabase, user } = await getAuthUser();
   if (!user) return { success: false, error: 'No autenticado' };
 
@@ -164,21 +170,22 @@ export async function upsertMintosMonthlySnapshots(
     updated_at: new Date().toISOString(),
   }));
 
-  const { error } = await supabase
+  const { data: upserted, error } = await supabase
     .from('mintos_monthly_snapshots')
-    .upsert(rows, { onConflict: 'user_id,year,month' });
+    .upsert(rows, { onConflict: 'user_id,year,month' })
+    .select('id, user_id, year, month, total_value, total_deposited, deposits, interest_income, capital_received, buyback_principal, buyback_interest, investments, secondary_market, late_interest, commissions, taxes_withheld, created_at, updated_at');
 
   if (error) return { success: false, error: error.message };
 
   revalidatePath('/patrimonio');
-  return { success: true };
+  return { success: true, snapshots: (upserted as MintosMonthlySnapshot[] | null) ?? [] };
 }
 
 // ── Upsert deposits (called after Excel import) ───────────────────────────────
 
 export async function upsertMintosDeposits(
   deposits: Array<{ deposit_date: string; amount: number; notes?: string }>
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; deposits?: MintosDeposit[]; error?: string }> {
   const { supabase, user } = await getAuthUser();
   if (!user) return { success: false, error: 'No autenticado' };
 
@@ -196,14 +203,15 @@ export async function upsertMintosDeposits(
     (d) => !existingKeys.has(`${d.deposit_date}_${d.amount}`)
   );
 
-  if (newDeposits.length === 0) return { success: true };
+  if (newDeposits.length === 0) return { success: true, deposits: [] };
 
-  const { error } = await supabase
+  const { data: inserted, error } = await supabase
     .from('mintos_deposits')
-    .insert(newDeposits.map((d) => ({ user_id: user.id, ...d })));
+    .insert(newDeposits.map((d) => ({ user_id: user.id, ...d })))
+    .select('id, user_id, deposit_date, amount, notes, created_at');
 
   if (error) return { success: false, error: error.message };
 
   revalidatePath('/patrimonio');
-  return { success: true };
+  return { success: true, deposits: (inserted as MintosDeposit[] | null) ?? [] };
 }

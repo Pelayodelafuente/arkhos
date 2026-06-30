@@ -12,6 +12,8 @@ function EditableAmount({ item }: { item: SavingsPlanItem }) {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(item.monthly_amount.toString());
   const [saving, setSaving] = useState(false);
+  const savingsPlan = usePatrimonioStore((s) => s.savingsPlan);
+  const setSavingsPlan = usePatrimonioStore((s) => s.setSavingsPlan);
 
   async function handleSave() {
     const num = parseFloat(value.replace(",", "."));
@@ -21,7 +23,11 @@ function EditableAmount({ item }: { item: SavingsPlanItem }) {
       return;
     }
     setSaving(true);
-    await updateSavingsPlanAmount(item.id, num);
+    const result = await updateSavingsPlanAmount(item.id, num);
+    if (result.success && result.data) {
+      const updatedItem = result.data;
+      setSavingsPlan(savingsPlan.map((p) => (p.id === updatedItem.id ? updatedItem : p)));
+    }
     setSaving(false);
     setEditing(false);
   }

@@ -5,7 +5,7 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import { Modal, Button, Input } from "@/components/ui";
 import { addCryptoTransactionAction } from "@/app/actions/crypto";
 import { useCryptoStore } from "@/stores/crypto-store";
-import { loadCryptoData } from "@/app/actions/crypto";
+import type { CryptoAsset, CryptoTransaction } from "@/types/crypto";
 
 interface PurchaseForm {
   date: string;
@@ -43,10 +43,9 @@ export function RegisterCryptoPurchaseModal({
   onSuccess,
 }: RegisterCryptoPurchaseModalProps) {
   const assets = useCryptoStore((s) => s.assets);
+  const transactions = useCryptoStore((s) => s.transactions);
   const setAssets = useCryptoStore((s) => s.setAssets);
   const setTransactions = useCryptoStore((s) => s.setTransactions);
-  const setDefiPositions = useCryptoStore((s) => s.setDefiPositions);
-  const setMonthlyPlan = useCryptoStore((s) => s.setMonthlyPlan);
 
   const [expanded, setExpanded] = useState<Set<string>>(new Set(["BTC"]));
   const [forms, setForms] = useState<Record<string, PurchaseForm>>({
@@ -112,6 +111,8 @@ export function RegisterCryptoPurchaseModal({
 
     setIsSubmitting(true);
     let hadError = false;
+    const newTransactions: CryptoTransaction[] = [];
+    const updatedAssets = new Map<string, CryptoAsset>();
 
     for (const { symbol, showPrice } of SECTIONS) {
       const f = forms[symbol];
@@ -143,17 +144,25 @@ export function RegisterCryptoPurchaseModal({
       if (!result.ok) {
         hadError = true;
         setGlobalError(result.error ?? "Error al guardar transacción");
+        continue;
       }
+
+      if (result.transaction) newTransactions.push(result.transaction);
+      if (result.asset) updatedAssets.set(result.asset.id, result.asset);
     }
 
     if (!hadError) {
-      // Reload store
-      const data = await loadCryptoData();
-      if (data) {
-        setAssets(data.assets);
-        setTransactions(data.transactions);
-        setDefiPositions(data.defiPositions);
-        setMonthlyPlan(data.monthlyPlan);
+      // Actualiza el store directamente con lo devuelto por la Server Action
+      // (sin volver a pedir todos los datos — la megacarga ya no se repite al navegar)
+      if (newTransactions.length > 0) {
+        setTransactions(
+          [...transactions, ...newTransactions].sort(
+            (a, b) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime()
+          )
+        );
+      }
+      if (updatedAssets.size > 0) {
+        setAssets(assets.map((a) => updatedAssets.get(a.id) ?? a));
       }
       onSuccess?.();
       onClose();

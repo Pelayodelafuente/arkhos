@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Modal, Button, Input } from "@/components/ui";
 import { updatePlatformValueAction } from "@/app/actions/patrimonio";
 import { useUIStore } from "@/stores/ui-store";
+import { usePatrimonioStore } from "@/stores/patrimonio-store";
 
 interface ManualPriceUpdateModalProps {
   isOpen: boolean;
@@ -21,6 +22,10 @@ export function ManualPriceUpdateModal({
   platformName,
 }: ManualPriceUpdateModalProps) {
   const addToast = useUIStore((s) => s.addToast);
+  const setAssets = usePatrimonioStore((s) => s.setAssets);
+  const setTransactions = usePatrimonioStore((s) => s.setTransactions);
+  const setSnapshots = usePatrimonioStore((s) => s.setSnapshots);
+  const setOverview = usePatrimonioStore((s) => s.setOverview);
   const [value, setValue] = useState("");
   const [date, setDate] = useState(today());
   const [loading, setLoading] = useState(false);
@@ -47,6 +52,12 @@ export function ManualPriceUpdateModal({
     try {
       const result = await updatePlatformValueAction(platformSlug, numValue);
       if (result.success) {
+        if (result.data) {
+          setAssets(result.data.assets);
+          setTransactions(result.data.transactions);
+          setSnapshots(result.data.snapshots);
+          if (result.data.overview) setOverview(result.data.overview);
+        }
         addToast(`Valor de ${platformName} actualizado a ${new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(numValue)}`, "success");
         onClose();
       } else {

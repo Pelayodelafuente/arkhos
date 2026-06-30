@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { X, RefreshCw, CheckCircle2, AlertCircle, TrendingUp, TrendingDown } from "lucide-react";
 import { useIndexaStore } from "@/stores/indexa-store";
-import { updateIndexaPrices, loadIndexaData } from "@/app/actions/indexa";
+import { updateIndexaPrices } from "@/app/actions/indexa";
 import type { IndexaPosition } from "@/types/indexa";
 
 import { formatEur } from "@/lib/utils/format";
@@ -185,15 +185,14 @@ export function UpdateIndexaPricesModal({ onClose }: UpdateIndexaPricesModalProp
       return;
     }
 
-    // Reload fresh data into store
-    const fresh = await loadIndexaData();
-    if (fresh) {
-      setFunds(fresh.funds);
-      setPositions(fresh.positions);
-      setTransactions(fresh.transactions);
-      setMonthlyReturns(fresh.monthlyReturns);
-      setPlan(fresh.plan);
-      setOverview(fresh.overview);
+    // Update store with the fresh data returned by the action
+    if (result.data) {
+      setFunds(result.data.funds);
+      setPositions(result.data.positions);
+      setTransactions(result.data.transactions);
+      setMonthlyReturns(result.data.monthlyReturns);
+      setPlan(result.data.plan);
+      setOverview(result.data.overview);
     }
 
     setStatus("success");

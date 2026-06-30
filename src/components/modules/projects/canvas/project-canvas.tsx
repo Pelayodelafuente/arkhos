@@ -13,7 +13,6 @@ import {
   DEFAULT_PROJECT_STATUSES,
   type ProjectTypeRecord,
   type ProjectStatusRecord,
-  type ProjectListItem,
 } from '@/types/projects';
 import { ProjectModal } from '../project-modal';
 import { CanvasGrid } from './canvas-grid';
@@ -29,21 +28,16 @@ import { WindowFocus } from './window-focus';
 
 interface ProjectCanvasProps {
   userId: string;
-  initialProjects?: ProjectListItem[] | null;
 }
 
 // ─── Component ───────────────────────
 
-export function ProjectCanvas({ userId, initialProjects }: ProjectCanvasProps) {
-  // Hidratación síncrona del store con el snapshot del servidor: el lazy
-  // initializer corre una sola vez y antes de los selectores, de modo que el
-  // HTML SSR ya pinte la lista de proyectos.
-  const [hydrated] = useState(() => {
-    if (!initialProjects) return false;
-    useProjectsStore.getState().hydrateProjects(initialProjects);
-    return true;
-  });
-
+export function ProjectCanvas({ userId }: ProjectCanvasProps) {
+  // El store ya viene hidratado por `AppDataLoader` (megacarga única al
+  // login) vía `hydrateProjects`, que marca `initialized: true`. Si el
+  // módulo `proyectos` vino degradado a `{ error }` en la megacarga,
+  // `initialized` queda en false y este fetch actúa de red de seguridad.
+  const initialized = useProjectsStore((s) => s.initialized);
   const selectedProjectId = useCanvasStore((s) => s.selectedProjectId);
   const fetchProjects = useProjectsStore((s) => s.fetchProjects);
   const projects = useProjectsStore((s) => s.projects);
@@ -52,10 +46,10 @@ export function ProjectCanvas({ userId, initialProjects }: ProjectCanvasProps) {
   const [projectTypes, setProjectTypes] = useState<ProjectTypeRecord[]>([]);
   const [projectStatuses, setProjectStatuses] = useState<ProjectStatusRecord[]>([]);
 
-  // Load projects on mount (solo si no llegó snapshot del servidor)
+  // Red de seguridad: solo dispara si la megacarga no pobló el store.
   useEffect(() => {
-    if (!hydrated) fetchProjects(userId);
-  }, [userId, hydrated, fetchProjects]);
+    if (!initialized) fetchProjects(userId);
+  }, [userId, initialized, fetchProjects]);
 
   // Load project types and statuses for the new-project modal
   useEffect(() => {

@@ -13,6 +13,7 @@ import { NotaRapidaPanel } from './nota-rapida-panel'
 import { NotasRecientesPanel } from './notas-recientes-panel'
 import { EvolucionPlataformasPanel } from './evolucion-plataformas-panel'
 import { ProximosPagosPanel } from './proximos-pagos-panel'
+import { useDashboardStore } from '@/stores/dashboard-store'
 
 export interface SnapshotData {
   snapshot_date: string
@@ -94,29 +95,34 @@ export interface MarketData {
 
 export interface DashboardViewProps {
   userName: string
-  initialActivity: ActivityData[]
-  initialProjects: ProjectData[]
-  initialSnapshots: SnapshotData[]
-  initialSubscriptions: SubscriptionData[]
-  initialPlatforms: PlatformData[]
-  initialNotes: NoteData[]
-  btcPrice?: number | null
-  btcBalance?: number | null
-  marketData?: MarketData | null
 }
 
-export function DashboardView({
-  userName,
-  initialActivity,
-  initialProjects,
-  initialSnapshots,
-  initialSubscriptions,
-  initialPlatforms,
-  initialNotes,
-  btcPrice,
-  btcBalance,
-  marketData,
-}: DashboardViewProps) {
+export function DashboardView({ userName }: DashboardViewProps) {
+  const data = useDashboardStore((s) => s.data)
+  const error = useDashboardStore((s) => s.error)
+
+  if (!data) {
+    return (
+      <div className="absolute inset-0 flex items-center justify-center">
+        <p className="text-sm text-text-tertiary">
+          {error ?? 'Cargando dashboard…'}
+        </p>
+      </div>
+    )
+  }
+
+  const {
+    initialActivity,
+    initialProjects,
+    initialSnapshots,
+    initialSubscriptions,
+    initialPlatforms,
+    initialNotes,
+    btcPrice,
+    btcBalance,
+    marketData,
+  } = data
+
   return (
     <div className="absolute inset-0 flex flex-col overflow-hidden">
       <MarketTicker />

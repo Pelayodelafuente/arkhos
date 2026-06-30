@@ -3,7 +3,9 @@
 // Módulo Notas: notes + canvases + nodes + edges
 // ══════════════════════════════════════
 
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from './client'
+import type { Database } from './types'
 import type {
   Note,
   NoteListItem,
@@ -16,6 +18,10 @@ import type {
   NoteFolder,
   NoteVersion,
 } from '@/types/notes'
+
+// El cliente es parametrizable para poder reutilizar las lecturas del snapshot
+// inicial desde Server Components (se pasa el server client) sin duplicar queries.
+type Client = SupabaseClient<Database>
 
 // ─── Constantes ──────────────────────
 
@@ -250,6 +256,57 @@ export async function getNotesByTag(userId: string, tag: string): Promise<Note[]
 
   if (error) throw new NotesError('Error fetching notes by tag', error.message)
   return toNoteListItems(data)
+}
+
+// ══════════════════════════════════════
+// INITIAL LOAD (server aggregator)
+// ══════════════════════════════════════
+
+/**
+ * Carga inicial de Notas para `getAppData`/`notas/page.tsx`: primera página de
+ * notas (sin `content`, lazy load) + canvas por defecto (get-or-create).
+ * Acepta el cliente Supabase tipado del llamador (Server Component/Server
+ * Action) en vez de instanciar el cliente de navegador de este módulo.
+ * Relocalización literal de la lógica que vivía en `notas/page.tsx`.
+ */
+export async function getNotasInitialData(
+  client: Client,
+  userId: string
+): Promise<{ notes: Note[]; canvas: NoteCanvas }> {
+  const { data: notesRaw } = await client
+    .from('notes')
+    .select(NOTE_LIST_FIELDS)
+    .eq('user_id', userId)
+    .is('deleted_at', null)
+    .order('is_pinned', { ascending: false })
+    .order('updated_at', { ascending: false })
+    .range(0, NOTES_PAGE_SIZE - 1)
+
+  const notes = toNoteListItems(notesRaw)
+
+  // Get or create default canvas
+  let canvas: NoteCanvas
+  const { data: existingCanvas } = await client
+    .from('note_canvases')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('is_default', true)
+    .single()
+
+  if (existingCanvas) {
+    canvas = existingCanvas as NoteCanvas
+  } else {
+    const { data: newCanvas, error } = await client
+      .from('note_canvases')
+      .insert({ user_id: userId, name: 'Mi Canvas', is_default: true })
+      .select()
+      .single()
+    if (error) throw new NotesError('Error creating default canvas', error.message)
+    if (!newCanvas) throw new NotesError('Error creating default canvas: no data returned')
+    canvas = newCanvas as NoteCanvas
+  }
+
+  return { notes, canvas }
 }
 
 // ══════════════════════════════════════

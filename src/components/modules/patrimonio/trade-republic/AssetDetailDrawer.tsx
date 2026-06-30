@@ -59,6 +59,10 @@ function formatDateDDMMYYYY(dateStr: string): string {
 export function AssetDetailDrawer({ assetId, onClose }: AssetDetailDrawerProps) {
   const assets = usePatrimonioStore((s) => s.assets);
   const transactions = usePatrimonioStore((s) => s.transactions);
+  const setAssets = usePatrimonioStore((s) => s.setAssets);
+  const setTransactions = usePatrimonioStore((s) => s.setTransactions);
+  const setSnapshots = usePatrimonioStore((s) => s.setSnapshots);
+  const setOverview = usePatrimonioStore((s) => s.setOverview);
   const addToast = useUIStore((s) => s.addToast);
 
   const [activeTab, setActiveTab] = useState<ActiveTab>("resumen");
@@ -109,6 +113,12 @@ export function AssetDetailDrawer({ assetId, onClose }: AssetDetailDrawerProps) 
     setDeletingId(null);
     setConfirmDeleteId(null);
     if (result.success) {
+      if (result.data) {
+        setAssets(result.data.assets);
+        setTransactions(result.data.transactions);
+        setSnapshots(result.data.snapshots);
+        if (result.data.overview) setOverview(result.data.overview);
+      }
       addToast("Transacción eliminada", "success");
     } else {
       addToast(result.error ?? "Error al eliminar", "error");

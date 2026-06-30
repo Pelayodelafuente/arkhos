@@ -5,6 +5,7 @@ import { RefreshCw, ExternalLink } from "lucide-react";
 import type { InvestmentPlatform, PortfolioAsset } from "@/types/patrimonio";
 import { updatePlatformValueAction } from "@/app/actions/patrimonio";
 import { Button, Input, Modal } from "@/components/ui";
+import { usePatrimonioStore } from "@/stores/patrimonio-store";
 
 interface PlaceholderPlatformProps {
   platform: InvestmentPlatform;
@@ -18,6 +19,10 @@ export function PlaceholderPlatform({ platform, assets }: PlaceholderPlatformPro
   const [inputValue, setInputValue] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
   const [updated, setUpdated] = useState(false);
+  const setAssets = usePatrimonioStore((s) => s.setAssets);
+  const setTransactions = usePatrimonioStore((s) => s.setTransactions);
+  const setSnapshots = usePatrimonioStore((s) => s.setSnapshots);
+  const setOverview = usePatrimonioStore((s) => s.setOverview);
 
   const currentTotal = assets.reduce((sum, a) => sum + (a.current_value ?? 0), 0);
 
@@ -27,7 +32,13 @@ export function PlaceholderPlatform({ platform, assets }: PlaceholderPlatformPro
     const value = parseFloat(inputValue.replace(",", "."));
     if (isNaN(value) || value < 0) return;
     setIsUpdating(true);
-    await updatePlatformValueAction(platform.slug, value);
+    const result = await updatePlatformValueAction(platform.slug, value);
+    if (result.data) {
+      setAssets(result.data.assets);
+      setTransactions(result.data.transactions);
+      setSnapshots(result.data.snapshots);
+      if (result.data.overview) setOverview(result.data.overview);
+    }
     setIsUpdating(false);
     setUpdated(true);
     setModalOpen(false);

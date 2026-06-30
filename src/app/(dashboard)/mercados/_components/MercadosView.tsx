@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   TrendingUp,
   Bell,
@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui";
 import { useMercadosStore } from "@/stores/mercados-store";
 import type { MercadosTab } from "@/stores/mercados-store";
+import type { PulseData } from "@/lib/mercados/pulse";
 import type { MacroData } from "@/lib/mercados/macro";
 import type { AssetsData } from "@/lib/mercados/assets";
 import type { PortfolioMarketData } from "@/lib/mercados/portfolio-market";
@@ -46,35 +47,9 @@ const PortfolioDashboard = dynamic(
 import { AIChatPanel } from "./AIChatPanel";
 import { DailySummary } from "./DailySummary";
 
-interface CachedMetricValue {
-  current: number;
-  change24h?: number;
-  changePct24h?: number;
-  history?: Array<{ date: string; value: number }>;
-  label?: string;
-}
-
-interface PulseData {
-  vix: CachedMetricValue;
-  fearGreed: CachedMetricValue;
-  dxy: CachedMetricValue;
-  eurusd: CachedMetricValue;
-  us10y: CachedMetricValue;
-  gold: CachedMetricValue;
-  bitcoin: CachedMetricValue;
-  m2: CachedMetricValue;
-  fetchedAt: string;
-  errors: string[];
-}
-
 interface AlertsResponse {
   alerts: MarketAlert[];
   unreadCount: number;
-}
-
-interface MercadosViewProps {
-  userId: string;
-  initialTab: MercadosTab;
 }
 
 const TABS: {
@@ -88,30 +63,34 @@ const TABS: {
   { id: "portfolio", label: "Mi Cartera", icon: Briefcase },
 ];
 
-export function MercadosView({ initialTab }: MercadosViewProps) {
+const VALID_TABS: MercadosTab[] = ["pulse", "macro", "assets", "portfolio"];
+
+export function MercadosView() {
   const router = useRouter();
-  const {
-    activeTab,
-    setActiveTab,
-    setLastUpdated,
-    setIsRefreshing: storeSetIsRefreshing,
-  } = useMercadosStore();
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const initialTab: MercadosTab = VALID_TABS.includes(tabParam as MercadosTab)
+    ? (tabParam as MercadosTab)
+    : "pulse";
 
-  const [pulseData, setPulseData] = useState<PulseData | null>(null);
-  const [isPulseLoading, setIsPulseLoading] = useState(true);
+  const activeTab = useMercadosStore((s) => s.activeTab);
+  const setActiveTab = useMercadosStore((s) => s.setActiveTab);
+  const setLastUpdated = useMercadosStore((s) => s.setLastUpdated);
+  const storeSetIsRefreshing = useMercadosStore((s) => s.setIsRefreshing);
+  const pulseData = useMercadosStore((s) => s.pulseData);
+  const setPulseData = useMercadosStore((s) => s.setPulseData);
+  const macroData = useMercadosStore((s) => s.macroData);
+  const setMacroData = useMercadosStore((s) => s.setMacroData);
+  const assetsData = useMercadosStore((s) => s.assetsData);
+  const setAssetsData = useMercadosStore((s) => s.setAssetsData);
+  const portfolioData = useMercadosStore((s) => s.portfolioData);
+  const setPortfolioData = useMercadosStore((s) => s.setPortfolioData);
+  const alerts = useMercadosStore((s) => s.alerts);
+  const setAlerts = useMercadosStore((s) => s.setAlerts);
+  const unreadAlertsCount = useMercadosStore((s) => s.unreadAlertsCount);
+  const setUnreadAlertsCount = useMercadosStore((s) => s.setUnreadAlertsCount);
+
   const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const [macroData, setMacroData] = useState<MacroData | null>(null);
-  const [isMacroLoading, setIsMacroLoading] = useState(false);
-
-  const [assetsData, setAssetsData] = useState<AssetsData | null>(null);
-  const [isAssetsLoading, setIsAssetsLoading] = useState(false);
-
-  const [portfolioData, setPortfolioData] = useState<PortfolioMarketData | null>(null);
-  const [isPortfolioLoading, setIsPortfolioLoading] = useState(false);
-
-  const [alerts, setAlerts] = useState<MarketAlert[]>([]);
-  const [unreadAlertsCount, setUnreadAlertsCount] = useState(0);
   const [isAlertsFeedOpen, setIsAlertsFeedOpen] = useState(false);
   const [isAIPanelOpen, setIsAIPanelOpen] = useState(false);
   const bellRef = useRef<HTMLDivElement>(null);
@@ -120,50 +99,7 @@ export function MercadosView({ initialTab }: MercadosViewProps) {
     setActiveTab(initialTab);
   }, [initialTab, setActiveTab]);
 
-  const loadPulse = useCallback(
-    async (forceRefresh = false) => {
-      const url = forceRefresh ? "/api/mercados/pulse?refresh=true" : "/api/mercados/pulse";
-      try {
-        const res = await fetch(url);
-        if (res.ok) {
-          const data = (await res.json()) as PulseData;
-          setPulseData(data);
-          setLastUpdated(new Date(data.fetchedAt));
-        }
-      } catch {
-        // Network error — keep existing data
-      }
-    },
-    [setLastUpdated]
-  );
-
-  const loadMacro = useCallback(async (forceRefresh = false) => {
-    const url = forceRefresh ? "/api/mercados/macro?refresh=true" : "/api/mercados/macro";
-    setIsMacroLoading(true);
-    try {
-      const res = await fetch(url);
-      if (res.ok) setMacroData((await res.json()) as MacroData);
-    } catch {
-      // Network error
-    } finally {
-      setIsMacroLoading(false);
-    }
-  }, []);
-
-  const loadAssets = useCallback(async (forceRefresh = false) => {
-    const url = forceRefresh ? "/api/mercados/assets?refresh=true" : "/api/mercados/assets";
-    setIsAssetsLoading(true);
-    try {
-      const res = await fetch(url);
-      if (res.ok) setAssetsData((await res.json()) as AssetsData);
-    } catch {
-      // Network error
-    } finally {
-      setIsAssetsLoading(false);
-    }
-  }, []);
-
-  const loadAlerts = useCallback(async () => {
+  async function refreshAlerts() {
     try {
       const res = await fetch('/api/mercados/alerts');
       if (res.ok) {
@@ -174,70 +110,74 @@ export function MercadosView({ initialTab }: MercadosViewProps) {
     } catch {
       // Network error
     }
-  }, []);
-
-  const loadPortfolio = useCallback(async (forceRefresh = false) => {
-    const url = forceRefresh ? "/api/mercados/portfolio?refresh=true" : "/api/mercados/portfolio";
-    setIsPortfolioLoading(true);
-    try {
-      const res = await fetch(url);
-      if (res.ok) {
-        const data = (await res.json()) as PortfolioMarketData;
-        setPortfolioData(data);
-        // Si hay alertas de rebalanceo warning/critical, persistirlas
-        const toCreate = data.rebalanceAlerts.filter(a => a.severity !== 'info');
-        if (toCreate.length > 0) {
-          void fetch('/api/mercados/alerts', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'create_rebalance', alerts: toCreate }),
-          });
-        }
-        // Refrescar conteo de alertas
-        void loadAlerts();
-      }
-    } catch {
-      // Network error
-    } finally {
-      setIsPortfolioLoading(false);
-    }
-  }, [loadAlerts]);
-
-  useEffect(() => {
-    async function init() {
-      setIsPulseLoading(true);
-      await loadPulse(false);
-      setIsPulseLoading(false);
-      if (initialTab === "macro") void loadMacro(false);
-      if (initialTab === "assets") void loadAssets(false);
-      if (initialTab === "portfolio") void loadPortfolio(false);
-      void loadAlerts();
-    }
-    void init();
-  }, [loadPulse, loadMacro, loadAssets, loadPortfolio, loadAlerts, initialTab]);
+  }
 
   function handleTabChange(tab: MercadosTab) {
     setActiveTab(tab);
     router.push(`/mercados?tab=${tab}`, { scroll: false });
-    if (tab === "macro" && !macroData && !isMacroLoading) void loadMacro();
-    if (tab === "assets" && !assetsData && !isAssetsLoading) void loadAssets();
-    if (tab === "portfolio" && !portfolioData && !isPortfolioLoading) void loadPortfolio();
   }
 
   async function handleRefresh() {
     setIsRefreshing(true);
     storeSetIsRefreshing(true);
     try {
+      const pulsePromise = fetch("/api/mercados/pulse?refresh=true")
+        .then((res) => (res.ok ? (res.json() as Promise<PulseData>) : null))
+        .then((data) => {
+          if (data) {
+            setPulseData(data);
+            setLastUpdated(new Date(data.fetchedAt));
+          }
+        })
+        .catch(() => {
+          // Network error — keep existing data
+        });
+
       if (activeTab === "macro") {
-        await Promise.all([loadPulse(true), loadMacro(true)]);
+        const macroPromise = fetch("/api/mercados/macro?refresh=true")
+          .then((res) => (res.ok ? (res.json() as Promise<MacroData>) : null))
+          .then((data) => {
+            if (data) setMacroData(data);
+          })
+          .catch(() => {
+            // Network error
+          });
+        await Promise.all([pulsePromise, macroPromise]);
       } else if (activeTab === "assets") {
-        await Promise.all([loadPulse(true), loadAssets(true)]);
+        const assetsPromise = fetch("/api/mercados/assets?refresh=true")
+          .then((res) => (res.ok ? (res.json() as Promise<AssetsData>) : null))
+          .then((data) => {
+            if (data) setAssetsData(data);
+          })
+          .catch(() => {
+            // Network error
+          });
+        await Promise.all([pulsePromise, assetsPromise]);
       } else if (activeTab === "portfolio") {
-        await Promise.all([loadPulse(true), loadPortfolio(true)]);
+        const portfolioPromise = fetch("/api/mercados/portfolio?refresh=true")
+          .then((res) => (res.ok ? (res.json() as Promise<PortfolioMarketData>) : null))
+          .then(async (data) => {
+            if (data) {
+              setPortfolioData(data);
+              // Si hay alertas de rebalanceo warning/critical, persistirlas
+              const toCreate = data.rebalanceAlerts.filter((a) => a.severity !== 'info');
+              if (toCreate.length > 0) {
+                await fetch('/api/mercados/alerts', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ action: 'create_rebalance', alerts: toCreate }),
+                });
+              }
+            }
+          })
+          .catch(() => {
+            // Network error
+          });
+        await Promise.all([pulsePromise, portfolioPromise]);
       } else {
-        await loadPulse(true);
+        await pulsePromise;
       }
-      await loadAlerts();
+      await refreshAlerts();
     } finally {
       setIsRefreshing(false);
       storeSetIsRefreshing(false);
@@ -245,8 +185,8 @@ export function MercadosView({ initialTab }: MercadosViewProps) {
   }
 
   function handleMarkRead(id: string) {
-    setAlerts(prev => prev.map(a => (a.id === id ? { ...a, is_read: true } : a)));
-    setUnreadAlertsCount(prev => Math.max(0, prev - 1));
+    setAlerts(alerts.map(a => (a.id === id ? { ...a, is_read: true } : a)));
+    setUnreadAlertsCount(Math.max(0, unreadAlertsCount - 1));
     void fetch('/api/mercados/alerts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -255,7 +195,7 @@ export function MercadosView({ initialTab }: MercadosViewProps) {
   }
 
   function handleMarkAllRead() {
-    setAlerts(prev => prev.map(a => ({ ...a, is_read: true })));
+    setAlerts(alerts.map(a => ({ ...a, is_read: true })));
     setUnreadAlertsCount(0);
     void fetch('/api/mercados/alerts', {
       method: 'POST',
@@ -328,7 +268,7 @@ export function MercadosView({ initialTab }: MercadosViewProps) {
 
       {/* Pulso Global — always visible */}
       <div className="animate-fade-in-up" style={{ animationDelay: "50ms" }}>
-        <MarketPulseBar data={pulseData} isLoading={isPulseLoading} />
+        <MarketPulseBar data={pulseData} isLoading={!pulseData} />
       </div>
 
       {/* DailySummary — entre Pulso Global y tabs */}
@@ -456,13 +396,13 @@ export function MercadosView({ initialTab }: MercadosViewProps) {
                 ))}
               </div>
             )}
-            {!pulseData && isPulseLoading && (
+            {!pulseData && (
               <p className="text-sm text-text-tertiary">Cargando indicadores...</p>
             )}
           </div>
         )}
         {activeTab === "macro" && (
-          <MacroDashboard data={macroData} isLoading={isMacroLoading} />
+          <MacroDashboard data={macroData} isLoading={!macroData} />
         )}
         {activeTab === "assets" && (
           <AssetsDashboard
@@ -470,11 +410,11 @@ export function MercadosView({ initialTab }: MercadosViewProps) {
               ...assetsData,
               crypto: { ...assetsData.crypto, fearGreed: pulseData.fearGreed.current },
             } : assetsData}
-            isLoading={isAssetsLoading}
+            isLoading={!assetsData}
           />
         )}
         {activeTab === "portfolio" && (
-          <PortfolioDashboard data={portfolioData} isLoading={isPortfolioLoading} />
+          <PortfolioDashboard data={portfolioData} isLoading={!portfolioData} />
         )}
       </div>
 

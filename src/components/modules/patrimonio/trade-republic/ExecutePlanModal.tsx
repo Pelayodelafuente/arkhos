@@ -26,6 +26,10 @@ const today = () => new Date().toISOString().slice(0, 10);
 export function ExecutePlanModal({ isOpen, onClose }: ExecutePlanModalProps) {
   const savingsPlan = usePatrimonioStore((s) => s.savingsPlan);
   const assets = usePatrimonioStore((s) => s.assets);
+  const setAssets = usePatrimonioStore((s) => s.setAssets);
+  const setTransactions = usePatrimonioStore((s) => s.setTransactions);
+  const setSnapshots = usePatrimonioStore((s) => s.setSnapshots);
+  const setOverview = usePatrimonioStore((s) => s.setOverview);
   const addToast = useUIStore((s) => s.addToast);
 
   const activePlan = useMemo(
@@ -113,6 +117,12 @@ export function ExecutePlanModal({ isOpen, onClose }: ExecutePlanModalProps) {
     try {
       const result = await executeSavingsPlan(executions);
       if (result.success) {
+        if (result.data) {
+          setAssets(result.data.assets);
+          setTransactions(result.data.transactions);
+          setSnapshots(result.data.snapshots);
+          if (result.data.overview) setOverview(result.data.overview);
+        }
         addToast(
           `${executions.length} ejecuci${executions.length === 1 ? "ón" : "ones"} registradas — Plan ejecutado`,
           "success"

@@ -3,8 +3,29 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
-import type { AssetCategory, RiskLevel, TransactionType } from '@/types/patrimonio';
-import { getAssetPriceHistory, type AssetPricePoint } from '@/lib/supabase/patrimonio';
+import type {
+  AssetCategory,
+  RiskLevel,
+  TransactionType,
+  PortfolioAsset,
+  PortfolioTransaction,
+  PortfolioSnapshot,
+  PortfolioOverview,
+  InvestmentPlatform,
+  SavingsPlanItem,
+  PassiveIncome,
+} from '@/types/patrimonio';
+import {
+  getAssetPriceHistory,
+  getAllAssets,
+  getAllTransactions,
+  getSnapshots,
+  getPortfolioOverview,
+  getPlatforms,
+  getSavingsPlan,
+  getPassiveIncome,
+  type AssetPricePoint,
+} from '@/lib/supabase/patrimonio';
 
 async function createClient() {
   const cookieStore = await cookies();
@@ -74,10 +95,48 @@ type Result<T = undefined> =
   | { success: true; data?: T }
   | { success: false; error: string };
 
+// ============================================================
+// SNAPSHOT: estado completo tras una mutación, para hidratar el store
+// directamente sin depender de revalidatePath (ver patrimonio-store.ts)
+// ============================================================
+export interface PatrimonioMutationSnapshot {
+  assets: PortfolioAsset[];
+  transactions: PortfolioTransaction[];
+  snapshots: PortfolioSnapshot[];
+  overview: PortfolioOverview | null;
+}
+
+async function getMutationSnapshot(userId: string): Promise<PatrimonioMutationSnapshot> {
+  const [assets, transactions, snapshots, overview] = await Promise.all([
+    getAllAssets(userId),
+    getAllTransactions(userId, 500),
+    getSnapshots(userId),
+    getPortfolioOverview(userId),
+  ]);
+  return { assets, transactions, snapshots, overview };
+}
+
+export interface PatrimonioFullSnapshot extends PatrimonioMutationSnapshot {
+  platforms: InvestmentPlatform[];
+  savingsPlan: SavingsPlanItem[];
+  passiveIncome: PassiveIncome[];
+}
+
+async function getFullSnapshot(userId: string): Promise<PatrimonioFullSnapshot> {
+  const [base, platforms, savingsPlan, passiveIncome] = await Promise.all([
+    getMutationSnapshot(userId),
+    getPlatforms(userId),
+    getSavingsPlan(userId),
+    getPassiveIncome(userId),
+  ]);
+  return { ...base, platforms, savingsPlan, passiveIncome };
+}
+
 export async function importPatrimonioData(): Promise<{
   success: boolean;
   message: string;
   counts?: { assets: number; platforms: number; income: number };
+  data?: PatrimonioFullSnapshot;
 }> {
   const cookieStore = await cookies();
   const supabase = createServerClient(
@@ -143,6 +202,8 @@ export async function importPatrimonioData(): Promise<{
     passive_income_records: number;
   };
 
+  const snapshot = await getFullSnapshot(user.id);
+
   return {
     success: true,
     message: `${result.assets_tr + result.assets_other} activos · 191 transacciones · 18 snapshots históricos importados`,
@@ -151,13 +212,14 @@ export async function importPatrimonioData(): Promise<{
       platforms: result.platforms,
       income: result.passive_income_records,
     },
+    data: snapshot,
   };
 }
 
 export async function updatePlatformValueAction(
   platformSlug: string,
   totalValue: number
-): Promise<{ success: boolean }> {
+): Promise<{ success: boolean; data?: PatrimonioMutationSnapshot }> {
   const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -196,7 +258,8 @@ export async function updatePlatformValueAction(
     .in('category', ['fund', 'p2p']);
 
   revalidatePath('/patrimonio');
-  return { success: true };
+  const data = await getMutationSnapshot(user.id);
+  return { success: true, data };
 }
 
 // ============================================================
@@ -204,7 +267,7 @@ export async function updatePlatformValueAction(
 // ============================================================
 export async function executeSavingsPlan(
   executions: PlanExecution[]
-): Promise<Result<{ count: number }>> {
+): Promise<Result<{ count: number } & PatrimonioMutationSnapshot>> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, error: 'No autenticado' };
@@ -261,13 +324,16 @@ export async function executeSavingsPlan(
   }
 
   revalidatePath('/patrimonio');
-  return { success: true, data: { count: executions.length } };
+  const snapshot = await getMutationSnapshot(user.id);
+  return { success: true, data: { count: executions.length, ...snapshot } };
 }
 
 // ============================================================
 // CRUD ACTIVOS
 // ============================================================
-export async function createAsset(data: AssetFormData): Promise<Result<{ id: string }>> {
+export async function createAsset(
+  data: AssetFormData
+): Promise<Result<{ id: string } & PatrimonioMutationSnapshot>> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, error: 'No autenticado' };
@@ -296,10 +362,14 @@ export async function createAsset(data: AssetFormData): Promise<Result<{ id: str
   if (error) return { success: false, error: error.message };
 
   revalidatePath('/patrimonio');
-  return { success: true, data: { id: asset.id } };
+  const snapshot = await getMutationSnapshot(user.id);
+  return { success: true, data: { id: asset.id, ...snapshot } };
 }
 
-export async function updateAsset(id: string, data: Partial<AssetFormData>): Promise<Result> {
+export async function updateAsset(
+  id: string,
+  data: Partial<AssetFormData>
+): Promise<Result<PatrimonioMutationSnapshot>> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, error: 'No autenticado' };
@@ -325,10 +395,11 @@ export async function updateAsset(id: string, data: Partial<AssetFormData>): Pro
   if (error) return { success: false, error: error.message };
 
   revalidatePath('/patrimonio');
-  return { success: true };
+  const snapshot = await getMutationSnapshot(user.id);
+  return { success: true, data: snapshot };
 }
 
-export async function deleteAsset(id: string): Promise<Result> {
+export async function deleteAsset(id: string): Promise<Result<PatrimonioMutationSnapshot>> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, error: 'No autenticado' };
@@ -342,13 +413,16 @@ export async function deleteAsset(id: string): Promise<Result> {
   if (error) return { success: false, error: error.message };
 
   revalidatePath('/patrimonio');
-  return { success: true };
+  const snapshot = await getMutationSnapshot(user.id);
+  return { success: true, data: snapshot };
 }
 
 // ============================================================
 // CRUD TRANSACCIONES
 // ============================================================
-export async function addTransaction(data: TransactionFormData): Promise<Result<{ id: string }>> {
+export async function addTransaction(
+  data: TransactionFormData
+): Promise<Result<{ id: string } & PatrimonioMutationSnapshot>> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, error: 'No autenticado' };
@@ -375,13 +449,14 @@ export async function addTransaction(data: TransactionFormData): Promise<Result<
   await recalcAssets(supabase, user.id, [data.asset_id]);
 
   revalidatePath('/patrimonio');
-  return { success: true, data: { id: tx.id } };
+  const snapshot = await getMutationSnapshot(user.id);
+  return { success: true, data: { id: tx.id, ...snapshot } };
 }
 
 export async function updateTransaction(
   id: string,
   data: Partial<TransactionFormData>
-): Promise<Result> {
+): Promise<Result<PatrimonioMutationSnapshot>> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, error: 'No autenticado' };
@@ -412,10 +487,13 @@ export async function updateTransaction(
   if (assetId) await recalcAssets(supabase, user.id, [assetId]);
 
   revalidatePath('/patrimonio');
-  return { success: true };
+  const snapshot = await getMutationSnapshot(user.id);
+  return { success: true, data: snapshot };
 }
 
-export async function deleteTransaction(id: string): Promise<Result> {
+export async function deleteTransaction(
+  id: string
+): Promise<Result<PatrimonioMutationSnapshot>> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, error: 'No autenticado' };
@@ -438,7 +516,8 @@ export async function deleteTransaction(id: string): Promise<Result> {
   if (tx?.asset_id) await recalcAssets(supabase, user.id, [tx.asset_id]);
 
   revalidatePath('/patrimonio');
-  return { success: true };
+  const snapshot = await getMutationSnapshot(user.id);
+  return { success: true, data: snapshot };
 }
 
 // ============================================================
@@ -447,54 +526,58 @@ export async function deleteTransaction(id: string): Promise<Result> {
 export async function toggleSavingsPlanItem(
   itemId: string,
   isActive: boolean
-): Promise<Result> {
+): Promise<Result<SavingsPlanItem>> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, error: 'No autenticado' };
 
-  const { error } = await supabase
+  const { data: item, error } = await supabase
     .from('savings_plan_items')
     .update({
       is_active: isActive,
       ended_at: isActive ? null : new Date().toISOString().slice(0, 10),
     })
     .eq('id', itemId)
-    .eq('user_id', user.id);
+    .eq('user_id', user.id)
+    .select()
+    .single();
 
   if (error) return { success: false, error: error.message };
   revalidatePath('/patrimonio');
-  return { success: true };
+  return { success: true, data: item as SavingsPlanItem };
 }
 
 export async function updateSavingsPlanAmount(
   itemId: string,
   monthlyAmount: number
-): Promise<Result> {
+): Promise<Result<SavingsPlanItem>> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, error: 'No autenticado' };
 
-  const { error } = await supabase
+  const { data: item, error } = await supabase
     .from('savings_plan_items')
     .update({ monthly_amount: monthlyAmount })
     .eq('id', itemId)
-    .eq('user_id', user.id);
+    .eq('user_id', user.id)
+    .select()
+    .single();
 
   if (error) return { success: false, error: error.message };
   revalidatePath('/patrimonio');
-  return { success: true };
+  return { success: true, data: item as SavingsPlanItem };
 }
 
 export async function addSavingsPlanItem(
   assetId: string,
   monthlyAmount: number,
   startedAt?: string
-): Promise<Result> {
+): Promise<Result<SavingsPlanItem>> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, error: 'No autenticado' };
 
-  const { error } = await supabase
+  const { data: item, error } = await supabase
     .from('savings_plan_items')
     .insert({
       user_id: user.id,
@@ -502,11 +585,13 @@ export async function addSavingsPlanItem(
       monthly_amount: monthlyAmount,
       is_active: true,
       started_at: startedAt ?? new Date().toISOString().slice(0, 10),
-    });
+    })
+    .select()
+    .single();
 
   if (error) return { success: false, error: error.message };
   revalidatePath('/patrimonio');
-  return { success: true };
+  return { success: true, data: item as SavingsPlanItem };
 }
 
 // ============================================================

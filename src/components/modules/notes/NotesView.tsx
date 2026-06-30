@@ -11,27 +11,15 @@ import { NoteModal } from "./NoteModal"
 import { NotePane } from "./NotePane"
 import { NotesSidebar } from "./NotesSidebar"
 import { NotesCanvas } from "./canvas/NotesCanvas"
-import type { Note, NoteCanvas } from "@/types/notes"
+import type { Note } from "@/types/notes"
 
 interface Props {
-  initialNotes: Note[]
-  initialCanvas: NoteCanvas
   userId: string
 }
 
-export function NotesView({ initialNotes, initialCanvas, userId }: Props) {
-  // Hidratación síncrona del store con el snapshot del servidor: el lazy
-  // initializer corre una sola vez y antes de los selectores, de modo que el
-  // HTML SSR ya pinte la lista de notas.
-  useState(() => {
-    const store = useNotesStore.getState()
-    store.setNotes(initialNotes)
-    store.setCanvas(initialCanvas)
-    return true
-  })
-
-  const setNotes = useNotesStore((s) => s.setNotes)
-  const setCanvas = useNotesStore((s) => s.setCanvas)
+export function NotesView({ userId }: Props) {
+  // El store ya viene poblado por la megacarga (`AppDataLoader` →
+  // `hydrateAllStores`) antes de que este componente monte.
   const initCanvas = useNotesStore((s) => s.initCanvas)
   const syncNotesToCanvas = useNotesStore((s) => s.syncNotesToCanvas)
   const addNoteToCanvas = useNotesStore((s) => s.addNoteToCanvas)
@@ -67,18 +55,6 @@ export function NotesView({ initialNotes, initialCanvas, userId }: Props) {
       if (linked) setSelectedNoteId(linked.id)
     }
   }, [notes, searchParams]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Re-hidratar si Next refresca el RSC payload con props nuevas (router.refresh);
-  // la primera ejecución se salta porque ya se hidrató síncronamente en el render
-  const firstHydrationEffect = useRef(true)
-  useEffect(() => {
-    if (firstHydrationEffect.current) {
-      firstHydrationEffect.current = false
-      return
-    }
-    setNotes(initialNotes)
-    setCanvas(initialCanvas)
-  }, [initialNotes, initialCanvas, setNotes, setCanvas])
 
   const handleNew = useCallback(() => {
     setPendingCanvasPos(null)

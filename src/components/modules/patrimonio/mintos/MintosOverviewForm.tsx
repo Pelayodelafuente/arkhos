@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Edit3, Check, X } from "lucide-react";
 import { useMintosStore } from "@/stores/mintos-store";
 import { updateMintosOverview } from "@/app/actions/mintos";
-import { loadMintosData } from "@/app/actions/mintos";
 
 const fmt = (v: number) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(v);
@@ -12,11 +11,6 @@ const fmt = (v: number) =>
 export function MintosOverviewForm() {
   const overview = useMintosStore((s) => s.overview);
   const setOverview = useMintosStore((s) => s.setOverview);
-  const setDeposits = useMintosStore((s) => s.setDeposits);
-  const setMonthlySnapshots = useMintosStore((s) => s.setMonthlySnapshots);
-  const setPortfolioHealth = useMintosStore((s) => s.setPortfolioHealth);
-  const setDistributions = useMintosStore((s) => s.setDistributions);
-  const setPlan = useMintosStore((s) => s.setPlan);
 
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -55,15 +49,9 @@ export function MintosOverviewForm() {
       return;
     }
 
-    const fresh = await loadMintosData();
-    if (fresh) {
-      setOverview(fresh.overview);
-      setDeposits(fresh.deposits);
-      setMonthlySnapshots(fresh.monthlySnapshots);
-      setPortfolioHealth(fresh.portfolioHealth);
-      setDistributions(fresh.distributions);
-      setPlan(fresh.plan);
-    }
+    // Actualiza el store directamente con lo devuelto por la Server Action
+    // (sin volver a pedir todos los datos — la megacarga ya no se repite al navegar)
+    if (res.overview) setOverview(res.overview);
 
     setSaving(false);
     setEditing(false);

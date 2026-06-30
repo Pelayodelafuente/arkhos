@@ -49,37 +49,37 @@ export interface IndexaFullData {
   overview: IndexaOverview | null;
 }
 
-export async function loadIndexaData(): Promise<IndexaFullData | null> {
-  const { supabase, user } = await getAuthUser();
-  if (!user) return null;
-
+async function fetchIndexaFullData(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string
+): Promise<IndexaFullData> {
   const [fundsRes, positionsRes, txRes, returnsRes, planRes] = await Promise.all([
     supabase
       .from('indexa_funds')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .eq('is_active', true)
       .order('fund_type'),
     supabase
       .from('indexa_positions')
       .select('*, fund:indexa_funds(*)')
-      .eq('user_id', user.id),
+      .eq('user_id', userId),
     supabase
       .from('indexa_transactions')
       .select('*, fund:indexa_funds(id, name, isin, fund_type, color)')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .order('transaction_date', { ascending: false })
       .limit(200),
     supabase
       .from('indexa_monthly_returns')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .order('year', { ascending: true })
       .order('month', { ascending: true }),
     supabase
       .from('indexa_monthly_plan')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .eq('is_active', true)
       .maybeSingle(),
   ]);
@@ -93,6 +93,13 @@ export async function loadIndexaData(): Promise<IndexaFullData | null> {
   const overview = computeOverview(positions, monthlyReturns);
 
   return { funds, positions, transactions, monthlyReturns, plan, overview };
+}
+
+export async function loadIndexaData(): Promise<IndexaFullData | null> {
+  const { supabase, user } = await getAuthUser();
+  if (!user) return null;
+
+  return fetchIndexaFullData(supabase, user.id);
 }
 
 // ── Compute overview from raw data (mirrors indexa.ts logic) ────────────────
@@ -180,7 +187,7 @@ export interface RegisterContributionInput {
 
 export async function registerIndexaContribution(
   input: RegisterContributionInput
-): Promise<{ ok: boolean; error?: string }> {
+): Promise<{ ok: boolean; error?: string; data?: IndexaFullData }> {
   const { supabase, user } = await getAuthUser();
   if (!user) return { ok: false, error: 'No autenticado' };
 
@@ -209,8 +216,10 @@ export async function registerIndexaContribution(
   });
   if (rpcError) return { ok: false, error: rpcError.message };
 
+  const data = await fetchIndexaFullData(supabase, user.id);
+
   revalidatePath('/patrimonio');
-  return { ok: true };
+  return { ok: true, data };
 }
 
 // ── Import CSV transactions ─────────────────────────────────────────────────
@@ -228,7 +237,7 @@ export interface CSVImportRow {
 
 export async function importIndexaCSV(
   rows: CSVImportRow[]
-): Promise<{ ok: boolean; imported: number; error?: string }> {
+): Promise<{ ok: boolean; imported: number; error?: string; data?: IndexaFullData }> {
   const { supabase, user } = await getAuthUser();
   if (!user) return { ok: false, imported: 0, error: 'No autenticado' };
 
@@ -250,8 +259,11 @@ export async function importIndexaCSV(
     .insert(records, { count: 'exact' });
 
   if (error) return { ok: false, imported: 0, error: error.message };
+
+  const data = await fetchIndexaFullData(supabase, user.id);
+
   revalidatePath('/patrimonio');
-  return { ok: true, imported: count ?? rows.length };
+  return { ok: true, imported: count ?? rows.length, data };
 }
 
 // ── Update fund prices manually ─────────────────────────────────────────────
@@ -265,7 +277,7 @@ export interface UpdateIndexaPriceInput {
 
 export async function updateIndexaPrices(
   updates: UpdateIndexaPriceInput[]
-): Promise<{ ok: boolean; error?: string }> {
+): Promise<{ ok: boolean; error?: string; data?: IndexaFullData }> {
   const { supabase, user } = await getAuthUser();
   if (!user) return { ok: false, error: 'No autenticado' };
 
@@ -305,20 +317,25 @@ export async function updateIndexaPrices(
     }
   }
 
+  const data = await fetchIndexaFullData(supabase, user.id);
+
   revalidatePath('/patrimonio');
-  return { ok: true };
+  return { ok: true, data };
 }
 
 // ── Seed for onboarding ─────────────────────────────────────────────────────
 
-export async function seedIndexaDataAction(): Promise<{ ok: boolean; error?: string }> {
+export async function seedIndexaDataAction(): Promise<{ ok: boolean; error?: string; data?: IndexaFullData }> {
   const { supabase, user } = await getAuthUser();
   if (!user) return { ok: false, error: 'No autenticado' };
 
   const { error } = await supabase.rpc('seed_indexa_for_user', { p_user_id: user.id });
   if (error) return { ok: false, error: error.message };
+
+  const data = await fetchIndexaFullData(supabase, user.id);
+
   revalidatePath('/patrimonio');
-  return { ok: true };
+  return { ok: true, data };
 }
 
 // ── Add / edit monthly return ────────────────────────────────────────────────
@@ -332,7 +349,7 @@ export interface AddMonthlyReturnInput {
 
 export async function addIndexaMonthlyReturn(
   input: AddMonthlyReturnInput
-): Promise<{ ok: boolean; error?: string; newCumulative?: number }> {
+): Promise<{ ok: boolean; error?: string; newCumulative?: number; data?: IndexaFullData }> {
   const { supabase, user } = await getAuthUser();
   if (!user) return { ok: false, error: 'No autenticado' };
 
@@ -388,6 +405,8 @@ export async function addIndexaMonthlyReturn(
     (u) => u.year === input.year && u.month === input.month
   )?.cumulative_twr;
 
+  const data = await fetchIndexaFullData(supabase, user.id);
+
   revalidatePath('/patrimonio');
-  return { ok: true, newCumulative };
+  return { ok: true, newCumulative, data };
 }

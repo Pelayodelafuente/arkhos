@@ -23,6 +23,7 @@ export function UpdateNAVModal({ currentNav, onClose, onSuccess }: UpdateNAVModa
   const [error, setError] = useState<string | null>(null);
 
   const setPosition = useHorosStore((s) => s.setPosition);
+  const setNavHistory = useHorosStore((s) => s.setNavHistory);
   const position = useHorosStore((s) => s.position);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -40,17 +41,10 @@ export function UpdateNAVModal({ currentNav, onClose, onSuccess }: UpdateNAVModa
       setLoading(false);
       return;
     }
-    // Optimistic update in store
-    if (position) {
-      const newValue = parseFloat((position.shares * nav).toFixed(2));
-      setPosition({
-        ...position,
-        nav_price: nav,
-        nav_date: navDate,
-        total_value: newValue,
-        unrealized_gain: parseFloat((newValue - position.total_cost).toFixed(2)),
-        unrealized_gain_pct: parseFloat(((newValue - position.total_cost) / position.total_cost * 100).toFixed(4)),
-      });
+    // Update store with the fresh data returned by the action (position + NAV history)
+    if (result.data) {
+      setPosition(result.data.position);
+      setNavHistory(result.data.navHistory);
     }
     onSuccess();
     onClose();

@@ -6,6 +6,7 @@ import { NavigationProgress } from "@/components/layout/NavigationProgress";
 import { QuickCapture } from "@/components/modules/notes/QuickCapture";
 import { MfaBanner } from "@/components/layout/MfaBanner";
 import { CommandPalette } from "@/components/layout/CommandPalette";
+import { AppDataLoader } from "@/components/layout/AppDataLoader";
 
 export default async function DashboardLayout({
   children,
@@ -61,7 +62,7 @@ export default async function DashboardLayout({
 
       {/* Page content — full width on desktop */}
       <main className="relative flex-1 overflow-y-auto px-4 py-4 pb-[calc(5rem+env(safe-area-inset-bottom))] lg:px-8 lg:py-6 lg:pb-28">
-        {children}
+        <AppDataLoader>{children}</AppDataLoader>
       </main>
 
       {/* Mobile bottom nav */}
