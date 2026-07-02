@@ -37,7 +37,7 @@ interface PaletteItem {
   href?: string
   action?: "capture-note" | "capture-agenda"
   icon: React.ReactNode
-  group: "Acciones" | "Navegación" | "Notas" | "Proyectos" | "Suscripciones"
+  group: "Acciones" | "Navegación" | "Notas" | "Proyectos" | "Suscripciones" | "Cronos"
 }
 
 const NAV_ITEMS: PaletteItem[] = [
@@ -90,7 +90,8 @@ function PaletteDialog({ userId, onClose }: { userId: string; onClose: () => voi
   const addNote = useNotesStore((s) => s.addNote)
   const addToast = useUIStore((s) => s.addToast)
 
-  // Búsqueda en DB con debounce
+  // Búsqueda global de contenido (FTS español) con debounce — RPC global_search
+  // busca en título Y contenido de notas, proyectos, suscripciones y eventos.
   useEffect(() => {
     const q = query.trim()
     const t = setTimeout(async () => {
@@ -99,56 +100,48 @@ function PaletteDialog({ userId, onClose }: { userId: string; onClose: () => voi
         return
       }
       const client = createClient()
-      const pattern = `%${q}%`
-      const [notes, projects, subs] = await Promise.all([
-        client
-          .from("notes")
-          .select("id, title")
-          .eq("user_id", userId)
-          .is("deleted_at", null)
-          .ilike("title", pattern)
-          .limit(5),
-        client
-          .from("projects")
-          .select("id, name")
-          .eq("user_id", userId)
-          .neq("status", "archived")
-          .ilike("name", pattern)
-          .limit(5),
-        client
-          .from("subscriptions")
-          .select("id, name")
-          .eq("user_id", userId)
-          .ilike("name", pattern)
-          .limit(5),
-      ])
+      const { data } = await client.rpc("global_search", { p_query: q, p_limit: 12 })
 
-      const items: PaletteItem[] = [
-        ...((notes.data ?? []).map((n) => ({
-          id: `note-${n.id}`,
-          label: n.title,
-          hint: "Abrir nota",
-          href: `/notas?note=${n.id}`,
-          icon: <StickyNote size={15} />,
-          group: "Notas" as const,
-        }))),
-        ...((projects.data ?? []).map((p) => ({
-          id: `project-${p.id}`,
-          label: p.name,
-          hint: "Abrir proyecto",
-          href: `/proyectos/${p.id}`,
-          icon: <FolderKanban size={15} />,
-          group: "Proyectos" as const,
-        }))),
-        ...((subs.data ?? []).map((s) => ({
-          id: `sub-${s.id}`,
-          label: s.name,
-          hint: "Ver en Gastos",
-          href: "/gastos",
-          icon: <CreditCard size={15} />,
-          group: "Suscripciones" as const,
-        }))),
-      ]
+      const items: PaletteItem[] = (data ?? []).map((r) => {
+        switch (r.kind) {
+          case "note":
+            return {
+              id: `note-${r.id}`,
+              label: r.title,
+              hint: "Abrir nota",
+              href: `/notas?note=${r.id}`,
+              icon: <StickyNote size={15} />,
+              group: "Notas" as const,
+            }
+          case "project":
+            return {
+              id: `project-${r.id}`,
+              label: r.title,
+              hint: "Abrir proyecto",
+              href: `/proyectos/${r.id}`,
+              icon: <FolderKanban size={15} />,
+              group: "Proyectos" as const,
+            }
+          case "event":
+            return {
+              id: `event-${r.id}`,
+              label: r.title,
+              hint: "Ver en Cronos",
+              href: "/agenda",
+              icon: <CalendarDays size={15} />,
+              group: "Cronos" as const,
+            }
+          default:
+            return {
+              id: `sub-${r.id}`,
+              label: r.title,
+              hint: "Ver en Gastos",
+              href: "/gastos",
+              icon: <CreditCard size={15} />,
+              group: "Suscripciones" as const,
+            }
+        }
+      })
       setResults(items)
       setActiveIndex(0)
     }, 180)

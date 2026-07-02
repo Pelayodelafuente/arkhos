@@ -3148,6 +3148,16 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: undefined
       }
+      global_search: {
+        Args: { p_query: string; p_limit?: number }
+        Returns: {
+          kind: string
+          id: string
+          title: string
+          snippet: string
+          rank: number
+        }[]
+      }
       reset_crypto_for_user: { Args: { p_user_id: string }; Returns: undefined }
       seed_crypto_for_user: { Args: { p_user_id: string }; Returns: undefined }
       seed_crypto_for_user_v2: {
