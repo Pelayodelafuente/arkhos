@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   AreaChart,
   Area,
@@ -55,8 +55,10 @@ const BENCHMARK_LABELS: Record<Exclude<BenchmarkIndex, "none">, string> = {
 export function GlobalEvolutionChart() {
   const [period, setPeriod] = useState<"3M" | "6M" | "1A" | "Todo">("Todo");
   const [benchmark, setBenchmark] = useState<BenchmarkIndex>("none");
-  const [benchPrices, setBenchPrices] = useState<Map<string, number> | null>(null);
-  const benchCache = useRef<Partial<Record<Exclude<BenchmarkIndex, "none">, Map<string, number>>>>({});
+  const [benchLoaded, setBenchLoaded] = useState<
+    Partial<Record<Exclude<BenchmarkIndex, "none">, Map<string, number>>>
+  >({});
+  const benchPrices = benchmark === "none" ? null : benchLoaded[benchmark] ?? null;
   // ── TR (snapshots mensuales) ─────────────────────────────────────────────
   const trSnapshots = usePatrimonioStore((s) => s.snapshots);
   const trOverview = usePatrimonioStore((s) => s.overview);
@@ -286,31 +288,22 @@ export function GlobalEvolutionChart() {
 
   // ── Benchmark: cierres mensuales EUR del índice seleccionado ─────────────
   useEffect(() => {
-    if (benchmark === "none") {
-      setBenchPrices(null);
-      return;
-    }
-    const cached = benchCache.current[benchmark];
-    if (cached) {
-      setBenchPrices(cached);
-      return;
-    }
+    if (benchmark === "none" || benchLoaded[benchmark]) return;
     let cancelled = false;
     fetch(`/api/patrimonio/benchmark?index=${benchmark}`)
       .then((res) => (res.ok ? res.json() : Promise.reject(new Error(String(res.status)))))
       .then((json: { prices: { month: string; close: number }[] }) => {
         if (cancelled) return;
         const map = new Map(json.prices.map((p) => [p.month, p.close]));
-        benchCache.current[benchmark] = map;
-        setBenchPrices(map);
+        setBenchLoaded((prev) => ({ ...prev, [benchmark]: map }));
       })
       .catch(() => {
-        if (!cancelled) setBenchPrices(null);
+        // fallo silencioso: la línea simplemente no se dibuja
       });
     return () => {
       cancelled = true;
     };
-  }, [benchmark]);
+  }, [benchmark, benchLoaded]);
 
   // ── Simulación DCA: mismas aportaciones mensuales compradas al índice ────
   const dataWithBenchmark = useMemo(() => {

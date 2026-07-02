@@ -32,6 +32,7 @@ const SankeyDiagram = dynamic(
   { ssr: false, loading: () => <div className="h-[320px] animate-pulse rounded-xl bg-bg-sand" /> },
 );
 import { FiscalidadPanel } from "@/components/modules/patrimonio/trade-republic/FiscalidadPanel";
+import { FireCalculator } from "@/components/modules/patrimonio/dashboard/FireCalculator";
 import { PatrimonioAlerts } from "@/components/modules/patrimonio/shared/PatrimonioAlerts";
 
 
@@ -506,6 +507,9 @@ export function PatrimonioDashboard() {
 
           {/* ── SANKEY ────────────────────────────────────────────────────── */}
           <SankeyDiagram />
+
+          {/* ── FIRE ──────────────────────────────────────────────────────── */}
+          <FireCalculator />
 
           {/* ── FISCALIDAD ────────────────────────────────────────────────── */}
           <section>
