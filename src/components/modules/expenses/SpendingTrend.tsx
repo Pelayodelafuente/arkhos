@@ -5,7 +5,7 @@ import { BarChart, Bar, Cell, ResponsiveContainer, XAxis, Tooltip, LineChart, Li
 import { Card } from "@/components/ui"
 import { useExpensesStore } from "@/stores/expenses-store"
 import { formatCurrency } from "@/lib/gastos-utils"
-import { TrendingUp, TrendingDown, Minus } from "lucide-react"
+import { TrendingUp, TrendingDown, Minus, Sparkles } from "lucide-react"
 import type { SubscriptionWithCategory } from "@/types/expenses"
 
 const MONTH_NAMES = [
@@ -137,6 +137,36 @@ export function SpendingTrend() {
     return { data: chartData, hasData: true, mean: meanValue }
   }, [subscriptions])
 
+  // Insight mes vs media de los 3 meses anteriores (determinista, sin IA)
+  const insight = useMemo(() => {
+    if (!monthlySpending || monthlySpending.length < 2) return null
+    const sorted = [...monthlySpending].sort((a, b) => a.month.localeCompare(b.month))
+    const last = sorted[sorted.length - 1]
+    const prev = sorted.slice(Math.max(0, sorted.length - 4), sorted.length - 1)
+    if (!last || prev.length === 0) return null
+    const avg = prev.reduce((acc, e) => acc + e.total, 0) / prev.length
+    if (avg <= 0) return null
+    const diff = last.total - avg
+    const pct = (diff / avg) * 100
+    const monthsLabel = prev.length === 1 ? 'el mes anterior' : `los ${prev.length} meses anteriores`
+    if (Math.abs(pct) < 5) {
+      return {
+        text: `Este mes vas en línea con la media de ${monthsLabel} (${formatCurrency(avg)}).`,
+        tone: 'neutral' as const,
+      }
+    }
+    if (diff > 0) {
+      return {
+        text: `Este mes llevas ${formatCurrency(diff)} más que la media de ${monthsLabel} (${formatCurrency(avg)}).`,
+        tone: 'up' as const,
+      }
+    }
+    return {
+      text: `Este mes llevas ${formatCurrency(Math.abs(diff))} menos que la media de ${monthsLabel} (${formatCurrency(avg)}).`,
+      tone: 'down' as const,
+    }
+  }, [monthlySpending])
+
   // Build historical data from monthlySpending (last 6 months)
   const historyData = useMemo(() => {
     if (!monthlySpending || monthlySpending.length === 0) return []
@@ -192,6 +222,25 @@ export function SpendingTrend() {
           </button>
         </div>
       </div>
+
+      {/* Insight mes a mes */}
+      {insight && (
+        <div className="mx-2 mb-2 flex items-start gap-1.5 rounded-md bg-sand/60 px-2 py-1.5">
+          <Sparkles
+            size={11}
+            strokeWidth={1.75}
+            className={`mt-px flex-shrink-0 ${
+              insight.tone === 'up'
+                ? 'text-red-500'
+                : insight.tone === 'down'
+                  ? 'text-emerald-600'
+                  : 'text-text-tertiary'
+            }`}
+            aria-hidden="true"
+          />
+          <p className="text-[10px] leading-snug text-text-secondary">{insight.text}</p>
+        </div>
+      )}
 
       {activeTab === 'projection' ? (
         <>
