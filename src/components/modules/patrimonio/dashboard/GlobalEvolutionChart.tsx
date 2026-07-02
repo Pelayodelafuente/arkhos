@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AreaChart,
   Area,
@@ -45,8 +45,18 @@ function EmptyState() {
 // GlobalEvolutionChart — fusión TR + Indexa (preparado para más plataformas)
 // ---------------------------------------------------------------------------
 
+type BenchmarkIndex = "none" | "sp500" | "world";
+
+const BENCHMARK_LABELS: Record<Exclude<BenchmarkIndex, "none">, string> = {
+  sp500: "S&P 500",
+  world: "MSCI World",
+};
+
 export function GlobalEvolutionChart() {
   const [period, setPeriod] = useState<"3M" | "6M" | "1A" | "Todo">("Todo");
+  const [benchmark, setBenchmark] = useState<BenchmarkIndex>("none");
+  const [benchPrices, setBenchPrices] = useState<Map<string, number> | null>(null);
+  const benchCache = useRef<Partial<Record<Exclude<BenchmarkIndex, "none">, Map<string, number>>>>({});
   // ── TR (snapshots mensuales) ─────────────────────────────────────────────
   const trSnapshots = usePatrimonioStore((s) => s.snapshots);
   const trOverview = usePatrimonioStore((s) => s.overview);
@@ -274,6 +284,58 @@ export function GlobalEvolutionChart() {
     return points;
   }, [trByMonth, indexaByMonth, horosByMonth, cryptoByMonth, mintosByMonth, cryptoOverview, mintosOverview, liveInvested, liveTotalValue]);
 
+  // ── Benchmark: cierres mensuales EUR del índice seleccionado ─────────────
+  useEffect(() => {
+    if (benchmark === "none") {
+      setBenchPrices(null);
+      return;
+    }
+    const cached = benchCache.current[benchmark];
+    if (cached) {
+      setBenchPrices(cached);
+      return;
+    }
+    let cancelled = false;
+    fetch(`/api/patrimonio/benchmark?index=${benchmark}`)
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error(String(res.status)))))
+      .then((json: { prices: { month: string; close: number }[] }) => {
+        if (cancelled) return;
+        const map = new Map(json.prices.map((p) => [p.month, p.close]));
+        benchCache.current[benchmark] = map;
+        setBenchPrices(map);
+      })
+      .catch(() => {
+        if (!cancelled) setBenchPrices(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [benchmark]);
+
+  // ── Simulación DCA: mismas aportaciones mensuales compradas al índice ────
+  const dataWithBenchmark = useMemo(() => {
+    if (benchmark === "none" || !benchPrices || benchPrices.size === 0) return data;
+    const sortedMonths = [...benchPrices.keys()].sort();
+    const closeFor = (key: string): number | null => {
+      if (benchPrices.has(key)) return benchPrices.get(key)!;
+      // cierre más cercano anterior; si no hay, el primero disponible
+      const prev = sortedMonths.filter((m) => m <= key);
+      const pick = prev.length > 0 ? prev[prev.length - 1] : sortedMonths[0];
+      return pick ? benchPrices.get(pick)! : null;
+    };
+
+    let shares = 0;
+    let prevInvested = 0;
+    return data.map((p) => {
+      const close = closeFor(p.key);
+      if (close === null) return p;
+      const delta = p.invested - prevInvested;
+      prevInvested = p.invested;
+      shares += delta / close;
+      return { ...p, benchmark: parseFloat((shares * close).toFixed(2)) };
+    });
+  }, [data, benchmark, benchPrices]);
+
   const cutoffDate = useMemo(() => {
     const now = new Date();
     switch (period) {
@@ -285,9 +347,9 @@ export function GlobalEvolutionChart() {
   }, [period]);
 
   const filteredData = useMemo(() => {
-    if (!cutoffDate) return data;
-    return data.filter(p => p.key >= cutoffDate);
-  }, [data, cutoffDate]);
+    if (!cutoffDate) return dataWithBenchmark;
+    return dataWithBenchmark.filter(p => p.key >= cutoffDate);
+  }, [dataWithBenchmark, cutoffDate]);
 
   // Bug #6: Crypto y Mintos no tienen histórico de valor de mercado: los meses
   // previos muestran coste y solo el último punto usa valor de mercado live.
@@ -308,7 +370,7 @@ export function GlobalEvolutionChart() {
       subtitle="TR · Indexa · Horos · Mintos · Crypto — histórico acumulado"
       className="overflow-hidden"
       actions={
-        <div className="flex gap-1">
+        <div className="flex flex-wrap justify-end gap-1">
           {(["3M", "6M", "1A", "Todo"] as const).map((p) => (
             <button
               key={p}
@@ -323,6 +385,24 @@ export function GlobalEvolutionChart() {
               aria-pressed={period === p}
             >
               {p}
+            </button>
+          ))}
+          <span className="mx-0.5 w-px self-stretch" style={{ backgroundColor: "var(--border)" }} aria-hidden="true" />
+          {(["sp500", "world"] as const).map((b) => (
+            <button
+              key={b}
+              type="button"
+              onClick={() => setBenchmark((cur) => (cur === b ? "none" : b))}
+              title={`Comparar con ${BENCHMARK_LABELS[b]} (misma aportación mensual)`}
+              className="rounded-md px-2.5 py-1 font-mono text-xs font-medium transition-colors"
+              style={{
+                backgroundColor: benchmark === b ? "var(--module-mercados)" : "var(--bg-sand)",
+                color: benchmark === b ? "#fff" : "var(--text-tertiary)",
+                border: `1px solid ${benchmark === b ? "var(--module-mercados)" : "var(--border)"}`,
+              }}
+              aria-pressed={benchmark === b}
+            >
+              {BENCHMARK_LABELS[b]}
             </button>
           ))}
         </div>
@@ -365,7 +445,15 @@ export function GlobalEvolutionChart() {
             content={(props) => (
               <ChartTooltip
                 {...(props as unknown as ChartTooltipProps)}
-                nameFormatter={(name) => (name === "value" ? "Patrimonio" : "Invertido")}
+                nameFormatter={(name) =>
+                  name === "value"
+                    ? "Patrimonio"
+                    : name === "benchmark"
+                      ? benchmark !== "none"
+                        ? BENCHMARK_LABELS[benchmark]
+                        : "Índice"
+                      : "Invertido"
+                }
                 valueFormatter={(v) => formatEur(v)}
               />
             )}
@@ -395,6 +483,20 @@ export function GlobalEvolutionChart() {
             activeDot={{ r: 4, fill: "#2E7D6B" }}
             name="value"
           />
+          {benchmark !== "none" && benchPrices && (
+            <Area
+              type="monotone"
+              dataKey="benchmark"
+              {...anim}
+              stroke="var(--module-mercados, #9B7A4A)"
+              strokeWidth={1.5}
+              strokeDasharray="5 3"
+              fill="transparent"
+              dot={false}
+              activeDot={{ r: 3, fill: "var(--module-mercados, #9B7A4A)" }}
+              name="benchmark"
+            />
+          )}
           {showMarketCaveat && lastLabel && (
             <ReferenceLine
               x={lastLabel}
@@ -421,6 +523,12 @@ export function GlobalEvolutionChart() {
           />
         </AreaChart>
       </ResponsiveContainer>
+      {benchmark !== "none" && benchPrices && (
+        <p className="mt-2 text-[10px] leading-snug" style={{ color: "var(--text-tertiary)" }}>
+          La línea punteada simula invertir tus mismas aportaciones mensuales en{" "}
+          {BENCHMARK_LABELS[benchmark]} (ETF UCITS en EUR, cierres mensuales de Yahoo Finance).
+        </p>
+      )}
       {showMarketCaveat && (
         <p className="mt-2 text-[10px] leading-snug" style={{ color: "var(--text-tertiary)" }}>
           El valor de Cripto y Mintos refleja precio de mercado actual desde el último punto
