@@ -13,6 +13,7 @@ import { NotaRapidaPanel } from './nota-rapida-panel'
 import { NotasRecientesPanel } from './notas-recientes-panel'
 import { EvolucionPlataformasPanel } from './evolucion-plataformas-panel'
 import { ProximosPagosPanel } from './proximos-pagos-panel'
+import { HoyPanel } from './hoy-panel'
 import { useDashboardStore } from '@/stores/dashboard-store'
 
 export interface SnapshotData {
@@ -95,9 +96,10 @@ export interface MarketData {
 
 export interface DashboardViewProps {
   userName: string
+  userId: string
 }
 
-export function DashboardView({ userName }: DashboardViewProps) {
+export function DashboardView({ userName, userId }: DashboardViewProps) {
   const data = useDashboardStore((s) => s.data)
   const error = useDashboardStore((s) => s.error)
 
@@ -137,6 +139,7 @@ export function DashboardView({ userName }: DashboardViewProps) {
       />
       <div className="flex-1 min-h-0 overflow-y-auto">
         <div className="p-3 space-y-3 pb-20 lg:pb-28">
+          <HoyPanel userId={userId} />
           <div className="grid grid-cols-1 lg:grid-cols-[3fr_1.4fr_1.6fr] gap-3">
             <PatrimonioPanel snapshots={initialSnapshots} platforms={initialPlatforms} />
             <GastosPanel subscriptions={initialSubscriptions} />

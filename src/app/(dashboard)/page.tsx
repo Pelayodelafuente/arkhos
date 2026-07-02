@@ -10,5 +10,5 @@ export default async function DashboardPage() {
 
   const userName = user.email?.split("@")[0] ?? "Pelayo"
 
-  return <DashboardView userName={userName} />
+  return <DashboardView userName={userName} userId={user.id} />
 }
