@@ -13,14 +13,16 @@ interface ScreenFrameProps {
   w: number;
   h: number;
   accentHex: string;
+  highlighted?: boolean;
 }
 
 const BORDER = 0.045;
 const DEPTH = 0.05;
 
-export function ScreenFrame({ w, h, accentHex }: ScreenFrameProps) {
+export function ScreenFrame({ w, h, accentHex, highlighted = false }: ScreenFrameProps) {
   const outerW = w + BORDER * 2;
   const outerH = h + BORDER * 2;
+  const edgeIntensity = highlighted ? 2.4 : 1.1;
 
   return (
     <group>
@@ -35,7 +37,7 @@ export function ScreenFrame({ w, h, accentHex }: ScreenFrameProps) {
         <meshStandardMaterial color={SALA_COLORS.screenOff} roughness={0.4} metalness={0.1} />
       </mesh>
       {/* Borde emisivo perimetral */}
-      <FrameEdge w={outerW} h={outerH} accentHex={accentHex} />
+      <FrameEdge w={outerW} h={outerH} accentHex={accentHex} intensity={edgeIntensity} />
       {/* Asa inferior (target de drag en F5) */}
       <mesh position={[0, -outerH / 2 - 0.07, 0]}>
         <boxGeometry args={[Math.min(0.6, w * 0.3), 0.045, 0.04]} />
@@ -51,36 +53,46 @@ export function ScreenFrame({ w, h, accentHex }: ScreenFrameProps) {
   );
 }
 
-function FrameEdge({ w, h, accentHex }: { w: number; h: number; accentHex: string }) {
+function FrameEdge({
+  w,
+  h,
+  accentHex,
+  intensity,
+}: {
+  w: number;
+  h: number;
+  accentHex: string;
+  intensity: number;
+}) {
   const t = 0.016;
   return (
     <group position={[0, 0, 0.012]}>
       <mesh position={[0, h / 2, 0]}>
         <boxGeometry args={[w, t, t]} />
-        <EdgeMaterial accentHex={accentHex} />
+        <EdgeMaterial accentHex={accentHex} intensity={intensity} />
       </mesh>
       <mesh position={[0, -h / 2, 0]}>
         <boxGeometry args={[w, t, t]} />
-        <EdgeMaterial accentHex={accentHex} />
+        <EdgeMaterial accentHex={accentHex} intensity={intensity} />
       </mesh>
       <mesh position={[-w / 2, 0, 0]}>
         <boxGeometry args={[t, h, t]} />
-        <EdgeMaterial accentHex={accentHex} />
+        <EdgeMaterial accentHex={accentHex} intensity={intensity} />
       </mesh>
       <mesh position={[w / 2, 0, 0]}>
         <boxGeometry args={[t, h, t]} />
-        <EdgeMaterial accentHex={accentHex} />
+        <EdgeMaterial accentHex={accentHex} intensity={intensity} />
       </mesh>
     </group>
   );
 }
 
-function EdgeMaterial({ accentHex }: { accentHex: string }) {
+function EdgeMaterial({ accentHex, intensity }: { accentHex: string; intensity: number }) {
   return (
     <meshStandardMaterial
       color={SALA_COLORS.screenOff}
       emissive={accentHex}
-      emissiveIntensity={1.1}
+      emissiveIntensity={intensity}
       roughness={0.4}
     />
   );

@@ -10,7 +10,9 @@
 
 import { Html } from "@react-three/drei";
 import type { SalaSlot, SalaWidgetKey } from "@/lib/sala/config";
+import { useSalaStore } from "@/stores/sala-store";
 import { SALA_WIDGETS } from "../widgets/registry";
+import { SlotToolbar } from "./slot-chrome";
 
 /** Píxeles CSS por unidad de escena (drei Html transform: ratio = distanceFactor/400) */
 export const PX_PER_UNIT = 300;
@@ -19,9 +21,13 @@ const DISTANCE_FACTOR = 400 / PX_PER_UNIT;
 const CONTENT_PADDING = 24;
 /** Altura del header del shell (px) */
 const HEADER_PX = 30;
+/** Altura de la barra de acciones bajo la pantalla (px) */
+const TOOLBAR_PX = 30;
 
 export function ScreenContent({ slot, widgetKey }: { slot: SalaSlot; widgetKey: SalaWidgetKey }) {
   const meta = SALA_WIDGETS[widgetKey];
+  const hovered = useSalaStore((s) => s.hoveredSlot === slot.id);
+  const setHoveredSlot = useSalaStore((s) => s.setHoveredSlot);
   const wPx = Math.round(slot.w * PX_PER_UNIT);
   const hPx = Math.round(slot.h * PX_PER_UNIT);
   const Widget = meta.Component;
@@ -30,12 +36,20 @@ export function ScreenContent({ slot, widgetKey }: { slot: SalaSlot; widgetKey: 
     <Html
       transform
       distanceFactor={DISTANCE_FACTOR}
-      position={[0, 0, 0.02]}
+      position={[0, -TOOLBAR_PX / 2 / PX_PER_UNIT, 0.02]}
       zIndexRange={[5, 0]}
-      style={{ width: wPx, height: hPx }}
+      style={{ width: wPx, height: hPx + TOOLBAR_PX }}
     >
-      <div style={{ width: wPx, height: hPx }} className="select-none">
-        <Widget width={wPx - CONTENT_PADDING} height={hPx - HEADER_PX - CONTENT_PADDING} />
+      <div
+        className="relative select-none"
+        style={{ width: wPx, height: hPx + TOOLBAR_PX }}
+        onPointerEnter={() => setHoveredSlot(slot.id)}
+        onPointerLeave={() => setHoveredSlot(null)}
+      >
+        <div style={{ width: wPx, height: hPx }}>
+          <Widget width={wPx - CONTENT_PADDING} height={hPx - HEADER_PX - CONTENT_PADDING} />
+        </div>
+        <SlotToolbar slotId={slot.id} visible={hovered} screenHeight={hPx} />
       </div>
     </Html>
   );

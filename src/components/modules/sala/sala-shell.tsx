@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
+import { useSalaStore } from "@/stores/sala-store";
 import { SalaFallback } from "./sala-fallback";
 
 const SalaExperience = dynamic(
@@ -42,6 +43,17 @@ export function SalaShell() {
   // La detección necesita window: se resuelve tras el primer render (SSR-safe)
   useEffect(() => {
     setMode(detectMode());
+  }, []);
+
+  // Esc: salir del modo foco
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        useSalaStore.getState().setFocusedSlot(null);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
   return (
