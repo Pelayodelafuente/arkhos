@@ -14,12 +14,18 @@ import {
   Settings,
   CreditCard,
   ArrowRight,
+  Sparkles,
+  PenLine,
+  Loader2,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
+import { useNotesStore } from "@/stores/notes-store"
+import { useUIStore } from "@/stores/ui-store"
 
 // ══════════════════════════════════════
 // Command Palette global (F4.4) — ⌘K / Ctrl+K
 // Navegación + búsqueda de notas, proyectos y suscripciones (RLS via cliente browser)
+// + Quick Capture universal: crear nota o agendar con IA desde cualquier pantalla.
 // El estado interno vive en PaletteDialog, que se monta al abrir — así cada
 // apertura arranca limpia sin resets en efectos.
 // ══════════════════════════════════════
@@ -28,9 +34,10 @@ interface PaletteItem {
   id: string
   label: string
   hint: string
-  href: string
+  href?: string
+  action?: "capture-note" | "capture-agenda"
   icon: React.ReactNode
-  group: "Navegación" | "Notas" | "Proyectos" | "Suscripciones"
+  group: "Acciones" | "Navegación" | "Notas" | "Proyectos" | "Suscripciones"
 }
 
 const NAV_ITEMS: PaletteItem[] = [
@@ -73,7 +80,10 @@ function PaletteDialog({ userId, onClose }: { userId: string; onClose: () => voi
   const [query, setQuery] = useState("")
   const [results, setResults] = useState<PaletteItem[]>([])
   const [activeIndex, setActiveIndex] = useState(0)
+  const [capturing, setCapturing] = useState<"note" | "agenda" | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
+  const addNote = useNotesStore((s) => s.addNote)
+  const addToast = useUIStore((s) => s.addToast)
 
   // Búsqueda en DB con debounce
   useEffect(() => {
@@ -146,14 +156,93 @@ function PaletteDialog({ userId, onClose }: { userId: string; onClose: () => voi
     return NAV_ITEMS.filter((i) => i.label.toLowerCase().includes(q))
   }, [query])
 
-  const allItems = useMemo(() => [...filteredNav, ...results], [filteredNav, results])
+  // Quick Capture universal: con texto libre, ofrecer crear nota o agendar con IA
+  const captureItems = useMemo<PaletteItem[]>(() => {
+    const q = query.trim()
+    if (q.length < 3) return []
+    const short = q.length > 60 ? `${q.slice(0, 60)}…` : q
+    return [
+      {
+        id: "capture-note",
+        label: `Crear nota: «${short}»`,
+        hint: "Captura",
+        action: "capture-note",
+        icon: <PenLine size={15} />,
+        group: "Acciones",
+      },
+      {
+        id: "capture-agenda",
+        label: `Agendar con IA: «${short}»`,
+        hint: "Cronos",
+        action: "capture-agenda",
+        icon: <Sparkles size={15} />,
+        group: "Acciones",
+      },
+    ]
+  }, [query])
+
+  const allItems = useMemo(
+    () => [...filteredNav, ...results, ...captureItems],
+    [filteredNav, results, captureItems]
+  )
+
+  const runCapture = useCallback(
+    async (kind: "note" | "agenda") => {
+      const text = query.trim()
+      if (!text || capturing) return
+      setCapturing(kind)
+      try {
+        if (kind === "note") {
+          const note = await addNote(userId, {
+            title: text.length > 80 ? `${text.slice(0, 80)}…` : text,
+            content: text.length > 80 ? text : "",
+            color: "default",
+            icon: "FileText",
+            tags: [],
+          })
+          // addNote ya lanza su propio toast de éxito/error
+          if (note) onClose()
+        } else {
+          const res = await fetch("/api/agenda/ai", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              message: text,
+              tz_offset_min: -new Date().getTimezoneOffset(),
+            }),
+          })
+          const reply = await res.text()
+          if (res.ok) {
+            addToast(reply.slice(0, 200) || "Hecho", "success")
+            onClose()
+          } else {
+            addToast(reply || "No se pudo agendar", "error")
+          }
+        }
+      } catch {
+        addToast("Error en la captura rápida", "error")
+      } finally {
+        setCapturing(null)
+      }
+    },
+    [query, capturing, addNote, addToast, onClose, userId]
+  )
 
   const select = useCallback(
     (item: PaletteItem) => {
+      if (item.action === "capture-note") {
+        void runCapture("note")
+        return
+      }
+      if (item.action === "capture-agenda") {
+        void runCapture("agenda")
+        return
+      }
+      if (!item.href) return
       onClose()
       router.push(item.href)
     },
-    [router, onClose]
+    [router, onClose, runCapture]
   )
 
   // Navegación con teclado dentro de la paleta
@@ -202,7 +291,7 @@ function PaletteDialog({ userId, onClose }: { userId: string; onClose: () => voi
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={onInputKeyDown}
-            placeholder="Buscar notas, proyectos, suscripciones…"
+            placeholder="Buscar… o escribe algo para capturarlo (nota / agenda)"
             aria-label="Buscar en Arkhos"
             className="h-12 w-full bg-transparent text-sm text-foreground outline-none placeholder:text-text-tertiary"
           />
@@ -232,17 +321,24 @@ function PaletteDialog({ userId, onClose }: { userId: string; onClose: () => voi
                   data-index={index}
                   role="option"
                   aria-selected={index === activeIndex}
+                  disabled={capturing !== null}
                   onMouseEnter={() => setActiveIndex(index)}
                   onClick={() => select(item)}
-                  className={`flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm transition-colors ${
+                  className={`flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm transition-colors disabled:opacity-50 ${
                     index === activeIndex ? "bg-sand text-foreground" : "text-text-secondary"
                   }`}
                 >
                   <span className="text-text-tertiary">{item.icon}</span>
                   <span className="flex-1 truncate">{item.label}</span>
                   <span className="flex items-center gap-1 text-[11px] text-text-tertiary">
-                    {item.hint}
-                    <ArrowRight size={11} aria-hidden />
+                    {capturing !== null && item.action ? (
+                      <Loader2 size={12} className="animate-spin" aria-hidden />
+                    ) : (
+                      <>
+                        {item.hint}
+                        <ArrowRight size={11} aria-hidden />
+                      </>
+                    )}
                   </span>
                 </button>
               </div>
