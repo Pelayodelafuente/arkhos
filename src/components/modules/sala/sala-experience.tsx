@@ -15,6 +15,11 @@ import { Lighting } from "./environment/lighting";
 import { Room } from "./environment/room";
 import { OperatorConsole } from "./environment/console";
 import { SalaEffects } from "./environment/effects";
+import { Nucleo } from "./environment/nucleo";
+import { ServerRacks } from "./environment/server-racks";
+import { Vault } from "./environment/vault";
+import { MarketTicker } from "./environment/ticker";
+import { Atmosphere } from "./environment/atmosphere";
 import { ScreenWall } from "./screens/screen-wall";
 import { CameraRig, CAMERA_INTRO_POS } from "./interaction/camera-rig";
 import { DragController } from "./interaction/drag-controller";
@@ -41,6 +46,11 @@ export function SalaExperience() {
       <Room />
       <OperatorConsole />
       <ScreenWall />
+      <Nucleo reducedMotion={reducedMotion} />
+      <ServerRacks reducedMotion={reducedMotion} />
+      <Vault />
+      <MarketTicker />
+      <Atmosphere reducedMotion={reducedMotion} />
       <DragController />
       <SalaEffects />
     </Canvas>
