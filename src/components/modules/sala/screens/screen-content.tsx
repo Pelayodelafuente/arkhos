@@ -24,7 +24,16 @@ const HEADER_PX = 30;
 /** Altura de la barra de acciones bajo la pantalla (px) */
 const TOOLBAR_PX = 30;
 
-export function ScreenContent({ slot, widgetKey }: { slot: SalaSlot; widgetKey: SalaWidgetKey }) {
+export function ScreenContent({
+  slot,
+  widgetKey,
+  dimmed = false,
+}: {
+  slot: SalaSlot;
+  widgetKey: SalaWidgetKey;
+  /** Atenuado mientras se arrastra esta pantalla */
+  dimmed?: boolean;
+}) {
   const meta = SALA_WIDGETS[widgetKey];
   const hovered = useSalaStore((s) => s.hoveredSlot === slot.id);
   const setHoveredSlot = useSalaStore((s) => s.setHoveredSlot);
@@ -41,8 +50,8 @@ export function ScreenContent({ slot, widgetKey }: { slot: SalaSlot; widgetKey: 
       style={{ width: wPx, height: hPx + TOOLBAR_PX }}
     >
       <div
-        className="relative select-none"
-        style={{ width: wPx, height: hPx + TOOLBAR_PX }}
+        className="relative select-none transition-opacity duration-200"
+        style={{ width: wPx, height: hPx + TOOLBAR_PX, opacity: dimmed ? 0.35 : 1 }}
         onPointerEnter={() => setHoveredSlot(slot.id)}
         onPointerLeave={() => setHoveredSlot(null)}
       >

@@ -13,16 +13,16 @@ interface ScreenFrameProps {
   w: number;
   h: number;
   accentHex: string;
-  highlighted?: boolean;
+  /** Intensidad emisiva del borde (hover/foco/drag la modulan) */
+  edgeIntensity?: number;
 }
 
 const BORDER = 0.045;
 const DEPTH = 0.05;
 
-export function ScreenFrame({ w, h, accentHex, highlighted = false }: ScreenFrameProps) {
+export function ScreenFrame({ w, h, accentHex, edgeIntensity = 1.1 }: ScreenFrameProps) {
   const outerW = w + BORDER * 2;
   const outerH = h + BORDER * 2;
-  const edgeIntensity = highlighted ? 2.4 : 1.1;
 
   return (
     <group>

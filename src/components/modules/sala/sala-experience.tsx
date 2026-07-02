@@ -17,6 +17,7 @@ import { OperatorConsole } from "./environment/console";
 import { SalaEffects } from "./environment/effects";
 import { ScreenWall } from "./screens/screen-wall";
 import { CameraRig, CAMERA_INTRO_POS } from "./interaction/camera-rig";
+import { DragController } from "./interaction/drag-controller";
 
 export function SalaExperience() {
   const reducedMotion = usePrefersReducedMotion();
@@ -40,6 +41,7 @@ export function SalaExperience() {
       <Room />
       <OperatorConsole />
       <ScreenWall />
+      <DragController />
       <SalaEffects />
     </Canvas>
   );

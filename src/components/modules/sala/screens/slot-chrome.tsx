@@ -7,7 +7,7 @@
 // ══════════════════════════════════════
 
 import { useState } from "react";
-import { LayoutGrid, Maximize2, Minimize2, Check } from "lucide-react";
+import { LayoutGrid, Maximize2, Minimize2, Check, GripHorizontal } from "lucide-react";
 import { SALA_WIDGET_KEYS, type SalaSlotId, type SalaWidgetKey } from "@/lib/sala/config";
 import { useSalaStore } from "@/stores/sala-store";
 import { SALA_WIDGETS } from "../widgets/registry";
@@ -24,6 +24,7 @@ export function SlotToolbar({
 }) {
   const focusedSlot = useSalaStore((s) => s.focusedSlot);
   const setFocusedSlot = useSalaStore((s) => s.setFocusedSlot);
+  const setDraggingSlot = useSalaStore((s) => s.setDraggingSlot);
   const [pickerOpen, setPickerOpen] = useState(false);
   const isFocused = focusedSlot === slotId;
 
@@ -33,6 +34,19 @@ export function SlotToolbar({
         className="flex h-[30px] items-center justify-end gap-1.5 pr-1 transition-opacity duration-200"
         style={{ opacity: visible || isFocused || pickerOpen ? 1 : 0 }}
       >
+        <button
+          type="button"
+          aria-label="Arrastrar pantalla"
+          title="Arrastrar a otro slot"
+          onPointerDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setDraggingSlot(slotId);
+          }}
+          className="flex h-6 w-8 cursor-grab items-center justify-center rounded border border-[var(--sala-border)] bg-[rgba(10,10,18,0.85)] text-[var(--sala-text-dim)] transition-colors duration-150 hover:border-[var(--sala-copper)] hover:text-[var(--sala-copper)] active:cursor-grabbing"
+        >
+          <GripHorizontal className="h-3 w-3" />
+        </button>
         <ChromeButton
           label="Cambiar widget"
           onClick={() => setPickerOpen((open) => !open)}

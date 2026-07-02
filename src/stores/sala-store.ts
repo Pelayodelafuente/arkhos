@@ -24,6 +24,8 @@ interface SalaStore {
   hoveredSlot: SalaSlotId | null;
   /** Slot que se está arrastrando (drag & drop del muro) */
   draggingSlot: SalaSlotId | null;
+  /** Slot destino del arrastre actual (candidato a swap) */
+  dropTargetSlot: SalaSlotId | null;
   soundOn: boolean;
   quality: SalaQuality;
   layoutHydrated: boolean;
@@ -35,6 +37,7 @@ interface SalaStore {
   setFocusedSlot: (slot: SalaSlotId | null) => void;
   setHoveredSlot: (slot: SalaSlotId | null) => void;
   setDraggingSlot: (slot: SalaSlotId | null) => void;
+  setDropTargetSlot: (slot: SalaSlotId | null) => void;
   toggleSound: () => void;
   setQuality: (quality: SalaQuality) => void;
 }
@@ -44,6 +47,7 @@ export const useSalaStore = create<SalaStore>((set, get) => ({
   focusedSlot: null,
   hoveredSlot: null,
   draggingSlot: null,
+  dropTargetSlot: null,
   soundOn: false,
   quality: "alta",
   layoutHydrated: false,
@@ -79,6 +83,7 @@ export const useSalaStore = create<SalaStore>((set, get) => ({
   setFocusedSlot: (slot) => set({ focusedSlot: slot }),
   setHoveredSlot: (slot) => set({ hoveredSlot: slot }),
   setDraggingSlot: (slot) => set({ draggingSlot: slot }),
+  setDropTargetSlot: (slot) => set({ dropTargetSlot: slot }),
   toggleSound: () => set((s) => ({ soundOn: !s.soundOn })),
   setQuality: (quality) => set({ quality }),
 }));
