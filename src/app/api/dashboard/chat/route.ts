@@ -8,6 +8,7 @@ import { COPILOT_TOOLS, executeCopilotTool } from '@/lib/ai/copilot-tools'
 
 const bodySchema = z.object({
   message: z.string().min(1).max(2000),
+  tz_offset_min: z.number().int().min(-840).max(840).optional(),
   context: z
     .object({
       patrimonio: z.number().optional(),
@@ -47,19 +48,32 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 })
   }
 
-  const { message, context } = parsed.data
+  const { message, context, tz_offset_min = 0 } = parsed.data
+
+  // Fecha/hora local del usuario para resolver "mañana", "el viernes", etc.
+  const nowLocal = new Date(Date.now() + tz_offset_min * 60000)
+  const nowNaive = nowLocal.toISOString().slice(0, 19)
+  const weekday = new Intl.DateTimeFormat('es-ES', { weekday: 'long', timeZone: 'UTC' }).format(
+    nowLocal
+  )
 
   const systemPrompt = `Eres el AI Copiloto de Arkhos, la plataforma personal de Pelayo.
+Ahora mismo es ${weekday}, ${nowNaive} (hora local del usuario).
 Contexto actual:
 - Patrimonio total: ${context?.patrimonio != null ? `€${context.patrimonio.toLocaleString('es-ES', { maximumFractionDigits: 0 })}` : 'no disponible'}
 - Gasto mensual en suscripciones: ${context?.gastos != null ? `€${context.gastos.toFixed(0)}` : 'no disponible'}
 - Proyectos activos: ${context?.projects ?? 'desconocido'}
-Tienes herramientas para consultar los datos reales de Pelayo (gastos por mes,
-suscripciones, patrimonio, proyectos). Úsalas cuando la pregunta dependa de
-datos concretos en lugar de estimar.
+Tienes herramientas de consulta (gastos por mes, suscripciones, patrimonio,
+proyectos) y de acción (crear evento en Cronos, crear nota, registrar
+suscripción, completar tarea). Úsalas cuando la petición dependa de datos
+concretos o pida crear/registrar/completar algo — no estimes ni finjas.
+Para eventos, trabaja en hora local naive "YYYY-MM-DDTHH:mm:ss" y resuelve
+fechas relativas respecto a la fecha actual. Para completar una tarea, primero
+localízala con list_pending_tasks.
 Responde siempre en español. Sé directo y específico. Máximo 200 palabras.`
 
   const anthropicClient = new Anthropic({ apiKey })
+  let mutated = false
 
   try {
     // F4.2 — loop agéntico manual: las tools se ejecutan server-side con el
@@ -92,7 +106,14 @@ Responde siempre en español. Sé directo y específico. Máximo 200 palabras.`
 
       const results: Anthropic.ToolResultBlockParam[] = []
       for (const toolUse of toolUses) {
-        const result = await executeCopilotTool(supabase, user.id, toolUse.name, toolUse.input)
+        const result = await executeCopilotTool(
+          supabase,
+          user.id,
+          toolUse.name,
+          toolUse.input,
+          tz_offset_min
+        )
+        if (result.mutated) mutated = true
         results.push({
           type: 'tool_result',
           tool_use_id: toolUse.id,
@@ -112,6 +133,7 @@ Responde siempre en español. Sé directo y específico. Máximo 200 palabras.`
       headers: {
         'Content-Type': 'text/plain; charset=utf-8',
         'Cache-Control': 'no-cache',
+        'X-Copilot-Mutated': mutated ? '1' : '0',
       },
     })
   } catch {

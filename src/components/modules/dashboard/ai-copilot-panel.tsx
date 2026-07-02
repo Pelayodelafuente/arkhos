@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Send, Sparkles } from 'lucide-react'
 import { DashboardPanel, PanelHeader, ModuleChip } from './dashboard-view'
+import { loadAppData } from '@/lib/app-data/actions'
+import { hydrateAllStores } from '@/lib/app-data/hydrate-stores'
 import type { ProjectData, SnapshotData, SubscriptionData } from './dashboard-view'
 
 interface AICopilotPanelProps {
@@ -108,6 +110,7 @@ export function AICopilotPanel({ projects, snapshots, subscriptions }: AICopilot
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             message: trimmed,
+            tz_offset_min: -new Date().getTimezoneOffset(),
             context: {
               patrimonio,
               gastos,
@@ -129,6 +132,16 @@ export function AICopilotPanel({ projects, snapshots, subscriptions }: AICopilot
           setMessages((prev) =>
             prev.map((m) => (m.id === assistantId ? { ...m, content: accumulated } : m))
           )
+        }
+
+        // Si el copiloto ejecutó una acción de escritura, rehidratar los stores
+        // (misma vía que la megacarga) para que la UI refleje el cambio al momento
+        if (res.headers.get('X-Copilot-Mutated') === '1') {
+          try {
+            hydrateAllStores(await loadAppData())
+          } catch {
+            // fallo no crítico: los datos se refrescarán en el próximo login
+          }
         }
       } catch {
         setMessages((prev) =>
