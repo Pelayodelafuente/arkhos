@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { configureWebPush, sendPush, type PushSub } from "@/lib/agenda/push"
+import { expandEvents } from "@/lib/agenda/expand"
+import type { AgendaEvent } from "@/types/agenda"
 
 export const maxDuration = 60
 
@@ -45,25 +47,36 @@ export async function GET(req: NextRequest) {
 
   let sent = 0
 
+  const horizonDate = new Date(horizon)
+
   for (const [userId, userSubs] of byUser) {
+    // Únicos que solapan la ventana + todos los recurrentes (la RRULE puede
+    // caer dentro) — mismo criterio que getEvents; se expanden a ocurrencias.
     const { data: events } = await admin
       .from("agenda_events")
-      .select("title, start_time, is_all_day")
+      .select(
+        "id, user_id, title, description, start_time, end_time, is_all_day, location, color, recurrence_rule, reminders, source, linked_task_id, completed, metadata, created_at, updated_at"
+      )
       .eq("user_id", userId)
-      .is("recurrence_rule", null)
-      .gte("start_time", now.toISOString())
-      .lte("start_time", horizon)
-      .order("start_time", { ascending: true })
+      .or(
+        `and(start_time.lte.${horizon},end_time.gte.${now.toISOString()}),recurrence_rule.not.is.null`
+      )
 
     if (!events?.length) continue
 
-    const lines = events.slice(0, 4).map((e) => {
-      const when = e.is_all_day ? "Todo el día" : timeFmt.format(new Date(e.start_time))
-      return `${when} ${e.title}`
+    const items = expandEvents(events as unknown as AgendaEvent[], now, horizonDate)
+      // Próximos (o de día completo aún en curso), sin los ya completados
+      .filter((i) => !i.completed && (i.allDay ? new Date(i.end) >= now : new Date(i.start) >= now))
+
+    if (items.length === 0) continue
+
+    const lines = items.slice(0, 4).map((i) => {
+      const when = i.allDay ? "Todo el día" : timeFmt.format(new Date(i.start))
+      return `${when} ${i.title}`
     })
-    const extra = events.length > 4 ? ` +${events.length - 4} más` : ""
+    const extra = items.length > 4 ? ` +${items.length - 4} más` : ""
     const body = lines.join(" · ") + extra
-    const title = `Hoy: ${events.length} ${events.length === 1 ? "evento" : "eventos"}`
+    const title = `Hoy: ${items.length} ${items.length === 1 ? "evento" : "eventos"}`
 
     for (const sub of userSubs) {
       const res = await sendPush(sub, { title, body, url: "/agenda" })
