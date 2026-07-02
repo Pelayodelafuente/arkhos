@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useMemo } from "react"
-import { X, Trash2, Archive, ArchiveRestore, History, RotateCcw, Link2, ArrowRight, Unlink, ChevronLeft, ChevronDown, FolderKanban, CreditCard, Star, FileText } from "lucide-react"
+import { X, Trash2, Archive, ArchiveRestore, History, RotateCcw, Link2, ArrowRight, Unlink, ChevronLeft, ChevronDown, FolderKanban, CreditCard, Star, FileText, Maximize2, Minimize2 } from "lucide-react"
 import { getLucideIcon, DynamicLucideIcon } from "@/lib/utils/icons"
 import { Button, SelectCustom } from "@/components/ui"
 import { useNotesStore, useAllTags } from "@/stores/notes-store"
@@ -69,6 +69,7 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
   const [status, setStatus] = useState<NoteStatus>('none')
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [showIcons, setShowIcons] = useState(false)
+  const [focusMode, setFocusMode] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
 
@@ -260,14 +261,19 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
     }
   }, [])
 
-  // Escape to close
+  // Escape: primero sale del modo focus, después cierra la nota
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !historyOpen) onClose()
+      if (e.key !== 'Escape' || historyOpen) return
+      if (focusMode) {
+        setFocusMode(false)
+      } else {
+        onClose()
+      }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [onClose, historyOpen])
+  }, [onClose, historyOpen, focusMode])
 
   const handleDelete = async () => {
     if (!note) return
@@ -406,6 +412,14 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
           title="Historial de versiones"
         >
           <History size={14} strokeWidth={1.75} />
+        </button>
+        <button
+          type="button"
+          onClick={() => setFocusMode(true)}
+          className="flex h-7 w-7 items-center justify-center rounded-md text-text-tertiary hover:text-text-secondary hover:bg-sand/60 transition-colors flex-shrink-0"
+          title="Modo focus — escritura a pantalla completa"
+        >
+          <Maximize2 size={14} strokeWidth={1.75} />
         </button>
         {!isMobile && (
           <button
@@ -777,6 +791,54 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
       )}
     </div>
   )
+
+  // Modo focus: solo título + editor, a pantalla completa, sin chrome
+  if (focusMode) {
+    return (
+      <div className="fixed inset-0 z-[70] flex flex-col bg-background">
+        <div className="mx-auto flex w-full max-w-3xl items-center gap-3 px-6 pt-6 pb-3">
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Título de la nota"
+            maxLength={200}
+            className="flex-1 bg-transparent font-heading text-2xl text-foreground outline-none placeholder:text-text-tertiary min-w-0"
+          />
+          {saveStatus !== 'idle' && (
+            <span className={`flex-shrink-0 font-mono text-[10px] transition-opacity duration-500 ${saveStatus === 'saved' ? 'text-[#B07A3A]' : 'text-text-tertiary'}`}>
+              {saveStatus === 'saving' ? 'Guardando…' : 'Guardado ✓'}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={() => setFocusMode(false)}
+            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md text-text-tertiary hover:text-text-secondary hover:bg-sand/60 transition-colors"
+            title="Salir del modo focus (Esc)"
+          >
+            <Minimize2 size={15} strokeWidth={1.75} />
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto">
+          <div className="mx-auto w-full max-w-3xl px-6 pb-16">
+            {note && !note.contentLoaded ? (
+              <div className="space-y-2 py-1 animate-pulse">
+                <div className="h-3 bg-border rounded-md w-3/4" />
+                <div className="h-3 bg-border rounded-md w-full" />
+                <div className="h-3 bg-border rounded-md w-5/6" />
+              </div>
+            ) : (
+              <NoteEditor
+                content={content}
+                onChange={setContent}
+                placeholder="Escribe aquí... usa / para insertar bloques"
+              />
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   // Mobile: full-screen overlay
   if (isMobile) {
