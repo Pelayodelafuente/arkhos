@@ -12,11 +12,14 @@
   market-refresh, ⌘K global (`CommandPalette`), PWA (sw.js + /offline)
 - Pendiente: acciones de Pelayo (secrets GitHub/Vercel, Sentry DSN, FRED key) y
   decisiones (historial IA, staging, módulo Agenda, CSP nonces) — ver `docs/PENDING-FIXES.md`
-- **Plan de mejoras 2026** — `docs/PLAN_MEJORAS_2026.md`. Bloque 1 ejecutado
-  (2026-07-02): widget Hoy en Dashboard, Quick Capture en ⌘K, presupuestos por
-  categoría en Gastos, insight mes a mes, comparador vs índices + FIRE en
-  Patrimonio, modo focus en Notas, **dock móvil unificado** (BottomNav = misma
-  identidad que BottomDock; drawer lateral y Sidebar eliminados)
+- **Plan de mejoras 2026** — `docs/PLAN_MEJORAS_2026.md`. Bloques 1 y 2
+  ejecutados (2026-07-02): widget Hoy en Dashboard, Quick Capture en ⌘K,
+  presupuestos por categoría en Gastos, insight mes a mes, comparador vs
+  índices + FIRE en Patrimonio, modo focus en Notas, **dock móvil unificado**
+  (BottomNav = misma identidad que BottomDock; drawer y Sidebar eliminados),
+  **copiloto cross-módulo con acciones** (crear evento/nota/suscripción,
+  completar tarea — `src/lib/ai/copilot-tools.ts`) y **búsqueda global FTS**
+  en ⌘K (RPC `global_search`, español, título+contenido)
 
 ## Stack
 | Tecnología | Versión | Nota |
