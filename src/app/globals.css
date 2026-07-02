@@ -129,6 +129,16 @@
   --shadow-modal:      0 8px 40px rgba(42,26,16,0.14), 0 2px 8px rgba(42,26,16,0.08);
   --shadow-terra:      0 4px 20px rgba(196,112,74,0.30);
 
+  /* SALA — centro de mando 3D (paleta cobre-sobre-oscuro, hermana de .auth-dark) */
+  --sala-bg:           #07070F;
+  --sala-copper:       #D4845A;
+  --sala-copper-dark:  #A85C35;
+  --sala-copper-glow:  rgba(212, 132, 90, 0.15);
+  --sala-text:         #F0EDE8;
+  --sala-text-dim:     #8A867E;
+  --sala-surface:      rgba(255, 255, 255, 0.04);
+  --sala-border:       rgba(255, 255, 255, 0.08);
+
   /* ANIMACIONES */
   --ease-out-expo:     cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring:       cubic-bezier(0.34, 1.56, 0.64, 1);
