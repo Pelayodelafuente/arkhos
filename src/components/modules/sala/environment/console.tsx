@@ -36,7 +36,7 @@ function DeskSection({ position, rotationY }: DeskSectionProps) {
       <group position={[0, 0.86, 0]} rotation-x={0.42}>
         <mesh>
           <boxGeometry args={[1.55, 0.055, 0.78]} />
-          <meshStandardMaterial color={SALA_COLORS.metal} roughness={0.45} metalness={0.8} />
+          <meshStandardMaterial color={SALA_COLORS.metalDark} roughness={0.7} metalness={0.5} />
         </mesh>
         {/* Panel de instrumentos (contenido real en F6/F7) */}
         <mesh position={[0, 0.032, -0.04]} rotation-x={-Math.PI / 2}>
@@ -44,9 +44,9 @@ function DeskSection({ position, rotationY }: DeskSectionProps) {
           <meshStandardMaterial
             color={SALA_COLORS.screenOff}
             emissive={SALA_COLORS.copperDark}
-            emissiveIntensity={0.12}
-            roughness={0.6}
-            metalness={0.1}
+            emissiveIntensity={0.05}
+            roughness={0.85}
+            metalness={0.05}
           />
         </mesh>
         {/* Arista de cobre frontal */}

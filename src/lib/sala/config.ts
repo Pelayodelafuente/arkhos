@@ -45,13 +45,13 @@ export interface SalaSlot {
 export const WALL_ARC = { cx: 0, cz: 5, radius: 8.2 } as const;
 
 export const SALA_SLOTS: readonly SalaSlot[] = [
-  { id: "hero-1", angleDeg: -21, y: 2.25, w: 2.55, h: 1.5, tier: "hero" },
-  { id: "hero-2", angleDeg: 0, y: 2.25, w: 2.55, h: 1.5, tier: "hero" },
-  { id: "hero-3", angleDeg: 21, y: 2.25, w: 2.55, h: 1.5, tier: "hero" },
-  { id: "mid-1", angleDeg: -27, y: 0.92, w: 1.72, h: 1.02, tier: "mid" },
-  { id: "mid-2", angleDeg: -9, y: 0.92, w: 1.72, h: 1.02, tier: "mid" },
-  { id: "mid-3", angleDeg: 9, y: 0.92, w: 1.72, h: 1.02, tier: "mid" },
-  { id: "mid-4", angleDeg: 27, y: 0.92, w: 1.72, h: 1.02, tier: "mid" },
+  { id: "hero-1", angleDeg: -21, y: 2.34, w: 2.55, h: 1.5, tier: "hero" },
+  { id: "hero-2", angleDeg: 0, y: 2.34, w: 2.55, h: 1.5, tier: "hero" },
+  { id: "hero-3", angleDeg: 21, y: 2.34, w: 2.55, h: 1.5, tier: "hero" },
+  { id: "mid-1", angleDeg: -27, y: 0.84, w: 1.72, h: 1.02, tier: "mid" },
+  { id: "mid-2", angleDeg: -9, y: 0.84, w: 1.72, h: 1.02, tier: "mid" },
+  { id: "mid-3", angleDeg: 9, y: 0.84, w: 1.72, h: 1.02, tier: "mid" },
+  { id: "mid-4", angleDeg: 27, y: 0.84, w: 1.72, h: 1.02, tier: "mid" },
 ] as const;
 
 export type SalaAssignments = Record<SalaSlotId, SalaWidgetKey>;

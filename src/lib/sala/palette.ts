@@ -23,3 +23,15 @@ export const SALA_COLORS = {
 } as const;
 
 export type SalaColor = (typeof SALA_COLORS)[keyof typeof SALA_COLORS];
+
+/** Colores de módulo (espejo de --module-* en globals.css) para acentos 3D/FUI */
+export const MODULE_HEX = {
+  proyectos: "#C4704A",
+  patrimonio: "#2E7D6B",
+  gastos: "#3B78B0",
+  mercados: "#7260C4",
+  notas: "#B07A3A",
+  agenda: "#8A5A7A",
+} as const;
+
+export type ModuleKey = keyof typeof MODULE_HEX;
