@@ -12,6 +12,7 @@ import {
   Clock,
   Loader2,
   X,
+  type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui";
 import { createClient } from "@/lib/supabase/client";
@@ -27,7 +28,7 @@ interface ActivityViewProps {
 // ─── Action config ────────────────────
 
 interface ActionConfig {
-  icon: React.ElementType;
+  icon: LucideIcon;
   color: string;
   dotColor: string;
   label: (entityName: string | null) => string;

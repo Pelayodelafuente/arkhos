@@ -11,6 +11,7 @@ import {
   Trash2,
   TrendingUp,
   Layers,
+  type LucideIcon,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { getRecentActivity, type ActivityEntry } from "@/lib/supabase/activity";
@@ -35,7 +36,7 @@ const ACTION_LABELS: Record<string, string> = {
 };
 
 interface ActionStyle {
-  icon: React.ElementType;
+  icon: LucideIcon;
   color: string;
 }
 
