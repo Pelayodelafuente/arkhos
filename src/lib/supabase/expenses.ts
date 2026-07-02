@@ -47,7 +47,7 @@ export async function getExpenseCategories(
 ): Promise<ExpenseCategory[]> {
   const { data, error } = await client
     .from('expense_categories')
-    .select('id, user_id, name, icon, color, sort_order, created_at, updated_at')
+    .select('id, user_id, name, icon, color, sort_order, budget, created_at, updated_at')
     .eq('user_id', userId)
     .order('sort_order', { ascending: true })
 
@@ -65,6 +65,7 @@ export async function createExpenseCategory(data: ExpenseCategoryInsert): Promis
       icon: data.icon,
       color: data.color,
       sort_order: data.sort_order ?? 0,
+      budget: data.budget ?? null,
     })
     .select()
     .single()

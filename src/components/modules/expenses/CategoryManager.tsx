@@ -142,6 +142,7 @@ export function CategoryManager({ open, onClose, userId }: CategoryManagerProps)
   const [name, setName] = useState("")
   const [icon, setIcon] = useState("zap")
   const [color, setColor] = useState("#3B78B0")
+  const [budgetInput, setBudgetInput] = useState("")
   const [iconSearch, setIconSearch] = useState("")
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
@@ -157,6 +158,7 @@ export function CategoryManager({ open, onClose, userId }: CategoryManagerProps)
     setName("")
     setIcon("zap")
     setColor("#4A7A9B")
+    setBudgetInput("")
     setIconSearch("")
     setShowForm(false)
     setEditingId(null)
@@ -164,10 +166,12 @@ export function CategoryManager({ open, onClose, userId }: CategoryManagerProps)
 
   const handleSave = async () => {
     if (!name.trim()) return
+    const parsedBudget = parseFloat(budgetInput.replace(",", "."))
+    const budget = !isNaN(parsedBudget) && parsedBudget > 0 ? parsedBudget : null
     if (editingId) {
-      await editCategory(editingId, { name: name.trim(), icon, color })
+      await editCategory(editingId, { name: name.trim(), icon, color, budget })
     } else {
-      await addCategory({ user_id: userId, name: name.trim(), icon, color })
+      await addCategory({ user_id: userId, name: name.trim(), icon, color, budget })
     }
     resetForm()
   }
@@ -177,6 +181,7 @@ export function CategoryManager({ open, onClose, userId }: CategoryManagerProps)
     setName(cat.name)
     setIcon(cat.icon)
     setColor(cat.color)
+    setBudgetInput(cat.budget != null ? String(cat.budget) : "")
     setIconSearch("")
     setShowForm(true)
   }
@@ -259,6 +264,16 @@ export function CategoryManager({ open, onClose, userId }: CategoryManagerProps)
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Nombre de la categoria"
+            />
+
+            <Input
+              label="Presupuesto mensual (€, opcional)"
+              type="number"
+              min="0"
+              step="0.01"
+              value={budgetInput}
+              onChange={(e) => setBudgetInput(e.target.value)}
+              placeholder="Ej. 50 — vacío = sin presupuesto"
             />
 
             {/* Icon picker */}

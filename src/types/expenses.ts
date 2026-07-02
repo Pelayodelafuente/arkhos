@@ -12,6 +12,8 @@ export interface ExpenseCategory {
   icon: string
   color: string
   sort_order: number
+  /** Presupuesto mensual en EUR (null = sin presupuesto) */
+  budget: number | null
   created_at: string
   updated_at: string
 }
@@ -22,6 +24,7 @@ export interface ExpenseCategoryInsert {
   icon: string
   color: string
   sort_order?: number
+  budget?: number | null
 }
 
 export interface ExpenseCategoryUpdate {
@@ -29,6 +32,7 @@ export interface ExpenseCategoryUpdate {
   icon?: string
   color?: string
   sort_order?: number
+  budget?: number | null
 }
 
 // ─── Subscription Status ────────────

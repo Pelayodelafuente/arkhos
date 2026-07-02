@@ -213,6 +213,12 @@ function CategoryView({
           ? activeMonthly + activeQuarterly + activeSemiannual + activeAnnual
           : activeMonthly + activeQuarterly / 3 + activeSemiannual / 6 + activeAnnual / 12
 
+        // El presupuesto es mensual: se compara siempre contra el gasto amortizado
+        const amortizedTotal =
+          activeMonthly + activeQuarterly / 3 + activeSemiannual / 6 + activeAnnual / 12
+        const budget = group.category?.budget ?? null
+        const budgetPct = budget && budget > 0 ? (amortizedTotal / budget) * 100 : null
+
         return (
           <div key={key}>
             {/* Category header */}
@@ -250,6 +256,42 @@ function CategoryView({
                 {formatCurrency(groupTotal)}
               </span>
             </motion.button>
+
+            {/* Presupuesto por categoría: barra de progreso con umbrales 80/100% */}
+            {budgetPct !== null && budget !== null && (
+              <div className="flex items-center gap-2 px-3 pb-2 pt-0.5">
+                <div
+                  className="h-1 flex-1 overflow-hidden rounded-full bg-sand"
+                  role="progressbar"
+                  aria-valuenow={Math.round(budgetPct)}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label={`Presupuesto de ${group.category?.name ?? 'categoría'}`}
+                >
+                  <div
+                    className={`h-full rounded-full transition-all ${
+                      budgetPct >= 100
+                        ? 'bg-red-500'
+                        : budgetPct >= 80
+                          ? 'bg-amber-500'
+                          : 'bg-[var(--module-gastos)]'
+                    }`}
+                    style={{ width: `${Math.min(budgetPct, 100)}%` }}
+                  />
+                </div>
+                <span
+                  className={`flex-shrink-0 font-mono text-[10px] ${
+                    budgetPct >= 100
+                      ? 'text-red-600'
+                      : budgetPct >= 80
+                        ? 'text-amber-600'
+                        : 'text-text-tertiary'
+                  }`}
+                >
+                  {Math.round(budgetPct)}% de {formatCurrency(budget)}
+                </span>
+              </div>
+            )}
 
             {/* Items */}
             <AnimatePresence initial={false}>

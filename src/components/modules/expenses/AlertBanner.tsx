@@ -9,10 +9,17 @@ import { ServiceAvatar } from "./ServiceAvatar"
 
 interface Alert {
   id: string
-  type: 'today' | 'tomorrow' | 'renewal'
+  type: 'today' | 'tomorrow' | 'renewal' | 'budget'
   message: string
   total?: number
   subscriptions: { name: string; icon: string; color: string; amount: number }[]
+}
+
+const CYCLE_MONTHS: Record<string, number> = {
+  monthly: 1,
+  quarterly: 3,
+  semiannual: 6,
+  annual: 12,
 }
 
 const DISMISS_KEY = 'arkhos-gastos-dismissed-alerts'
@@ -35,22 +42,27 @@ const gradientByType = {
   today: 'linear-gradient(90deg, rgba(196,112,74,0.10), rgba(196,112,74,0.03))',
   tomorrow: 'linear-gradient(90deg, rgba(245,158,11,0.10), rgba(245,158,11,0.03))',
   renewal: 'linear-gradient(90deg, rgba(74,122,155,0.10), rgba(74,122,155,0.03))',
+  budget: 'linear-gradient(90deg, rgba(239,68,68,0.10), rgba(239,68,68,0.03))',
 }
 
 const borderByType = {
   today: 'border-accent/30',
   tomorrow: 'border-amber-200',
   renewal: 'border-[rgba(74,122,155,0.3)]',
+  budget: 'border-red-200',
 }
 
 const amountColorByType = {
   today: 'text-accent',
   tomorrow: 'text-amber-600',
   renewal: 'text-[var(--module-gastos)]',
+  budget: 'text-red-600',
 }
 
 export function AlertBanner() {
   const subscriptions = useCycleFilteredSubscriptions()
+  const allSubscriptions = useExpensesStore((s) => s.subscriptions)
+  const categories = useExpensesStore((s) => s.categories)
   const settings = useExpensesStore((s) => s.settings)
 
   const alertEnabled = settings?.alert_enabled ?? true
@@ -125,8 +137,29 @@ export function AlertBanner() {
       }
     }
 
-    return result.slice(0, 2) // Max 2 alerts
-  }, [subscriptions, alertEnabled, alertDaysBefore, alertRenewalDays])
+    // Presupuestos por categoría: aviso al 80% (amber) y al 100% (rojo)
+    const withBudget = categories.filter((c) => c.budget != null && c.budget > 0)
+    for (const cat of withBudget) {
+      const spent = allSubscriptions
+        .filter((s) => s.status === 'active' && s.category_id === cat.id)
+        .reduce((acc, s) => acc + s.amount / (CYCLE_MONTHS[s.cycle] ?? 1), 0)
+      const pct = (spent / (cat.budget as number)) * 100
+      if (pct >= 80) {
+        result.push({
+          id: `budget-${cat.id}-${pct >= 100 ? 'over' : 'warn'}`,
+          type: pct >= 100 ? 'budget' : 'tomorrow',
+          message:
+            pct >= 100
+              ? `«${cat.name}» supera su presupuesto (${formatCurrency(spent)} de ${formatCurrency(cat.budget as number)})`
+              : `«${cat.name}» al ${Math.round(pct)}% de su presupuesto mensual`,
+          total: spent,
+          subscriptions: [],
+        })
+      }
+    }
+
+    return result.slice(0, 3) // Max 3 alerts
+  }, [subscriptions, allSubscriptions, categories, alertEnabled, alertDaysBefore, alertRenewalDays])
 
   const visibleAlerts = alerts.filter((a) => !dismissedIds.has(a.id))
 
