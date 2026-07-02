@@ -58,7 +58,7 @@ interface Props {
 export function CommandPalette({ userId }: Props) {
   const [open, setOpen] = useState(false)
 
-  // Atajo global ⌘K / Ctrl+K
+  // Atajo global ⌘K / Ctrl+K + evento del Topbar móvil (botón de búsqueda)
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
@@ -67,8 +67,13 @@ export function CommandPalette({ userId }: Props) {
       }
       if (e.key === "Escape") setOpen(false)
     }
+    const onOpenEvent = () => setOpen(true)
     window.addEventListener("keydown", onKeyDown)
-    return () => window.removeEventListener("keydown", onKeyDown)
+    window.addEventListener("arkhos:open-palette", onOpenEvent)
+    return () => {
+      window.removeEventListener("keydown", onKeyDown)
+      window.removeEventListener("arkhos:open-palette", onOpenEvent)
+    }
   }, [])
 
   if (!open) return null

@@ -65,8 +65,13 @@ export default async function DashboardLayout({
         <AppDataLoader>{children}</AppDataLoader>
       </main>
 
-      {/* Mobile bottom nav */}
-      <BottomNav />
+      {/* Mobile bottom nav — dock móvil, misma identidad que el BottomDock */}
+      <BottomNav
+        userName={userName}
+        avatarUrl={avatarUrl}
+        initialProjectCount={initialProjectCount}
+        initialNoteCount={initialNoteCount}
+      />
 
       {/* Desktop bottom dock */}
       <BottomDock

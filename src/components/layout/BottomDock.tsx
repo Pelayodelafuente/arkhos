@@ -17,7 +17,7 @@ const SVG = {
   strokeLinejoin: "round" as const,
 };
 
-function IcoDashboard() {
+export function IcoDashboard() {
   const c = "#D4895E";
   return (
     <svg fill="none" width="26" height="26" viewBox="0 0 24 24">
@@ -157,7 +157,7 @@ function IcoHeimer() {
 
 // ─── Module config ────────────────────────────────────────────────────────────
 
-interface ModuleConfig {
+export interface ModuleConfig {
   key: string;
   label: string;
   href: string;
@@ -171,7 +171,7 @@ interface ModuleConfig {
   Icon: React.ComponentType;
 }
 
-const MODULES: ModuleConfig[] = [
+export const MODULES: ModuleConfig[] = [
   {
     key: "proyectos",
     label: "Proyectos",
