@@ -119,7 +119,11 @@ export const createNotesSlice: StateCreator<NotesStore, [], [], NotesSlice> = (s
   addNote: async (userId, data) => {
     try {
       const note = await notesApi.createNote(userId, data)
-      set((s) => ({ notes: [note, ...s.notes] }))
+      set((s) => ({
+        notes: [note, ...s.notes],
+        // Espejo al grafo si está cargado
+        graphNotes: s.graphLoaded ? [note, ...s.graphNotes] : s.graphNotes,
+      }))
       toast('Nota creada', 'success')
       return note
     } catch (e) {
@@ -144,6 +148,14 @@ export const createNotesSlice: StateCreator<NotesStore, [], [], NotesSlice> = (s
           ? { ...n, ...data, word_count: wordCount, updated_at: new Date().toISOString() }
           : n
       ),
+      // Espejo al grafo (título/color/carpeta afectan a nodos)
+      graphNotes: s.graphLoaded
+        ? s.graphNotes.map((n) =>
+            n.id === id
+              ? { ...n, ...data, word_count: wordCount, updated_at: new Date().toISOString() }
+              : n
+          )
+        : s.graphNotes,
     }))
     // Also update in canvasNodes if this note is on the canvas
     set((s) => ({
@@ -187,6 +199,11 @@ export const createNotesSlice: StateCreator<NotesStore, [], [], NotesSlice> = (s
     // Optimistic: remove from canvas immediately regardless of whether note is in store
     set((s) => ({
       notes: note ? s.notes.filter((n) => n.id !== id) : s.notes,
+      // Espejo al grafo: fuera el nodo y sus aristas
+      graphNotes: s.graphLoaded ? s.graphNotes.filter((n) => n.id !== id) : s.graphNotes,
+      graphBacklinks: s.graphLoaded
+        ? s.graphBacklinks.filter((b) => b.source_note_id !== id && b.target_note_id !== id)
+        : s.graphBacklinks,
       trashedNotes: note
         ? [{ ...note, deleted_at: new Date().toISOString() }, ...s.trashedNotes]
         : s.trashedNotes,

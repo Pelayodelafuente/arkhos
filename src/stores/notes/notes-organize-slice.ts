@@ -212,10 +212,22 @@ export const createNotesOrganizeSlice: StateCreator<NotesStore, [], [], NotesOrg
   },
 
   syncBacklinksOnSave: async (noteId, content) => {
-    const { notes } = get()
-    const targetIds = notesApi.parseBacklinksFromContent(content, notes)
+    const { notes, graphLoaded, graphNotes } = get()
+    // Con el grafo cargado, graphNotes tiene TODAS las notas (s.notes está
+    // paginado a 30): los [[links]] a notas antiguas también resuelven
+    const pool = graphLoaded && graphNotes.length > notes.length ? graphNotes : notes
+    const targetIds = notesApi.parseBacklinksFromContent(content, pool)
     await notesApi.syncNoteBacklinks(noteId, targetIds)
     await get().loadNoteLinks(noteId)
+    // Espejo optimista del grafo: la arista aparece sin refetch
+    if (graphLoaded) {
+      set((s) => ({
+        graphBacklinks: [
+          ...s.graphBacklinks.filter((b) => b.source_note_id !== noteId),
+          ...targetIds.map((tid) => ({ source_note_id: noteId, target_note_id: tid })),
+        ],
+      }))
+    }
   },
 
   generateBacklinkEdges: async () => {
