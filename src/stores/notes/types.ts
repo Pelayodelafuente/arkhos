@@ -31,7 +31,7 @@ export interface NotesSlice {
   isLoading: boolean
   searchQuery: string
   activeTag: string | null
-  viewMode: 'list' | 'canvas'
+  viewMode: 'list' | 'canvas' | 'graph'
   sortMode: NoteSortMode
 
   // Split-pane selected note
@@ -65,11 +65,34 @@ export interface NotesSlice {
   // List filters
   setSearchQuery: (q: string) => void
   setActiveTag: (tag: string | null) => void
-  setViewMode: (mode: 'list' | 'canvas') => void
+  setViewMode: (mode: 'list' | 'canvas' | 'graph') => void
   setSortMode: (mode: NoteSortMode) => void
 
   // Split-pane
   setSelectedNoteId: (id: string | null) => void
+}
+
+// ─── Notes graph slice ────────────────
+// Vista grafo de conocimiento: nodos = notas, aristas = backlinks [[wikilink]]
+
+/** Par de backlink tal y como lo devuelve getAllBacklinksForGraph */
+export interface NoteBacklinkPair {
+  source_note_id: string
+  target_note_id: string
+}
+
+export interface NotesGraphSlice {
+  /** Todas las notas activas del usuario (ligeras, sin content, ≤500) */
+  graphNotes: Note[]
+  /** Todos los backlinks del usuario */
+  graphBacklinks: NoteBacklinkPair[]
+  graphLoaded: boolean
+  isGraphLoading: boolean
+
+  loadGraphData: (userId: string, opts?: { force?: boolean }) => Promise<void>
+  invalidateGraph: () => void
+  /** Inserta una graphNote en s.notes si la paginación aún no la trajo (NotePane) */
+  ensureNoteInList: (noteId: string) => void
 }
 
 // ─── Notes organize slice ─────────────
@@ -279,6 +302,7 @@ export interface CanvasInteractionSlice {
 
 export type NotesStore = NotesSlice &
   NotesOrganizeSlice &
+  NotesGraphSlice &
   FoldersSlice &
   CanvasNodesSlice &
   CanvasInteractionSlice

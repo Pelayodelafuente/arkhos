@@ -8,6 +8,7 @@ import { create } from 'zustand'
 import type { NotesStore } from '@/stores/notes/types'
 import { createNotesSlice } from '@/stores/notes/notes-slice'
 import { createNotesOrganizeSlice } from '@/stores/notes/notes-organize-slice'
+import { createNotesGraphSlice } from '@/stores/notes/notes-graph-slice'
 import { createFoldersSlice } from '@/stores/notes/folders-slice'
 import { createCanvasNodesSlice } from '@/stores/notes/canvas-nodes-slice'
 import { createCanvasInteractionSlice } from '@/stores/notes/canvas-interaction-slice'
@@ -15,6 +16,7 @@ import { createCanvasInteractionSlice } from '@/stores/notes/canvas-interaction-
 export const useNotesStore = create<NotesStore>()((...a) => ({
   ...createNotesSlice(...a),
   ...createNotesOrganizeSlice(...a),
+  ...createNotesGraphSlice(...a),
   ...createFoldersSlice(...a),
   ...createCanvasNodesSlice(...a),
   ...createCanvasInteractionSlice(...a),

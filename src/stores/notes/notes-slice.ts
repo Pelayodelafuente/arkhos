@@ -21,10 +21,10 @@ export const createNotesSlice: StateCreator<NotesStore, [], [], NotesSlice> = (s
     if (typeof window === 'undefined') return 'list'
     try {
       const v = localStorage.getItem('arkhos:notes:viewMode')
-      if (v === 'canvas') return v
+      if (v === 'canvas' || v === 'graph') return v
     } catch { /* ignore */ }
     return 'list'
-  })() as 'list' | 'canvas',
+  })() as 'list' | 'canvas' | 'graph',
   sortMode: 'recent' as NoteSortMode,
   selectedNoteId: null,
   notesOffset: 0,
@@ -59,12 +59,18 @@ export const createNotesSlice: StateCreator<NotesStore, [], [], NotesSlice> = (s
     set({ isLoadingMore: true })
     try {
       const more = await notesApi.getNotes(userId, notesOffset)
-      set((s) => ({
-        notes: [...s.notes, ...more],
-        notesOffset: notesOffset + more.length,
-        hasMoreNotes: more.length === notesApi.NOTES_PAGE_SIZE,
-        isLoadingMore: false,
-      }))
+      set((s) => {
+        // Dedupe: ensureNoteInList (grafo) puede haber insertado ya alguna
+        // nota que ahora llega en su página del servidor
+        const seen = new Set(s.notes.map((n) => n.id))
+        const fresh = more.filter((n) => !seen.has(n.id))
+        return {
+          notes: [...s.notes, ...fresh],
+          notesOffset: notesOffset + more.length,
+          hasMoreNotes: more.length === notesApi.NOTES_PAGE_SIZE,
+          isLoadingMore: false,
+        }
+      })
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Error al cargar más notas'
       set({ isLoadingMore: false })

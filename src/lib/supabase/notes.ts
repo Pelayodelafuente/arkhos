@@ -972,6 +972,23 @@ export async function getCanvasNodesForGraph(canvasId: string): Promise<CanvasNo
   return (data ?? []) as CanvasNode[]
 }
 
+/** Todas las notas activas (ligeras, sin content) — nodos del grafo de conocimiento.
+ *  Mismo criterio que getNotesWithoutCanvasNode: activas, no archivadas, cap 500. */
+export async function getNotesForGraph(userId: string): Promise<Note[]> {
+  const client = createClient()
+  const { data, error } = await client
+    .from('notes')
+    .select(NOTE_LIST_FIELDS)
+    .eq('user_id', userId)
+    .eq('archived', false)
+    .is('deleted_at', null)
+    .order('updated_at', { ascending: false })
+    .limit(500)
+
+  if (error) throw new NotesError('Error fetching notes for graph', error.message)
+  return toNoteListItems(data)
+}
+
 /** Todos los backlinks del usuario — para construir el grafo de conocimiento.
  *  RLS de note_backlinks filtra por user_id vía:
  *  source_note_id IN (SELECT id FROM notes WHERE user_id = auth.uid())
