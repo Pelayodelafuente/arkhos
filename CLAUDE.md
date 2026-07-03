@@ -42,7 +42,7 @@
 - Dashboard ✅ — `src/components/modules/dashboard/` — agregado global server-side
 - Proyectos ✅ — `src/components/modules/projects/`
 - Gastos ✅ — `src/components/modules/expenses/`
-- Notas ✅ — `src/components/modules/notes/`
+- Notas ✅ — `src/components/modules/notes/` — 3 vistas: Lista / Canvas / **Grafo** (2026-07-03: d3-force + SVG en `notes/graph/`, backlinks `[[wikilink]]`, slice `notes-graph-slice`; d3 solo carga al abrir el grafo)
 - Patrimonio ✅ — `src/components/modules/patrimonio/` — TR, Indexa, Horos, Crypto, Mintos
 - Mercados ✅ — `src/app/(dashboard)/mercados/` — Fases 0-5 + auditoría v1.1
 - Cronos (Agenda) ✅ — `src/app/(dashboard)/agenda/` — calendario mes/semana/día + agregación cross-módulo (Gastos/Proyectos/Mercados) + IA NL/auto-scheduling + feed ICS (Proton) + Web Push. Color `--module-agenda #8A5A7A`
