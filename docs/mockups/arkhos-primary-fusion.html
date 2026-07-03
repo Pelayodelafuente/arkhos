@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arkhos × Primary — Mockup de fusión del design system</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     PALETA FUSIONADA — Arkhos (estructura) × Primary (color)
+     Neutros: escala l-gray / d-gray del tema Primary (cremas cálidos)
+     Acentos: los 8 colores de Primary con sus escalas 10→40
+     ============================================================ */
+  :root {
+    /* --- Neutros LIGHT (Primary l-gray) --- */
+    --bg-page:      hsl(35, 37%, 92%);   /* l-gray-30 ≈ actual #f2ede6 */
+    --bg-surface:   hsl(36, 38%, 98%);   /* l-gray-10 */
+    --bg-card:      #ffffff;
+    --bg-sand:      hsl(34, 34%, 90%);   /* l-gray-40 */
+    --bg-hover:     hsl(36, 35%, 88%);   /* l-gray-50 */
+    --border:       hsl(37, 38%, 83%);   /* l-gray-60 ≈ actual #E2D9CA */
+    --border-soft:  hsl(36, 35%, 88%);
+    --text-1:       hsl(33, 54%, 17%);   /* l-gray-140 */
+    --text-2:       hsl(36, 32%, 30%);   /* l-gray-120 */
+    --text-3:       hsl(31, 23%, 50%);   /* l-gray-90 */
+
+    /* --- Acento global: naranja Primary (evolución del terracota) --- */
+    --accent:       hsl(21, 81%, 59%);   /* l-orange-20 */
+    --accent-text:  hsl(18, 69%, 50%);   /* l-orange-30 (texto sobre crema) */
+    --accent-dark:  hsl(18, 96%, 35%);   /* l-orange-40 (hover/active) */
+    --accent-soft:  hsla(27, 100%, 50%, 0.12);
+
+    /* --- Módulos (light) --- */
+    --m-proyectos:  hsl(21, 81%, 59%);   /* orange  — antes #C4704A */
+    --m-gastos:     hsl(206, 57%, 44%);  /* blue    — antes #3B78B0 */
+    --m-patrimonio: hsl(149, 50%, 39%);  /* green   — antes #2E7D6B */
+    --m-mercados:   hsl(249, 39%, 60%);  /* purple  — antes #7260C4 */
+    --m-notas:      hsl(40, 79%, 47%);   /* yellow  — antes #B07A3A */
+    --m-agenda:     hsl(351, 44%, 61%);  /* pink    — antes #8A5A7A */
+    --m-sala:       hsl(178, 39%, 49%);  /* cyan    — nuevo, antes cobre */
+
+    /* --- Semánticos --- */
+    --ok:      hsl(148, 48%, 47%);
+    --ok-bg:   hsla(148, 48%, 47%, 0.12);
+    --err:     hsl(4, 72%, 55%);
+    --err-bg:  hsla(4, 72%, 55%, 0.10);
+    --warn:    hsl(40, 79%, 47%);
+    --warn-bg: hsla(43, 83%, 57%, 0.15);
+
+    /* --- Financieros --- */
+    --gain:    hsl(149, 50%, 39%);
+    --loss:    hsl(4, 56%, 48%);
+    --neutral-fin: hsl(40, 98%, 36%);
+
+    --radius: 10px;
+    --font-display: 'DM Serif Display', serif;
+    --font-ui: 'Plus Jakarta Sans', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  /* --- Neutros y acentos DARK (Primary d-gray / d-*) --- */
+  .dark {
+    --bg-page:      hsl(29, 16%, 13%);   /* d-gray-120 */
+    --bg-surface:   hsl(30, 19%, 15%);   /* d-gray-100 */
+    --bg-card:      hsl(33, 20%, 17%);   /* d-gray-90 */
+    --bg-sand:      hsl(28, 22%, 19%);   /* d-gray-80 */
+    --bg-hover:     hsl(31, 27%, 25%);   /* d-gray-70 */
+    --border:       hsl(31, 27%, 25%);
+    --border-soft:  hsl(33, 27%, 21%);
+    --text-1:       hsl(32, 48%, 85%);   /* d-gray-10 */
+    --text-2:       hsl(34, 39%, 74%);   /* d-gray-20 */
+    --text-3:       hsl(35, 27%, 55%);   /* d-gray-40 */
+
+    --accent:       hsl(26, 85%, 58%);   /* d-orange-10 */
+    --accent-text:  hsl(26, 85%, 58%);
+    --accent-dark:  hsl(24, 84%, 50%);
+    --accent-soft:  hsla(27, 100%, 55%, 0.15);
+
+    --m-proyectos:  hsl(26, 85%, 58%);
+    --m-gastos:     hsl(194, 59%, 56%);
+    --m-patrimonio: hsl(152, 51%, 54%);
+    --m-mercados:   hsl(242, 52%, 69%);
+    --m-notas:      hsl(43, 69%, 63%);
+    --m-agenda:     hsl(351, 50%, 66%);
+    --m-sala:       hsl(178, 39%, 55%);
+
+    --ok:      hsl(152, 51%, 54%);
+    --ok-bg:   hsla(152, 51%, 54%, 0.14);
+    --err:     hsl(4, 88%, 61%);
+    --err-bg:  hsla(4, 88%, 61%, 0.14);
+    --warn:    hsl(43, 69%, 63%);
+    --warn-bg: hsla(43, 69%, 63%, 0.14);
+
+    --gain:    hsl(152, 51%, 54%);
+    --loss:    hsl(4, 88%, 61%);
+    --neutral-fin: hsl(43, 69%, 63%);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: var(--font-ui); background: hsl(35, 37%, 92%); color: hsl(33, 54%, 17%); }
+
+  .theme-section { background: var(--bg-page); color: var(--text-1); padding: 48px 5vw 64px; }
+
+  h1 { font-family: var(--font-display); font-size: 42px; font-weight: 400; letter-spacing: -0.5px; }
+  h2 { font-family: var(--font-display); font-size: 26px; font-weight: 400; margin: 44px 0 6px; }
+  h3 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-3); margin: 28px 0 12px; }
+  .sub { color: var(--text-2); font-size: 15px; margin-top: 8px; max-width: 68ch; line-height: 1.55; }
+  .hint { color: var(--text-3); font-size: 12.5px; margin: 4px 0 14px; }
+
+  .theme-tag { display: inline-block; font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    border: 1px solid var(--border); border-radius: 99px; padding: 5px 14px; color: var(--text-3); margin-bottom: 14px; background: var(--bg-surface); }
+
+  /* --- Swatches --- */
+  .swatch-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .swatch { width: 108px; }
+  .swatch .chip { height: 56px; border-radius: 8px; border: 1px solid var(--border); }
+  .swatch .name { font-size: 11.5px; font-weight: 600; margin-top: 6px; }
+  .swatch .val { font-family: var(--font-mono); font-size: 10px; color: var(--text-3); }
+
+  /* --- Mapeo módulos antes/después --- */
+  .map-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+  .map-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+  .map-card .mod-name { font-weight: 700; font-size: 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .map-pair { display: flex; align-items: center; gap: 10px; }
+  .map-pair .dot { width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--border); flex-shrink: 0; }
+  .map-pair .arrow { color: var(--text-3); font-size: 16px; }
+  .map-pair .lbl { font-family: var(--font-mono); font-size: 10px; color: var(--text-3); margin-top: 3px; }
+
+  /* --- Botones --- */
+  .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .btn { font-family: var(--font-ui); font-size: 13.5px; font-weight: 600; padding: 9px 18px; border-radius: 8px;
+    border: 1px solid transparent; cursor: pointer; transition: transform .15s, box-shadow .15s, background .15s; }
+  .btn:hover { transform: translateY(-1px); }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-dark); box-shadow: 0 4px 14px var(--accent-soft); }
+  .btn-secondary { background: var(--bg-card); color: var(--text-1); border-color: var(--border); }
+  .btn-secondary:hover { background: var(--bg-hover); }
+  .btn-ghost { background: transparent; color: var(--text-2); }
+  .btn-ghost:hover { background: var(--bg-hover); }
+  .btn-danger { background: var(--err-bg); color: var(--err); border-color: color-mix(in srgb, var(--err) 35%, transparent); }
+  .btn-sm { font-size: 12px; padding: 6px 12px; }
+
+  /* --- Tabs --- */
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); }
+  .tab { font-size: 13.5px; font-weight: 600; padding: 9px 16px; color: var(--text-3); cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .tab.active { color: var(--accent-text); border-bottom-color: var(--accent); }
+  .tab:hover:not(.active) { color: var(--text-1); }
+
+  /* --- Segmented control (selector de vista) --- */
+  .segmented { display: inline-flex; background: var(--bg-sand); border: 1px solid var(--border); border-radius: 9px; padding: 3px; gap: 2px; }
+  .seg { font-size: 12.5px; font-weight: 600; padding: 6px 14px; border-radius: 7px; color: var(--text-3); cursor: pointer; }
+  .seg.active { background: var(--bg-card); color: var(--text-1); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+
+  /* --- Inputs --- */
+  .field { display: flex; flex-direction: column; gap: 5px; min-width: 210px; }
+  .field label { font-size: 12px; font-weight: 600; color: var(--text-2); }
+  .input, .select { font-family: var(--font-ui); font-size: 13.5px; padding: 9px 12px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--bg-card); color: var(--text-1); outline: none; }
+  .input:focus, .select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+  /* --- Badges --- */
+  .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; padding: 4px 11px; border-radius: 99px; }
+  .badge .bdot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+  /* --- Cards / widgets --- */
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; border-top: 3px solid var(--card-color, var(--border)); }
+  .card .k { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-3); }
+  .card .v { font-family: var(--font-mono); font-size: 30px; font-weight: 600; margin: 8px 0 2px; }
+  .card .d { font-size: 12.5px; color: var(--text-3); }
+  .spark { display: flex; align-items: flex-end; gap: 4px; height: 44px; margin-top: 14px; }
+  .spark i { flex: 1; border-radius: 3px 3px 0 0; background: var(--card-color); opacity: .85; }
+  .progress { height: 8px; background: var(--bg-sand); border-radius: 99px; margin-top: 14px; overflow: hidden; }
+  .progress i { display: block; height: 100%; border-radius: 99px; background: var(--card-color); }
+  .task-line { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border-soft); font-size: 13.5px; }
+  .task-line:last-child { border-bottom: 0; }
+  .chk { width: 16px; height: 16px; border-radius: 5px; border: 1.5px solid var(--border); flex-shrink: 0; }
+  .chk.done { background: var(--card-color); border-color: var(--card-color); position: relative; }
+  .chk.done::after { content: '✓'; color: #fff; font-size: 10px; position: absolute; top: 0; left: 3px; }
+  .gain { color: var(--gain); } .loss { color: var(--loss); }
+  .mono { font-family: var(--font-mono); }
+
+  /* --- Topbar demo --- */
+  .topbar { display: flex; align-items: center; gap: 18px; background: var(--bg-surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 12px 20px; }
+  .topbar .logo { font-family: var(--font-display); font-size: 19px; }
+  .topbar .nav { display: flex; gap: 2px; font-size: 13px; font-weight: 600; }
+  .topbar .nav span { padding: 6px 12px; border-radius: 7px; color: var(--text-3); cursor: pointer; }
+  .topbar .nav span.active { color: var(--accent-text); background: var(--accent-soft); }
+  .topbar .cmdk { margin-left: auto; font-family: var(--font-mono); font-size: 11.5px; color: var(--text-3);
+    border: 1px solid var(--border); background: var(--bg-card); border-radius: 7px; padding: 6px 12px; }
+
+  table.demo { border-collapse: collapse; width: 100%; max-width: 620px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; font-size: 13px; }
+  table.demo th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-3); padding: 10px 16px; background: var(--bg-surface); border-bottom: 1px solid var(--border); }
+  table.demo td { padding: 11px 16px; border-bottom: 1px solid var(--border-soft); }
+  table.demo tr:last-child td { border-bottom: 0; }
+
+  .note-box { background: var(--bg-surface); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 8px; padding: 14px 18px; font-size: 13.5px; color: var(--text-2); line-height: 1.6; max-width: 76ch; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════ LIGHT ══════════════════════ -->
+<section class="theme-section">
+  <span class="theme-tag">Modo claro · base l-gray + acentos l-*</span>
+  <h1>Arkhos × Primary</h1>
+  <p class="sub">Fusión del design system: Arkhos conserva su alma —cremas cálidos, DM Serif Display,
+  flat, sin sombras— y adopta la <strong>paleta sistemática del tema Primary</strong> de Obsidian:
+  una escala de neutros cálidos (10→140) y 8 acentos con 4 pasos cada uno, en versión clara y oscura.
+  Resultado: colores más vivos y diferenciables, y modo oscuro nativo gratis.</p>
+
+  <h2>1 · Neutros</h2>
+  <p class="hint">Casi idénticos a los actuales de Arkhos — la transición es invisible en los fondos.</p>
+  <div class="swatch-row">
+    <div class="swatch"><div class="chip" style="background:hsl(36,38%,98%)"></div><div class="name">surface</div><div class="val">l-gray-10</div></div>
+    <div class="swatch"><div class="chip" style="background:hsl(35,37%,92%)"></div><div class="name">bg-page</div><div class="val">l-gray-30</div></div>
+    <div class="swatch"><div class="chip" style="background:hsl(34,34%,90%)"></div><div class="name">bg-sand</div><div class="val">l-gray-40</div></div>
+    <div class="swatch"><div class="chip" style="background:hsl(37,38%,83%)"></div><div class="name">border</div><div class="val">l-gray-60</div></div>
+    <div class="swatch"><div class="chip" style="background:hsl(31,23%,50%)"></div><div class="name">text-muted</div><div class="val">l-gray-90</div></div>
+    <div class="swatch"><div class="chip" style="background:hsl(36,32%,30%)"></div><div class="name">text-2</div><div class="val">l-gray-120</div></div>
+    <div class="swatch"><div class="chip" style="background:hsl(33,54%,17%)"></div><div class="name">text-1</div><div class="val">l-gray-140</div></div>
+  </div>
+
+  <h2>2 · Módulos — antes → después</h2>
+  <p class="hint">Cada módulo mantiene su familia de color actual pero salta al acento equivalente de Primary. Sala gana identidad propia (cyan, el único libre).</p>
+  <div class="map-grid">
+    <div class="map-card"><div class="mod-name"><span class="bdot" style="width:9px;height:9px;border-radius:50%;background:var(--m-proyectos)"></span>Proyectos</div>
+      <div class="map-pair"><div><div class="dot" style="background:#C4704A"></div><div class="lbl">#C4704A</div></div><span class="arrow">→</span><div><div class="dot" style="background:var(--m-proyectos)"></div><div class="lbl">orange</div></div></div></div>
+    <div class="map-card"><div class="mod-name"><span class="bdot" style="width:9px;height:9px;border-radius:50%;background:var(--m-gastos)"></span>Gastos</div>
+      <div class="map-pair"><div><div class="dot" style="background:#3B78B0"></div><div class="lbl">#3B78B0</div></div><span class="arrow">→</span><div><div class="dot" style="background:var(--m-gastos)"></div><div class="lbl">blue</div></div></div></div>
+    <div class="map-card"><div class="mod-name"><span class="bdot" style="width:9px;height:9px;border-radius:50%;background:var(--m-patrimonio)"></span>Patrimonio</div>
+      <div class="map-pair"><div><div class="dot" style="background:#2E7D6B"></div><div class="lbl">#2E7D6B</div></div><span class="arrow">→</span><div><div class="dot" style="background:var(--m-patrimonio)"></div><div class="lbl">green</div></div></div></div>
+    <div class="map-card"><div class="mod-name"><span class="bdot" style="width:9px;height:9px;border-radius:50%;background:var(--m-mercados)"></span>Mercados</div>
+      <div class="map-pair"><div><div class="dot" style="background:#7260C4"></div><div class="lbl">#7260C4</div></div><span class="arrow">→</span><div><div class="dot" style="background:var(--m-mercados)"></div><div class="lbl">purple</div></div></div></div>
+    <div class="map-card"><div class="mod-name"><span class="bdot" style="width:9px;height:9px;border-radius:50%;background:var(--m-notas)"></span>Notas</div>
+      <div class="map-pair"><div><div class="dot" style="background:#B07A3A"></div><div class="lbl">#B07A3A</div></div><span class="arrow">→</span><div><div class="dot" style="background:var(--m-notas)"></div><div class="lbl">yellow</div></div></div></div>
+    <div class="map-card"><div class="mod-name"><span class="bdot" style="width:9px;height:9px;border-radius:50%;background:var(--m-agenda)"></span>Cronos</div>
+      <div class="map-pair"><div><div class="dot" style="background:#8A5A7A"></div><div class="lbl">#8A5A7A</div></div><span class="arrow">→</span><div><div class="dot" style="background:var(--m-agenda)"></div><div class="lbl">pink</div></div></div></div>
+    <div class="map-card"><div class="mod-name"><span class="bdot" style="width:9px;height:9px;border-radius:50%;background:var(--m-sala)"></span>Sala OPS</div>
+      <div class="map-pair"><div><div class="dot" style="background:#D4845A"></div><div class="lbl">cobre</div></div><span class="arrow">→</span><div><div class="dot" style="background:var(--m-sala)"></div><div class="lbl">cyan · nuevo</div></div></div></div>
+    <div class="map-card"><div class="mod-name"><span class="bdot" style="width:9px;height:9px;border-radius:50%;background:var(--accent)"></span>Acento global</div>
+      <div class="map-pair"><div><div class="dot" style="background:#c4704a"></div><div class="lbl">terracota</div></div><span class="arrow">→</span><div><div class="dot" style="background:var(--accent)"></div><div class="lbl">orange-20</div></div></div></div>
+  </div>
+
+  <h2>3 · Componentes unificados</h2>
+
+  <h3>Topbar / navegación</h3>
+  <div class="topbar">
+    <span class="logo">Arkhos</span>
+    <div class="nav">
+      <span class="active">Dashboard</span><span>Proyectos</span><span>Gastos</span><span>Notas</span><span>Patrimonio</span><span>Mercados</span><span>Cronos</span>
+    </div>
+    <span class="cmdk">⌘K&nbsp; Buscar…</span>
+  </div>
+
+  <h3>Botones — una sola familia en toda la app</h3>
+  <div class="row">
+    <button class="btn btn-primary">Guardar cambios</button>
+    <button class="btn btn-secondary">Cancelar</button>
+    <button class="btn btn-ghost">Ver todo</button>
+    <button class="btn btn-danger">Eliminar</button>
+    <button class="btn btn-primary btn-sm">Nuevo +</button>
+    <button class="btn btn-secondary btn-sm">Filtrar</button>
+  </div>
+
+  <h3>Pestañas y selectores de vista</h3>
+  <div class="tabs" style="max-width:520px">
+    <span class="tab active">Resumen</span><span class="tab">Movimientos</span><span class="tab">Presupuestos</span><span class="tab">Suscripciones</span>
+  </div>
+  <div style="height:16px"></div>
+  <div class="row">
+    <div class="segmented"><span class="seg active">Lista</span><span class="seg">Canvas</span><span class="seg">Grafo</span></div>
+    <div class="segmented"><span class="seg">Mes</span><span class="seg active">Semana</span><span class="seg">Día</span></div>
+  </div>
+
+  <h3>Formularios</h3>
+  <div class="row">
+    <div class="field"><label>Nombre del proyecto</label><input class="input" value="Arkhos v2" /></div>
+    <div class="field"><label>Categoría</label><select class="select"><option>Vivienda</option><option>Ocio</option></select></div>
+    <div class="field"><label>Importe</label><input class="input mono" value="1.240,00 €" /></div>
+  </div>
+
+  <h3>Badges por módulo y estado</h3>
+  <div class="row">
+    <span class="badge" style="color:var(--m-proyectos);background:color-mix(in srgb, var(--m-proyectos) 13%, transparent)"><span class="bdot"></span>Proyecto</span>
+    <span class="badge" style="color:var(--m-gastos);background:color-mix(in srgb, var(--m-gastos) 13%, transparent)"><span class="bdot"></span>Gasto</span>
+    <span class="badge" style="color:var(--m-patrimonio);background:color-mix(in srgb, var(--m-patrimonio) 13%, transparent)"><span class="bdot"></span>Patrimonio</span>
+    <span class="badge" style="color:var(--m-mercados);background:color-mix(in srgb, var(--m-mercados) 13%, transparent)"><span class="bdot"></span>Mercados</span>
+    <span class="badge" style="color:var(--m-notas);background:color-mix(in srgb, var(--m-notas) 15%, transparent)"><span class="bdot"></span>Nota</span>
+    <span class="badge" style="color:var(--m-agenda);background:color-mix(in srgb, var(--m-agenda) 13%, transparent)"><span class="bdot"></span>Evento</span>
+    <span class="badge" style="color:var(--ok);background:var(--ok-bg)">✓ Pagado</span>
+    <span class="badge" style="color:var(--warn);background:var(--warn-bg)">Vence pronto</span>
+    <span class="badge" style="color:var(--err);background:var(--err-bg)">Vencido</span>
+  </div>
+
+  <h3>Widgets del Dashboard</h3>
+  <div class="cards">
+    <div class="card" style="--card-color:var(--m-patrimonio)">
+      <div class="k">Patrimonio total</div>
+      <div class="v">48.230 €</div>
+      <div class="d"><span class="gain mono">▲ +2,4%</span> este mes</div>
+      <div class="spark"><i style="height:35%"></i><i style="height:48%"></i><i style="height:42%"></i><i style="height:60%"></i><i style="height:55%"></i><i style="height:72%"></i><i style="height:68%"></i><i style="height:84%"></i><i style="height:100%"></i></div>
+    </div>
+    <div class="card" style="--card-color:var(--m-gastos)">
+      <div class="k">Gastos · Julio</div>
+      <div class="v">612 €</div>
+      <div class="d">Presupuesto: <span class="mono">900 €</span> · quedan <span class="mono">288 €</span></div>
+      <div class="progress"><i style="width:68%"></i></div>
+    </div>
+    <div class="card" style="--card-color:var(--m-proyectos)">
+      <div class="k">Tareas de hoy</div>
+      <div style="margin-top:10px">
+        <div class="task-line"><span class="chk done"></span><s style="color:var(--text-3)">QA sala 3D en prod</s></div>
+        <div class="task-line"><span class="chk"></span>Revisar mockup Primary</div>
+        <div class="task-line"><span class="chk"></span>Excel junio Mintos</div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Tabla financiera</h3>
+  <table class="demo">
+    <tr><th>Activo</th><th>Valor</th><th>Rentab.</th><th>Estado</th></tr>
+    <tr><td>Trade Republic</td><td class="mono">18.420 €</td><td class="mono gain">+12,1%</td><td><span class="badge" style="color:var(--ok);background:var(--ok-bg)">Sync</span></td></tr>
+    <tr><td>Indexa Capital</td><td class="mono">14.850 €</td><td class="mono gain">+6,8%</td><td><span class="badge" style="color:var(--ok);background:var(--ok-bg)">Sync</span></td></tr>
+    <tr><td>Crypto</td><td class="mono">4.310 €</td><td class="mono loss">−3,2%</td><td><span class="badge" style="color:var(--warn);background:var(--warn-bg)">Revisar</span></td></tr>
+  </table>
+</section>
+
+<!-- ══════════════════════ DARK ══════════════════════ -->
+<section class="theme-section dark">
+  <span class="theme-tag">Modo oscuro · base d-gray + acentos d-* (regalo del tema Primary)</span>
+  <h1>El mismo Arkhos, de noche</h1>
+  <p class="sub">Primary trae la escala oscura ya resuelta: marrones cálidos (no grises fríos) que
+  conservan la personalidad de la marca, y acentos recalibrados para fondo oscuro. Esto desbloquea
+  el bloque «modo oscuro» del plan 2026 sin inventar nada.</p>
+
+  <h3>Topbar / navegación</h3>
+  <div class="topbar">
+    <span class="logo">Arkhos</span>
+    <div class="nav">
+      <span class="active">Dashboard</span><span>Proyectos</span><span>Gastos</span><span>Notas</span><span>Patrimonio</span><span>Mercados</span><span>Cronos</span>
+    </div>
+    <span class="cmdk">⌘K&nbsp; Buscar…</span>
+  </div>
+
+  <h3>Botones</h3>
+  <div class="row">
+    <button class="btn btn-primary">Guardar cambios</button>
+    <button class="btn btn-secondary">Cancelar</button>
+    <button class="btn btn-ghost">Ver todo</button>
+    <button class="btn btn-danger">Eliminar</button>
+  </div>
+
+  <h3>Pestañas y selectores</h3>
+  <div class="tabs" style="max-width:520px">
+    <span class="tab active">Resumen</span><span class="tab">Movimientos</span><span class="tab">Presupuestos</span><span class="tab">Suscripciones</span>
+  </div>
+  <div style="height:16px"></div>
+  <div class="row">
+    <div class="segmented"><span class="seg active">Lista</span><span class="seg">Canvas</span><span class="seg">Grafo</span></div>
+    <div class="field"><label>Categoría</label><select class="select"><option>Vivienda</option></select></div>
+  </div>
+
+  <h3>Badges</h3>
+  <div class="row">
+    <span class="badge" style="color:var(--m-proyectos);background:color-mix(in srgb, var(--m-proyectos) 15%, transparent)"><span class="bdot"></span>Proyecto</span>
+    <span class="badge" style="color:var(--m-gastos);background:color-mix(in srgb, var(--m-gastos) 15%, transparent)"><span class="bdot"></span>Gasto</span>
+    <span class="badge" style="color:var(--m-patrimonio);background:color-mix(in srgb, var(--m-patrimonio) 15%, transparent)"><span class="bdot"></span>Patrimonio</span>
+    <span class="badge" style="color:var(--m-mercados);background:color-mix(in srgb, var(--m-mercados) 15%, transparent)"><span class="bdot"></span>Mercados</span>
+    <span class="badge" style="color:var(--m-notas);background:color-mix(in srgb, var(--m-notas) 15%, transparent)"><span class="bdot"></span>Nota</span>
+    <span class="badge" style="color:var(--m-agenda);background:color-mix(in srgb, var(--m-agenda) 15%, transparent)"><span class="bdot"></span>Evento</span>
+  </div>
+
+  <h3>Widgets</h3>
+  <div class="cards">
+    <div class="card" style="--card-color:var(--m-patrimonio)">
+      <div class="k">Patrimonio total</div>
+      <div class="v">48.230 €</div>
+      <div class="d"><span class="gain mono">▲ +2,4%</span> este mes</div>
+      <div class="spark"><i style="height:35%"></i><i style="height:48%"></i><i style="height:42%"></i><i style="height:60%"></i><i style="height:55%"></i><i style="height:72%"></i><i style="height:68%"></i><i style="height:84%"></i><i style="height:100%"></i></div>
+    </div>
+    <div class="card" style="--card-color:var(--m-gastos)">
+      <div class="k">Gastos · Julio</div>
+      <div class="v">612 €</div>
+      <div class="d">Presupuesto: <span class="mono">900 €</span> · quedan <span class="mono">288 €</span></div>
+      <div class="progress"><i style="width:68%"></i></div>
+    </div>
+    <div class="card" style="--card-color:var(--m-mercados)">
+      <div class="k">S&P 500</div>
+      <div class="v">6.412</div>
+      <div class="d"><span class="loss mono">▼ −0,6%</span> hoy</div>
+      <div class="spark"><i style="height:80%"></i><i style="height:88%"></i><i style="height:70%"></i><i style="height:75%"></i><i style="height:62%"></i><i style="height:68%"></i><i style="height:58%"></i><i style="height:64%"></i><i style="height:55%"></i></div>
+    </div>
+  </div>
+
+  <div style="height:34px"></div>
+  <div class="note-box">
+    <strong>Notas de implementación</strong> (si te gusta, siguiente paso):
+    ① las escalas completas (gray 10→140, acentos 10→40, l- y d-) entran en <code>globals.css</code> como tokens base;
+    ② las variables semánticas actuales (<code>--bg-page</code>, <code>--module-*</code>, <code>--color-gain</code>…) pasan a apuntar a esos tokens — los componentes casi no se tocan;
+    ③ se unifican botones/tabs/selectores en <code>@/components/ui</code> con estas recetas;
+    ④ el modo oscuro es un data-attribute que re-mapea las mismas variables (los charts Recharts con hex fijos son el único trabajo manual).
+  </div>
+</section>
+
+</body>
+</html>

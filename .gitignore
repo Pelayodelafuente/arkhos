@@ -87,3 +87,6 @@ docs/*.docx
 /data/
 .playwright-mcp/
 chrome-arkhos/
+
+# Tema Obsidian de referencia (paleta Primary) — solo local
+/Primary/
