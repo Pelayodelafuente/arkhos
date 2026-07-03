@@ -1,8 +1,9 @@
 "use client"
 
 import { useEffect, useState, useCallback, useRef } from "react"
+import dynamic from "next/dynamic"
 import { useSearchParams } from "next/navigation"
-import { Plus, BookOpen, Layout } from "lucide-react"
+import { Plus, BookOpen, Layout, Waypoints } from "lucide-react"
 import { Button } from "@/components/ui"
 import { useNotesStore } from "@/stores/notes-store"
 import { NotesToolbar } from "./NotesToolbar"
@@ -12,6 +13,19 @@ import { NotePane } from "./NotePane"
 import { NotesSidebar } from "./NotesSidebar"
 import { NotesCanvas } from "./canvas/NotesCanvas"
 import type { Note } from "@/types/notes"
+
+// d3 solo entra en el bundle cuando se abre la vista grafo
+const NotesGraphView = dynamic(
+  () => import("./graph/NotesGraphView").then((m) => m.NotesGraphView),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex flex-1 items-center justify-center">
+        <p className="text-sm text-text-tertiary">Cargando grafo…</p>
+      </div>
+    ),
+  }
+)
 
 interface Props {
   userId: string
@@ -104,6 +118,13 @@ export function NotesView({ userId }: Props) {
     setPendingCanvasPos(null)
   }, [pendingCanvasPos, viewMode, addNoteToCanvas, initCanvas, userId])
 
+  // Switch to graph view: la carga (o refresh barato de backlinks) la hace
+  // el propio NotesGraphView al montar
+  const handleSwitchToGraph = useCallback(() => {
+    setViewMode("graph")
+    setSelectedNoteId(null)
+  }, [setViewMode, setSelectedNoteId])
+
   // Switch to canvas view: init once, luego re-sync por si hay notas nuevas
   const handleSwitchToCanvas = useCallback(() => {
     setViewMode("canvas")
@@ -164,6 +185,15 @@ export function NotesView({ userId }: Props) {
                   <Layout size={13} strokeWidth={1.75} />
                   Canvas
                 </button>
+                <button
+                  onClick={handleSwitchToGraph}
+                  className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                    viewMode === "graph" ? "bg-[#B07A3A] text-white shadow-sm" : "text-text-tertiary hover:text-text-secondary"
+                  }`}
+                >
+                  <Waypoints size={13} strokeWidth={1.75} />
+                  Grafo
+                </button>
               </div>
               <Button variant="primary" size="sm" onClick={handleNew}>
                 <Plus size={16} strokeWidth={1.75} />
@@ -216,6 +246,12 @@ export function NotesView({ userId }: Props) {
               onEditNote={handleCanvasEditNote}
               onNewNote={handleCanvasNewNote}
             />
+          </div>
+        )}
+
+        {viewMode === "graph" && (
+          <div className="flex flex-1 min-h-0 flex-col animate-fade-in-up" style={{ animationDelay: "100ms" }}>
+            <NotesGraphView userId={userId} onNewNote={handleNew} />
           </div>
         )}
 

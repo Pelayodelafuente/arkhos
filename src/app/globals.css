@@ -382,6 +382,27 @@ summary,
 }
 
 /* ══════════════════════════════════════
+   Notas — Grafo de conocimiento
+   Labels con halo legible y visibilidad controlada por nivel de zoom
+   (data-zoom lo escribe d3 sin re-render de React).
+   ══════════════════════════════════════ */
+
+.notes-graph .graph-label {
+  paint-order: stroke;
+  stroke: var(--bg-page);
+  stroke-width: 3px;
+  transition: opacity 150ms ease;
+}
+
+.notes-graph [data-zoom="far"] .graph-label {
+  opacity: 0;
+}
+
+.notes-graph [data-zoom="far"] .graph-label.is-priority {
+  opacity: 1;
+}
+
+/* ══════════════════════════════════════
    App — Global Animations
    ══════════════════════════════════════ */
 
