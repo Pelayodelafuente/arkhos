@@ -52,7 +52,7 @@ export function DrawdownChart() {
       title="Drawdown"
       subtitle="Caída desde máximo histórico (sobre curva TWR)"
       actions={
-        <span className="font-mono text-xs font-semibold tabular-nums" style={{ color: "#A32D2D" }}>
+        <span className="font-mono text-xs font-semibold tabular-nums" style={{ color: "var(--color-loss)" }}>
           Máx {formatPct(maxDD, true)}
         </span>
       }
@@ -61,8 +61,8 @@ export function DrawdownChart() {
         <AreaChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 4 }} {...chartProps}>
           <defs>
             <linearGradient id="gradDrawdown" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#A32D2D" stopOpacity={0} />
-              <stop offset="95%" stopColor="#A32D2D" stopOpacity={0.35} />
+              <stop offset="5%" stopColor="var(--color-loss)" stopOpacity={0} />
+              <stop offset="95%" stopColor="var(--color-loss)" stopOpacity={0.35} />
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
@@ -105,12 +105,12 @@ export function DrawdownChart() {
             dataKey="value"
             isAnimationActive={!reduced}
             animationDuration={500}
-            stroke="#A32D2D"
+            stroke="var(--color-loss)"
             strokeWidth={1.5}
             fill="url(#gradDrawdown)"
             baseValue={0}
             dot={false}
-            activeDot={{ r: 4, fill: "#A32D2D" }}
+            activeDot={{ r: 4, fill: "var(--color-loss)" }}
           />
         </AreaChart>
       </ResponsiveContainer>

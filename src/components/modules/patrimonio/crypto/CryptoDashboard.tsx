@@ -150,7 +150,7 @@ function CostBreakdownPanel() {
           description="Cargo por compra/venta en Bit2Me (aprox. 0.95% por operación)"
           amount={exchangeFees}
           total={totalFees}
-          color="#B07A3A"
+          color="var(--module-notas)"
           count={exchangeCount}
         />
         <FeeTypeRow

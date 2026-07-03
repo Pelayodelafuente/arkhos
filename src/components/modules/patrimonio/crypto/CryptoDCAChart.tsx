@@ -16,8 +16,8 @@ import type { CryptoDCAPoint } from "@/types/crypto";
 
 import { formatEur } from "@/lib/utils/format";
 
-const COLOR_BELOW = "#2E7D6B"; // Verde: comprado por debajo del precio actual (barato)
-const COLOR_ABOVE = "#A32D2D"; // Rojo: comprado por encima del precio actual (caro)
+const COLOR_BELOW = "var(--color-gain)"; // Verde: comprado por debajo del precio actual (barato)
+const COLOR_ABOVE = "var(--color-loss)"; // Rojo: comprado por encima del precio actual (caro)
 
 interface CustomTooltipProps {
   active?: boolean;

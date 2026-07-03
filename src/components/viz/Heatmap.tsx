@@ -41,23 +41,15 @@ interface HeatmapProps {
 }
 
 const DEFAULT_SCALE: HeatmapColorScale = {
-  negative: "#A32D2D",
-  zero: "#ECE5DA",
-  positive: "#2E7D6B",
+  negative: "var(--color-loss)",
+  zero: "var(--bg-sand)",
+  positive: "var(--color-gain)",
 };
 
-function hexToRgb(hex: string): [number, number, number] {
-  const n = parseInt(hex.slice(1), 16);
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-}
-
+// Interpolación vía CSS color-mix: acepta hex y var(--token), y así el
+// heatmap sigue el tema claro/oscuro sin resolver colores en JS.
 function mix(a: string, b: string, t: number): string {
-  const A = hexToRgb(a);
-  const B = hexToRgb(b);
-  const r = Math.round(A[0] + (B[0] - A[0]) * t);
-  const g = Math.round(A[1] + (B[1] - A[1]) * t);
-  const bl = Math.round(A[2] + (B[2] - A[2]) * t);
-  return `rgb(${r}, ${g}, ${bl})`;
+  return `color-mix(in srgb, ${b} ${Math.round(t * 100)}%, ${a})`;
 }
 
 interface HoverState {

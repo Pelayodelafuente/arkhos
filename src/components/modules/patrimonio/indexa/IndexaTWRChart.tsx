@@ -45,12 +45,12 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
       <p className="font-semibold mb-1" style={{ color: "var(--text-secondary)" }}>
         {label}
       </p>
-      <p style={{ color: twr >= 0 ? "var(--platform-tr, #2E7D6B)" : "#A32D2D" }}>
+      <p style={{ color: twr >= 0 ? "var(--platform-tr, var(--color-gain))" : "var(--color-loss)" }}>
         TWR cartera: {twr >= 0 ? "+" : ""}
         {twr.toFixed(2)}%
       </p>
       {benchEntry && benchEntry.value != null && (
-        <p style={{ color: "#888780" }}>
+        <p style={{ color: "var(--text-muted)" }}>
           Benchmark: {benchEntry.value >= 0 ? "+" : ""}
           {benchEntry.value.toFixed(2)}%
         </p>
@@ -110,11 +110,11 @@ export function IndexaTWRChart({ data, isLoading }: IndexaTWRChartProps) {
         {hasBenchmark && (
           <div className="flex items-center gap-3 text-xs" style={{ color: "var(--text-muted)" }}>
             <span className="flex items-center gap-1.5">
-              <span className="inline-block h-0.5 w-4 rounded-full" style={{ backgroundColor: "#3B78B0" }} />
+              <span className="inline-block h-0.5 w-4 rounded-full" style={{ backgroundColor: "var(--module-gastos)" }} />
               TWR cartera
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="inline-block w-4" style={{ borderTop: "2px dashed #888780" }} />
+              <span className="inline-block w-4" style={{ borderTop: "2px dashed var(--text-muted)" }} />
               Benchmark
             </span>
           </div>
@@ -157,10 +157,10 @@ export function IndexaTWRChart({ data, isLoading }: IndexaTWRChartProps) {
             dataKey="twr"
             isAnimationActive={!reduced}
             animationDuration={500}
-            stroke="#3B78B0"
+            stroke="var(--module-gastos)"
             strokeWidth={2}
             dot={false}
-            activeDot={{ r: 4, fill: "#3B78B0", strokeWidth: 0 }}
+            activeDot={{ r: 4, fill: "var(--module-gastos)", strokeWidth: 0 }}
             name="twr"
           />
           {hasBenchmark && (
@@ -169,7 +169,7 @@ export function IndexaTWRChart({ data, isLoading }: IndexaTWRChartProps) {
               dataKey="benchmark"
               isAnimationActive={!reduced}
               animationDuration={500}
-              stroke="#888780"
+              stroke="var(--text-muted)"
               strokeWidth={1.5}
               strokeDasharray="4 3"
               dot={false}

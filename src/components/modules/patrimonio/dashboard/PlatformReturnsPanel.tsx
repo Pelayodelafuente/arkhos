@@ -25,7 +25,7 @@ export function PlatformReturnsPanel({ returns }: { returns: PlatformReturn[] })
       <div className="mb-2.5 flex items-center gap-2">
         <span
           className="flex h-6 w-6 items-center justify-center rounded-lg"
-          style={{ backgroundColor: "color-mix(in srgb, #7260C4 12%, transparent)", color: "#7260C4" }}
+          style={{ backgroundColor: "color-mix(in srgb, var(--module-mercados) 12%, transparent)", color: "var(--module-mercados)" }}
           aria-hidden="true"
         >
           <Percent size={13} strokeWidth={1.75} />
@@ -48,7 +48,7 @@ export function PlatformReturnsPanel({ returns }: { returns: PlatformReturn[] })
             </div>
             <span
               className="font-mono text-xs font-semibold tabular-nums"
-              style={{ color: r.value === null ? "var(--text-tertiary)" : r.value >= 0 ? "#2E7D6B" : "#A32D2D" }}
+              style={{ color: r.value === null ? "var(--text-tertiary)" : r.value >= 0 ? "var(--color-gain)" : "var(--color-loss)" }}
             >
               {r.value === null ? "—" : formatPct(r.value, true)}
             </span>

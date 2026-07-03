@@ -15,7 +15,7 @@ import { Plus } from "lucide-react";
 import type { HorosMonthlyPlan, HorosTransaction, HorosProjectionPoint } from "@/types/horos";
 import { RegisterHorosContributionModal } from "./RegisterHorosContributionModal";
 
-const HOROS_COLOR = "#7260C4";
+const HOROS_COLOR = "var(--module-mercados)";
 const GRANATE = "#8B1A2E";
 
 const fmt = (v: number) =>
@@ -275,12 +275,12 @@ export function HorosPlanPanel({ plan, transactions, getProjection }: HorosPlanP
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border-stone, rgba(160,120,80,0.15))" />
                 <XAxis
                   dataKey="label"
-                  tick={{ fontSize: 10, fill: "var(--text-muted, #888780)" }}
+                  tick={{ fontSize: 10, fill: "var(--text-muted, var(--text-muted))" }}
                   tickLine={false}
                   axisLine={false}
                 />
                 <YAxis
-                  tick={{ fontSize: 10, fill: "var(--text-muted, #888780)" }}
+                  tick={{ fontSize: 10, fill: "var(--text-muted, var(--text-muted))" }}
                   tickLine={false}
                   axisLine={false}
                   tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k€`}
@@ -326,7 +326,7 @@ export function HorosPlanPanel({ plan, transactions, getProjection }: HorosPlanP
                 </div>
                 <div className="rounded-lg p-2" style={{ backgroundColor: "var(--bg-page)" }}>
                   <div style={{ color: "var(--text-muted)" }}>Intereses</div>
-                  <div className="font-semibold" style={{ color: "var(--platform-tr, #2E7D6B)" }}>
+                  <div className="font-semibold" style={{ color: "var(--platform-tr, var(--color-gain))" }}>
                     {fmt(projectionData[projectionData.length - 1].interest_earned)}
                   </div>
                 </div>

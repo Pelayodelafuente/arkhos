@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { FileText, Copy, Check } from "lucide-react";
 
-const HOROS_COLOR = "#7260C4";
+const HOROS_COLOR = "var(--module-mercados)";
 
 const fmt = (v: number) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(v);
@@ -91,7 +91,7 @@ A 31/12/2025 (Modelo 714 — Patrimonio):
           <FiscalRow
             label="Revalorización latente"
             value={`+${fmt(fiscalData.unrealizedGain)}`}
-            color="var(--platform-tr, #2E7D6B)"
+            color="var(--platform-tr, var(--color-gain))"
           />
           <FiscalRow label="Cuenta" value={fiscalData.account} />
         </div>
@@ -103,7 +103,7 @@ A 31/12/2025 (Modelo 714 — Patrimonio):
             border: "1px solid rgba(46,125,107,0.15)",
           }}
         >
-          <p className="font-medium mb-0.5" style={{ color: "var(--platform-tr, #2E7D6B)" }}>
+          <p className="font-medium mb-0.5" style={{ color: "var(--platform-tr, var(--color-gain))" }}>
             Sin hecho imponible en 2025
           </p>
           <p style={{ color: "var(--text-secondary)" }}>

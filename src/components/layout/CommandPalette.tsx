@@ -17,8 +17,10 @@ import {
   Sparkles,
   PenLine,
   Loader2,
+  Moon,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
+import { toggleTheme } from "@/lib/theme"
 import { useNotesStore } from "@/stores/notes-store"
 import { useUIStore } from "@/stores/ui-store"
 
@@ -35,7 +37,7 @@ interface PaletteItem {
   label: string
   hint: string
   href?: string
-  action?: "capture-note" | "capture-agenda"
+  action?: "capture-note" | "capture-agenda" | "toggle-theme"
   icon: React.ReactNode
   group: "Acciones" | "Navegación" | "Notas" | "Proyectos" | "Suscripciones" | "Cronos"
 }
@@ -49,6 +51,7 @@ const NAV_ITEMS: PaletteItem[] = [
   { id: "nav-mercados", label: "Mercados", hint: "Ir a", href: "/mercados", icon: <LineChart size={15} />, group: "Navegación" },
   { id: "nav-agenda", label: "Cronos", hint: "Ir a", href: "/agenda", icon: <CalendarDays size={15} />, group: "Navegación" },
   { id: "nav-settings", label: "Ajustes", hint: "Ir a", href: "/settings", icon: <Settings size={15} />, group: "Navegación" },
+  { id: "toggle-theme", label: "Cambiar tema claro/oscuro", hint: "Tema", action: "toggle-theme", icon: <Moon size={15} />, group: "Acciones" },
 ]
 
 interface Props {
@@ -230,6 +233,11 @@ function PaletteDialog({ userId, onClose }: { userId: string; onClose: () => voi
     (item: PaletteItem) => {
       if (item.action === "capture-note") {
         void runCapture("note")
+        return
+      }
+      if (item.action === "toggle-theme") {
+        toggleTheme()
+        onClose()
         return
       }
       if (item.action === "capture-agenda") {

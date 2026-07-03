@@ -124,10 +124,10 @@ export function PatrimonioHero() {
   // el desglose real por plataforma (cada valor ya en %, o null).
   const platformReturns: PlatformReturn[] = [
     { name: "Trade Republic", color: "var(--platform-tr)", metric: "CAGR", value: trCAGR !== null ? trCAGR * 100 : null },
-    { name: "Indexa", color: "#3B78B0", metric: "TWR", value: indexaOverview?.twr_pct ?? null },
-    { name: "Horos", color: "#7260C4", metric: "P&L", value: horosPosition?.unrealized_gain_pct ?? null },
-    { name: "Cripto", color: "#B07A3A", metric: "P&L", value: cryptoOverview?.pl_pct ?? null },
-    { name: "Mintos", color: "#C4704A", metric: "XIRR", value: mintosXirr },
+    { name: "Indexa", color: "var(--module-gastos)", metric: "TWR", value: indexaOverview?.twr_pct ?? null },
+    { name: "Horos", color: "var(--module-mercados)", metric: "P&L", value: horosPosition?.unrealized_gain_pct ?? null },
+    { name: "Cripto", color: "var(--module-notas)", metric: "P&L", value: cryptoOverview?.pl_pct ?? null },
+    { name: "Mintos", color: "var(--accent-terracotta)", metric: "XIRR", value: mintosXirr },
   ];
 
   // ── Deltas ────────────────────────────────────────────────────────────────

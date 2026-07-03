@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui";
 import type { HorosOverview } from "@/types/horos";
 
-const HOROS_COLOR = "#7260C4";
+const HOROS_COLOR = "var(--module-mercados)";
 const GRANATE = "#8B1A2E";
 
 const fmt = (v: number) =>
@@ -60,7 +60,7 @@ export function HorosKPIs({ overview, isLoading }: HorosKPIsProps) {
     );
   }
 
-  const gainColor = overview.unrealized_gain >= 0 ? "var(--platform-tr, #2E7D6B)" : GRANATE;
+  const gainColor = overview.unrealized_gain >= 0 ? "var(--platform-tr, var(--color-gain))" : GRANATE;
 
   return (
     <motion.div

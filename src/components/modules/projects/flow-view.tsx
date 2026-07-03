@@ -123,7 +123,7 @@ export default function FlowView({ phases }: FlowViewProps) {
           {/* Glow filter for active phase */}
           <filter id="glow-active" x="-20%" y="-20%" width="140%" height="140%">
             <feGaussianBlur stdDeviation="3" result="blur" />
-            <feFlood floodColor="#C4704A" floodOpacity="0.15" result="color" />
+            <feFlood floodColor="var(--accent-terracotta)" floodOpacity="0.15" result="color" />
             <feComposite in="color" in2="blur" operator="in" result="shadow" />
             <feMerge>
               <feMergeNode in="shadow" />
@@ -167,7 +167,7 @@ export default function FlowView({ phases }: FlowViewProps) {
             markerHeight="6"
             orient="auto-start-reverse"
           >
-            <path d="M 0 0 L 10 4 L 0 8 Z" fill="#C4704A" />
+            <path d="M 0 0 L 10 4 L 0 8 Z" fill="var(--accent-terracotta)" />
           </marker>
         </defs>
 
@@ -188,7 +188,7 @@ export default function FlowView({ phases }: FlowViewProps) {
 
             const isDone = phase.status === 'done';
             const isActive = phase.status === 'in-progress' || nextPhase.status === 'in-progress';
-            const strokeColor = isDone ? '#22C55E' : isActive ? '#C4704A' : 'rgba(160,120,80,0.35)';
+            const strokeColor = isDone ? '#22C55E' : isActive ? 'var(--accent-terracotta)' : 'rgba(160,120,80,0.35)';
             const markerId = isDone ? 'arrow-done' : isActive ? 'arrow-active' : 'arrow-pending';
 
             return (
@@ -231,7 +231,7 @@ export default function FlowView({ phases }: FlowViewProps) {
               phase.status === 'done'
                 ? '#22C55E'
                 : phase.status === 'in-progress'
-                  ? '#C4704A'
+                  ? 'var(--accent-terracotta)'
                   : 'rgba(160,120,80,0.35)';
             const borderWidth = phase.status === 'pending' ? 1 : 2;
             const isActive = phase.status === 'in-progress';

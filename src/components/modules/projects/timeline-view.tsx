@@ -23,11 +23,11 @@ function formatMonthYear(date: Date): string {
   return date.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' });
 }
 
-const PHASE_COLOR = '#C4704A';
+const PHASE_COLOR = 'var(--accent-terracotta)';
 
 const STATUS_COLORS: Record<string, string> = {
-  todo: '#888780',
-  in_progress: '#C4704A',
+  todo: 'var(--text-muted)',
+  in_progress: 'var(--accent-terracotta)',
   review: '#F59E0B',
   done: '#22C55E',
   blocked: '#EF4444',
@@ -197,7 +197,7 @@ export default function TimelineView({ phases }: TimelineViewProps) {
                     className="flex items-center gap-2 border-r border-border px-3"
                   >
                     <span className="truncate text-xs font-semibold text-foreground">{row.phase.name}</span>
-                    <span className="shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-medium text-white" style={{ backgroundColor: '#C4704A' }}>
+                    <span className="shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-medium text-white" style={{ backgroundColor: 'var(--accent-terracotta)' }}>
                       {row.tasks.length}
                     </span>
                   </div>

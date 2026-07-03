@@ -91,7 +91,7 @@ function ScatterTooltip({ active, payload }: ScatterTooltipProps) {
   if (!point) return null;
 
   const sign = point.y >= 0 ? "+" : "";
-  const color = point.y >= 0 ? "var(--color-gain, #2E7D6B)" : "var(--color-loss, #A32D2D)";
+  const color = point.y >= 0 ? "var(--color-gain, var(--color-gain))" : "var(--color-loss, var(--color-loss))";
 
   return (
     <div

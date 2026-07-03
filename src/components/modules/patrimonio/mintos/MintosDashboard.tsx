@@ -16,7 +16,7 @@ import { MintosImporter } from "./MintosImporter";
 import { MintosOverviewForm } from "./MintosOverviewForm";
 import { MintosHealthForm } from "./MintosHealthForm";
 
-const MINTOS_COLOR = "#C4704A";
+const MINTOS_COLOR = "var(--accent-terracotta)";
 
 const TABS = [
   { id: "dashboard" as const, label: "Resumen" },

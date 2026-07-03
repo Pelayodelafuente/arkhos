@@ -361,7 +361,7 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
                   type="button"
                   onClick={() => { setIcon(iconName); setShowIcons(false) }}
                   className={`flex h-8 w-8 items-center justify-center rounded-md transition-colors ${
-                    icon === iconName ? 'bg-[#B07A3A] text-white' : 'hover:bg-sand text-text-secondary'
+                    icon === iconName ? 'bg-[var(--module-notas)] text-white' : 'hover:bg-sand text-text-secondary'
                   }`}
                 >
                   <IC size={16} strokeWidth={1.75} />
@@ -625,7 +625,7 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
             </div>
             {selectedVersion && (
               <div className="border-t border-border p-3 space-y-2">
-                <div className="rounded-md border border-border bg-[#FAF7F2] p-2.5 max-h-32 overflow-y-auto">
+                <div className="rounded-md border border-border bg-[var(--bg-card-hover)] p-2.5 max-h-32 overflow-y-auto">
                   <p className="text-[12px] font-medium text-foreground mb-1">
                     {selectedVersion.title || 'Sin título'}
                   </p>

@@ -25,7 +25,7 @@ export function PlatformCards() {
             className="rounded-xl border bg-card p-4 text-left transition-all duration-200 hover:scale-[1.01]"
             style={{
               borderColor: isActive ? ps.platform.color : "var(--border)",
-              boxShadow: isActive ? `0 0 0 2px ${ps.platform.color}30` : "none",
+              boxShadow: isActive ? `0 0 0 2px color-mix(in srgb, ${ps.platform.color} 19%, transparent)` : "none",
               cursor: "pointer",
             }}
             aria-pressed={isActive}

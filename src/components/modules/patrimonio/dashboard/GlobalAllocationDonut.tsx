@@ -11,11 +11,11 @@ import { ChartShell, Donut } from "@/components/viz";
 import type { DonutDatum } from "@/components/viz";
 
 const PLATFORM_CONFIG: { slug: string; name: string; color: string }[] = [
-  { slug: "trade-republic", name: "Trade Republic", color: "#2E7D6B" },
-  { slug: "indexa", name: "Indexa Capital", color: "#3B78B0" },
-  { slug: "horos", name: "Horos", color: "#7260C4" },
-  { slug: "mintos", name: "Mintos", color: "#C4704A" },
-  { slug: "crypto", name: "Cripto", color: "#B07A3A" },
+  { slug: "trade-republic", name: "Trade Republic", color: "var(--color-gain)" },
+  { slug: "indexa", name: "Indexa Capital", color: "var(--module-gastos)" },
+  { slug: "horos", name: "Horos", color: "var(--module-mercados)" },
+  { slug: "mintos", name: "Mintos", color: "var(--accent-terracotta)" },
+  { slug: "crypto", name: "Cripto", color: "var(--module-notas)" },
 ];
 
 export function GlobalAllocationDonut() {

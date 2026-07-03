@@ -60,7 +60,7 @@ export function MintosKPIs({ kpis, isLoading }: MintosKPIsProps) {
   }
 
   const gainColor =
-    kpis.net_gain >= 0 ? "var(--color-success, #3B7A57)" : "var(--color-error, #A32D2D)";
+    kpis.net_gain >= 0 ? "var(--color-success, #3B7A57)" : "var(--color-error, var(--color-loss))";
   const xirrValue = kpis.xirr ?? null;
 
   return (

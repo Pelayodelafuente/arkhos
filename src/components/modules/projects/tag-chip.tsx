@@ -18,7 +18,7 @@ export function TagChip({ tag, size = 'sm', onRemove }: TagChipProps) {
         isSm ? 'rounded-full px-1.5 py-0.5 text-[10px]' : 'rounded-md px-2 py-0.5 text-xs'
       }`}
       style={{
-        backgroundColor: `${tag.color}20`,
+        backgroundColor: `color-mix(in srgb, ${tag.color} 13%, transparent)`,
         color: tag.color,
       }}
     >

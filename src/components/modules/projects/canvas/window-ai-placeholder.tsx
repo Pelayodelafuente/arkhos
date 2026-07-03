@@ -10,7 +10,7 @@ export function WindowAIPlaceholder() {
           border: '0.5px solid rgba(196,112,74,0.15)',
         }}
       >
-        <Sparkles className="h-5 w-5" style={{ color: '#C4704A', opacity: 0.6 }} />
+        <Sparkles className="h-5 w-5" style={{ color: 'var(--accent-terracotta)', opacity: 0.6 }} />
       </div>
       <div className="text-center">
         <p className="text-[11px] font-semibold" style={{ color: 'var(--text-secondary)' }}>

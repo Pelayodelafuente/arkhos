@@ -369,10 +369,10 @@ export default function RegisterPage() {
                     style={{
                       border: `1px solid ${selected ? mod.color : "var(--border-stone)"}`,
                       backgroundColor: selected
-                        ? `${mod.color}10`
+                        ? `color-mix(in srgb, ${mod.color} 6%, transparent)`
                         : "rgba(226, 217, 202, 0.2)",
                       boxShadow: selected
-                        ? `0 0 16px ${mod.color}20`
+                        ? `0 0 16px color-mix(in srgb, ${mod.color} 13%, transparent)`
                         : "none",
                     }}
                   >

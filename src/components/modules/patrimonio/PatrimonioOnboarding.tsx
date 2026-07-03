@@ -158,7 +158,7 @@ export function PatrimonioOnboarding() {
               )}
             </Button>
             {status === "error" && (
-              <p className="text-sm text-[#A32D2D]">{message}</p>
+              <p className="text-sm text-[var(--color-loss)]">{message}</p>
             )}
           </>
         )}

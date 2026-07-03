@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { RefreshCw } from "lucide-react";
 import type { HorosOverview } from "@/types/horos";
 
-const HOROS_COLOR = "#7260C4";
+const HOROS_COLOR = "var(--module-mercados)";
 const GRANATE = "#8B1A2E";
 
 const fmt = (v: number) =>
@@ -25,8 +25,8 @@ interface HorosPositionCardProps {
 }
 
 export function HorosPositionCard({ overview, onUpdateNav }: HorosPositionCardProps) {
-  const gainColor = overview.unrealized_gain >= 0 ? "var(--platform-tr, #2E7D6B)" : GRANATE;
-  const navGainColor = overview.nav_gain_per_share >= 0 ? "var(--platform-tr, #2E7D6B)" : GRANATE;
+  const gainColor = overview.unrealized_gain >= 0 ? "var(--platform-tr, var(--color-gain))" : GRANATE;
+  const navGainColor = overview.nav_gain_per_share >= 0 ? "var(--platform-tr, var(--color-gain))" : GRANATE;
   const navDate = new Date(overview.nav_date).toLocaleDateString("es-ES", {
     day: "2-digit",
     month: "2-digit",

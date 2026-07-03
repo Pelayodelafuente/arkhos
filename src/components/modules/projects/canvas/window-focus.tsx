@@ -160,7 +160,7 @@ export function WindowFocus({ userId }: WindowFocusProps) {
   function pillStyle(active: boolean) {
     return {
       background: active ? 'rgba(196,112,74,0.12)' : 'transparent',
-      color: active ? '#C4704A' : 'var(--text-tertiary)',
+      color: active ? 'var(--accent-terracotta)' : 'var(--text-tertiary)',
       border: active ? '0.5px solid rgba(196,112,74,0.35)' : '0.5px solid var(--border-stone)',
     };
   }

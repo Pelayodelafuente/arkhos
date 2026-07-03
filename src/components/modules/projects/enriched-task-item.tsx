@@ -71,10 +71,10 @@ function timeAgo(dateStr: string): string {
 // ─── Priority colors ────────────────
 
 const PRIORITY_COLORS: Record<TaskPriority, string> = {
-  none: "#888780",
+  none: "var(--text-muted)",
   low: "#22C55E",
   medium: "#F59E0B",
-  high: "#C4704A",
+  high: "var(--accent-terracotta)",
 };
 
 // ─── Props ──────────────────────────
@@ -295,7 +295,7 @@ export function EnrichedTaskItem({
                   ""
                 }`}
                 style={{
-                  backgroundColor: `${PRIORITY_COLORS[liveTask.priority]}14`,
+                  backgroundColor: `color-mix(in srgb, ${PRIORITY_COLORS[liveTask.priority]} 8%, transparent)`,
                   color: PRIORITY_COLORS[liveTask.priority],
                 }}
               >

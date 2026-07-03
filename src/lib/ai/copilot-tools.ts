@@ -279,7 +279,7 @@ export async function executeCopilotTool(
         }
 
         let categoryId: string | null = null
-        let categoryColor = '#4A7A9B'
+        let categoryColor = '#3079B0'
         if (i.category_name?.trim()) {
           const { data: cat } = await client
             .from('expense_categories')

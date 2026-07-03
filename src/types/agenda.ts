@@ -86,12 +86,12 @@ export const REMINDER_OPTIONS: { value: number; label: string }[] = [
 ]
 
 /** Color por defecto del módulo (var --module-agenda). */
-export const AGENDA_COLOR = '#8A5A7A'
+export const AGENDA_COLOR = 'var(--module-agenda)'
 
 /** Colores de los eventos virtuales por módulo de origen. */
 export const SOURCE_COLORS: Record<EventSource, string> = {
   native: AGENDA_COLOR,
-  gasto: '#3B78B0',
-  proyecto: '#C4704A',
-  mercado: '#7260C4',
+  gasto: 'var(--module-gastos)',
+  proyecto: 'var(--accent-terracotta)',
+  mercado: 'var(--module-mercados)',
 }

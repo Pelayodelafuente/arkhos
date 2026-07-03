@@ -19,7 +19,7 @@ export function TagManager({ projectId }: TagManagerProps) {
   const removeTag = useProjectsStore((s) => s.removeTag);
 
   const [newName, setNewName] = useState('');
-  const [newColor, setNewColor] = useState('#C4704A');
+  const [newColor, setNewColor] = useState('var(--accent-terracotta)');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [editColor, setEditColor] = useState('');
@@ -29,7 +29,7 @@ export function TagManager({ projectId }: TagManagerProps) {
     if (!newName.trim()) return;
     addTag(projectId, newName.trim(), newColor);
     setNewName('');
-    setNewColor('#C4704A');
+    setNewColor('var(--accent-terracotta)');
   }
 
   function startEdit(tag: { id: string; name: string; color: string }) {

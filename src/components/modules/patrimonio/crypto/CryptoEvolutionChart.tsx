@@ -123,13 +123,13 @@ function EvolutionTooltip({ active, payload, label }: TooltipProps) {
       </p>
       {invested && (
         <p className="font-mono flex justify-between gap-4">
-          <span style={{ color: "#B07A3A" }}>Invertido</span>
+          <span style={{ color: "var(--module-notas)" }}>Invertido</span>
           <span>{formatEur(invested.value)}</span>
         </p>
       )}
       {value && (
         <p className="font-mono flex justify-between gap-4">
-          <span style={{ color: "#2E7D6B" }}>Valor estimado</span>
+          <span style={{ color: "var(--color-gain)" }}>Valor estimado</span>
           <span>{formatEur(value.value)}</span>
         </p>
       )}
@@ -138,7 +138,7 @@ function EvolutionTooltip({ active, payload, label }: TooltipProps) {
           <div style={{ borderTop: "1px solid var(--border-stone, rgba(160,120,80,0.15))", margin: "4px 0" }} />
           <p className="font-mono flex justify-between gap-4">
             <span style={{ color: "var(--text-muted)" }}>P&L acum.</span>
-            <span style={{ color: pl >= 0 ? "#2E7D6B" : "#A32D2D" }}>
+            <span style={{ color: pl >= 0 ? "var(--color-gain)" : "var(--color-loss)" }}>
               {pl >= 0 ? "+" : ""}{formatEur(pl)} ({plPct >= 0 ? "+" : ""}{plPct.toFixed(1)}%)
             </span>
           </p>
@@ -206,7 +206,7 @@ export function CryptoEvolutionChart() {
             {formatEur(last.value)}
           </p>
           {plPct !== null && (
-            <p className="font-mono text-xs tabular-nums" style={{ color: isUp ? "#2E7D6B" : "#A32D2D" }}>
+            <p className="font-mono text-xs tabular-nums" style={{ color: isUp ? "var(--color-gain)" : "var(--color-loss)" }}>
               {isUp ? "+" : ""}{formatEur(pl)} ({plPct >= 0 ? "+" : ""}{plPct.toFixed(2)}%)
             </p>
           )}
@@ -217,24 +217,24 @@ export function CryptoEvolutionChart() {
         <ComposedChart data={data} margin={{ top: 6, right: 4, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id="gradInvCrypto" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#B07A3A" stopOpacity={0.18} />
-              <stop offset="100%" stopColor="#B07A3A" stopOpacity={0.02} />
+              <stop offset="0%" stopColor="var(--module-notas)" stopOpacity={0.18} />
+              <stop offset="100%" stopColor="var(--module-notas)" stopOpacity={0.02} />
             </linearGradient>
             <linearGradient id="gradValCrypto" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#2E7D6B" stopOpacity={0.15} />
-              <stop offset="100%" stopColor="#2E7D6B" stopOpacity={0.01} />
+              <stop offset="0%" stopColor="var(--color-gain)" stopOpacity={0.15} />
+              <stop offset="100%" stopColor="var(--color-gain)" stopOpacity={0.01} />
             </linearGradient>
           </defs>
 
           <XAxis
             dataKey="label"
-            tick={{ fontSize: 10, fill: "var(--text-muted, #888780)" }}
+            tick={{ fontSize: 10, fill: "var(--text-muted, var(--text-muted))" }}
             axisLine={false}
             tickLine={false}
             interval="preserveStartEnd"
           />
           <YAxis
-            tick={{ fontSize: 10, fill: "var(--text-muted, #888780)" }}
+            tick={{ fontSize: 10, fill: "var(--text-muted, var(--text-muted))" }}
             axisLine={false}
             tickLine={false}
             tickFormatter={formatCompact}
@@ -254,21 +254,21 @@ export function CryptoEvolutionChart() {
             type="stepAfter"
             dataKey="invested"
             name="Invertido"
-            stroke="#B07A3A"
+            stroke="var(--module-notas)"
             strokeWidth={1.75}
             fill="url(#gradInvCrypto)"
             dot={false}
-            activeDot={{ r: 3, fill: "#B07A3A" }}
+            activeDot={{ r: 3, fill: "var(--module-notas)" }}
           />
           <Line
             type="monotone"
             dataKey="value"
             name="Valor estimado"
-            stroke="#2E7D6B"
+            stroke="var(--color-gain)"
             strokeWidth={2}
             fill="url(#gradValCrypto)"
             dot={false}
-            activeDot={{ r: 4, fill: "#2E7D6B", strokeWidth: 0 }}
+            activeDot={{ r: 4, fill: "var(--color-gain)", strokeWidth: 0 }}
           />
         </ComposedChart>
       </ResponsiveContainer>

@@ -13,7 +13,7 @@ import {
 } from "recharts";
 import type { HorosDCAPoint } from "@/types/horos";
 
-const HOROS_COLOR = "#7260C4";
+const HOROS_COLOR = "var(--module-mercados)";
 const GRANATE = "#8B1A2E";
 
 const fmt = (v: number) =>
@@ -103,12 +103,12 @@ export function HorosDCAChart({ data, currentNav, avgNav }: HorosDCAChartProps) 
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border-stone, rgba(160,120,80,0.15))" />
           <XAxis
             dataKey="label"
-            tick={{ fontSize: 10, fill: "var(--text-muted, #888780)" }}
+            tick={{ fontSize: 10, fill: "var(--text-muted, var(--text-muted))" }}
             tickLine={false}
             axisLine={false}
           />
           <YAxis
-            tick={{ fontSize: 10, fill: "var(--text-muted, #888780)" }}
+            tick={{ fontSize: 10, fill: "var(--text-muted, var(--text-muted))" }}
             tickLine={false}
             axisLine={false}
             domain={[

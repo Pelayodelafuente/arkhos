@@ -352,7 +352,7 @@ export function NotesList({ userId, onEdit, onNew, selectedNoteId }: Props) {
             onClick={() => isSelectionMode ? clearSelection() : setSelectionMode(true)}
             className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors ${
               isSelectionMode
-                ? "bg-[#B07A3A]/10 text-[#B07A3A]"
+                ? "bg-[var(--module-notas)]/10 text-[var(--module-notas)]"
                 : "text-text-tertiary hover:text-text-secondary hover:bg-sand"
             }`}
           >

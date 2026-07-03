@@ -29,8 +29,8 @@ const INDEX_COLORS: Record<string, string> = {
   nasdaq: "var(--color-terracota)",
   msciWorld: "var(--color-success)",
   dax: "var(--color-warning)",
-  eurostoxx: "#4A7A9B",
-  emerging: "#9B7A4A",
+  eurostoxx: "var(--module-gastos)",
+  emerging: "var(--platform-crypto)",
 };
 
 function PctBadge({ pct }: { pct: number }) {

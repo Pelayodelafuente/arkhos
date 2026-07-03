@@ -96,7 +96,7 @@ export function CanvasFilterPanel({ onClose }: Props) {
                 key={cfg.value}
                 onClick={() => toggleColor(cfg.value)}
                 className={`h-5 w-5 rounded-full border-2 transition-transform hover:scale-110 ${active ? 'scale-110' : ''}`}
-                style={{ backgroundColor: cfg.border, borderColor: active ? '#C4704A' : 'transparent' }}
+                style={{ backgroundColor: cfg.border, borderColor: active ? 'var(--accent-terracotta)' : 'transparent' }}
                 title={cfg.label}
                 aria-label={cfg.label}
               />

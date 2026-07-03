@@ -90,7 +90,7 @@ export function ProjectCanvas({ userId }: ProjectCanvasProps) {
       >
         <span
           className="font-heading text-[15px] font-bold"
-          style={{ color: '#C4704A', letterSpacing: '-0.3px' }}
+          style={{ color: 'var(--accent-terracotta)', letterSpacing: '-0.3px' }}
         >
           Arkhos
         </span>

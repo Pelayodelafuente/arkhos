@@ -20,7 +20,7 @@ interface PriceInputRowProps {
 function PriceInputRow({ position, value, onChange }: PriceInputRowProps) {
   const fundName = position.fund?.name ?? "Fondo desconocido";
   const fundType = position.fund?.fund_type ?? "equity";
-  const color = position.fund?.color ?? "#3B78B0";
+  const color = position.fund?.color ?? "var(--module-gastos)";
   const isin = position.fund?.isin ?? "";
   const currentPrice = position.price_per_share ?? 0;
   const shares = position.shares ?? 0;
@@ -53,7 +53,7 @@ function PriceInputRow({ position, value, onChange }: PriceInputRowProps) {
             <p className="text-sm font-semibold text-foreground truncate">{fundName}</p>
             <span
               className="rounded px-1.5 py-0.5 text-xs font-medium"
-              style={{ backgroundColor: `${color}18`, color }}
+              style={{ backgroundColor: `color-mix(in srgb, ${color} 9%, transparent)`, color }}
             >
               {TYPE_LABEL[fundType] ?? fundType}
             </span>
@@ -112,13 +112,13 @@ function PriceInputRow({ position, value, onChange }: PriceInputRowProps) {
           </div>
           <div className="flex items-center gap-1.5">
             {newGain >= 0
-              ? <TrendingUp size={13} style={{ color: "var(--platform-tr, #2E7D6B)" }} />
-              : <TrendingDown size={13} style={{ color: "#A32D2D" }} />}
+              ? <TrendingUp size={13} style={{ color: "var(--platform-tr, var(--color-gain))" }} />
+              : <TrendingDown size={13} style={{ color: "var(--color-loss)" }} />}
             <div>
               <p className="text-xs text-muted-foreground">P&L</p>
               <p
                 className="font-mono text-sm font-semibold"
-                style={{ color: newGain >= 0 ? "var(--platform-tr, #2E7D6B)" : "#A32D2D" }}
+                style={{ color: newGain >= 0 ? "var(--platform-tr, var(--color-gain))" : "var(--color-loss)" }}
               >
                 {newGain >= 0 ? "+" : ""}{formatEur(newGain)} ({newGainPct >= 0 ? "+" : ""}{newGainPct.toFixed(2)}%)
               </p>
@@ -257,7 +257,7 @@ export function UpdateIndexaPricesModal({ onClose }: UpdateIndexaPricesModalProp
         {status === "error" && errorMsg && (
           <div
             className="mb-4 flex items-center gap-2 rounded-lg px-3 py-2.5 text-xs"
-            style={{ backgroundColor: "rgba(163,45,45,0.08)", color: "#A32D2D", border: "1px solid rgba(163,45,45,0.15)" }}
+            style={{ backgroundColor: "rgba(163,45,45,0.08)", color: "var(--color-loss)", border: "1px solid rgba(163,45,45,0.15)" }}
           >
             <AlertCircle size={14} />
             {errorMsg}
@@ -287,7 +287,7 @@ export function UpdateIndexaPricesModal({ onClose }: UpdateIndexaPricesModalProp
               backgroundColor: status === "success"
                 ? "rgba(46,125,107,0.12)"
                 : "rgba(59,120,176,0.12)",
-              color: status === "success" ? "var(--platform-tr, #2E7D6B)" : "#3B78B0",
+              color: status === "success" ? "var(--platform-tr, var(--color-gain))" : "var(--module-gastos)",
               border: status === "success"
                 ? "1px solid rgba(46,125,107,0.25)"
                 : "1px solid rgba(59,120,176,0.25)",

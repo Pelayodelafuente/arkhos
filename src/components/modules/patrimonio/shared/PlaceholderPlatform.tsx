@@ -49,7 +49,7 @@ export function PlaceholderPlatform({ platform, assets }: PlaceholderPlatformPro
     <div className="flex flex-col items-center justify-center py-16">
       <div
         className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl"
-        style={{ backgroundColor: `${platform.color}18`, border: `1px solid ${platform.color}30` }}
+        style={{ backgroundColor: `color-mix(in srgb, ${platform.color} 9%, transparent)`, border: `1px solid color-mix(in srgb, ${platform.color} 19%, transparent)` }}
       >
         <ExternalLink size={28} strokeWidth={1.5} style={{ color: platform.color }} />
       </div>

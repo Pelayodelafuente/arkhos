@@ -141,7 +141,7 @@ export function CategoryManager({ open, onClose, userId }: CategoryManagerProps)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [name, setName] = useState("")
   const [icon, setIcon] = useState("zap")
-  const [color, setColor] = useState("#3B78B0")
+  const [color, setColor] = useState("var(--module-gastos)")
   const [budgetInput, setBudgetInput] = useState("")
   const [iconSearch, setIconSearch] = useState("")
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
@@ -157,7 +157,7 @@ export function CategoryManager({ open, onClose, userId }: CategoryManagerProps)
   const resetForm = () => {
     setName("")
     setIcon("zap")
-    setColor("#4A7A9B")
+    setColor("var(--module-gastos)")
     setBudgetInput("")
     setIconSearch("")
     setShowForm(false)
@@ -215,7 +215,7 @@ export function CategoryManager({ open, onClose, userId }: CategoryManagerProps)
               {/* Icon bubble */}
               <div
                 className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md"
-                style={{ backgroundColor: `${cat.color}18` }}
+                style={{ backgroundColor: `color-mix(in srgb, ${cat.color} 9%, transparent)` }}
               >
                 {renderIconByName(cat.icon, 13, cat.color) ?? (
                   <span className="text-xs font-medium" style={{ color: cat.color }}>
@@ -284,8 +284,8 @@ export function CategoryManager({ open, onClose, userId }: CategoryManagerProps)
                 <div
                   className="flex h-6 w-6 items-center justify-center rounded-md transition-colors"
                   style={{
-                    backgroundColor: `${color}18`,
-                    border: `1px solid ${color}40`,
+                    backgroundColor: `color-mix(in srgb, ${color} 9%, transparent)`,
+                    border: `1px solid color-mix(in srgb, ${color} 25%, transparent)`,
                   }}
                 >
                   {renderIconByName(icon, 13, color)}

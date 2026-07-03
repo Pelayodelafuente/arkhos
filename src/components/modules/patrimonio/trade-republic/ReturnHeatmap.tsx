@@ -95,15 +95,15 @@ export function ReturnHeatmap() {
       >
         <span>Retorno mensual:</span>
         <span className="flex items-center gap-1.5">
-          <span className="inline-block h-3 w-5 rounded-sm" style={{ backgroundColor: "#A32D2D" }} />
+          <span className="inline-block h-3 w-5 rounded-sm" style={{ backgroundColor: "var(--color-loss)" }} />
           negativo
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="inline-block h-3 w-5 rounded-sm" style={{ backgroundColor: "#ECE5DA" }} />
+          <span className="inline-block h-3 w-5 rounded-sm" style={{ backgroundColor: "var(--bg-sand)" }} />
           ~0%
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="inline-block h-3 w-5 rounded-sm" style={{ backgroundColor: "#2E7D6B" }} />
+          <span className="inline-block h-3 w-5 rounded-sm" style={{ backgroundColor: "var(--color-gain)" }} />
           positivo
         </span>
       </div>

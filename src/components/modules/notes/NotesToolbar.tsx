@@ -73,7 +73,7 @@ export function NotesToolbar({ userId }: Props) {
         }}
       >
         {isSearching && searchExpanded && !localSearch ? (
-          <div className="h-3.5 w-3.5 flex-shrink-0 animate-spin rounded-full border-2 border-border border-t-[#B07A3A]" />
+          <div className="h-3.5 w-3.5 flex-shrink-0 animate-spin rounded-full border-2 border-border border-t-[var(--module-notas)]" />
         ) : (
           <Search size={14} strokeWidth={1.75} className="text-text-tertiary flex-shrink-0" />
         )}
@@ -129,7 +129,7 @@ export function NotesToolbar({ userId }: Props) {
                 onClick={() => setActiveTag(null)}
                 className={`rounded-md px-2 py-1 text-[11px] font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
                   !activeTag
-                    ? "bg-[#B07A3A] text-white"
+                    ? "bg-[var(--module-notas)] text-white"
                     : "bg-sand text-text-secondary hover:bg-border"
                 }`}
               >
@@ -141,7 +141,7 @@ export function NotesToolbar({ userId }: Props) {
                   onClick={() => setActiveTag(activeTag === tag ? null : tag)}
                   className={`rounded-md px-2 py-1 text-[11px] font-medium transition-colors whitespace-nowrap flex-shrink-0 inline-flex items-center gap-1 ${
                     activeTag === tag
-                      ? "bg-[#B07A3A] text-white"
+                      ? "bg-[var(--module-notas)] text-white"
                       : "bg-sand text-text-secondary hover:bg-border"
                   }`}
                 >

@@ -11,7 +11,7 @@ import {
 } from "recharts";
 import type { HorosPortfolioPoint } from "@/types/horos";
 
-const HOROS_COLOR = "#7260C4";
+const HOROS_COLOR = "var(--module-mercados)";
 const GRANATE = "#8B1A2E";
 
 const fmt = (v: number) =>
@@ -48,7 +48,7 @@ function CustomTooltip({ active, payload, label }: TooltipProps) {
         {payload.length === 2 && payload[0].value != null && payload[1].value != null && (
           <div className="flex justify-between gap-4 pt-1 border-t border-stone-200">
             <span style={{ color: "var(--text-muted)" }}>Ganancia</span>
-            <span style={{ color: payload[1].value >= payload[0].value ? "var(--platform-tr, #2E7D6B)" : GRANATE }}>
+            <span style={{ color: payload[1].value >= payload[0].value ? "var(--platform-tr, var(--color-gain))" : GRANATE }}>
               {payload[1].value >= payload[0].value ? "+" : ""}
               {fmt(payload[1].value - payload[0].value)}
             </span>
@@ -98,13 +98,13 @@ export function HorosPortfolioChart({ data }: HorosPortfolioChartProps) {
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border-stone, rgba(160,120,80,0.15))" />
           <XAxis
             dataKey="label"
-            tick={{ fontSize: 10, fill: "var(--text-muted, #888780)" }}
+            tick={{ fontSize: 10, fill: "var(--text-muted, var(--text-muted))" }}
             tickLine={false}
             axisLine={false}
             interval="preserveStartEnd"
           />
           <YAxis
-            tick={{ fontSize: 10, fill: "var(--text-muted, #888780)" }}
+            tick={{ fontSize: 10, fill: "var(--text-muted, var(--text-muted))" }}
             tickLine={false}
             axisLine={false}
             domain={["auto", "auto"]}

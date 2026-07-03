@@ -14,7 +14,7 @@ export function PriceProgressBar({ avgBuyPrice, currentPrice, className = "" }: 
   if (!currentPrice || currentPrice <= 0) return null;
 
   const isPositive = currentPrice >= avgBuyPrice;
-  const fillColor = isPositive ? "#2E7D6B" : "#A32D2D";
+  const fillColor = isPositive ? "var(--color-gain)" : "var(--color-loss)";
   const bgColor = isPositive ? "#2E7D6B1A" : "#A32D2D1A";
 
   // Fill: ratio de 0-100%, máx 100%

@@ -99,7 +99,7 @@ export function AavePositionPanel() {
         style={{
           backgroundColor: "var(--bg-card)",
           border: "1px solid var(--border-stone, rgba(160,120,80,0.25))",
-          borderLeftColor: "var(--platform-patrimonio, #2E7D6B)",
+          borderLeftColor: "var(--platform-patrimonio, var(--color-gain))",
           borderLeftWidth: "3px",
         }}
       >
@@ -117,7 +117,7 @@ export function AavePositionPanel() {
             className="text-xs px-2.5 py-1 rounded-full font-mono"
             style={{
               backgroundColor: "rgba(46,125,107,0.10)",
-              color: "var(--platform-patrimonio, #2E7D6B)",
+              color: "var(--platform-patrimonio, var(--color-gain))",
               border: "1px solid rgba(46,125,107,0.20)",
             }}
           >
@@ -142,7 +142,7 @@ export function AavePositionPanel() {
             </p>
             <p
               className="font-mono text-lg font-semibold tabular-nums"
-              style={{ color: "var(--platform-patrimonio, #2E7D6B)" }}
+              style={{ color: "var(--platform-patrimonio, var(--color-gain))" }}
             >
               {formatUsdc(current)}{" "}
               <span className="text-sm font-normal opacity-60">USDC</span>
@@ -159,13 +159,13 @@ export function AavePositionPanel() {
             </p>
             <p
               className="font-mono text-lg font-semibold tabular-nums"
-              style={{ color: "var(--platform-patrimonio, #2E7D6B)" }}
+              style={{ color: "var(--platform-patrimonio, var(--color-gain))" }}
             >
               +{formatUsdc(yieldEarned)}{" "}
               <span className="text-sm font-normal opacity-60">USDC</span>
             </p>
             {hasEurRate && (
-              <p className="font-mono text-xs mt-0.5" style={{ color: "var(--platform-patrimonio, #2E7D6B)" }}>
+              <p className="font-mono text-xs mt-0.5" style={{ color: "var(--platform-patrimonio, var(--color-gain))" }}>
                 ≈ +{formatEur(yieldEur)}
               </p>
             )}

@@ -2,6 +2,7 @@
 
 import { Search } from "lucide-react";
 import { ArkhosLogo } from "@/components/ui/arkhos-logo";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 
 interface TopbarProps {
   userName: string;
@@ -24,13 +25,16 @@ export function Topbar({ userName }: TopbarProps) {
       }}
     >
       <ArkhosLogo size="sm" />
-      <button
-        onClick={() => window.dispatchEvent(new CustomEvent("arkhos:open-palette"))}
-        className="flex h-9 w-9 items-center justify-center rounded-md text-text-secondary hover:bg-sand"
-        aria-label="Buscar y captura rápida"
-      >
-        <Search size={19} strokeWidth={1.75} />
-      </button>
+      <div className="flex items-center gap-1">
+        <ThemeToggle />
+        <button
+          onClick={() => window.dispatchEvent(new CustomEvent("arkhos:open-palette"))}
+          className="flex h-9 w-9 items-center justify-center rounded-md text-text-secondary hover:bg-sand"
+          aria-label="Buscar y captura rápida"
+        >
+          <Search size={19} strokeWidth={1.75} />
+        </button>
+      </div>
       {/* Decorative gradient line */}
       <div
         style={{

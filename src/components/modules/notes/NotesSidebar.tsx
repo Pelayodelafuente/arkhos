@@ -160,7 +160,7 @@ export function NotesSidebar({ userId }: Props) {
 
   if (collapsed) {
     return (
-      <div className="flex flex-col items-center gap-1 border-r border-border bg-[#FAF7F2] w-10 py-3 flex-shrink-0">
+      <div className="flex flex-col items-center gap-1 border-r border-border bg-[var(--bg-card-hover)] w-10 py-3 flex-shrink-0">
         <button
           onClick={() => setCollapsed(false)}
           className="flex h-7 w-7 items-center justify-center rounded-md text-text-tertiary hover:text-text-secondary hover:bg-sand transition-colors"
@@ -178,7 +178,7 @@ export function NotesSidebar({ userId }: Props) {
                 onClick={() => setActiveFolderId(item.id)}
                 className={`flex h-7 w-7 items-center justify-center rounded-md transition-colors ${
                   isActive
-                    ? "bg-[#B07A3A]/10 text-[#B07A3A]"
+                    ? "bg-[var(--module-notas)]/10 text-[var(--module-notas)]"
                     : "text-text-tertiary hover:text-text-secondary hover:bg-sand"
                 }`}
                 title={item.label}
@@ -197,7 +197,7 @@ export function NotesSidebar({ userId }: Props) {
                 onClick={() => setActiveFolderId(folder.id)}
                 className={`flex h-7 w-7 items-center justify-center rounded-md transition-colors ${
                   isActive
-                    ? "bg-[#B07A3A]/10 text-[#B07A3A]"
+                    ? "bg-[var(--module-notas)]/10 text-[var(--module-notas)]"
                     : "text-text-tertiary hover:text-text-secondary hover:bg-sand"
                 }`}
                 title={folder.name}
@@ -212,7 +212,7 @@ export function NotesSidebar({ userId }: Props) {
   }
 
   return (
-    <div className="flex flex-col w-[220px] flex-shrink-0 border-r border-border bg-[#FAF7F2] py-3 overflow-y-auto">
+    <div className="flex flex-col w-[220px] flex-shrink-0 border-r border-border bg-[var(--bg-card-hover)] py-3 overflow-y-auto">
       {/* Header */}
       <div className="flex items-center justify-between px-3 mb-3">
         <span className="text-[11px] font-semibold uppercase tracking-wide text-text-tertiary">
@@ -233,7 +233,7 @@ export function NotesSidebar({ userId }: Props) {
           onClick={handleDailyNote}
           className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-[13px] text-text-secondary hover:bg-sand hover:text-text-secondary transition-colors"
         >
-          <CalendarDays size={14} strokeWidth={1.75} className="flex-shrink-0 text-[#B07A3A]" />
+          <CalendarDays size={14} strokeWidth={1.75} className="flex-shrink-0 text-[var(--module-notas)]" />
           <span className="flex-1 text-left">Nota de hoy</span>
         </button>
       </div>
@@ -250,7 +250,7 @@ export function NotesSidebar({ userId }: Props) {
               onClick={() => setActiveFolderId(item.id)}
               className={`flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-[13px] transition-colors ${
                 isActive
-                  ? "bg-[#B07A3A]/10 text-[#B07A3A] font-medium"
+                  ? "bg-[var(--module-notas)]/10 text-[var(--module-notas)] font-medium"
                   : "text-text-secondary hover:bg-sand hover:text-text-secondary"
               }`}
             >
@@ -292,11 +292,11 @@ export function NotesSidebar({ userId }: Props) {
                 if (e.key === "Escape") setCreatingFolder(false)
               }}
               placeholder="Nombre de carpeta"
-              className="flex-1 text-[13px] bg-card border border-border rounded-md px-2 py-1 text-foreground outline-none focus:ring-1 focus:ring-[#B07A3A]"
+              className="flex-1 text-[13px] bg-card border border-border rounded-md px-2 py-1 text-foreground outline-none focus:ring-1 focus:ring-[var(--module-notas)]"
             />
             <button
               onClick={handleCreateFolder}
-              className="flex h-6 w-6 items-center justify-center rounded-md text-[#B07A3A] hover:bg-[#B07A3A]/10 transition-colors"
+              className="flex h-6 w-6 items-center justify-center rounded-md text-[var(--module-notas)] hover:bg-[var(--module-notas)]/10 transition-colors"
             >
               <Check size={12} strokeWidth={2} />
             </button>
@@ -390,7 +390,7 @@ function SortableFolderItem({
       ref={setNodeRef}
       style={style}
       className={`group relative flex items-center gap-2 rounded-md px-1.5 py-1.5 text-[13px] transition-colors cursor-pointer ${
-        isActive ? "bg-[#B07A3A]/10 text-[#B07A3A] font-medium" : "text-text-secondary hover:bg-sand"
+        isActive ? "bg-[var(--module-notas)]/10 text-[var(--module-notas)] font-medium" : "text-text-secondary hover:bg-sand"
       }`}
       onClick={onSelect}
     >
@@ -419,7 +419,7 @@ function SortableFolderItem({
           }}
           onBlur={onRenameSubmit}
           onClick={(e) => e.stopPropagation()}
-          className="flex-1 text-[13px] bg-card border border-border rounded-md px-1.5 py-0.5 text-foreground outline-none focus:ring-1 focus:ring-[#B07A3A]"
+          className="flex-1 text-[13px] bg-card border border-border rounded-md px-1.5 py-0.5 text-foreground outline-none focus:ring-1 focus:ring-[var(--module-notas)]"
         />
       ) : (
         <span className="flex-1 truncate">{folder.name}</span>

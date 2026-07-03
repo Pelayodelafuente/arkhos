@@ -239,7 +239,7 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
 
       const html2canvas = (await import('html2canvas')).default
       const canvas = await html2canvas(containerRef.current, {
-        backgroundColor: '#FAF7F2',
+        backgroundColor: 'var(--bg-card-hover)',
         useCORS: true,
         scale: 2,
         logging: false,
@@ -948,10 +948,10 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
         <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 5 }}>
           {snapGuides.map((g, i) => g.orientation === "vertical" ? (
             <line key={i} x1={g.position * viewport.scale + viewport.offsetX} y1={0}
-              x2={g.position * viewport.scale + viewport.offsetX} y2="100%" stroke="#3B78B0" strokeWidth={1} strokeDasharray="4 4" opacity={0.6} />
+              x2={g.position * viewport.scale + viewport.offsetX} y2="100%" stroke="var(--module-gastos)" strokeWidth={1} strokeDasharray="4 4" opacity={0.6} />
           ) : (
             <line key={i} x1={0} y1={g.position * viewport.scale + viewport.offsetY}
-              x2="100%" y2={g.position * viewport.scale + viewport.offsetY} stroke="#3B78B0" strokeWidth={1} strokeDasharray="4 4" opacity={0.6} />
+              x2="100%" y2={g.position * viewport.scale + viewport.offsetY} stroke="var(--module-gastos)" strokeWidth={1} strokeDasharray="4 4" opacity={0.6} />
           ))}
         </svg>
       )}
@@ -982,11 +982,11 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
         {connectingLine && (
           <>
             <path d={calculateBezierPreview(connectingLine.fromX, connectingLine.fromY, connectingLine.toX, connectingLine.toY, connectingSide)}
-              stroke="#B07A3A" strokeWidth={6} fill="none" opacity={0.15} strokeLinecap="round" />
+              stroke="var(--module-notas)" strokeWidth={6} fill="none" opacity={0.15} strokeLinecap="round" />
             <path d={calculateBezierPreview(connectingLine.fromX, connectingLine.fromY, connectingLine.toX, connectingLine.toY, connectingSide)}
-              stroke="#B07A3A" strokeWidth={2 / viewport.scale} fill="none"
+              stroke="var(--module-notas)" strokeWidth={2 / viewport.scale} fill="none"
               strokeDasharray={`${6 / viewport.scale} ${4 / viewport.scale}`} opacity={0.7} />
-            <circle cx={connectingLine.toX} cy={connectingLine.toY} r={4} fill="#B07A3A" opacity={0.85} />
+            <circle cx={connectingLine.toX} cy={connectingLine.toY} r={4} fill="var(--module-notas)" opacity={0.85} />
           </>
         )}
       </svg>

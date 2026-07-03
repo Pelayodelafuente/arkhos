@@ -46,7 +46,7 @@ export function MintosFiscal() {
             <span className="text-sm" style={{ color: "var(--text-secondary)" }}>
               Retenciones fiscales pagadas
             </span>
-            <span className="font-mono text-sm tabular-nums" style={{ color: "#A32D2D" }}>
+            <span className="font-mono text-sm tabular-nums" style={{ color: "var(--color-loss)" }}>
               -{fmt(fiscal.taxes_withheld)}
             </span>
           </div>
@@ -56,7 +56,7 @@ export function MintosFiscal() {
             <span className="text-sm" style={{ color: "var(--text-secondary)" }}>
               Comisiones Mintos Core
             </span>
-            <span className="font-mono text-sm tabular-nums" style={{ color: "#A32D2D" }}>
+            <span className="font-mono text-sm tabular-nums" style={{ color: "var(--color-loss)" }}>
               -{fmt(fiscal.commissions)}
             </span>
           </div>

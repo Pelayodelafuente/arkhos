@@ -87,7 +87,7 @@ function KanbanColumn({
     <div
       ref={setNodeRef}
       className={`${column.bg} min-w-[200px] flex-1 rounded-xl p-3 flex flex-col gap-2 transition-all duration-150 ${
-        isOver ? 'ring-2 ring-dashed ring-[#C4704A]' : ''
+        isOver ? 'ring-2 ring-dashed ring-[var(--accent-terracotta)]' : ''
       }`}
     >
       {/* Header */}
@@ -102,7 +102,7 @@ function KanbanColumn({
             className="h-full rounded-full transition-all duration-500"
             style={{
               width: `${progressPercent}%`,
-              background: column.status === 'done' ? '#22C55E' : '#C4704A',
+              background: column.status === 'done' ? '#22C55E' : 'var(--accent-terracotta)',
             }}
           />
         </div>
@@ -427,7 +427,7 @@ export default function KanbanView({
           onClick={() => setActivePhaseFilter(null)}
           className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-150 whitespace-nowrap ${
             activePhaseFilter === null
-              ? 'bg-[#C4704A] text-white'
+              ? 'bg-[var(--accent-terracotta)] text-white'
               : 'bg-[--bg-sand] text-[--text-secondary] hover:bg-[--border-stone]'
           }`}
         >
@@ -441,7 +441,7 @@ export default function KanbanView({
             }
             className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-150 whitespace-nowrap ${
               activePhaseFilter === phase.id
-                ? 'bg-[#C4704A] text-white'
+                ? 'bg-[var(--accent-terracotta)] text-white'
                 : 'bg-[--bg-sand] text-[--text-secondary] hover:bg-[--border-stone]'
             }`}
           >

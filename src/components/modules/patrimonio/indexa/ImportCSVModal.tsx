@@ -214,7 +214,7 @@ export function ImportCSVModal({ isOpen, onClose, onImport, funds }: ImportCSVMo
             <Upload
               size={28}
               strokeWidth={1.5}
-              style={{ color: "var(--platform-indexa, #3B78B0)" }}
+              style={{ color: "var(--platform-indexa, var(--module-gastos))" }}
               aria-hidden="true"
             />
             <div className="text-center">
@@ -241,7 +241,7 @@ export function ImportCSVModal({ isOpen, onClose, onImport, funds }: ImportCSVMo
               style={{
                 backgroundColor: "rgba(163,45,45,0.08)",
                 border: "1px solid rgba(163,45,45,0.25)",
-                color: "#A32D2D",
+                color: "var(--color-loss)",
               }}
             >
               <AlertCircle size={13} strokeWidth={1.75} className="mt-0.5 flex-shrink-0" aria-hidden="true" />
@@ -257,7 +257,7 @@ export function ImportCSVModal({ isOpen, onClose, onImport, funds }: ImportCSVMo
             <FileText
               size={14}
               strokeWidth={1.75}
-              style={{ color: "var(--platform-indexa, #3B78B0)" }}
+              style={{ color: "var(--platform-indexa, var(--module-gastos))" }}
               aria-hidden="true"
             />
             <span className="text-xs font-mono" style={{ color: "var(--text-muted)" }}>
@@ -267,7 +267,7 @@ export function ImportCSVModal({ isOpen, onClose, onImport, funds }: ImportCSVMo
               className="ml-auto text-xs px-2 py-0.5 rounded font-semibold"
               style={{
                 backgroundColor: "rgba(59,120,176,0.12)",
-                color: "var(--platform-indexa, #3B78B0)",
+                color: "var(--platform-indexa, var(--module-gastos))",
               }}
             >
               {parsed.length} filas
@@ -308,7 +308,7 @@ export function ImportCSVModal({ isOpen, onClose, onImport, funds }: ImportCSVMo
                           className="px-1 py-0.5 rounded text-xs"
                           style={{
                             backgroundColor: "rgba(59,120,176,0.12)",
-                            color: "var(--platform-indexa, #3B78B0)",
+                            color: "var(--platform-indexa, var(--module-gastos))",
                           }}
                         >
                           {typeLabel}
@@ -339,7 +339,7 @@ export function ImportCSVModal({ isOpen, onClose, onImport, funds }: ImportCSVMo
               style={{
                 backgroundColor: "rgba(163,45,45,0.08)",
                 border: "1px solid rgba(163,45,45,0.25)",
-                color: "#A32D2D",
+                color: "var(--color-loss)",
               }}
             >
               <AlertCircle size={13} strokeWidth={1.75} className="mt-0.5 flex-shrink-0" aria-hidden="true" />
@@ -360,7 +360,7 @@ export function ImportCSVModal({ isOpen, onClose, onImport, funds }: ImportCSVMo
               height={24}
               viewBox="0 0 24 24"
               fill="none"
-              stroke="var(--platform-tr, #2E7D6B)"
+              stroke="var(--platform-tr, var(--color-gain))"
               strokeWidth={2}
               strokeLinecap="round"
               strokeLinejoin="round"

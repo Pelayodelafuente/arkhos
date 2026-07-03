@@ -188,7 +188,7 @@ export function RebalanceoPanel() {
                     backgroundColor: isAlert
                       ? isOver
                         ? "#c53030"
-                        : "#2E7D6B"
+                        : "var(--color-gain)"
                       : "var(--module-patrimonio)",
                     opacity: 0.7,
                   }}

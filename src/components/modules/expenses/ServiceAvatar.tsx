@@ -59,11 +59,11 @@ export function ServiceAvatar({ name, icon, color, size = 'sm', className = '', 
       className={`relative overflow-hidden group/avatar flex flex-shrink-0 items-center justify-center ${sizeConfig.container} ${sizeConfig.rounded} ${className}`}
       style={{
         background: isDark
-          ? `linear-gradient(135deg, ${color}, ${color}dd)`
+          ? `linear-gradient(135deg, ${color}, color-mix(in srgb, ${color} 87%, transparent))`
           : primaryImg && !imgError
-            ? `linear-gradient(135deg, ${color}10, ${color}06)`
-            : `linear-gradient(135deg, ${color}28, ${color}12)`,
-        border: `1px solid ${color}2A`,
+            ? `linear-gradient(135deg, color-mix(in srgb, ${color} 6%, transparent), color-mix(in srgb, ${color} 2%, transparent))`
+            : `linear-gradient(135deg, color-mix(in srgb, ${color} 16%, transparent), color-mix(in srgb, ${color} 7%, transparent))`,
+        border: `1px solid color-mix(in srgb, ${color} 16%, transparent)`,
         boxShadow: (!primaryImg || imgError) && !IconComponent ? `inset 0 1px 2px rgba(0,0,0,0.06)` : undefined,
       }}
       title={name}

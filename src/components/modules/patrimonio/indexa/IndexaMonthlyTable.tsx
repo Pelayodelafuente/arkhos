@@ -69,7 +69,7 @@ export function IndexaMonthlyTable({ rows, isLoading, onAdd }: IndexaMonthlyTabl
               className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium transition-all"
               style={{
                 backgroundColor: "rgba(59,120,176,0.10)",
-                color: "#3B78B0",
+                color: "var(--module-gastos)",
                 border: "1px solid rgba(59,120,176,0.20)",
               }}
             >
@@ -82,8 +82,8 @@ export function IndexaMonthlyTable({ rows, isLoading, onAdd }: IndexaMonthlyTabl
           <span
             className="text-xs px-2 py-0.5 rounded"
             style={{
-              backgroundColor: "var(--platform-indexa, #3B78B0)20",
-              color: "var(--platform-indexa, #3B78B0)",
+              backgroundColor: "var(--platform-indexa, var(--module-gastos))20",
+              color: "var(--platform-indexa, var(--module-gastos))",
             }}
           >
             En %

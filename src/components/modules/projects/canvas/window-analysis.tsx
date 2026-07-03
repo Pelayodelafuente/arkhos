@@ -60,7 +60,7 @@ function StepRow({
   const dotStyle: Record<StepStatus, React.CSSProperties> = {
     done: { background: '#22C55E' },
     active: {
-      background: '#C4704A',
+      background: 'var(--accent-terracotta)',
       animation: 'analysis-pulse 2s ease-in-out infinite',
     },
     pending: {
@@ -71,7 +71,7 @@ function StepRow({
 
   const textClass: Record<StepStatus, string> = {
     done: 'text-[#b0a090] line-through',
-    active: 'text-[#C4704A] font-semibold',
+    active: 'text-[var(--accent-terracotta)] font-semibold',
     pending: 'text-[#ccc]',
   };
 

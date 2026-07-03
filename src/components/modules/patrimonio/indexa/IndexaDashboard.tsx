@@ -31,9 +31,9 @@ import { formatEur } from "@/lib/utils/format";
 
 // Donut chart for allocation
 const FUND_TYPE_COLOR: Record<string, string> = {
-  equity: "#3B78B0",
-  bond: "#7260C4",
-  cash: "#888780",
+  equity: "var(--module-gastos)",
+  bond: "var(--module-mercados)",
+  cash: "var(--text-muted)",
 };
 
 const FUND_TYPE_LABEL: Record<string, string> = {
@@ -99,7 +99,7 @@ export function IndexaDashboard() {
     .map((p) => ({
       name: FUND_TYPE_LABEL[p.fund_type ?? "equity"] ?? (p.fund?.name ?? "Desconocido"),
       value: p.total_value,
-      fill: FUND_TYPE_COLOR[p.fund_type ?? "equity"] ?? "#888780",
+      fill: FUND_TYPE_COLOR[p.fund_type ?? "equity"] ?? "var(--text-muted)",
     }));
 
   const handleContributionConfirm = async (data: ContributionFormData) => {
@@ -136,7 +136,7 @@ export function IndexaDashboard() {
             onClick={() => setActiveTab(tab.id as ActiveTab)}
             className="flex-shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium transition-all duration-150 whitespace-nowrap"
             style={{
-              backgroundColor: activeTab === tab.id ? "var(--platform-indexa, #3B78B0)" : "transparent",
+              backgroundColor: activeTab === tab.id ? "var(--platform-indexa, var(--module-gastos))" : "transparent",
               color: activeTab === tab.id ? "#fff" : "var(--text-secondary)",
             }}
           >
@@ -167,7 +167,7 @@ export function IndexaDashboard() {
           className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all"
           style={{
             backgroundColor: "rgba(59,120,176,0.10)",
-            color: "#3B78B0",
+            color: "var(--module-gastos)",
             border: "1px solid rgba(59,120,176,0.20)",
           }}
         >

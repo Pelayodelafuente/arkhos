@@ -24,9 +24,9 @@ function Skeleton({ className = "" }: { className?: string }) {
 }
 
 const COLORS: Record<string, string> = {
-  "Mi Cartera": "#C4704A",
-  "S&P 500":    "#3B78B0",
-  "MSCI World": "#2E7D6B",
+  "Mi Cartera": "var(--accent-terracotta)",
+  "S&P 500":    "var(--module-gastos)",
+  "MSCI World": "var(--color-gain)",
   "NASDAQ":     "#E67E22",
 };
 

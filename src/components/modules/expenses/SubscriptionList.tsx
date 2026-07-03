@@ -528,7 +528,7 @@ function SubscriptionRow({
                 style={{
                   width: `${cycleProgress}%`,
                   background: categoryColor
-                    ? `linear-gradient(90deg, ${categoryColor}B3, ${categoryColor})`
+                    ? `linear-gradient(90deg, color-mix(in srgb, ${categoryColor} 70%, transparent), ${categoryColor})`
                     : 'linear-gradient(90deg, rgba(95,27,41,0.7), var(--module-gastos))',
                   transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
                 }}

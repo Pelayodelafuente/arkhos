@@ -14,7 +14,7 @@ import { formatCurrency } from "@/lib/utils/format";
 import { useMintosStore } from "@/stores/mintos-store";
 import type { MintosKPIs, MintosPlan } from "@/types/mintos";
 
-const MINTOS_COLOR = "#C4704A";
+const MINTOS_COLOR = "var(--accent-terracotta)";
 
 function fmt(v: number) {
   return formatCurrency(v, "EUR");
@@ -189,12 +189,12 @@ export function MintosProjection({ kpis, plan }: MintosProjectionProps) {
             />
             <XAxis
               dataKey="label"
-              tick={{ fontSize: 11, fill: "var(--text-muted, #888780)", fontFamily: "var(--font-mono)" }}
+              tick={{ fontSize: 11, fill: "var(--text-muted, var(--text-muted))", fontFamily: "var(--font-mono)" }}
               axisLine={false}
               tickLine={false}
             />
             <YAxis
-              tick={{ fontSize: 11, fill: "var(--text-muted, #888780)", fontFamily: "var(--font-mono)" }}
+              tick={{ fontSize: 11, fill: "var(--text-muted, var(--text-muted))", fontFamily: "var(--font-mono)" }}
               axisLine={false}
               tickLine={false}
               tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`}
@@ -205,7 +205,7 @@ export function MintosProjection({ kpis, plan }: MintosProjectionProps) {
               type="monotone"
               dataKey="total_contributed"
               name="total_contributed"
-              stroke="#888780"
+              stroke="var(--text-muted)"
               strokeWidth={1.5}
               strokeDasharray="4 3"
               fill="none"

@@ -1,26 +1,30 @@
+// Paleta Primary (fusión 2026-07-03) — ver docs/mockups/arkhos-primary-fusion.html
+// MODULE_COLORS y SEMANTIC_COLORS apuntan a las CSS variables (siguen el tema
+// claro/oscuro). COLOR_PRESETS se persiste en la DB → hex fijos de la paleta.
+
 export const MODULE_COLORS = {
-  proyectos:  '#C4704A',
-  mercados:   '#7260C4',
-  patrimonio: '#2E7D6B',
-  gastos:     '#3B78B0',
-  notas:      '#B07A3A',
-  agenda:     '#8A5A7A',
+  proyectos:  'var(--module-proyectos)',
+  mercados:   'var(--module-mercados)',
+  patrimonio: 'var(--module-patrimonio)',
+  gastos:     'var(--module-gastos)',
+  notas:      'var(--module-notas)',
+  agenda:     'var(--module-agenda)',
 } as const
 
 export const COLOR_PRESETS = [
-  { name: 'Terracota',  value: '#C4704A' },
-  { name: 'Violeta',    value: '#7260C4' },
-  { name: 'Esmeralda',  value: '#2E7D6B' },
-  { name: 'Azul',       value: '#3B78B0' },
-  { name: 'Ámbar',      value: '#B07A3A' },
-  { name: 'Pizarra',    value: '#6B7280' },
-  { name: 'Rosa',       value: '#C4607A' },
-  { name: 'Índigo',     value: '#5B6DAE' },
+  { name: 'Naranja',    value: '#EB7D42' }, // orange-20
+  { name: 'Violeta',    value: '#7D71C1' }, // purple
+  { name: 'Esmeralda',  value: '#329562' }, // green-30
+  { name: 'Azul',       value: '#3079B0' }, // blue
+  { name: 'Ámbar',      value: '#D79719' }, // yellow-30
+  { name: 'Rosa',       value: '#C7707D' }, // pink
+  { name: 'Cian',       value: '#4CAEAA' }, // cyan
+  { name: 'Piedra',     value: '#9D8062' }, // gray-90
 ] as const
 
 export const SEMANTIC_COLORS = {
-  success: { bg: '#F0FDF4', border: '#86EFAC', text: '#15803D', dot: '#22C55E' },
-  error:   { bg: '#FEF2F2', border: '#FECACA', text: '#B91C1C', dot: '#EF4444' },
-  warning: { bg: '#FFFBEB', border: '#FDE68A', text: '#B45309', dot: '#F59E0B' },
-  neutral: { bg: '#F9FAFB', border: '#D1D5DB', text: '#374151', dot: '#6B7280' },
+  success: { bg: 'var(--success-bg)', border: 'var(--success-border)', text: 'var(--success-text)', dot: 'var(--success)' },
+  error:   { bg: 'var(--error-bg)',   border: 'var(--error-border)',   text: 'var(--error-text)',   dot: 'var(--error)' },
+  warning: { bg: 'var(--warning-bg)', border: 'var(--warning-border)', text: 'var(--warning-text)', dot: 'var(--warning)' },
+  neutral: { bg: 'var(--neutral-bg)', border: 'var(--neutral-border)', text: 'var(--neutral-text)', dot: 'var(--neutral)' },
 } as const

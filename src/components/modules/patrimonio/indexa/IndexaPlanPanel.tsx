@@ -18,10 +18,10 @@ const TX_TYPE_LABEL: Record<string, string> = {
 };
 
 const TX_TYPE_ACCENT: Record<string, string> = {
-  subscription: "var(--platform-indexa, #3B78B0)",
-  redemption: "#A32D2D",
-  transfer_in: "var(--platform-tr, #2E7D6B)",
-  transfer_out: "#A32D2D",
+  subscription: "var(--platform-indexa, var(--module-gastos))",
+  redemption: "var(--color-loss)",
+  transfer_in: "var(--platform-tr, var(--color-gain))",
+  transfer_out: "var(--color-loss)",
 };
 
 interface IndexaPlanPanelProps {
@@ -96,12 +96,12 @@ export function IndexaPlanPanel({
                   className="text-xs px-2 py-0.5 rounded font-medium flex items-center gap-1"
                   style={{
                     backgroundColor: "rgba(46,125,107,0.12)",
-                    color: "var(--platform-tr, #2E7D6B)",
+                    color: "var(--platform-tr, var(--color-gain))",
                   }}
                 >
                   <span
                     className="h-1.5 w-1.5 rounded-full animate-pulse"
-                    style={{ backgroundColor: "var(--platform-tr, #2E7D6B)" }}
+                    style={{ backgroundColor: "var(--platform-tr, var(--color-gain))" }}
                     aria-hidden="true"
                   />
                   ACTIVO
@@ -116,7 +116,7 @@ export function IndexaPlanPanel({
                 </p>
                 <p
                   className="font-mono text-2xl font-semibold tabular-nums"
-                  style={{ color: "var(--platform-indexa, #3B78B0)" }}
+                  style={{ color: "var(--platform-indexa, var(--module-gastos))" }}
                 >
                   {formatEur(plan.monthly_amount)}
                 </p>
@@ -196,7 +196,7 @@ export function IndexaPlanPanel({
               const label = TX_TYPE_LABEL[tx.type] ?? tx.type.toUpperCase();
               const fundName = tx.fund?.name ?? "Fondo";
               const fundType = tx.fund?.fund_type ?? "equity";
-              const fundColor = fundType === "bond" ? "#7260C4" : "#3B78B0";
+              const fundColor = fundType === "bond" ? "var(--module-mercados)" : "var(--module-gastos)";
 
               return (
                 <div
@@ -216,14 +216,14 @@ export function IndexaPlanPanel({
                     </span>
                     <span
                       className="truncate max-w-[100px] px-1.5 py-0.5 rounded text-xs font-semibold"
-                      style={{ backgroundColor: `${fundColor}20`, color: fundColor }}
+                      style={{ backgroundColor: `color-mix(in srgb, ${fundColor} 13%, transparent)`, color: fundColor }}
                       title={fundName}
                     >
                       {fundName}
                     </span>
                     <span
                       className="hidden sm:inline flex-shrink-0 px-1.5 py-0.5 rounded font-semibold"
-                      style={{ backgroundColor: `${color}18`, color }}
+                      style={{ backgroundColor: `color-mix(in srgb, ${color} 9%, transparent)`, color }}
                     >
                       {label}
                     </span>

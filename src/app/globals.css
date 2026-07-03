@@ -5,121 +5,128 @@
    ══════════════════════════════════════ */
 
 :root {
-  /* FONDOS */
-  --bg-page:           #f2ede6;
-  --bg-cream:          #f2ede6;
-  --bg-sand:           #ece5da;
+  color-scheme: light;
+
+  /* FONDOS — Primary l-gray */
+  --bg-page:           hsl(35, 37%, 92%);   /* l-gray-30 */
+  --bg-cream:          hsl(35, 37%, 92%);
+  --bg-sand:           hsl(34, 34%, 90%);   /* l-gray-40 */
   --bg-card:           #ffffff;
-  --bg-card-hover:     #faf7f2;
+  --bg-card-hover:     hsl(36, 38%, 98%);   /* l-gray-10 */
+
+  /* Glows del fondo global (radiales del body) */
+  --bg-glow-1:         hsla(27, 100%, 50%, 0.06);
+  --bg-glow-2:         hsla(33, 54%, 25%, 0.05);
 
   /* SIDEBAR ESPRESSO */
-  --bg-sidebar:        #1e1510;
+  --bg-sidebar:        hsl(24, 18%, 11%);   /* d-gray-130 */
   --sb-grid-color:     rgba(255, 220, 160, 0.04);
   --sb-border:         rgba(255, 255, 255, 0.06);
-  --sb-text-primary:   #f5ede0;
-  --sb-text-secondary: rgba(220, 190, 150, 0.65);
-  --sb-text-muted:     rgba(196, 150, 100, 0.45);
+  --sb-text-primary:   hsl(32, 48%, 92%);
+  --sb-text-secondary: hsla(34, 45%, 73%, 0.65);
+  --sb-text-muted:     hsla(30, 49%, 58%, 0.45);
 
   /* GRID DE FONDO GLOBAL */
   --grid-color:        rgba(160, 130, 90, 0.13);
   --grid-size:         24px;
 
-  /* BORDES */
-  --border-stone:      rgba(160, 120, 80, 0.35);
-  --border-subtle:     rgba(160, 120, 80, 0.20);
-  --border-medium:     rgba(160, 120, 80, 0.35);
-  --border-strong:     rgba(160, 120, 80, 0.50);
-  --border-accent:     rgba(196, 112, 74, 0.45);
+  /* BORDES — base l-gray-90 rgb(157,127,98) */
+  --border-stone:      rgba(157, 127, 98, 0.35);
+  --border-subtle:     rgba(157, 127, 98, 0.20);
+  --border-medium:     rgba(157, 127, 98, 0.35);
+  --border-strong:     rgba(157, 127, 98, 0.50);
+  --border-accent:     hsla(21, 81%, 50%, 0.45);
 
-  /* TEXTOS — WCAG AA */
-  --text-primary:      #1a1410;
-  --text-secondary:    #4a3820;
-  --text-tertiary:     #7a5e42;
-  --text-muted:        #7a5e42;
-  --text-faint:        #8a6e50;
+  /* TEXTOS — WCAG AA (l-gray 140/120/90/80) */
+  --text-primary:      hsl(33, 54%, 15%);
+  --text-secondary:    hsl(36, 32%, 28%);
+  --text-tertiary:     hsl(31, 23%, 42%);
+  --text-muted:        hsl(31, 23%, 42%);
+  --text-faint:        hsl(33, 26%, 52%);
 
-  /* ACENTO TERRACOTA */
-  --accent-terracotta: #c4704a;
-  --accent-text:       #b5623e;
-  --accent-dark:       #a85838;
-  --accent-light:      #d8835e;
-  --accent-glow:       rgba(196, 112, 74, 0.18);
-  --accent-ring:       rgba(196, 112, 74, 0.28);
+  /* ACENTO — naranja Primary (evolución del terracota) */
+  --accent-terracotta: hsl(21, 81%, 59%);   /* l-orange-20 */
+  --accent-text:       hsl(18, 69%, 46%);   /* l-orange-30 */
+  --accent-dark:       hsl(18, 90%, 38%);   /* l-orange-40 */
+  --accent-light:      hsl(26, 70%, 63%);   /* l-orange-10 */
+  --accent-glow:       hsla(27, 100%, 50%, 0.18);
+  --accent-ring:       hsla(27, 100%, 50%, 0.28);
 
   /* ACENTOS SECUNDARIOS */
-  --orange:            #ff845d;
-  --crimson:           #5f1b29;
-  --crimson-soft:      #7a2235;
-  --amber:             #e6c498;
+  --orange:            hsl(21, 100%, 68%);
+  --crimson:           hsl(4, 72%, 25%);    /* red-40 profundo */
+  --crimson-soft:      hsl(4, 56%, 33%);
+  --amber:             hsl(43, 71%, 75%);   /* yellow-10 suave */
 
-  /* MÓDULOS */
-  --module-proyectos:  #C4704A;
-  --module-mercados:   #7260C4;
-  --module-patrimonio: #2E7D6B;
-  --platform-tr:      #2E7D6B;
-  --platform-indexa:  #3B78B0;
-  --platform-horos:   #7260C4;
-  --platform-mintos:  #C4704A;
-  --platform-crypto:  #B07A3A;
+  /* MÓDULOS — acentos Primary */
+  --module-proyectos:  hsl(21, 81%, 59%);   /* orange */
+  --module-mercados:   hsl(249, 39%, 60%);  /* purple */
+  --module-patrimonio: hsl(149, 50%, 39%);  /* green */
+  --platform-tr:      hsl(149, 50%, 39%);
+  --platform-indexa:  hsl(206, 57%, 44%);
+  --platform-horos:   hsl(249, 39%, 60%);
+  --platform-mintos:  hsl(21, 81%, 59%);
+  --platform-crypto:  hsl(40, 79%, 47%);
 
   /* FINANCIERO — estados de ganancia/pérdida */
-  --color-gain:          #2E7D6B;
-  --color-gain-subtle:   rgba(46, 125, 107, 0.12);
-  --color-gain-border:   rgba(46, 125, 107, 0.25);
-  --color-loss:          #A32D2D;
-  --color-loss-subtle:   rgba(163, 45, 45, 0.12);
-  --color-loss-border:   rgba(163, 45, 45, 0.25);
-  --color-neutral-fin:   #B07A3A;
-  --color-neutral-subtle: rgba(176, 122, 58, 0.12);
-  --color-neutral-border: rgba(176, 122, 58, 0.25);
+  --color-gain:          hsl(149, 50%, 39%);
+  --color-gain-subtle:   hsla(149, 50%, 39%, 0.12);
+  --color-gain-border:   hsla(149, 50%, 39%, 0.25);
+  --color-loss:          hsl(4, 56%, 48%);
+  --color-loss-subtle:   hsla(4, 56%, 48%, 0.12);
+  --color-loss-border:   hsla(4, 56%, 48%, 0.25);
+  --color-neutral-fin:   hsl(40, 98%, 36%);
+  --color-neutral-subtle: hsla(40, 98%, 36%, 0.12);
+  --color-neutral-border: hsla(40, 98%, 36%, 0.25);
 
   /* MORA P2P */
-  --mora-current: #2E7D6B;
-  --mora-grace:   #B07A3A;
-  --mora-1-30:    #C4704A;
-  --mora-31-60:   rgba(163, 45, 45, 0.5);
-  --mora-60plus:  #A32D2D;
+  --mora-current: hsl(149, 50%, 39%);
+  --mora-grace:   hsl(40, 98%, 36%);
+  --mora-1-30:    hsl(18, 69%, 50%);
+  --mora-31-60:   hsla(4, 56%, 48%, 0.5);
+  --mora-60plus:  hsl(4, 72%, 35%);
 
-  --module-gastos:     #3B78B0;
-  --module-notas:      #B07A3A;
-  --module-agenda:     #8A5A7A;
+  --module-gastos:     hsl(206, 57%, 44%);  /* blue */
+  --module-notas:      hsl(40, 79%, 47%);   /* yellow */
+  --module-agenda:     hsl(351, 44%, 61%);  /* pink */
+  --module-sala:       hsl(178, 39%, 49%);  /* cyan */
 
   /* SISTEMA DE URGENCIA */
-  --urgency-critical:     #c0392b;
-  --urgency-critical-bg:  rgba(192, 57, 43, 0.08);
-  --urgency-warning:      #d4790e;
-  --urgency-warning-bg:   rgba(212, 121, 14, 0.08);
-  --urgency-soon:         #9a6a28;
-  --urgency-soon-bg:      rgba(154, 106, 40, 0.10);
-  --urgency-safe:         #5b8c6a;
-  --urgency-safe-bg:      rgba(91, 140, 106, 0.08);
+  --urgency-critical:     hsl(4, 72%, 48%);
+  --urgency-critical-bg:  hsla(4, 72%, 48%, 0.08);
+  --urgency-warning:      hsl(24, 84%, 44%);
+  --urgency-warning-bg:   hsla(24, 84%, 44%, 0.08);
+  --urgency-soon:         hsl(40, 79%, 38%);
+  --urgency-soon-bg:      hsla(40, 79%, 38%, 0.10);
+  --urgency-safe:         hsl(149, 35%, 43%);
+  --urgency-safe-bg:      hsla(149, 35%, 43%, 0.08);
 
-  /* ESTADOS SEMÁNTICOS */
-  --success:           #22C55E;
-  --success-bg:        #F0FDF4;
-  --success-border:    #86EFAC;
-  --success-text:      #15803D;
+  /* ESTADOS SEMÁNTICOS — tintes con alpha (funcionan en ambos modos) */
+  --success:           hsl(148, 48%, 47%);
+  --success-bg:        hsla(148, 48%, 47%, 0.12);
+  --success-border:    hsla(148, 48%, 47%, 0.35);
+  --success-text:      hsl(153, 65%, 27%);
 
-  --error:             #EF4444;
-  --error-bg:          #FEF2F2;
-  --error-border:      #FECACA;
-  --error-text:        #B91C1C;
+  --error:             hsl(4, 72%, 55%);
+  --error-bg:          hsla(4, 72%, 55%, 0.10);
+  --error-border:      hsla(4, 72%, 55%, 0.35);
+  --error-text:        hsl(4, 72%, 38%);
 
-  --warning:           #F59E0B;
-  --warning-bg:        #FFFBEB;
-  --warning-border:    #FDE68A;
-  --warning-text:      #B45309;
+  --warning:           hsl(40, 79%, 47%);
+  --warning-bg:        hsla(43, 83%, 57%, 0.15);
+  --warning-border:    hsla(40, 79%, 47%, 0.40);
+  --warning-text:      hsl(40, 98%, 30%);
 
-  --neutral:           #6B7280;
-  --neutral-bg:        #F9FAFB;
-  --neutral-border:    #D1D5DB;
-  --neutral-text:      #374151;
+  --neutral:           hsl(31, 23%, 50%);
+  --neutral-bg:        hsla(34, 37%, 70%, 0.15); /* l-alpha-gray */
+  --neutral-border:    hsl(37, 38%, 83%);
+  --neutral-text:      hsl(36, 32%, 30%);
 
   /* Auxiliares de layout */
   --shadow-card-hover: 0 4px 20px rgba(160, 80, 40, 0.10);
   --overlay-drawer:    rgba(26, 23, 20, 0.2);
-  --accent-hover-bg:   rgba(196, 112, 74, 0.08);
-  --topbar-bg:         rgba(242, 237, 230, 0.88);
+  --accent-hover-bg:   hsla(27, 100%, 50%, 0.08);
+  --topbar-bg:         hsla(35, 37%, 92%, 0.88);
 
   /* SOMBRAS */
   --shadow-sm:         0 1px 3px rgba(42,26,16,0.06), 0 1px 2px rgba(42,26,16,0.04);
@@ -127,7 +134,7 @@
   --shadow-lg:         0 8px 32px rgba(42,26,16,0.12), 0 2px 8px rgba(42,26,16,0.08);
   --shadow-card:       0 1px 4px rgba(160,100,50,0.06), inset 0 1px 0 rgba(255,255,255,0.8);
   --shadow-modal:      0 8px 40px rgba(42,26,16,0.14), 0 2px 8px rgba(42,26,16,0.08);
-  --shadow-terra:      0 4px 20px rgba(196,112,74,0.30);
+  --shadow-terra:      0 4px 20px hsla(21, 81%, 50%, 0.30);
 
   /* SALA — centro de mando 3D (paleta cobre-sobre-oscuro, hermana de .auth-dark) */
   --sala-bg:           #07070F;
@@ -150,6 +157,134 @@
   --transition-fast:   150ms;
   --transition-normal: 250ms;
   --transition-slow:   400ms;
+}
+
+/* ══════════════════════════════════════
+   Modo oscuro — Primary d-gray + acentos d-*
+   Activado con data-theme="dark" en <html> (ThemeToggle + script anti-flash)
+   ══════════════════════════════════════ */
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* FONDOS — d-gray, marrones cálidos */
+  --bg-page:           hsl(29, 16%, 13%);   /* d-gray-120 */
+  --bg-cream:          hsl(29, 16%, 13%);
+  --bg-sand:           hsl(28, 22%, 19%);   /* d-gray-80 */
+  --bg-card:           hsl(33, 20%, 17%);   /* d-gray-90 */
+  --bg-card-hover:     hsl(31, 24%, 20%);
+
+  --bg-glow-1:         hsla(27, 100%, 55%, 0.05);
+  --bg-glow-2:         hsla(33, 40%, 60%, 0.03);
+
+  /* SIDEBAR / DOCK — un paso más oscuro que la página */
+  --bg-sidebar:        hsl(24, 18%, 9%);
+  --grid-color:        rgba(255, 220, 160, 0.05);
+
+  /* BORDES — base d-gray-30 rgb(196,174,150) */
+  --border-stone:      rgba(196, 174, 150, 0.22);
+  --border-subtle:     rgba(196, 174, 150, 0.13);
+  --border-medium:     rgba(196, 174, 150, 0.22);
+  --border-strong:     rgba(196, 174, 150, 0.36);
+  --border-accent:     hsla(26, 85%, 58%, 0.45);
+
+  /* TEXTOS — d-gray 10/20/40/50 */
+  --text-primary:      hsl(32, 48%, 87%);
+  --text-secondary:    hsl(34, 39%, 74%);
+  --text-tertiary:     hsl(35, 27%, 58%);
+  --text-muted:        hsl(35, 27%, 58%);
+  --text-faint:        hsl(34, 24%, 48%);
+
+  /* ACENTO */
+  --accent-terracotta: hsl(26, 85%, 58%);   /* d-orange-10 */
+  --accent-text:       hsl(26, 85%, 62%);
+  --accent-dark:       hsl(24, 84%, 50%);   /* d-orange-20 */
+  --accent-light:      hsl(26, 85%, 66%);
+  --accent-glow:       hsla(26, 85%, 58%, 0.20);
+  --accent-ring:       hsla(26, 85%, 58%, 0.32);
+
+  /* ACENTOS SECUNDARIOS */
+  --orange:            hsl(24, 100%, 70%);
+  --crimson:           hsl(4, 60%, 30%);
+  --crimson-soft:      hsl(4, 50%, 38%);
+  --amber:             hsl(43, 45%, 55%);
+
+  /* MÓDULOS — acentos d-* (recalibrados para fondo oscuro) */
+  --module-proyectos:  hsl(26, 85%, 58%);
+  --module-mercados:   hsl(242, 52%, 69%);
+  --module-patrimonio: hsl(152, 51%, 54%);
+  --module-gastos:     hsl(194, 59%, 56%);
+  --module-notas:      hsl(43, 69%, 63%);
+  --module-agenda:     hsl(351, 50%, 66%);
+  --module-sala:       hsl(178, 39%, 55%);
+  --platform-tr:       hsl(152, 51%, 54%);
+  --platform-indexa:   hsl(194, 59%, 56%);
+  --platform-horos:    hsl(242, 52%, 69%);
+  --platform-mintos:   hsl(26, 85%, 58%);
+  --platform-crypto:   hsl(43, 69%, 63%);
+
+  /* FINANCIERO */
+  --color-gain:          hsl(152, 51%, 54%);
+  --color-gain-subtle:   hsla(152, 51%, 54%, 0.14);
+  --color-gain-border:   hsla(152, 51%, 54%, 0.30);
+  --color-loss:          hsl(4, 88%, 61%);
+  --color-loss-subtle:   hsla(4, 88%, 61%, 0.14);
+  --color-loss-border:   hsla(4, 88%, 61%, 0.30);
+  --color-neutral-fin:   hsl(43, 69%, 63%);
+  --color-neutral-subtle: hsla(43, 69%, 63%, 0.14);
+  --color-neutral-border: hsla(43, 69%, 63%, 0.30);
+
+  /* MORA P2P */
+  --mora-current: hsl(152, 51%, 54%);
+  --mora-grace:   hsl(43, 69%, 63%);
+  --mora-1-30:    hsl(26, 85%, 58%);
+  --mora-31-60:   hsla(4, 88%, 61%, 0.55);
+  --mora-60plus:  hsl(2, 75%, 58%);
+
+  /* URGENCIA */
+  --urgency-critical:     hsl(4, 88%, 64%);
+  --urgency-critical-bg:  hsla(4, 88%, 61%, 0.12);
+  --urgency-warning:      hsl(24, 84%, 58%);
+  --urgency-warning-bg:   hsla(24, 84%, 55%, 0.12);
+  --urgency-soon:         hsl(43, 69%, 60%);
+  --urgency-soon-bg:      hsla(43, 69%, 60%, 0.12);
+  --urgency-safe:         hsl(152, 40%, 55%);
+  --urgency-safe-bg:      hsla(152, 40%, 55%, 0.10);
+
+  /* SEMÁNTICOS */
+  --success:           hsl(152, 51%, 54%);
+  --success-bg:        hsla(152, 51%, 54%, 0.14);
+  --success-border:    hsla(152, 51%, 54%, 0.38);
+  --success-text:      hsl(152, 51%, 64%);
+
+  --error:             hsl(4, 88%, 61%);
+  --error-bg:          hsla(4, 88%, 61%, 0.13);
+  --error-border:      hsla(4, 88%, 61%, 0.38);
+  --error-text:        hsl(5, 94%, 73%);
+
+  --warning:           hsl(43, 69%, 63%);
+  --warning-bg:        hsla(43, 69%, 63%, 0.13);
+  --warning-border:    hsla(43, 69%, 63%, 0.38);
+  --warning-text:      hsl(43, 71%, 70%);
+
+  --neutral:           hsl(35, 27%, 58%);
+  --neutral-bg:        hsla(34, 24%, 40%, 0.20); /* d-alpha-gray */
+  --neutral-border:    hsl(31, 27%, 27%);
+  --neutral-text:      hsl(34, 39%, 74%);
+
+  /* Auxiliares */
+  --shadow-card-hover: 0 4px 20px rgba(0, 0, 0, 0.35);
+  --overlay-drawer:    rgba(0, 0, 0, 0.5);
+  --accent-hover-bg:   hsla(26, 85%, 58%, 0.10);
+  --topbar-bg:         hsla(29, 16%, 13%, 0.88);
+
+  /* SOMBRAS — más negras, sin inset claro */
+  --shadow-sm:         0 1px 3px rgba(0,0,0,0.25), 0 1px 2px rgba(0,0,0,0.18);
+  --shadow-md:         0 4px 16px rgba(0,0,0,0.30), 0 1px 4px rgba(0,0,0,0.22);
+  --shadow-lg:         0 8px 32px rgba(0,0,0,0.40), 0 2px 8px rgba(0,0,0,0.28);
+  --shadow-card:       0 1px 4px rgba(0,0,0,0.28);
+  --shadow-modal:      0 8px 40px rgba(0,0,0,0.50), 0 2px 8px rgba(0,0,0,0.30);
+  --shadow-terra:      0 4px 20px hsla(26, 85%, 58%, 0.28);
 }
 
 @theme inline {
@@ -188,6 +323,7 @@
   --color-mercados: var(--module-mercados);
   --color-notas: var(--module-notas);
   --color-agenda: var(--module-agenda);
+  --color-sala-module: var(--module-sala);
 
   /* Estados */
   --color-success: var(--success);
@@ -206,9 +342,9 @@ body {
   background-color: var(--bg-page);
   background-image:
     radial-gradient(ellipse 70% 60% at 5% 95%,
-      rgba(196,112,74,0.07) 0%, transparent 60%),
+      var(--bg-glow-1) 0%, transparent 60%),
     radial-gradient(ellipse 50% 45% at 95% 5%,
-      rgba(90,60,30,0.05) 0%, transparent 55%),
+      var(--bg-glow-2) 0%, transparent 55%),
     linear-gradient(var(--grid-color) 1px, transparent 1px),
     linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
   background-size:
@@ -219,7 +355,7 @@ body {
 }
 
 mark {
-  background-color: rgba(196, 112, 74, 0.2);
+  background-color: var(--accent-glow);
   color: inherit;
   border-radius: 2px;
   padding: 0 1px;
@@ -540,7 +676,7 @@ summary,
 /* ── Projects: Phase completion border glow ── */
 @keyframes phase-complete-glow {
   0% { border-color: var(--accent-terracotta); }
-  50% { border-color: #22C55E; }
+  50% { border-color: var(--success); }
   100% { border-color: transparent; }
 }
 
@@ -649,7 +785,7 @@ summary,
 
 /* ─── Date input ─── */
 input[type="date"] {
-  color-scheme: light;
+  /* color-scheme heredado de :root / [data-theme="dark"] */
   color: var(--text-primary);
 }
 input[type="date"]::-webkit-calendar-picker-indicator {
@@ -790,20 +926,20 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .tiptap-content ul[data-type="taskList"] { list-style: none; padding-left: 0; }
 .tiptap-content ul[data-type="taskList"] li { display: flex; align-items: flex-start; gap: 0.5rem; }
 .tiptap-content ul[data-type="taskList"] li > label { margin-top: 0.15rem; flex-shrink: 0; }
-.tiptap-content ul[data-type="taskList"] li > label input[type="checkbox"] { accent-color: #B07A3A; width: 14px; height: 14px; cursor: pointer; }
+.tiptap-content ul[data-type="taskList"] li > label input[type="checkbox"] { accent-color: var(--module-notas); width: 14px; height: 14px; cursor: pointer; }
 .tiptap-content ul[data-type="taskList"] li[data-checked="true"] > div { opacity: 0.55; text-decoration: line-through; }
-.tiptap-content blockquote { border-left: 3px solid #B07A3A; padding-left: 0.75rem; color: var(--color-text-secondary); font-style: italic; margin: 0.5rem 0; }
+.tiptap-content blockquote { border-left: 3px solid var(--module-notas); padding-left: 0.75rem; color: var(--color-text-secondary); font-style: italic; margin: 0.5rem 0; }
 .tiptap-content pre { background: var(--color-sand); border-radius: 0.5rem; padding: 0.875rem 1rem; overflow-x: auto; margin: 0.5rem 0; border: 1px solid var(--color-border); }
 .tiptap-content pre code { background: none; padding: 0; font-size: 0.8rem; font-family: var(--font-mono); }
 .tiptap-content code { background: var(--color-sand); padding: 0.1em 0.35em; border-radius: 0.25rem; font-size: 0.82em; font-family: var(--font-mono); }
 .tiptap-content hr { border: none; border-top: 1px solid var(--color-border); margin: 1rem 0; }
-.tiptap-content a { color: #B07A3A; text-decoration: underline; }
-.tiptap-content a:hover { color: #5a7a56; }
+.tiptap-content a { color: var(--module-notas); text-decoration: underline; }
+.tiptap-content a:hover { color: var(--accent-text); }
 .tiptap-content table { border-collapse: collapse; width: 100%; margin: 0.5rem 0; }
 .tiptap-content th, .tiptap-content td { border: 1px solid var(--color-border); padding: 0.4rem 0.6rem; font-size: 0.82rem; }
 .tiptap-content th { background: var(--color-sand); font-weight: 600; }
 .tiptap-content img { max-width: 100%; border-radius: 0.5rem; margin: 0.5rem 0; }
-.tiptap-content mark { background: rgba(196,112,74,0.2); border-radius: 0.2rem; padding: 0 0.15em; }
+.tiptap-content mark { background: var(--accent-glow); border-radius: 0.2rem; padding: 0 0.15em; }
 .tiptap-content .is-editor-empty:first-child::before { content: attr(data-placeholder); color: var(--color-text-tertiary); pointer-events: none; float: left; height: 0; }
 .tiptap-content .selectedCell { background: rgba(176,122,58,0.12); }
 

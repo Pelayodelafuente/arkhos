@@ -8,11 +8,11 @@ interface NotasRecientesProps {
 }
 
 const NOTE_COLORS: Record<string, string> = {
-  terracota: '#C4704A',
-  emerald:   '#2E7D6B',
-  blue:      '#3B78B0',
-  amber:     '#B07A3A',
-  violet:    '#7260C4',
+  terracota: 'var(--accent-terracotta)',
+  emerald:   'var(--color-gain)',
+  blue:      'var(--module-gastos)',
+  amber:     'var(--module-notas)',
+  violet:    'var(--module-mercados)',
 }
 
 interface TipTapNode {

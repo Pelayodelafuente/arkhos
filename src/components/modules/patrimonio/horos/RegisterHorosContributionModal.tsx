@@ -5,7 +5,7 @@ import { X, Plus } from "lucide-react";
 import { registerHorosContribution } from "@/app/actions/horos";
 import { useHorosStore } from "@/stores/horos-store";
 
-const HOROS_COLOR = "#7260C4";
+const HOROS_COLOR = "var(--module-mercados)";
 
 const fmtShares = (v: number) =>
   new Intl.NumberFormat("es-ES", { minimumFractionDigits: 6, maximumFractionDigits: 6 }).format(v);

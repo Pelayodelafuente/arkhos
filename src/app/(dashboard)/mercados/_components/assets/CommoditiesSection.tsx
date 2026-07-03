@@ -137,7 +137,7 @@ export function CommoditiesSection({ data, isLoading }: Props) {
   const metals = [
     { key: "gold", label: "Oro", unit: "USD/oz", data: gold, color: C.warning, gradId: "goldGrad" },
     { key: "silver", label: "Plata", unit: "USD/oz", data: silver, color: C.terracota, gradId: "silverGrad" },
-    { key: "oil", label: "Petróleo WTI", unit: "USD/bbl", data: oil, color: "#9B7A4A", gradId: "oilGrad" },
+    { key: "oil", label: "Petróleo WTI", unit: "USD/bbl", data: oil, color: "var(--platform-crypto)", gradId: "oilGrad" },
   ] as const;
 
   return (

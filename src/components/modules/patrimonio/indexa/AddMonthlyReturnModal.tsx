@@ -176,7 +176,7 @@ export function AddMonthlyReturnModal({ onClose }: AddMonthlyReturnModalProps) {
               className="rounded-lg px-3 py-2 text-xs"
               style={{
                 backgroundColor: "rgba(59,120,176,0.08)",
-                color: "#3B78B0",
+                color: "var(--module-gastos)",
                 border: "1px solid rgba(59,120,176,0.15)",
               }}
             >
@@ -237,7 +237,7 @@ export function AddMonthlyReturnModal({ onClose }: AddMonthlyReturnModalProps) {
               <span className="text-xs text-muted-foreground">TWR acumulada resultante</span>
               <span
                 className="font-mono text-sm font-semibold"
-                style={{ color: previewCumulative >= 0 ? "var(--platform-tr, #2E7D6B)" : "#A32D2D" }}
+                style={{ color: previewCumulative >= 0 ? "var(--platform-tr, var(--color-gain))" : "var(--color-loss)" }}
               >
                 {previewCumulative >= 0 ? "+" : ""}{previewCumulative.toFixed(2)}%
               </span>
@@ -251,7 +251,7 @@ export function AddMonthlyReturnModal({ onClose }: AddMonthlyReturnModalProps) {
             className="mt-4 flex items-center gap-2 rounded-lg px-3 py-2.5 text-xs"
             style={{
               backgroundColor: "rgba(163,45,45,0.08)",
-              color: "#A32D2D",
+              color: "var(--color-loss)",
               border: "1px solid rgba(163,45,45,0.15)",
             }}
           >
@@ -283,7 +283,7 @@ export function AddMonthlyReturnModal({ onClose }: AddMonthlyReturnModalProps) {
               backgroundColor: status === "success"
                 ? "rgba(46,125,107,0.12)"
                 : "rgba(59,120,176,0.12)",
-              color: status === "success" ? "var(--platform-tr, #2E7D6B)" : "#3B78B0",
+              color: status === "success" ? "var(--platform-tr, var(--color-gain))" : "var(--module-gastos)",
               border: status === "success"
                 ? "1px solid rgba(46,125,107,0.25)"
                 : "1px solid rgba(59,120,176,0.25)",

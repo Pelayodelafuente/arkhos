@@ -45,7 +45,7 @@ function CardSparkline({ values, color }: { values: number[]; color: string }) {
       return `${x.toFixed(1)},${y.toFixed(1)}`;
     })
     .join(" ");
-  const strokeColor = isPositive ? color : "#A32D2D";
+  const strokeColor = isPositive ? color : "var(--color-loss)";
   return (
     <svg width={W} height={H} aria-hidden="true" className="flex-shrink-0">
       <polyline
@@ -116,7 +116,7 @@ export function PlatformCard({
       whileHover={{
         scale: 1.02,
         y: -4,
-        boxShadow: `0 12px 40px ${colorHex}25`,
+        boxShadow: `0 12px 40px color-mix(in srgb, ${colorHex} 15%, transparent)`,
       }}
       whileTap={{ scale: 0.99 }}
       transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] as const }}

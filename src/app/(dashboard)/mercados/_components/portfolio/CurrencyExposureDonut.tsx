@@ -19,8 +19,8 @@ export function CurrencyExposureDonut({ usdExposurePct }: Props) {
   const eur = Math.max(0, 100 - usd);
 
   const data = [
-    { name: "USD", value: usd, color: "#4A7A9B" },
-    { name: "EUR / otras", value: eur, color: "#2E7D6B" },
+    { name: "USD", value: usd, color: "var(--module-gastos)" },
+    { name: "EUR / otras", value: eur, color: "var(--color-gain)" },
   ];
 
   return (

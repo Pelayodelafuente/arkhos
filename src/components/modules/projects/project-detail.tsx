@@ -160,7 +160,7 @@ const CONFETTI_PARTICLES: ConfettiParticle[] = Array.from({ length: 20 }, (_, i)
   id: i,
   x: Math.random() * 100,
   delay: Math.random() * 0.5,
-  color: i % 2 === 0 ? "#C4704A" : "#5b8c6a",
+  color: i % 2 === 0 ? "var(--accent-terracotta)" : "var(--urgency-safe)",
   size: 6 + Math.random() * 4,
 }))
 
@@ -1130,7 +1130,7 @@ function SortablePhaseItem({
                 <span
                   className="rounded-full px-2 py-0.5 text-[10px] font-medium"
                   style={{
-                    backgroundColor: `${statusConfig.color}14`,
+                    backgroundColor: `color-mix(in srgb, ${statusConfig.color} 8%, transparent)`,
                     color: statusConfig.color,
                   }}
                 >

@@ -210,16 +210,16 @@ export const CATEGORY_LABELS: Record<AssetCategory, string> = {
 };
 
 export const CATEGORY_COLORS: Record<AssetCategory, string> = {
-  etf_index: '#2E7D6B',
-  etf_thematic: '#3B78B0',
-  etf_bond: '#7260C4',
-  etf_commodity: '#B07A3A',
-  stock_us: '#C4704A',
-  stock_eu: '#5B8C6A',
+  etf_index: 'var(--color-gain)',
+  etf_thematic: 'var(--module-gastos)',
+  etf_bond: 'var(--module-mercados)',
+  etf_commodity: 'var(--module-notas)',
+  stock_us: 'var(--accent-terracotta)',
+  stock_eu: 'var(--urgency-safe)',
   stock_asia: '#E67E22',
-  fund: '#9B7A4A',
-  crypto: '#B07A3A',
-  p2p: '#888780',
+  fund: 'var(--platform-crypto)',
+  crypto: 'var(--module-notas)',
+  p2p: 'var(--text-muted)',
   cash: '#C0B8AE',
 };
 
@@ -233,8 +233,8 @@ export const RISK_LABELS: Record<RiskLevel, string> = {
 
 export const RISK_COLORS: Record<RiskLevel, string> = {
   very_low: '#6DB33F',
-  low: '#2E7D6B',
-  medium: '#B07A3A',
-  high: '#C4704A',
-  very_high: '#A32D2D',
+  low: 'var(--color-gain)',
+  medium: 'var(--module-notas)',
+  high: 'var(--accent-terracotta)',
+  very_high: 'var(--color-loss)',
 };

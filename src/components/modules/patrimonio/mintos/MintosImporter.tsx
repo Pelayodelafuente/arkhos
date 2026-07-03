@@ -131,8 +131,8 @@ function Badge({ ok, text }: { ok: boolean; text: string }) {
     <span
       className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
       style={{
-        backgroundColor: ok ? "color-mix(in srgb, #3B7A57 12%, transparent)" : "color-mix(in srgb, #A32D2D 12%, transparent)",
-        color: ok ? "#3B7A57" : "#A32D2D",
+        backgroundColor: ok ? "color-mix(in srgb, #3B7A57 12%, transparent)" : "color-mix(in srgb, var(--color-loss) 12%, transparent)",
+        color: ok ? "#3B7A57" : "var(--color-loss)",
       }}
     >
       {ok ? <CheckCircle2 size={11} strokeWidth={2} /> : <X size={11} strokeWidth={2} />}
@@ -416,15 +416,15 @@ function ImportPreview({
                     <td className="py-2 text-right font-mono tabular-nums" style={{ color: "var(--text-secondary)" }}>
                       {formatEur(m.buyback_interest + m.late_interest)}
                     </td>
-                    <td className="py-2 text-right font-mono tabular-nums" style={{ color: "#A32D2D" }}>
+                    <td className="py-2 text-right font-mono tabular-nums" style={{ color: "var(--color-loss)" }}>
                       -{formatEur(m.taxes_withheld)}
                     </td>
-                    <td className="py-2 text-right font-mono tabular-nums" style={{ color: "#A32D2D" }}>
+                    <td className="py-2 text-right font-mono tabular-nums" style={{ color: "var(--color-loss)" }}>
                       -{formatEur(m.commissions)}
                     </td>
                     <td
                       className="py-2 text-right font-mono tabular-nums font-semibold"
-                      style={{ color: m.net_interest >= 0 ? "#3B7A57" : "#A32D2D" }}
+                      style={{ color: m.net_interest >= 0 ? "#3B7A57" : "var(--color-loss)" }}
                     >
                       {m.net_interest >= 0 ? "+" : ""}
                       {formatEur(m.net_interest)}
@@ -441,7 +441,7 @@ function ImportPreview({
                 <td colSpan={4} />
                 <td
                   className="pt-2 text-right font-mono text-sm font-bold"
-                  style={{ color: preview.totalNetInterest >= 0 ? "#3B7A57" : "#A32D2D" }}
+                  style={{ color: preview.totalNetInterest >= 0 ? "#3B7A57" : "var(--color-loss)" }}
                 >
                   {preview.totalNetInterest >= 0 ? "+" : ""}
                   {formatEur(preview.totalNetInterest)}
@@ -897,8 +897,8 @@ export function MintosImporter() {
           style={{ backgroundColor: "var(--bg-card)", border: "1px solid rgba(163,45,45,0.3)" }}
         >
           <div className="flex items-center gap-3">
-            <AlertTriangle size={20} strokeWidth={1.5} style={{ color: "#A32D2D" }} aria-hidden="true" />
-            <h3 className="text-base font-medium" style={{ color: "#A32D2D" }}>
+            <AlertTriangle size={20} strokeWidth={1.5} style={{ color: "var(--color-loss)" }} aria-hidden="true" />
+            <h3 className="text-base font-medium" style={{ color: "var(--color-loss)" }}>
               Error al procesar el archivo
             </h3>
           </div>

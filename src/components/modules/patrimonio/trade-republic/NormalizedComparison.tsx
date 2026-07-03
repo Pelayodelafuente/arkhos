@@ -25,7 +25,7 @@ import { usePrefersReducedMotion } from "@/lib/hooks/use-prefers-reduced-motion"
  * histórico de forma lazy y permite elegir activos con pills.
  */
 
-const COLORS = ["#2E7D6B", "#B07A3A", "#7260C4", "#3B78B0", "#C4704A"];
+const COLORS = ["var(--color-gain)", "var(--module-notas)", "var(--module-mercados)", "var(--module-gastos)", "var(--accent-terracotta)"];
 const MAX_SERIES = 5;
 
 const fmtDate = (d: string) =>

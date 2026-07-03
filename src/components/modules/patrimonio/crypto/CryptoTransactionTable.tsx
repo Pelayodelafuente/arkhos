@@ -18,12 +18,12 @@ const TX_TYPE_LABELS: Record<CryptoTransactionType, string> = {
 const TX_TYPE_COLORS: Record<CryptoTransactionType, { bg: string; color: string; border: string }> = {
   buy: {
     bg: "rgba(46,125,107,0.10)",
-    color: "var(--platform-patrimonio, #2E7D6B)",
+    color: "var(--platform-patrimonio, var(--color-gain))",
     border: "1px solid rgba(46,125,107,0.20)",
   },
   sell: {
     bg: "rgba(163,45,45,0.10)",
-    color: "#A32D2D",
+    color: "var(--color-loss)",
     border: "1px solid rgba(163,45,45,0.20)",
   },
   transfer_in: {
@@ -43,7 +43,7 @@ const TX_TYPE_COLORS: Record<CryptoTransactionType, { bg: string; color: string;
   },
   defi_yield: {
     bg: "rgba(46,125,107,0.10)",
-    color: "var(--platform-patrimonio, #2E7D6B)",
+    color: "var(--platform-patrimonio, var(--color-gain))",
     border: "1px solid rgba(46,125,107,0.20)",
   },
 };
@@ -153,8 +153,8 @@ export function CryptoTransactionTable() {
                       tx.pl_since_buy_eur == null
                         ? "var(--text-muted)"
                         : tx.pl_since_buy_eur >= 0
-                          ? "var(--platform-patrimonio, #2E7D6B)"
-                          : "#A32D2D";
+                          ? "var(--platform-patrimonio, var(--color-gain))"
+                          : "var(--color-loss)";
 
                     return (
                       <tr

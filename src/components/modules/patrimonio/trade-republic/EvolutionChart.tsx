@@ -335,7 +335,7 @@ export function EvolutionChart({ height = 300, showBenchmark = false, showTotal:
           className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors"
           style={{
             backgroundColor: showTotal ? "rgba(59,120,176,0.12)" : "var(--bg-sand)",
-            color: showTotal ? "#3B78B0" : "var(--text-tertiary)",
+            color: showTotal ? "var(--module-gastos)" : "var(--text-tertiary)",
             border: `1px solid ${showTotal ? "rgba(59,120,176,0.3)" : "var(--border)"}`,
           }}
           aria-pressed={showTotal}
@@ -369,7 +369,7 @@ export function EvolutionChart({ height = 300, showBenchmark = false, showTotal:
       {showTotal && (
         <div className="mb-3 flex items-center gap-4 text-xs text-text-tertiary">
           <span className="flex items-center gap-1.5">
-            <span className="inline-block h-0.5 w-5 rounded-full" style={{ backgroundColor: "#3B78B0" }} />
+            <span className="inline-block h-0.5 w-5 rounded-full" style={{ backgroundColor: "var(--module-gastos)" }} />
             Patrimonio total (con efectivo)
           </span>
         </div>
@@ -467,11 +467,11 @@ export function EvolutionChart({ height = 300, showBenchmark = false, showTotal:
             <Line
               type="monotone"
               dataKey="totalValue"
-              stroke="#3B78B0"
+              stroke="var(--module-gastos)"
               strokeWidth={1.5}
               strokeDasharray="4 2"
               dot={false}
-              activeDot={{ r: 4, fill: "#3B78B0" }}
+              activeDot={{ r: 4, fill: "var(--module-gastos)" }}
               legendType="none"
             />
           )}

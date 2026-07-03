@@ -26,11 +26,11 @@ interface FiscalRowProps {
 function FiscalRow({ label, value, muted, accent }: FiscalRowProps) {
   const valueColor =
     accent === "warning"
-      ? "#B07A3A"
+      ? "var(--module-notas)"
       : accent === "negative"
-      ? "#A32D2D"
+      ? "var(--color-loss)"
       : accent === "positive"
-      ? "var(--platform-tr, #2E7D6B)"
+      ? "var(--platform-tr, var(--color-gain))"
       : "var(--text-primary)";
 
   return (
@@ -140,10 +140,10 @@ export function IndexaFiscalPanel({ overview, funds, positions, isLoading }: Ind
               size={14}
               strokeWidth={1.75}
               className="flex-shrink-0 mt-0.5"
-              style={{ color: "#B07A3A" }}
+              style={{ color: "var(--module-notas)" }}
               aria-hidden="true"
             />
-            <span style={{ color: "#B07A3A" }}>
+            <span style={{ color: "var(--module-notas)" }}>
               Si realizas todas las ganancias, podrías tributar{" "}
               <strong>{formatEur(potentialRetention)}</strong> en IRPF. Los fondos indexados
               se benefician del diferimiento fiscal hasta el reembolso.

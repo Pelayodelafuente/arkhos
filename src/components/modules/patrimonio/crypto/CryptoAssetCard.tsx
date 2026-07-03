@@ -31,7 +31,7 @@ interface CryptoAssetCardProps {
 export function CryptoAssetCard({ asset }: CryptoAssetCardProps) {
   const hasPL = asset.has_live_price && asset.pl_eur !== null && asset.pl_pct !== null;
   const isPositive = hasPL ? (asset.pl_eur as number) >= 0 : true;
-  const plColor = isPositive ? "var(--platform-patrimonio, #2E7D6B)" : "#A32D2D";
+  const plColor = isPositive ? "var(--platform-patrimonio, var(--color-gain))" : "var(--color-loss)";
   const assetColor = asset.color ?? "var(--platform-crypto)";
   const currentPrice = asset.current_price_eur;
   const showLossAlert = hasPL && (asset.pl_pct as number) < -30;
@@ -156,7 +156,7 @@ export function CryptoAssetCard({ asset }: CryptoAssetCardProps) {
           className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs"
           style={{
             backgroundColor: "rgba(163,45,45,0.08)",
-            color: "#A32D2D",
+            color: "var(--color-loss)",
             border: "1px solid rgba(163,45,45,0.18)",
           }}
           role="alert"
@@ -186,7 +186,7 @@ export function CryptoAssetCard({ asset }: CryptoAssetCardProps) {
               className="h-full rounded-full transition-all duration-500"
               style={{
                 width: `${Math.min(progressPct, 100)}%`,
-                backgroundColor: isPositive ? "var(--platform-patrimonio, #2E7D6B)" : "#A32D2D",
+                backgroundColor: isPositive ? "var(--platform-patrimonio, var(--color-gain))" : "var(--color-loss)",
               }}
             />
           </div>

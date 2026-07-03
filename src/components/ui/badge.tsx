@@ -5,15 +5,17 @@ const BADGE_STYLES: Record<string, React.CSSProperties> = {
   error:      { background: 'var(--error-bg)',      color: 'var(--error-text)',      borderColor: 'var(--error-border)' },
   warning:    { background: 'var(--warning-bg)',    color: 'var(--warning-text)',    borderColor: 'var(--warning-border)' },
   neutral:    { background: 'var(--neutral-bg)',    color: 'var(--neutral-text)',    borderColor: 'var(--neutral-border)' },
-  proyectos:  { background: 'rgba(196,112,74,0.10)',  color: '#8C4020', borderColor: 'rgba(196,112,74,0.30)' },
-  mercados:   { background: 'rgba(114,96,196,0.10)',  color: '#3D2880', borderColor: 'rgba(114,96,196,0.30)' },
-  patrimonio: { background: 'rgba(46,125,107,0.10)',  color: '#1A5E50', borderColor: 'rgba(46,125,107,0.30)' },
-  gastos:     { background: 'rgba(59,120,176,0.10)',  color: '#1E4F80', borderColor: 'rgba(59,120,176,0.30)' },
-  notas:      { background: 'rgba(176,122,58,0.10)',  color: '#7A4E10', borderColor: 'rgba(176,122,58,0.30)' },
+  // Módulos: texto = color del módulo mezclado con --text-primary → se oscurece
+  // en modo claro y se aclara en oscuro sin variantes manuales.
+  proyectos:  { background: 'color-mix(in srgb, var(--module-proyectos) 10%, transparent)',  color: 'color-mix(in srgb, var(--module-proyectos) 65%, var(--text-primary))', borderColor: 'color-mix(in srgb, var(--module-proyectos) 30%, transparent)' },
+  mercados:   { background: 'color-mix(in srgb, var(--module-mercados) 10%, transparent)',   color: 'color-mix(in srgb, var(--module-mercados) 65%, var(--text-primary))', borderColor: 'color-mix(in srgb, var(--module-mercados) 30%, transparent)' },
+  patrimonio: { background: 'color-mix(in srgb, var(--module-patrimonio) 10%, transparent)', color: 'color-mix(in srgb, var(--module-patrimonio) 65%, var(--text-primary))', borderColor: 'color-mix(in srgb, var(--module-patrimonio) 30%, transparent)' },
+  gastos:     { background: 'color-mix(in srgb, var(--module-gastos) 10%, transparent)',     color: 'color-mix(in srgb, var(--module-gastos) 65%, var(--text-primary))', borderColor: 'color-mix(in srgb, var(--module-gastos) 30%, transparent)' },
+  notas:      { background: 'color-mix(in srgb, var(--module-notas) 10%, transparent)',      color: 'color-mix(in srgb, var(--module-notas) 65%, var(--text-primary))', borderColor: 'color-mix(in srgb, var(--module-notas) 30%, transparent)' },
   // Legacy aliases
-  terracotta: { background: 'rgba(196,112,74,0.10)',  color: '#8C4020', borderColor: 'rgba(196,112,74,0.30)' },
+  terracotta: { background: 'color-mix(in srgb, var(--accent-terracotta) 10%, transparent)', color: 'color-mix(in srgb, var(--accent-terracotta) 65%, var(--text-primary))', borderColor: 'color-mix(in srgb, var(--accent-terracotta) 30%, transparent)' },
   green:      { background: 'var(--success-bg)',    color: 'var(--success-text)',    borderColor: 'var(--success-border)' },
-  blue:       { background: 'rgba(59,120,176,0.10)', color: '#1E4F80', borderColor: 'rgba(59,120,176,0.30)' },
+  blue:       { background: 'color-mix(in srgb, var(--module-gastos) 10%, transparent)', color: 'color-mix(in srgb, var(--module-gastos) 65%, var(--text-primary))', borderColor: 'color-mix(in srgb, var(--module-gastos) 30%, transparent)' },
   gold:       { background: 'var(--warning-bg)',    color: 'var(--warning-text)',    borderColor: 'var(--warning-border)' },
   gray:       { background: 'var(--neutral-bg)',    color: 'var(--neutral-text)',    borderColor: 'var(--neutral-border)' },
 }

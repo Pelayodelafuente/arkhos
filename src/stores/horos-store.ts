@@ -63,7 +63,7 @@ const SECTOR_COLORS = [
 ];
 
 const GEO_COLORS = [
-  '#7260C4',
+  'var(--module-mercados)',
   '#8A78D0',
   '#A290DC',
   '#5A4A9E',

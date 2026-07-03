@@ -17,9 +17,9 @@ const FUND_TYPE_LABEL: Record<string, string> = {
 
 // Using inline style hex only for the fund accent bars (literal brand colors)
 const FUND_TYPE_COLOR: Record<string, string> = {
-  equity: "#3B78B0",
-  bond: "#7260C4",
-  cash: "#888780",
+  equity: "var(--module-gastos)",
+  bond: "var(--module-mercados)",
+  cash: "var(--text-muted)",
 };
 
 interface PositionCardProps {
@@ -29,7 +29,7 @@ interface PositionCardProps {
 
 function PositionCard({ position, index }: PositionCardProps) {
   const fundType = position.fund_type ?? "equity";
-  const color = FUND_TYPE_COLOR[fundType] ?? "#888780";
+  const color = FUND_TYPE_COLOR[fundType] ?? "var(--text-muted)";
   const label = FUND_TYPE_LABEL[fundType] ?? fundType.toUpperCase();
   const name = position.fund?.name ?? "Fondo";
   const isin = position.fund?.isin ?? null;
@@ -75,7 +75,7 @@ function PositionCard({ position, index }: PositionCardProps) {
           </div>
           <span
             className="flex-shrink-0 px-1.5 py-0.5 rounded text-xs font-semibold tracking-wide"
-            style={{ backgroundColor: `${color}20`, color }}
+            style={{ backgroundColor: `color-mix(in srgb, ${color} 13%, transparent)`, color }}
           >
             {label}
           </span>
@@ -112,7 +112,7 @@ function PositionCard({ position, index }: PositionCardProps) {
             <span style={{ color: "var(--text-muted)" }}>Ganancia latente</span>
             <p
               className="font-mono font-medium tabular-nums"
-              style={{ color: gain >= 0 ? "var(--platform-tr, #2E7D6B)" : "#A32D2D" }}
+              style={{ color: gain >= 0 ? "var(--platform-tr, var(--color-gain))" : "var(--color-loss)" }}
             >
               {gain >= 0 ? "+" : ""}
               {formatEur(gain)}{" "}

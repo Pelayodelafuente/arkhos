@@ -54,13 +54,13 @@ export function SyncBit2MeButton({ compact = false }: { compact?: boolean }) {
     status === "success"
       ? {
           backgroundColor: "rgba(46,125,107,0.10)",
-          color: "var(--platform-patrimonio, #2E7D6B)",
+          color: "var(--platform-patrimonio, var(--color-gain))",
           border: "1px solid rgba(46,125,107,0.20)",
         }
       : status === "error"
         ? {
             backgroundColor: "rgba(163,45,45,0.10)",
-            color: "#A32D2D",
+            color: "var(--color-loss)",
             border: "1px solid rgba(163,45,45,0.20)",
           }
         : {
@@ -110,7 +110,7 @@ export function SyncBit2MeButton({ compact = false }: { compact?: boolean }) {
         {label}
       </button>
       {errorMsg && (
-        <p className="font-mono text-xs max-w-48 text-right" style={{ color: "#A32D2D" }}>
+        <p className="font-mono text-xs max-w-48 text-right" style={{ color: "var(--color-loss)" }}>
           {errorMsg}
         </p>
       )}

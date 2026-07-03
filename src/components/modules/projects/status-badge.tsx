@@ -11,7 +11,7 @@ export function StatusBadge({ status, color = "#9a7a5a", className = "" }: Statu
     <span
       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${className}`}
       style={{
-        backgroundColor: `${color}14`,
+        backgroundColor: `color-mix(in srgb, ${color} 8%, transparent)`,
         color: color,
       }}
     >

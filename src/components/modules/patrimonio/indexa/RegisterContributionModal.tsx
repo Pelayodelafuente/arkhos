@@ -5,9 +5,9 @@ import { X, ArrowDownToLine, RefreshCw, CheckCircle2, AlertCircle } from "lucide
 import type { IndexaFund, IndexaMonthlyPlan } from "@/types/indexa";
 
 const FUND_TYPE_COLOR: Record<string, string> = {
-  equity: "#3B78B0",
-  bond: "#7260C4",
-  cash: "#888780",
+  equity: "var(--module-gastos)",
+  bond: "var(--module-mercados)",
+  cash: "var(--text-muted)",
 };
 
 import { formatEur } from "@/lib/utils/format";
@@ -124,7 +124,7 @@ export function RegisterContributionModal({
   if (!isOpen) return null;
 
   const selectedFund = activeFunds.find((f) => f.id === fundId);
-  const fundColor = FUND_TYPE_COLOR[selectedFund?.fund_type ?? "equity"] ?? "#3B78B0";
+  const fundColor = FUND_TYPE_COLOR[selectedFund?.fund_type ?? "equity"] ?? "var(--module-gastos)";
 
   const inputStyle: React.CSSProperties = {
     backgroundColor: "var(--bg-card)",
@@ -287,7 +287,7 @@ export function RegisterContributionModal({
               </div>
               <div className="text-right">
                 <p className="text-muted-foreground">Valor añadido</p>
-                <p className="font-mono font-semibold" style={{ color: "var(--platform-indexa, #3B78B0)" }}>
+                <p className="font-mono font-semibold" style={{ color: "var(--platform-indexa, var(--module-gastos))" }}>
                   {formatEur(previewNewValue)}
                 </p>
               </div>
@@ -312,7 +312,7 @@ export function RegisterContributionModal({
               className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-xs"
               style={{
                 backgroundColor: "rgba(163,45,45,0.08)",
-                color: "#A32D2D",
+                color: "var(--color-loss)",
                 border: "1px solid rgba(163,45,45,0.15)",
               }}
             >
@@ -346,7 +346,7 @@ export function RegisterContributionModal({
               backgroundColor: submitStatus === "success"
                 ? "rgba(46,125,107,0.12)"
                 : "rgba(59,120,176,0.12)",
-              color: submitStatus === "success" ? "var(--platform-tr, #2E7D6B)" : "#3B78B0",
+              color: submitStatus === "success" ? "var(--platform-tr, var(--color-gain))" : "var(--module-gastos)",
               border: submitStatus === "success"
                 ? "1px solid rgba(46,125,107,0.25)"
                 : "1px solid rgba(59,120,176,0.25)",

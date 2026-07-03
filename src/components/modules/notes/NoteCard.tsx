@@ -257,7 +257,7 @@ export function NoteCard({ note, userId: _userId, onEdit, onDelete, onTogglePin,
           <div className="flex items-center gap-2 mb-2">
             <div className="flex-1 h-1 rounded-full bg-foreground/8 overflow-hidden">
               <div
-                className="h-full rounded-full bg-[#B07A3A] transition-all"
+                className="h-full rounded-full bg-[var(--module-notas)] transition-all"
                 style={{ width: checklistProgress.total > 0 ? `${(checklistProgress.checked / checklistProgress.total) * 100}%` : '0%' }}
               />
             </div>
@@ -274,7 +274,7 @@ export function NoteCard({ note, userId: _userId, onEdit, onDelete, onTogglePin,
               const cfg = NOTE_STATUS_CONFIG[note.status]
               return (
                 <span
-                  style={{ background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.color}40` }}
+                  style={{ background: cfg.bg, color: cfg.color, border: `1px solid color-mix(in srgb, ${cfg.color} 25%, transparent)` }}
                   className="rounded-full px-2 py-0.5 text-[10px] font-medium"
                 >
                   {cfg.label}
@@ -307,7 +307,7 @@ function MenuButton({ icon, label, onClick, danger, active }: { icon: ReactNode;
         danger
           ? 'text-red-600 hover:bg-red-50'
           : active
-          ? 'text-[#B07A3A] bg-[#B07A3A]/8 hover:bg-[#B07A3A]/12'
+          ? 'text-[var(--module-notas)] bg-[var(--module-notas)]/8 hover:bg-[var(--module-notas)]/12'
           : 'text-text-secondary hover:bg-sand'
       }`}
     >

@@ -140,7 +140,7 @@ function FiscalCard({ label, value, sub, accentColor }: FiscalCardProps) {
 
 function Row({ label, value }: { label: string; value: number }) {
   const color =
-    value > 0 ? "#2E7D6B" : value < 0 ? "#A32D2D" : "var(--text-secondary)";
+    value > 0 ? "var(--color-gain)" : value < 0 ? "var(--color-loss)" : "var(--text-secondary)";
   return (
     <div className="flex items-center justify-between py-1">
       <span className="text-sm text-text-secondary">{label}</span>
@@ -202,9 +202,9 @@ const TLH_STATUS_LABELS: Record<TLHStatusValue, string> = {
 };
 
 const TLH_STATUS_COLORS: Record<TLHStatusValue, { bg: string; text: string }> = {
-  pendiente: { bg: "rgba(163,45,45,0.10)", text: "#A32D2D" },
-  revisado: { bg: "rgba(176,122,58,0.12)", text: "#B07A3A" },
-  aplicado: { bg: "rgba(46,125,107,0.10)", text: "#2E7D6B" },
+  pendiente: { bg: "rgba(163,45,45,0.10)", text: "var(--color-loss)" },
+  revisado: { bg: "rgba(176,122,58,0.12)", text: "var(--module-notas)" },
+  aplicado: { bg: "rgba(46,125,107,0.10)", text: "var(--color-gain)" },
 };
 
 const TLH_STATUS_OPTIONS: TLHStatusValue[] = ["pendiente", "revisado", "aplicado"];
@@ -294,9 +294,9 @@ function TaxLossHarvestingPanel({ trNonCash, totalRealizedThisYear }: TaxLossHar
               style={{
                 color:
                   totalRealizedThisYear > 0
-                    ? "#C4704A"
+                    ? "var(--accent-terracotta)"
                     : totalRealizedThisYear < 0
-                    ? "#2E7D6B"
+                    ? "var(--color-gain)"
                     : "var(--foreground)",
               }}
             >
@@ -307,7 +307,7 @@ function TaxLossHarvestingPanel({ trNonCash, totalRealizedThisYear }: TaxLossHar
             <p className="text-xs font-medium" style={{ color: "var(--text-tertiary)" }}>
               Pérdidas latentes disponibles
             </p>
-            <p className="mt-1 font-mono text-lg font-semibold" style={{ color: "#A32D2D" }}>
+            <p className="mt-1 font-mono text-lg font-semibold" style={{ color: "var(--color-loss)" }}>
               -{formatEur(totalLatentLoss)}
             </p>
           </div>
@@ -315,7 +315,7 @@ function TaxLossHarvestingPanel({ trNonCash, totalRealizedThisYear }: TaxLossHar
             <p className="text-xs font-medium" style={{ color: "var(--text-tertiary)" }}>
               Ahorro fiscal estimado
             </p>
-            <p className="mt-1 font-mono text-lg font-semibold" style={{ color: "#2E7D6B" }}>
+            <p className="mt-1 font-mono text-lg font-semibold" style={{ color: "var(--color-gain)" }}>
               {formatEur(estimatedSaving)}
             </p>
             <p className="mt-0.5 text-xs" style={{ color: "var(--text-tertiary)" }}>
@@ -334,7 +334,7 @@ function TaxLossHarvestingPanel({ trNonCash, totalRealizedThisYear }: TaxLossHar
           >
             <p
               className="text-sm font-medium"
-              style={{ color: canFullyOffset ? "#2E7D6B" : "#A32D2D" }}
+              style={{ color: canFullyOffset ? "var(--color-gain)" : "var(--color-loss)" }}
             >
               {canFullyOffset
                 ? "Puedes compensar totalmente las ganancias de este año"
@@ -351,7 +351,7 @@ function TaxLossHarvestingPanel({ trNonCash, totalRealizedThisYear }: TaxLossHar
               border: "1px solid rgba(46,125,107,0.25)",
             }}
           >
-            <p className="text-sm font-medium" style={{ color: "#2E7D6B" }}>
+            <p className="text-sm font-medium" style={{ color: "var(--color-gain)" }}>
               Sin ganancias realizadas este año. Las pérdidas latentes podrán compensar ganancias futuras hasta 4 años.
             </p>
           </div>
@@ -378,7 +378,7 @@ function TaxLossHarvestingPanel({ trNonCash, totalRealizedThisYear }: TaxLossHar
                       className="shrink-0 rounded-md px-2 py-0.5 text-xs font-semibold"
                       style={{
                         backgroundColor: "rgba(163,45,45,0.12)",
-                        color: "#A32D2D",
+                        color: "var(--color-loss)",
                         fontFamily: "var(--font-mono)",
                       }}
                     >
@@ -392,7 +392,7 @@ function TaxLossHarvestingPanel({ trNonCash, totalRealizedThisYear }: TaxLossHar
                     </div>
                   </div>
                   <div className="shrink-0 flex flex-col items-end gap-1">
-                    <p className="font-mono text-sm font-semibold" style={{ color: "#A32D2D" }}>
+                    <p className="font-mono text-sm font-semibold" style={{ color: "var(--color-loss)" }}>
                       {formatEur(c.lossAmount)}
                     </p>
                     <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
@@ -515,25 +515,25 @@ export function FiscalidadPanel() {
           label="Dividendos recibidos"
           value={formatEur(dividendsThisYear)}
           sub={`${YEAR} · equity`}
-          accentColor="#2E7D6B"
+          accentColor="var(--color-gain)"
         />
         <FiscalCard
           label="Intereses + Saveback"
           value={formatEur(interestsThisYear + savebackThisYear)}
           sub={`${YEAR} · cuenta TR`}
-          accentColor="#4A7A9B"
+          accentColor="var(--module-gastos)"
         />
         <FiscalCard
           label="Ganancias realizadas"
           value={formatEur(totalRealizedThisYear)}
           sub={realizedThisYear.length > 0 ? `${realizedThisYear.length} ventas FIFO` : "Sin ventas este año"}
-          accentColor={totalRealizedThisYear >= 0 ? "#2E7D6B" : "#A32D2D"}
+          accentColor={totalRealizedThisYear >= 0 ? "var(--color-gain)" : "var(--color-loss)"}
         />
         <FiscalCard
           label="IRPF estimado"
           value={formatEur(irpfEstimado)}
           sub={`Base: ${formatEur(baseImponible)} · tipo ef. ${tipoEfectivo.toFixed(1)}%`}
-          accentColor="#C4704A"
+          accentColor="var(--accent-terracotta)"
         />
       </div>
 
@@ -559,7 +559,7 @@ export function FiscalidadPanel() {
           <span className="text-sm font-semibold text-foreground">IRPF a pagar</span>
           <span
             className="font-mono text-sm font-semibold"
-            style={{ color: irpfEstimado > 0 ? "#C4704A" : "var(--text-secondary)" }}
+            style={{ color: irpfEstimado > 0 ? "var(--accent-terracotta)" : "var(--text-secondary)" }}
           >
             {formatEur(irpfEstimado)}
             {tipoEfectivo > 0 && (
@@ -579,7 +579,7 @@ export function FiscalidadPanel() {
             <span className="text-sm text-text-secondary">P&L total cartera TR</span>
             <span
               className="font-mono text-sm font-semibold"
-              style={{ color: latentPLTotal >= 0 ? "#2E7D6B" : "#A32D2D" }}
+              style={{ color: latentPLTotal >= 0 ? "var(--color-gain)" : "var(--color-loss)" }}
             >
               {latentPLTotal >= 0 ? "+" : ""}
               {formatEur(latentPLTotal)}
@@ -587,13 +587,13 @@ export function FiscalidadPanel() {
           </div>
           <div className="flex items-center justify-between py-2">
             <span className="text-sm text-text-secondary">Plusvalías latentes (positivas)</span>
-            <span className="font-mono text-sm" style={{ color: "#2E7D6B" }}>
+            <span className="font-mono text-sm" style={{ color: "var(--color-gain)" }}>
               +{formatEur(latentPLPositive)}
             </span>
           </div>
           <div className="flex items-center justify-between py-2">
             <span className="text-sm text-text-secondary">IRPF si vendieras todo hoy</span>
-            <span className="font-mono text-sm" style={{ color: "#C4704A" }}>
+            <span className="font-mono text-sm" style={{ color: "var(--accent-terracotta)" }}>
               {formatEur(irpfSiVendieras)}
             </span>
           </div>
@@ -626,7 +626,7 @@ export function FiscalidadPanel() {
                 <div className="text-right">
                   <p
                     className="font-mono text-sm font-semibold"
-                    style={{ color: r.pl >= 0 ? "#2E7D6B" : "#A32D2D" }}
+                    style={{ color: r.pl >= 0 ? "var(--color-gain)" : "var(--color-loss)" }}
                   >
                     {r.pl >= 0 ? "+" : ""}
                     {formatEur(r.pl)}

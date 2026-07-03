@@ -61,9 +61,9 @@ export function SelectCustom({
           px-2 py-1 text-xs font-sans text-text-secondary
           cursor-pointer select-none
           transition-colors duration-150
-          hover:border-[#C4704A]/40 hover:text-foreground
-          focus:outline-none focus:ring-1 focus:ring-[#C4704A]/40
-          ${open ? "border-[#C4704A]/40 text-foreground" : ""}
+          hover:border-[var(--accent-terracotta)]/40 hover:text-foreground
+          focus:outline-none focus:ring-1 focus:ring-[var(--accent-terracotta)]/40
+          ${open ? "border-[var(--accent-terracotta)]/40 text-foreground" : ""}
           ${buttonClassName}
         `}
       >

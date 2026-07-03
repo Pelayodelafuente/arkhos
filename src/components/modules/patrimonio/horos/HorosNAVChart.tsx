@@ -11,7 +11,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const HOROS_COLOR = "#7260C4";
+const HOROS_COLOR = "var(--module-mercados)";
 const GRANATE = "#8B1A2E";
 
 const fmtNav = (v: number) =>
@@ -56,7 +56,7 @@ function CustomTooltip({ active, payload, label }: TooltipProps) {
         {avg > 0 && (
           <div className="flex justify-between gap-4">
             <span style={{ color: "var(--text-muted)" }}>vs precio medio</span>
-            <span style={{ color: diffPct >= 0 ? "var(--platform-tr, #2E7D6B)" : GRANATE }}>
+            <span style={{ color: diffPct >= 0 ? "var(--platform-tr, var(--color-gain))" : GRANATE }}>
               {diffPct >= 0 ? "+" : ""}{diffPct.toFixed(2)}%
             </span>
           </div>
@@ -105,13 +105,13 @@ export function HorosNAVChart({ data, avgNav }: HorosNAVChartProps) {
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border-stone, rgba(160,120,80,0.15))" />
           <XAxis
             dataKey="date"
-            tick={{ fontSize: 10, fill: "var(--text-muted, #888780)" }}
+            tick={{ fontSize: 10, fill: "var(--text-muted, var(--text-muted))" }}
             tickLine={false}
             axisLine={false}
             interval="preserveStartEnd"
           />
           <YAxis
-            tick={{ fontSize: 10, fill: "var(--text-muted, #888780)" }}
+            tick={{ fontSize: 10, fill: "var(--text-muted, var(--text-muted))" }}
             tickLine={false}
             axisLine={false}
             domain={["auto", "auto"]}

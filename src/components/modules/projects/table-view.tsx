@@ -267,7 +267,7 @@ export default function TableView({ phases, projectId: _projectId, userId: _user
             </select>
             <button
               onClick={handleBulkStatus}
-              className="rounded-md bg-accent px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-[#a85838]"
+              className="rounded-md bg-accent px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-[var(--accent-dark)]"
             >
               Aplicar estado
             </button>
@@ -359,7 +359,7 @@ export default function TableView({ phases, projectId: _projectId, userId: _user
                       {task.priority !== 'none' && (
                         <span
                           className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium"
-                          style={{ backgroundColor: `${priorityColor}18`, color: priorityColor }}
+                          style={{ backgroundColor: `color-mix(in srgb, ${priorityColor} 9%, transparent)`, color: priorityColor }}
                         >
                           <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: priorityColor }} />
                           {TASK_PRIORITY_CONFIG[task.priority].label}

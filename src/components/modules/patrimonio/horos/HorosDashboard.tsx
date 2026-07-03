@@ -16,7 +16,7 @@ import { HorosPlanPanel } from "./HorosPlanPanel";
 import { HorosFiscalPanel } from "./HorosFiscalPanel";
 import { UpdateNAVModal } from "./UpdateNAVModal";
 
-const HOROS_COLOR = "#7260C4";
+const HOROS_COLOR = "var(--module-mercados)";
 
 const TABS = [
   { id: "dashboard" as const, label: "Resumen" },

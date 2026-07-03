@@ -10,9 +10,9 @@ export type NoteStatus = 'none' | 'idea' | 'in_progress' | 'done'
 
 export const NOTE_STATUS_CONFIG: Record<NoteStatus, { label: string; color: string; bg: string }> = {
   none:        { label: '',           color: '',         bg: '' },
-  idea:        { label: 'Idea',       color: '#B07A3A',  bg: 'rgba(176,122,58,0.12)' },
-  in_progress: { label: 'En progreso', color: '#3B78B0', bg: 'rgba(59,120,176,0.12)' },
-  done:        { label: 'Hecho',      color: '#2E7D6B',  bg: 'rgba(46,125,107,0.12)' },
+  idea:        { label: 'Idea',       color: 'var(--module-notas)',  bg: 'rgba(176,122,58,0.12)' },
+  in_progress: { label: 'En progreso', color: 'var(--module-gastos)', bg: 'rgba(59,120,176,0.12)' },
+  done:        { label: 'Hecho',      color: 'var(--color-gain)',  bg: 'rgba(46,125,107,0.12)' },
 }
 export type NodeType = 'note' | 'text' | 'url' | 'image'
 export type EdgeColor = 'default' | 'sage' | 'terracotta' | 'stone' | 'blue'
@@ -177,10 +177,10 @@ export interface SnapGuide {
 
 export const NOTE_COLOR_CONFIG: { value: NoteColor; bg: string; border: string; label: string }[] = [
   { value: 'default', bg: '#f7f1e8', border: 'rgba(160,120,80,0.35)', label: 'Neutro' },
-  { value: 'sage', bg: '#faf5ec', border: '#B07A3A', label: 'Sage' },
-  { value: 'terracotta', bg: '#faf0ec', border: '#C4704A', label: 'Terracotta' },
+  { value: 'sage', bg: '#faf5ec', border: 'var(--module-notas)', label: 'Sage' },
+  { value: 'terracotta', bg: '#faf0ec', border: 'var(--accent-terracotta)', label: 'Terracotta' },
   { value: 'stone', bg: '#f5f2ee', border: 'var(--text-faint)', label: 'Stone' },
-  { value: 'blue', bg: '#eef2f8', border: '#3B78B0', label: 'Blue' },
+  { value: 'blue', bg: '#eef2f8', border: 'var(--module-gastos)', label: 'Blue' },
   { value: 'gold', bg: '#faf5ec', border: '#C4974A', label: 'Gold' },
 ]
 
@@ -194,7 +194,7 @@ export interface HistoryEntry {
 export const EDGE_COLOR_CONFIG: Record<string, string> = {
   default: 'var(--text-faint)',
   sage: 'var(--module-notas)',
-  terracotta: '#C4704A',
+  terracotta: 'var(--accent-terracotta)',
   stone: '#8A7A6A',
-  blue: '#3B78B0',
+  blue: 'var(--module-gastos)',
 }

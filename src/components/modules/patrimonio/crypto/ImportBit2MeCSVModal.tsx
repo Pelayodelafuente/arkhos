@@ -245,7 +245,7 @@ export function ImportBit2MeCSVModal({ onClose, onSuccess }: ImportBit2MeCSVModa
             className="flex items-start gap-2 rounded-lg px-3 py-2.5 text-sm"
             style={{
               backgroundColor: "rgba(163,45,45,0.08)",
-              color: "#A32D2D",
+              color: "var(--color-loss)",
               border: "1px solid rgba(163,45,45,0.18)",
             }}
             role="alert"
@@ -263,7 +263,7 @@ export function ImportBit2MeCSVModal({ onClose, onSuccess }: ImportBit2MeCSVModa
               className="px-2 py-0.5 rounded-full text-xs font-mono"
               style={{
                 backgroundColor: "rgba(46,125,107,0.10)",
-                color: "var(--platform-patrimonio, #2E7D6B)",
+                color: "var(--platform-patrimonio, var(--color-gain))",
                 border: "1px solid rgba(46,125,107,0.20)",
               }}
             >
@@ -342,7 +342,7 @@ export function ImportBit2MeCSVModal({ onClose, onSuccess }: ImportBit2MeCSVModa
                         {row.isDuplicate ? (
                           <span style={{ color: "var(--text-muted)" }}>Duplicada</span>
                         ) : (
-                          <span style={{ color: "var(--platform-patrimonio, #2E7D6B)" }}>Nueva</span>
+                          <span style={{ color: "var(--platform-patrimonio, var(--color-gain))" }}>Nueva</span>
                         )}
                       </td>
                     </tr>
@@ -371,7 +371,7 @@ export function ImportBit2MeCSVModal({ onClose, onSuccess }: ImportBit2MeCSVModa
             className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm"
             style={{
               backgroundColor: "rgba(46,125,107,0.08)",
-              color: "var(--platform-patrimonio, #2E7D6B)",
+              color: "var(--platform-patrimonio, var(--color-gain))",
               border: "1px solid rgba(46,125,107,0.18)",
             }}
             role="status"

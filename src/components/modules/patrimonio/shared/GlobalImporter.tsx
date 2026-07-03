@@ -485,14 +485,14 @@ export function GlobalImporter<T = unknown>({
             >
               <path
                 d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
-                stroke="#A32D2D"
+                stroke="var(--color-loss)"
                 strokeWidth="1.75"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
             </svg>
             <div>
-              <p className="text-sm font-medium" style={{ color: "#A32D2D" }}>
+              <p className="text-sm font-medium" style={{ color: "var(--color-loss)" }}>
                 Error al procesar el archivo
               </p>
               {errorMsg && (

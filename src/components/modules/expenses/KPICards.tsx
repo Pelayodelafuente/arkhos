@@ -25,10 +25,10 @@ function AnimatedNumber({ value, format }: { value: number; format?: (n: number)
 }
 
 const glassStyle = {
-  background: 'rgba(255,255,255,0.6)',
+  background: 'color-mix(in srgb, var(--bg-card) 60%, transparent)',
   backdropFilter: 'blur(12px)',
   WebkitBackdropFilter: 'blur(12px)',
-  border: '1px solid rgba(160,120,80,0.20)',
+  border: '1px solid var(--border-subtle)',
   boxShadow: 'var(--shadow-card)',
 } as const
 

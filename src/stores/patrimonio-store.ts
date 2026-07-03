@@ -269,13 +269,13 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
     if (totalValue === 0) return [];
 
     const geoColors: Record<string, string> = {
-      Global: '#2E7D6B',
-      USA: '#3B78B0',
-      Europa: '#7260C4',
-      Emergentes: '#C4704A',
+      Global: 'var(--color-gain)',
+      USA: 'var(--module-gastos)',
+      Europa: 'var(--module-mercados)',
+      Emergentes: 'var(--accent-terracotta)',
       China: '#E67E22',
-      Taiwan: '#B07A3A',
-      Otro: '#888780',
+      Taiwan: 'var(--module-notas)',
+      Otro: 'var(--text-muted)',
     };
 
     const grouped = new Map<string, number>();
@@ -290,7 +290,7 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
         name: region,
         value,
         percentage: (value / totalValue) * 100,
-        color: geoColors[region] ?? '#888780',
+        color: geoColors[region] ?? 'var(--text-muted)',
       }))
       .sort((a, b) => b.value - a.value);
   },
@@ -302,10 +302,10 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
 
     const riskColors: Record<string, string> = {
       very_low: '#6DB33F',
-      low: '#2E7D6B',
-      medium: '#B07A3A',
-      high: '#C4704A',
-      very_high: '#A32D2D',
+      low: 'var(--color-gain)',
+      medium: 'var(--module-notas)',
+      high: 'var(--accent-terracotta)',
+      very_high: 'var(--color-loss)',
     };
     const riskLabels: Record<string, string> = {
       very_low: 'Muy bajo',
@@ -342,7 +342,7 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
         ticker: a.ticker ?? a.isin?.substring(0, 6) ?? '',
         pl_amount: a.pl_amount ?? 0,
         pl_percentage: a.pl_percentage ?? 0,
-        color: (a.pl_amount ?? 0) >= 0 ? '#2E7D6B' : '#A32D2D',
+        color: (a.pl_amount ?? 0) >= 0 ? 'var(--color-gain)' : 'var(--color-loss)',
       }))
       .sort((a, b) => b.pl_percentage - a.pl_percentage);
   },
@@ -599,7 +599,7 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
     const totalValue = trAssets.reduce((sum, a) => sum + (a.current_value ?? 0), 0);
     if (totalValue === 0) return [];
     const currencyColors: Record<string, string> = {
-      EUR: '#2E7D6B', USD: '#3B78B0', GBP: '#7260C4', GBX: '#7260C4', HKD: '#E67E22',
+      EUR: 'var(--color-gain)', USD: 'var(--module-gastos)', GBP: 'var(--module-mercados)', GBX: 'var(--module-mercados)', HKD: '#E67E22',
     };
     const grouped = new Map<string, number>();
     for (const asset of trAssets) {
@@ -609,7 +609,7 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
     return Array.from(grouped.entries())
       .map(([currency, value]) => ({
         name: currency, value, percentage: (value / totalValue) * 100,
-        color: currencyColors[currency] ?? '#888780',
+        color: currencyColors[currency] ?? 'var(--text-muted)',
       }))
       .sort((a, b) => b.value - a.value);
   },
@@ -619,10 +619,10 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
     const totalValue = trAssets.reduce((sum, a) => sum + (a.current_value ?? 0), 0);
     if (totalValue === 0) return [];
     const sectorColors: Record<string, string> = {
-      Tecnología: '#3B78B0', Finanzas: '#2E7D6B', Salud: '#6DB33F',
-      Consumo: '#C4704A', Industria: '#7260C4', Energía: '#B07A3A',
-      Materiales: '#E67E22', Utilities: '#888780', 'Índice Global': '#5B8C6A',
-      Inmobiliario: '#9B7A4A', Otro: '#C0B8AE',
+      Tecnología: 'var(--module-gastos)', Finanzas: 'var(--color-gain)', Salud: '#6DB33F',
+      Consumo: 'var(--accent-terracotta)', Industria: 'var(--module-mercados)', Energía: 'var(--module-notas)',
+      Materiales: '#E67E22', Utilities: 'var(--text-muted)', 'Índice Global': 'var(--urgency-safe)',
+      Inmobiliario: 'var(--platform-crypto)', Otro: '#C0B8AE',
     };
     const grouped = new Map<string, number>();
     for (const asset of trAssets) {
@@ -632,7 +632,7 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
     return Array.from(grouped.entries())
       .map(([sector, value]) => ({
         name: sector, value, percentage: (value / totalValue) * 100,
-        color: sectorColors[sector] ?? '#888780',
+        color: sectorColors[sector] ?? 'var(--text-muted)',
       }))
       .sort((a, b) => b.value - a.value);
   },

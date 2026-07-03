@@ -22,7 +22,7 @@ interface CanvasWindowProps {
 // ─── Constants ───────────────────────
 
 const BADGE_STYLES: Record<CanvasWindowBadge['variant'], { bg: string; color: string }> = {
-  terracotta: { bg: 'rgba(196,112,74,0.12)', color: '#C4704A' },
+  terracotta: { bg: 'rgba(196,112,74,0.12)', color: 'var(--accent-terracotta)' },
   green: { bg: 'rgba(122,155,118,0.15)', color: '#4a7a46' },
   gray: { bg: 'rgba(154,122,90,0.12)', color: '#9a7a5a' },
 };

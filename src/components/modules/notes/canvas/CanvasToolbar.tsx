@@ -209,7 +209,7 @@ export function CanvasToolbar({
           <span style={{
             position: 'absolute', top: 0, right: 0,
             width: 8, height: 8, borderRadius: '50%',
-            backgroundColor: '#C4704A', fontSize: 0,
+            backgroundColor: 'var(--accent-terracotta)', fontSize: 0,
           }} />
         )}
       </button>

@@ -22,7 +22,7 @@ function StatRow({ label, value, sub, icon, color }: StatRowProps) {
         <span
           className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg"
           style={{
-            backgroundColor: color ? `${color}18` : "var(--bg-sand)",
+            backgroundColor: color ? `color-mix(in srgb, ${color} 9%, transparent)` : "var(--bg-sand)",
             color: color ?? "var(--text-tertiary)",
           }}
           aria-hidden="true"
@@ -68,7 +68,7 @@ export function TROverview() {
           label="Efectivo disponible"
           value={formatEur(cashValue)}
           icon={<Banknote size={14} strokeWidth={1.75} />}
-          color="#3B78B0"
+          color="var(--module-gastos)"
         />
         <StatRow
           label="Valor de la cartera"
@@ -99,13 +99,13 @@ export function TROverview() {
               <TrendingDown size={14} strokeWidth={1.75} />
             )
           }
-          color={valoresPL >= 0 ? "var(--module-patrimonio)" : "#A32D2D"}
+          color={valoresPL >= 0 ? "var(--module-patrimonio)" : "var(--color-loss)"}
         />
         <StatRow
           label="Rentabilidad s/ invertido"
           value={`${valoresPLPct >= 0 ? "+" : ""}${valoresPLPct.toFixed(2)}%`}
           icon={<Calendar size={14} strokeWidth={1.75} />}
-          color="#B07A3A"
+          color="var(--module-notas)"
         />
       </div>
     </div>

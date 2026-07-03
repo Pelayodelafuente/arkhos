@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import type { HorosTransactionPerformance } from "@/types/horos";
 
-const HOROS_COLOR = "#7260C4";
+const HOROS_COLOR = "var(--module-mercados)";
 const GRANATE = "#8B1A2E";
 
 const fmt = (v: number) =>
@@ -59,7 +59,7 @@ export function HorosTransactionTable({ data }: HorosTransactionTableProps) {
           </thead>
           <tbody>
             {data.map((row, i) => {
-              const gainColor = row.gain >= 0 ? "var(--platform-tr, #2E7D6B)" : GRANATE;
+              const gainColor = row.gain >= 0 ? "var(--platform-tr, var(--color-gain))" : GRANATE;
               return (
                 <motion.tr
                   key={row.transaction.id}
@@ -110,7 +110,7 @@ export function HorosTransactionTable({ data }: HorosTransactionTableProps) {
                 style={{
                   color:
                     data.reduce((s, r) => s + r.gain, 0) >= 0
-                      ? "var(--platform-tr, #2E7D6B)"
+                      ? "var(--platform-tr, var(--color-gain))"
                       : GRANATE,
                 }}
               >
@@ -122,7 +122,7 @@ export function HorosTransactionTable({ data }: HorosTransactionTableProps) {
                 style={{
                   color:
                     data.reduce((s, r) => s + r.gain, 0) >= 0
-                      ? "var(--platform-tr, #2E7D6B)"
+                      ? "var(--platform-tr, var(--color-gain))"
                       : GRANATE,
                 }}
               >

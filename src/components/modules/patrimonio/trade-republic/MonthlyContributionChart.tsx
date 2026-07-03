@@ -44,9 +44,9 @@ const STABLE_COLORS = [
   C.blue,
   C.purple,
   C.amber,
-  "#C4704A",
+  "var(--accent-terracotta)",
   "#E67E22",
-  "#9B7A4A",
+  "var(--platform-crypto)",
   C.gray,
 ];
 

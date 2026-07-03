@@ -167,7 +167,7 @@ export function PriceStatusBanner() {
 
   // Prices available — show date of last update
   const age = getPriceAge(lastUpdated);
-  const staleColor = "#B07A3A";
+  const staleColor = "var(--module-notas)";
 
   return (
     <div
@@ -176,12 +176,12 @@ export function PriceStatusBanner() {
         backgroundColor: age.isStale ? "rgba(176,122,58,0.06)" : "rgba(136,135,128,0.06)",
         border: `1px solid ${age.isStale ? "rgba(176,122,58,0.28)" : "rgba(136,135,128,0.18)"}`,
         borderLeftWidth: 2,
-        borderLeftColor: age.isStale ? staleColor : "#888780",
+        borderLeftColor: age.isStale ? staleColor : "var(--text-muted)",
       }}
     >
       <span
         className="h-2 w-2 flex-shrink-0 rounded-full"
-        style={{ backgroundColor: age.isStale ? staleColor : "#888780" }}
+        style={{ backgroundColor: age.isStale ? staleColor : "var(--text-muted)" }}
         aria-hidden="true"
       />
       {age.isStale ? (

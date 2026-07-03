@@ -13,7 +13,7 @@ import {
 import { formatCurrency } from "@/lib/utils/format";
 import type { MintosInterestPoint } from "@/types/mintos";
 
-const MINTOS_COLOR = "#C4704A";
+const MINTOS_COLOR = "var(--accent-terracotta)";
 const MINTOS_LIGHT = "#D9967A";
 const LATE_COLOR = "#C8A84B";
 
@@ -77,7 +77,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
       {taxesWithheld > 0 && (
         <div className="flex justify-between gap-4">
           <span style={{ color: "var(--text-muted)" }}>Retenciones</span>
-          <span className="font-mono tabular-nums" style={{ color: "#A32D2D" }}>
+          <span className="font-mono tabular-nums" style={{ color: "var(--color-loss)" }}>
             -{fmt(taxesWithheld)}
           </span>
         </div>
@@ -143,13 +143,13 @@ export function MintosInterestChart({ data }: MintosInterestChartProps) {
           />
           <XAxis
             dataKey="label"
-            tick={{ fontSize: 11, fill: "var(--text-muted, #888780)", fontFamily: "var(--font-mono)" }}
+            tick={{ fontSize: 11, fill: "var(--text-muted, var(--text-muted))", fontFamily: "var(--font-mono)" }}
             axisLine={false}
             tickLine={false}
             interval="preserveStartEnd"
           />
           <YAxis
-            tick={{ fontSize: 11, fill: "var(--text-muted, #888780)", fontFamily: "var(--font-mono)" }}
+            tick={{ fontSize: 11, fill: "var(--text-muted, var(--text-muted))", fontFamily: "var(--font-mono)" }}
             axisLine={false}
             tickLine={false}
             tickFormatter={(v: number) => `${v.toFixed(0)}€`}
@@ -163,7 +163,7 @@ export function MintosInterestChart({ data }: MintosInterestChartProps) {
             type="monotone"
             dataKey="taxes_withheld"
             name="taxes_withheld"
-            stroke="#A32D2D"
+            stroke="var(--color-loss)"
             strokeWidth={1.5}
             strokeDasharray="3 3"
             dot={false}

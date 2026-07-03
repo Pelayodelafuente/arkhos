@@ -48,8 +48,8 @@ function computeXIRR(cashflows: Array<{ date: Date; amount: number }>): number |
 const HEALTH_COLORS: Record<string, string> = {
   ok: '#3B7A57',
   warn: '#C8A84B',
-  orange: '#C4704A',
-  red: '#A32D2D',
+  orange: 'var(--accent-terracotta)',
+  red: 'var(--color-loss)',
 };
 
 const MONTHS_SHORT = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];

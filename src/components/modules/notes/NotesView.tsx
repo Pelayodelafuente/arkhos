@@ -170,7 +170,7 @@ export function NotesView({ userId }: Props) {
                 <button
                   onClick={() => { setViewMode("list"); setSelectedNoteId(null) }}
                   className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-                    viewMode === "list" ? "bg-[#B07A3A] text-white shadow-sm" : "text-text-tertiary hover:text-text-secondary"
+                    viewMode === "list" ? "bg-[var(--module-notas)] text-white shadow-sm" : "text-text-tertiary hover:text-text-secondary"
                   }`}
                 >
                   <BookOpen size={13} strokeWidth={1.75} />
@@ -179,7 +179,7 @@ export function NotesView({ userId }: Props) {
                 <button
                   onClick={handleSwitchToCanvas}
                   className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-                    viewMode === "canvas" ? "bg-[#B07A3A] text-white shadow-sm" : "text-text-tertiary hover:text-text-secondary"
+                    viewMode === "canvas" ? "bg-[var(--module-notas)] text-white shadow-sm" : "text-text-tertiary hover:text-text-secondary"
                   }`}
                 >
                   <Layout size={13} strokeWidth={1.75} />
@@ -188,7 +188,7 @@ export function NotesView({ userId }: Props) {
                 <button
                   onClick={handleSwitchToGraph}
                   className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-                    viewMode === "graph" ? "bg-[#B07A3A] text-white shadow-sm" : "text-text-tertiary hover:text-text-secondary"
+                    viewMode === "graph" ? "bg-[var(--module-notas)] text-white shadow-sm" : "text-text-tertiary hover:text-text-secondary"
                   }`}
                 >
                   <Waypoints size={13} strokeWidth={1.75} />

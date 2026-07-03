@@ -72,8 +72,8 @@ export function DashboardHeader({ userName }: DashboardHeaderProps) {
             onClick={() => router.push(pill.href)}
             className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all hover:scale-105 active:scale-95 cursor-pointer"
             style={{
-              borderColor: `${pill.color}40`,
-              backgroundColor: `${pill.color}10`,
+              borderColor: `color-mix(in srgb, ${pill.color} 25%, transparent)`,
+              backgroundColor: `color-mix(in srgb, ${pill.color} 6%, transparent)`,
             }}
             aria-label={`Ir a ${pill.label}`}
           >

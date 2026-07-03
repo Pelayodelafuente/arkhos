@@ -81,7 +81,7 @@ function TRSectionKPIs() {
       };
     }, [assets, platforms]);
 
-  const plColor = portfolioPL >= 0 ? "var(--platform-tr)" : "#A32D2D";
+  const plColor = portfolioPL >= 0 ? "var(--platform-tr)" : "var(--color-loss)";
 
   if (isLoading) {
     return (
@@ -108,7 +108,7 @@ function TRSectionKPIs() {
         label="Cartera (sin efect.)"
         value={formatEur(portfolioValue)}
         icon={<BarChart2 size={14} strokeWidth={1.75} />}
-        accentColor="#3B78B0"
+        accentColor="var(--module-gastos)"
         sub={
           <span className="font-mono text-xs" style={{ color: "var(--text-secondary)" }}>
             Inv: {formatEur(portfolioInvested)}

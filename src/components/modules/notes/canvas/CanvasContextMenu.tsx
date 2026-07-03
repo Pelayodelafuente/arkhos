@@ -24,9 +24,9 @@ import type { EdgeColor, EdgeStyle } from "@/types/notes"
 const EDGE_COLORS: { value: EdgeColor; color: string; label: string }[] = [
   { value: "default", color: "var(--text-faint)", label: "Neutro" },
   { value: "sage", color: "var(--module-notas)", label: "Sage" },
-  { value: "terracotta", color: "#C4704A", label: "Terracotta" },
+  { value: "terracotta", color: "var(--accent-terracotta)", label: "Terracotta" },
   { value: "stone", color: "#8A7A6A", label: "Stone" },
-  { value: "blue", color: "#3B78B0", label: "Blue" },
+  { value: "blue", color: "var(--module-gastos)", label: "Blue" },
 ]
 
 interface Props {
@@ -189,7 +189,7 @@ export function CanvasContextMenu({
                   title={title}
                   className={`flex h-7 w-7 items-center justify-center rounded-lg border transition-colors ${
                     isActive
-                      ? 'border-[#C4704A] bg-[#C4704A]/10 text-[#C4704A]'
+                      ? 'border-[var(--accent-terracotta)] bg-[var(--accent-terracotta)]/10 text-[var(--accent-terracotta)]'
                       : 'border-border text-text-secondary hover:bg-sand hover:text-foreground'
                   }`}
                 >

@@ -179,7 +179,7 @@ export function MfaSettings({ enrolledFactor }: MfaSettingsProps) {
                 size={18}
                 strokeWidth={1.75}
                 aria-hidden="true"
-                style={{ color: "var(--success, #2E7D6B)", flexShrink: 0 }}
+                style={{ color: "var(--success, var(--color-gain))", flexShrink: 0 }}
               />
               <div>
                 <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>

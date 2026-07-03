@@ -45,14 +45,14 @@ export const MentionList = forwardRef<MentionListRef, Props>(({ items, command }
           position: 'fixed',
           zIndex: 9999,
           background: 'var(--bg-card, #fff)',
-          border: '1px solid var(--border-stone, #E2D9CA)',
+          border: '1px solid var(--border-stone, var(--border-stone))',
           borderRadius: 12,
           padding: '6px',
           boxShadow: '0 4px 20px rgba(26,23,20,0.10)',
           minWidth: 200,
         }}
       >
-        <div style={{ padding: '6px 8px', fontSize: 12, color: 'var(--text-tertiary, #888780)' }}>
+        <div style={{ padding: '6px 8px', fontSize: 12, color: 'var(--text-tertiary, var(--text-muted))' }}>
           Sin resultados
         </div>
       </div>
@@ -64,7 +64,7 @@ export const MentionList = forwardRef<MentionListRef, Props>(({ items, command }
       style={{
         zIndex: 9999,
         background: 'var(--bg-card, #fff)',
-        border: '1px solid var(--border-stone, #E2D9CA)',
+        border: '1px solid var(--border-stone, var(--border-stone))',
         borderRadius: 12,
         padding: '4px',
         boxShadow: '0 4px 20px rgba(26,23,20,0.10)',
@@ -92,7 +92,7 @@ export const MentionList = forwardRef<MentionListRef, Props>(({ items, command }
             fontSize: 13,
           }}
         >
-          <FileText size={13} strokeWidth={1.75} style={{ color: 'var(--module-notas, #B07A3A)', flexShrink: 0 }} />
+          <FileText size={13} strokeWidth={1.75} style={{ color: 'var(--module-notas, var(--module-notas))', flexShrink: 0 }} />
           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {item.title}
           </span>

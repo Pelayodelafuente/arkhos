@@ -12,6 +12,13 @@
   market-refresh, ⌘K global (`CommandPalette`), PWA (sw.js + /offline)
 - Pendiente: acciones de Pelayo (secrets GitHub/Vercel, Sentry DSN, FRED key) y
   decisiones (historial IA, staging, módulo Agenda, CSP nonces) — ver `docs/PENDING-FIXES.md`
+- **Design system Arkhos × Primary (2026-07-03)** — paleta del tema Obsidian
+  Primary fusionada en `globals.css`: tokens light (`:root`) + **modo oscuro**
+  (`[data-theme="dark"]`, marrones cálidos d-gray). Toggle en Topbar/dock/⌘K
+  (`src/lib/theme.ts`, localStorage `arkhos-theme`, script anti-flash en
+  RootLayout). REGLA: nunca hex de marca en componentes — usar tokens
+  `var(--…)`; para tintes `color-mix(in srgb, var(--x) N%, transparent)`
+  (jamás concatenar alpha al hex). Mockup: `docs/mockups/arkhos-primary-fusion.html`
 - **Plan de mejoras 2026** — `docs/PLAN_MEJORAS_2026.md`. Bloques 1 y 2
   ejecutados (2026-07-02): widget Hoy en Dashboard, Quick Capture en ⌘K,
   presupuestos por categoría en Gastos, insight mes a mes, comparador vs

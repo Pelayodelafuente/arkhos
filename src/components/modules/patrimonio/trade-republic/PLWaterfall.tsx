@@ -74,7 +74,7 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
   const item = payload[payload.length - 1]?.payload;
   if (!item) return null;
 
-  const color = item.isGain ? "var(--color-gain, #2E7D6B)" : "var(--color-loss, #A32D2D)";
+  const color = item.isGain ? "var(--color-gain, var(--color-gain))" : "var(--color-loss, var(--color-loss))";
   const sign = item.isGain ? "+" : "";
 
   return (
@@ -162,7 +162,7 @@ export function PLWaterfall() {
           {data.map((entry, index) => (
             <Cell
               key={`cell-${index}`}
-              fill={entry.isGain ? "#2E7D6B" : "#A32D2D"}
+              fill={entry.isGain ? "var(--color-gain)" : "var(--color-loss)"}
               fillOpacity={0.85}
             />
           ))}

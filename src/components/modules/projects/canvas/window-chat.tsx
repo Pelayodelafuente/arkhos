@@ -58,7 +58,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
         style={
           isUser
             ? {
-                background: '#C4704A',
+                background: 'var(--accent-terracotta)',
                 color: '#fff',
                 borderRadius: '10px 3px 10px 10px',
               }
@@ -298,7 +298,7 @@ export function WindowChat() {
           disabled={isStreaming || !input.trim()}
           className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[8px] transition-all duration-150 hover:scale-[1.07] disabled:opacity-40 disabled:hover:scale-100"
           style={{
-            background: '#C4704A',
+            background: 'var(--accent-terracotta)',
           }}
           onMouseEnter={(e) => {
             if (!(e.currentTarget as HTMLButtonElement).disabled) {
@@ -307,7 +307,7 @@ export function WindowChat() {
             }
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = '#C4704A';
+            (e.currentTarget as HTMLButtonElement).style.background = 'var(--accent-terracotta)';
           }}
         >
           <Send className="h-[13px] w-[13px] text-white" />

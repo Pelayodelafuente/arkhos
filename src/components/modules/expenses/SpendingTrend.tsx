@@ -327,10 +327,10 @@ export function SpendingTrend() {
                   <Line
                     type="monotone"
                     dataKey="total"
-                    stroke="#3B78B0"
+                    stroke="var(--module-gastos)"
                     strokeWidth={2}
-                    dot={{ fill: '#3B78B0', r: 3, strokeWidth: 0 }}
-                    activeDot={{ r: 4, fill: '#3B78B0' }}
+                    dot={{ fill: 'var(--module-gastos)', r: 3, strokeWidth: 0 }}
+                    activeDot={{ r: 4, fill: 'var(--module-gastos)' }}
                   />
                 </LineChart>
               </ResponsiveContainer>

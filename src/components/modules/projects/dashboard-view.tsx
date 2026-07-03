@@ -201,7 +201,7 @@ export default function DashboardView({ phases }: DashboardViewProps) {
               cy={100}
               r={radius}
               fill="none"
-              stroke="#C4704A"
+              stroke="var(--accent-terracotta)"
               strokeWidth={20}
               strokeLinecap="round"
               strokeDasharray={circumference}
@@ -285,7 +285,7 @@ export default function DashboardView({ phases }: DashboardViewProps) {
                     )}
                     <span
                       className="text-xs font-mono shrink-0"
-                      style={{ color: rel.isPast ? '#EF4444' : '#888780' }}
+                      style={{ color: rel.isPast ? '#EF4444' : 'var(--text-muted)' }}
                     >
                       {rel.text}
                     </span>
@@ -306,7 +306,7 @@ export default function DashboardView({ phases }: DashboardViewProps) {
           <span className="text-xs text-text-tertiary mb-3">Salud del proyecto</span>
           <div
             className="inline-flex items-center gap-2 rounded-full px-5 py-2"
-            style={{ backgroundColor: healthColor + '18', border: `1px solid ${healthColor}40` }}
+            style={{ backgroundColor: `color-mix(in srgb, ${healthColor} 9%, transparent)`, border: `1px solid color-mix(in srgb, ${healthColor} 25%, transparent)` }}
           >
             <span
               className="font-mono text-3xl font-bold"

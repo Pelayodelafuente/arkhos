@@ -15,7 +15,7 @@ import { useCrosshair } from "@/components/viz";
 import { usePrefersReducedMotion } from "@/lib/hooks/use-prefers-reduced-motion";
 import type { MintosEvolutionPoint } from "@/types/mintos";
 
-const MINTOS_COLOR = "#C4704A";
+const MINTOS_COLOR = "var(--accent-terracotta)";
 
 function fmt(v: number) {
   return formatCurrency(v, "EUR");
@@ -64,7 +64,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
         <span style={{ color: "var(--text-muted)" }}>Ganancia</span>
         <span
           className="font-mono tabular-nums font-semibold"
-          style={{ color: gain >= 0 ? "#3B7A57" : "#A32D2D" }}
+          style={{ color: gain >= 0 ? "#3B7A57" : "var(--color-loss)" }}
         >
           {gain >= 0 ? "+" : ""}
           {fmt(gain)}
@@ -125,13 +125,13 @@ export function MintosEvolutionChart({ data }: MintosEvolutionChartProps) {
           />
           <XAxis
             dataKey="label"
-            tick={{ fontSize: 11, fill: "var(--text-muted, #888780)", fontFamily: "var(--font-mono)" }}
+            tick={{ fontSize: 11, fill: "var(--text-muted, var(--text-muted))", fontFamily: "var(--font-mono)" }}
             axisLine={false}
             tickLine={false}
             interval="preserveStartEnd"
           />
           <YAxis
-            tick={{ fontSize: 11, fill: "var(--text-muted, #888780)", fontFamily: "var(--font-mono)" }}
+            tick={{ fontSize: 11, fill: "var(--text-muted, var(--text-muted))", fontFamily: "var(--font-mono)" }}
             axisLine={false}
             tickLine={false}
             tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`}
@@ -153,7 +153,7 @@ export function MintosEvolutionChart({ data }: MintosEvolutionChartProps) {
             isAnimationActive={!reduced}
             animationDuration={500}
             name="total_deposited"
-            stroke="#888780"
+            stroke="var(--text-muted)"
             strokeWidth={1.5}
             strokeDasharray="4 3"
             fill="none"

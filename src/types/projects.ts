@@ -16,8 +16,8 @@ export type TaskStatus = (typeof TASK_STATUSES)[number];
 // ─── Phase/Task status display config ─
 
 export const PHASE_STATUS_CONFIG: Record<PhaseStatus, { label: string; color: string }> = {
-  pending: { label: 'Pendiente', color: '#888780' },
-  'in-progress': { label: 'En progreso', color: '#C4704A' },
+  pending: { label: 'Pendiente', color: 'var(--text-muted)' },
+  'in-progress': { label: 'En progreso', color: 'var(--accent-terracotta)' },
   done: { label: 'Completada', color: '#22C55E' },
 };
 
@@ -29,8 +29,8 @@ export const TASK_PRIORITY_CONFIG: Record<TaskPriority, { label: string; color: 
 };
 
 export const TASK_STATUS_CONFIG: Record<TaskStatus, { label: string; color: string }> = {
-  todo: { label: 'Pendiente', color: '#888780' },
-  in_progress: { label: 'En progreso', color: '#C4704A' },
+  todo: { label: 'Pendiente', color: 'var(--text-muted)' },
+  in_progress: { label: 'En progreso', color: 'var(--accent-terracotta)' },
   review: { label: 'En revisión', color: '#F59E0B' },
   done: { label: 'Completada', color: '#22C55E' },
 };
@@ -74,14 +74,14 @@ export interface CreateProjectStatusInput {
 // ─── Default seeds for new users ──────
 
 export const DEFAULT_PROJECT_TYPES: Omit<CreateProjectTypeInput, 'sort_order'>[] = [
-  { name: 'Web', icon: 'Globe', color: '#c4704a' },
+  { name: 'Web', icon: 'Globe', color: 'var(--accent-terracotta)' },
 ];
 
 export const DEFAULT_PROJECT_STATUSES: Omit<CreateProjectStatusInput, 'sort_order'>[] = [
-  { name: 'Idea', color: '#888780', is_default: true },
+  { name: 'Idea', color: 'var(--text-muted)', is_default: true },
   { name: 'Activo', color: '#22C55E' },
   { name: 'Pausado', color: '#F59E0B' },
-  { name: 'Completado', color: '#C4704A' },
+  { name: 'Completado', color: 'var(--accent-terracotta)' },
 ];
 
 // ─── Icon picker categories ──────────

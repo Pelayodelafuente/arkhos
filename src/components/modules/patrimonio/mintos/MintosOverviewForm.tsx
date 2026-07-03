@@ -131,7 +131,7 @@ export function MintosOverviewForm() {
               </div>
             ))}
           </div>
-          {error && <p className="text-xs" style={{ color: "#A32D2D" }}>{error}</p>}
+          {error && <p className="text-xs" style={{ color: "var(--color-loss)" }}>{error}</p>}
           <div className="flex gap-2">
             <button
               type="button"

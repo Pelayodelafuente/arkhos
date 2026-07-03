@@ -405,12 +405,12 @@ export function GlobalEvolutionChart() {
         <AreaChart data={filteredData} margin={{ top: 4, right: 4, left: 0, bottom: 8 }} {...chartProps}>
           <defs>
             <linearGradient id="gradValue" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#2E7D6B" stopOpacity={0.25} />
-              <stop offset="95%" stopColor="#2E7D6B" stopOpacity={0} />
+              <stop offset="5%" stopColor="var(--color-gain)" stopOpacity={0.25} />
+              <stop offset="95%" stopColor="var(--color-gain)" stopOpacity={0} />
             </linearGradient>
             <linearGradient id="gradInvested" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#3B78B0" stopOpacity={0.15} />
-              <stop offset="95%" stopColor="#3B78B0" stopOpacity={0} />
+              <stop offset="5%" stopColor="var(--module-gastos)" stopOpacity={0.15} />
+              <stop offset="95%" stopColor="var(--module-gastos)" stopOpacity={0} />
             </linearGradient>
           </defs>
 
@@ -418,7 +418,7 @@ export function GlobalEvolutionChart() {
 
           <XAxis
             dataKey="label"
-            tick={{ fontSize: 11, fontFamily: "var(--font-mono, monospace)", fill: "var(--muted-foreground, #888780)" }}
+            tick={{ fontSize: 11, fontFamily: "var(--font-mono, monospace)", fill: "var(--muted-foreground, var(--text-muted))" }}
             axisLine={false}
             tickLine={false}
             interval="preserveStartEnd"
@@ -426,7 +426,7 @@ export function GlobalEvolutionChart() {
 
           <YAxis
             tickFormatter={formatEurShort}
-            tick={{ fontSize: 11, fontFamily: "var(--font-mono, monospace)", fill: "var(--muted-foreground, #888780)" }}
+            tick={{ fontSize: 11, fontFamily: "var(--font-mono, monospace)", fill: "var(--muted-foreground, var(--text-muted))" }}
             axisLine={false}
             tickLine={false}
             width={54}
@@ -457,11 +457,11 @@ export function GlobalEvolutionChart() {
             type="monotone"
             dataKey="invested"
             {...anim}
-            stroke="#3B78B0"
+            stroke="var(--module-gastos)"
             strokeWidth={1.5}
             fill="url(#gradInvested)"
             dot={false}
-            activeDot={{ r: 3, fill: "#3B78B0" }}
+            activeDot={{ r: 3, fill: "var(--module-gastos)" }}
             name="invested"
           />
 
@@ -469,11 +469,11 @@ export function GlobalEvolutionChart() {
             type="monotone"
             dataKey="value"
             {...anim}
-            stroke="#2E7D6B"
+            stroke="var(--color-gain)"
             strokeWidth={2}
             fill="url(#gradValue)"
             dot={false}
-            activeDot={{ r: 4, fill: "#2E7D6B" }}
+            activeDot={{ r: 4, fill: "var(--color-gain)" }}
             name="value"
           />
           {benchmark !== "none" && benchPrices && (
@@ -481,12 +481,12 @@ export function GlobalEvolutionChart() {
               type="monotone"
               dataKey="benchmark"
               {...anim}
-              stroke="var(--module-mercados, #9B7A4A)"
+              stroke="var(--module-mercados, var(--platform-crypto))"
               strokeWidth={1.5}
               strokeDasharray="5 3"
               fill="transparent"
               dot={false}
-              activeDot={{ r: 3, fill: "var(--module-mercados, #9B7A4A)" }}
+              activeDot={{ r: 3, fill: "var(--module-mercados, var(--platform-crypto))" }}
               name="benchmark"
             />
           )}

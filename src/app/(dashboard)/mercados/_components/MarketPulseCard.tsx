@@ -189,15 +189,15 @@ export function MarketPulseCard({
             <AreaChart data={historyData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id={`grad-${metricId}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#7260C4" stopOpacity={0.35} />
-                  <stop offset="100%" stopColor="#7260C4" stopOpacity={0} />
+                  <stop offset="0%" stopColor="var(--module-mercados)" stopOpacity={0.35} />
+                  <stop offset="100%" stopColor="var(--module-mercados)" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <YAxis domain={[sparkMin - sparkPad, sparkMax + sparkPad]} hide />
               <Area
                 type="monotone"
                 dataKey="value"
-                stroke="#7260C4"
+                stroke="var(--module-mercados)"
                 strokeWidth={1.5}
                 fill={`url(#grad-${metricId})`}
                 dot={false}
@@ -209,10 +209,10 @@ export function MarketPulseCard({
                   border: "1px solid rgba(160, 120, 80, 0.35)",
                   borderRadius: "6px",
                   fontSize: "11px",
-                  color: "#1a1410",
+                  color: "var(--text-primary)",
                   padding: "4px 8px",
                 }}
-                itemStyle={{ color: "#4a3820" }}
+                itemStyle={{ color: "var(--text-secondary)" }}
                 labelStyle={{ display: "none" }}
                 formatter={(v) => [formatMetricValue(metricId, typeof v === 'number' ? v : 0), ""]}
               />

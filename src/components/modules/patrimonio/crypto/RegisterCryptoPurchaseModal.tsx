@@ -229,7 +229,7 @@ export function RegisterCryptoPurchaseModal({
                         onChange={(e) => updateForm(symbol, "date", e.target.value)}
                       />
                       {errors[`${symbol}.date`] && (
-                        <p className="text-xs mt-1" style={{ color: "#A32D2D" }}>
+                        <p className="text-xs mt-1" style={{ color: "var(--color-loss)" }}>
                           {errors[`${symbol}.date`]}
                         </p>
                       )}
@@ -252,7 +252,7 @@ export function RegisterCryptoPurchaseModal({
                         onChange={(e) => updateForm(symbol, "quantity", e.target.value)}
                       />
                       {errors[`${symbol}.quantity`] && (
-                        <p className="text-xs mt-1" style={{ color: "#A32D2D" }}>
+                        <p className="text-xs mt-1" style={{ color: "var(--color-loss)" }}>
                           {errors[`${symbol}.quantity`]}
                         </p>
                       )}
@@ -276,7 +276,7 @@ export function RegisterCryptoPurchaseModal({
                           onChange={(e) => updateForm(symbol, "price_eur", e.target.value)}
                         />
                         {errors[`${symbol}.price_eur`] && (
-                          <p className="text-xs mt-1" style={{ color: "#A32D2D" }}>
+                          <p className="text-xs mt-1" style={{ color: "var(--color-loss)" }}>
                             {errors[`${symbol}.price_eur`]}
                           </p>
                         )}
@@ -312,7 +312,7 @@ export function RegisterCryptoPurchaseModal({
             className="text-sm rounded-lg px-3 py-2"
             style={{
               backgroundColor: "rgba(163,45,45,0.08)",
-              color: "#A32D2D",
+              color: "var(--color-loss)",
               border: "1px solid rgba(163,45,45,0.18)",
             }}
             role="alert"

@@ -5,7 +5,7 @@ import { Donut } from "@/components/viz";
 import type { MintosDistribution } from "@/types/mintos";
 
 const MINTOS_PALETTE = [
-  "#C4704A",
+  "var(--accent-terracotta)",
   "#D9967A",
   "#A85A38",
   "#E8B49A",

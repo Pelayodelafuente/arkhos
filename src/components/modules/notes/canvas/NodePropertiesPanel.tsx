@@ -95,7 +95,7 @@ export function NodePropertiesPanel({ node }: Props) {
             <button
               key={cfg.value}
               className={`h-5 w-5 rounded-full border-2 transition-transform hover:scale-110 ${node.color === cfg.value ? 'scale-110' : ''}`}
-              style={{ backgroundColor: cfg.border, borderColor: node.color === cfg.value ? '#C4704A' : 'transparent' }}
+              style={{ backgroundColor: cfg.border, borderColor: node.color === cfg.value ? 'var(--accent-terracotta)' : 'transparent' }}
               title={cfg.label}
               onClick={() => updateNodeColor(node.id, cfg.value)}
             />

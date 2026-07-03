@@ -17,9 +17,9 @@ interface MetricItemProps {
 function MetricItem({ label, value, description, tooltip, accent = "neutral", index }: MetricItemProps) {
   const accentColor =
     accent === "positive"
-      ? "var(--platform-tr, #2E7D6B)"
+      ? "var(--platform-tr, var(--color-gain))"
       : accent === "negative"
-      ? "#A32D2D"
+      ? "var(--color-loss)"
       : "var(--text-primary)";
 
   return (

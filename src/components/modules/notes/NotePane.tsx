@@ -386,7 +386,7 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
             className="flex-1 font-heading text-lg text-foreground bg-transparent outline-none placeholder:text-text-tertiary min-w-0"
           />
           {saveStatus !== 'idle' && (
-            <span className={`text-[10px] font-mono flex-shrink-0 transition-opacity duration-500 ${saveStatus === 'saved' ? 'text-[#B07A3A]' : 'text-text-tertiary'}`}>
+            <span className={`text-[10px] font-mono flex-shrink-0 transition-opacity duration-500 ${saveStatus === 'saved' ? 'text-[var(--module-notas)]' : 'text-text-tertiary'}`}>
               {saveStatus === 'saving' ? 'Guardando…' : 'Guardado ✓'}
             </span>
           )}
@@ -447,7 +447,7 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
                   type="button"
                   onClick={() => { setIcon(iconName); setShowIcons(false) }}
                   className={`flex h-8 w-8 items-center justify-center rounded-md transition-colors ${
-                    icon === iconName ? 'bg-[#B07A3A] text-white' : 'hover:bg-sand text-text-secondary'
+                    icon === iconName ? 'bg-[var(--module-notas)] text-white' : 'hover:bg-sand text-text-secondary'
                   }`}
                 >
                   <IC size={15} strokeWidth={1.75} />
@@ -651,7 +651,7 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
                 <>
                   {/* Proyecto */}
                   <div className="flex items-center gap-2">
-                    <FolderKanban size={13} strokeWidth={1.75} className="text-[#C4704A] flex-shrink-0" />
+                    <FolderKanban size={13} strokeWidth={1.75} className="text-[var(--accent-terracotta)] flex-shrink-0" />
                     <span className="text-[11px] text-text-tertiary w-20 flex-shrink-0">Proyecto</span>
                     {note?.project_id ? (
                       <div className="flex items-center gap-1 flex-1 min-w-0">
@@ -680,7 +680,7 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
 
                   {/* Suscripción */}
                   <div className="flex items-center gap-2">
-                    <CreditCard size={13} strokeWidth={1.75} className="text-[#4A7A9B] flex-shrink-0" />
+                    <CreditCard size={13} strokeWidth={1.75} className="text-[var(--module-gastos)] flex-shrink-0" />
                     <span className="text-[11px] text-text-tertiary w-20 flex-shrink-0">Suscripción</span>
                     {note?.subscription_id ? (
                       <div className="flex items-center gap-1 flex-1 min-w-0">
@@ -774,7 +774,7 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
           </div>
           {selectedVersion && (
             <div className="border-t border-border p-3 space-y-2">
-              <div className="rounded-md border border-border bg-[#FAF7F2] p-2.5 max-h-28 overflow-y-auto">
+              <div className="rounded-md border border-border bg-[var(--bg-card-hover)] p-2.5 max-h-28 overflow-y-auto">
                 <p className="text-[12px] font-medium text-foreground mb-1">{selectedVersion.title || 'Sin título'}</p>
                 <div
                   className="text-[11px] text-text-secondary leading-relaxed line-clamp-3 tiptap-content"
@@ -806,7 +806,7 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
             className="flex-1 bg-transparent font-heading text-2xl text-foreground outline-none placeholder:text-text-tertiary min-w-0"
           />
           {saveStatus !== 'idle' && (
-            <span className={`flex-shrink-0 font-mono text-[10px] transition-opacity duration-500 ${saveStatus === 'saved' ? 'text-[#B07A3A]' : 'text-text-tertiary'}`}>
+            <span className={`flex-shrink-0 font-mono text-[10px] transition-opacity duration-500 ${saveStatus === 'saved' ? 'text-[var(--module-notas)]' : 'text-text-tertiary'}`}>
               {saveStatus === 'saving' ? 'Guardando…' : 'Guardado ✓'}
             </span>
           )}

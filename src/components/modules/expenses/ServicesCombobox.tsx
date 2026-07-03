@@ -107,7 +107,7 @@ export function ServicesCombobox({
               >
                 <div
                   className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md"
-                  style={{ backgroundColor: `${service.color}1A` }}
+                  style={{ backgroundColor: `color-mix(in srgb, ${service.color} 10%, transparent)` }}
                 >
                   <IconComponent width={16} height={16} />
                 </div>

@@ -9,15 +9,15 @@ import type { NoteColor } from '@/types/notes'
 /** Color de nodo por NoteColor (carpeta o nota) — derivado de NOTE_COLOR_CONFIG.border */
 export const GRAPH_NODE_COLORS: Record<NoteColor, string> = {
   default: 'var(--text-muted)',
-  sage: '#B07A3A',
-  terracotta: '#C4704A',
+  sage: 'var(--module-notas)',
+  terracotta: 'var(--accent-terracotta)',
   stone: 'var(--text-faint)',
-  blue: '#3B78B0',
+  blue: 'var(--module-gastos)',
   gold: '#C4974A',
 }
 
 export const GRAPH_LINK_COLOR = 'var(--text-faint)'
-export const GRAPH_LINK_ACTIVE_COLOR = '#B07A3A'
+export const GRAPH_LINK_ACTIVE_COLOR = 'var(--module-notas)'
 
 export const GRAPH_FORCES = {
   linkDistance: 90,

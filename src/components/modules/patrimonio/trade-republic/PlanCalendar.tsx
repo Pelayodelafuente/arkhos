@@ -62,8 +62,8 @@ function Cell({ state }: { state: CellState }) {
       <div
         className="flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold"
         style={{
-          backgroundColor: "color-mix(in srgb, var(--color-loss, #A32D2D) 10%, transparent)",
-          color: "var(--color-loss, #A32D2D)",
+          backgroundColor: "color-mix(in srgb, var(--color-loss, var(--color-loss)) 10%, transparent)",
+          color: "var(--color-loss, var(--color-loss))",
         }}
         aria-label="Pendiente sin registrar"
       >
@@ -281,7 +281,7 @@ export function PlanCalendar() {
           <div className="flex items-center gap-1.5">
             <div
               className="h-3 w-3 rounded-sm"
-              style={{ backgroundColor: "color-mix(in srgb, var(--color-loss, #A32D2D) 10%, transparent)" }}
+              style={{ backgroundColor: "color-mix(in srgb, var(--color-loss, var(--color-loss)) 10%, transparent)" }}
             />
             <span className="text-xs" style={{ color: "var(--text-tertiary, var(--text-muted))" }}>
               Sin registrar

@@ -59,7 +59,7 @@ export function SubscriptionModal({
 
   const [name, setName] = useState("")
   const [icon, setIcon] = useState("")
-  const [color, setColor] = useState("#3B78B0")
+  const [color, setColor] = useState("var(--module-gastos)")
   const [amount, setAmount] = useState("")
   const [cycle, setCycle] = useState<BillingCycle>("monthly")
   const [billingDay, setBillingDay] = useState("1")
@@ -90,7 +90,7 @@ export function SubscriptionModal({
   const resetForm = useCallback(() => {
     setName("")
     setIcon("")
-    setColor("#4A7A9B")
+    setColor("var(--module-gastos)")
     setAmount("")
     setCycle("monthly")
     setBillingDay("1")

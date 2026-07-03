@@ -47,13 +47,13 @@ export function UpdateOnChainBalancesButton({ compact = false }: { compact?: boo
     status === "success"
       ? {
           backgroundColor: "rgba(46,125,107,0.10)",
-          color: "var(--platform-patrimonio, #2E7D6B)",
+          color: "var(--platform-patrimonio, var(--color-gain))",
           border: "1px solid rgba(46,125,107,0.20)",
         }
       : status === "error"
         ? {
             backgroundColor: "rgba(163,45,45,0.10)",
-            color: "#A32D2D",
+            color: "var(--color-loss)",
             border: "1px solid rgba(163,45,45,0.20)",
           }
         : {

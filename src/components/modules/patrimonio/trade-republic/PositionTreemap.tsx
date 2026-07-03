@@ -8,11 +8,11 @@ import { formatEur } from "@/lib/utils/format";
 
 function getPLColor(pl: number): string {
   if (pl >= 15) return "#1B5E4A";
-  if (pl >= 8) return "#2E7D6B";
-  if (pl >= 3) return "#5B8C6A";
+  if (pl >= 8) return "var(--color-gain)";
+  if (pl >= 3) return "var(--urgency-safe)";
   if (pl >= 0) return "#8CAF8A";
-  if (pl >= -5) return "#C4704A";
-  if (pl >= -10) return "#A32D2D";
+  if (pl >= -5) return "var(--accent-terracotta)";
+  if (pl >= -10) return "var(--color-loss)";
   return "#7A1515";
 }
 
@@ -118,7 +118,7 @@ interface CustomTooltipProps {
 function CustomTooltip({ active, payload }: CustomTooltipProps) {
   if (!active || !payload?.[0]) return null;
   const d = payload[0].payload;
-  const plColor = d.pl_percentage >= 0 ? "#2E7D6B" : "#A32D2D";
+  const plColor = d.pl_percentage >= 0 ? "var(--color-gain)" : "var(--color-loss)";
   const sign = d.pl_percentage >= 0 ? "+" : "";
   return (
     <div
@@ -178,10 +178,10 @@ export function PositionTreemap() {
       <div className="mb-3 flex items-center gap-4">
         <span className="text-xs text-text-tertiary">P&L %:</span>
         {[
-          { color: "#A32D2D", label: "< 0%" },
-          { color: "#C4704A", label: "0-3%" },
+          { color: "var(--color-loss)", label: "< 0%" },
+          { color: "var(--accent-terracotta)", label: "0-3%" },
           { color: "#8CAF8A", label: "3-8%" },
-          { color: "#2E7D6B", label: "> 8%" },
+          { color: "var(--color-gain)", label: "> 8%" },
         ].map(({ color, label }) => (
           <div key={label} className="flex items-center gap-1">
             <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: color }} aria-hidden="true" />

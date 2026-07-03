@@ -5,7 +5,7 @@ import { X, RefreshCw } from "lucide-react";
 import { updateHorosNAV } from "@/app/actions/horos";
 import { useHorosStore } from "@/stores/horos-store";
 
-const HOROS_COLOR = "#7260C4";
+const HOROS_COLOR = "var(--module-mercados)";
 
 const fmtNav = (v: number) =>
   new Intl.NumberFormat("es-ES", { minimumFractionDigits: 3, maximumFractionDigits: 3 }).format(v);

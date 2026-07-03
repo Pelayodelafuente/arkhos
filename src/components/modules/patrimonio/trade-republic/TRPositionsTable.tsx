@@ -158,7 +158,7 @@ function PriceCell({ asset, changePercent }: PriceCellProps) {
     ? "var(--text-tertiary)"
     : isUp
     ? "var(--module-patrimonio)"
-    : "#A32D2D";
+    : "var(--color-loss)";
 
   return (
     <div className={`flex flex-col items-end gap-0.5 rounded ${flashClass}`}>
@@ -367,7 +367,7 @@ function CategoryGroup({
                     {plAnnualized != null && (
                       <span
                         className="font-mono text-[10px]"
-                        style={{ color: plAnnualized >= 0 ? "#2E7D6B" : "#A32D2D" }}
+                        style={{ color: plAnnualized >= 0 ? "var(--color-gain)" : "var(--color-loss)" }}
                         title="P&L% anualizado (CAGR por posición)"
                       >
                         {plAnnualized >= 0 ? "+" : ""}

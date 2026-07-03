@@ -59,7 +59,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
         <span style={{ color: "var(--text-muted)" }}>Aportado: </span>
         <span>{formatEur(cost)}</span>
       </p>
-      <p style={{ color: gain >= 0 ? "var(--platform-tr, #2E7D6B)" : "#A32D2D" }}>
+      <p style={{ color: gain >= 0 ? "var(--platform-tr, var(--color-gain))" : "var(--color-loss)" }}>
         <span>Ganancia: </span>
         <span>
           {gain >= 0 ? "+" : ""}
@@ -113,8 +113,8 @@ export function IndexaEvolutionChart({ data, isLoading }: IndexaEvolutionChartPr
         <AreaChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id="gradValue" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#3B78B0" stopOpacity={0.2} />
-              <stop offset="95%" stopColor="#3B78B0" stopOpacity={0} />
+              <stop offset="5%" stopColor="var(--module-gastos)" stopOpacity={0.2} />
+              <stop offset="95%" stopColor="var(--module-gastos)" stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid
@@ -149,7 +149,7 @@ export function IndexaEvolutionChart({ data, isLoading }: IndexaEvolutionChartPr
           <Area
             type="monotone"
             dataKey="value"
-            stroke="#3B78B0"
+            stroke="var(--module-gastos)"
             strokeWidth={2}
             fill="url(#gradValue)"
             dot={false}

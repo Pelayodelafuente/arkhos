@@ -548,12 +548,12 @@ export function NoteEditor({
                     }
                   }}
                   placeholder="https://..."
-                  className="w-40 rounded border border-border bg-background px-1.5 py-0.5 text-[11px] text-foreground outline-none focus:border-[#B07A3A]"
+                  className="w-40 rounded border border-border bg-background px-1.5 py-0.5 text-[11px] text-foreground outline-none focus:border-[var(--module-notas)]"
                 />
                 <button
                   type="button"
                   onClick={handleSetLink}
-                  className="rounded px-1.5 py-0.5 text-[10px] font-medium bg-[#B07A3A] text-white hover:bg-[#5a7a56] transition-colors"
+                  className="rounded px-1.5 py-0.5 text-[10px] font-medium bg-[var(--module-notas)] text-white hover:bg-[#5a7a56] transition-colors"
                 >
                   OK
                 </button>
@@ -642,7 +642,7 @@ function BubbleBtn({
       title={title}
       className={`flex h-7 w-7 items-center justify-center rounded transition-colors ${
         active
-          ? 'bg-[#B07A3A]/10 text-[#B07A3A]'
+          ? 'bg-[var(--module-notas)]/10 text-[var(--module-notas)]'
           : 'text-text-secondary hover:text-foreground hover:bg-sand/60'
       }`}
     >

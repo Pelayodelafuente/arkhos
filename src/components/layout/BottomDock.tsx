@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useProjectsStore } from "@/stores/projects-store";
 import { useNotesStore } from "@/stores/notes-store";
 import { logout } from "@/app/(auth)/actions";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 
 // ─── SVG Icons ───────────────────────────────────────────────────────────────
 
@@ -660,7 +661,7 @@ export function BottomDock({
               ref={(el) => { if (el) iconRefs.current.set("profile", el); else iconRefs.current.delete("profile"); }}
               style={{
                 width: 44, height: 44, borderRadius: "50%",
-                background: avatarUrl ? "transparent" : "linear-gradient(135deg, #C4704A, #7a2030)",
+                background: avatarUrl ? "transparent" : "linear-gradient(135deg, var(--accent-terracotta), #7a2030)",
                 border: "2px solid rgba(196,112,74,0.4)",
                 boxShadow: "0 4px 16px rgba(0,0,0,0.4), 0 0 0 2px rgba(196,112,74,0.15)",
                 overflow: "hidden", flexShrink: 0,
@@ -707,7 +708,7 @@ export function BottomDock({
               <div style={{ position: "absolute", top: "100%", left: "50%", transform: "translateX(-50%)", width: 0, height: 0, borderLeft: "5px solid transparent", borderRight: "5px solid transparent", borderTop: "5px solid rgba(255,255,255,0.07)" }} />
 
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                <div style={{ width: 34, height: 34, borderRadius: "50%", background: avatarUrl ? "transparent" : "linear-gradient(135deg, #C4704A, #7a2030)", border: "1px solid rgba(196,112,74,0.35)", overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ width: 34, height: 34, borderRadius: "50%", background: avatarUrl ? "transparent" : "linear-gradient(135deg, var(--accent-terracotta), #7a2030)", border: "1px solid rgba(196,112,74,0.35)", overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
                   {avatarUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={avatarUrl} alt={userName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -744,6 +745,10 @@ export function BottomDock({
                 <IcoSettings />
                 Configuración
               </Link>
+
+              <div style={{ marginBottom: 6 }}>
+                <ThemeToggle variant="menu" />
+              </div>
 
               <form action={logout}>
                 <button

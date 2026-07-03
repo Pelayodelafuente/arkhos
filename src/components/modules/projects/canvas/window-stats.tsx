@@ -66,7 +66,7 @@ function StatCard({ data, animateDelay }: { data: StatCardData; animateDelay: nu
     return () => clearTimeout(timer);
   }, [animateDelay]);
 
-  const barColor = data.barColor ?? '#C4704A';
+  const barColor = data.barColor ?? 'var(--accent-terracotta)';
 
   return (
     <div

@@ -374,7 +374,7 @@ export function ModuleChip({ label, color }: ModuleChipProps) {
   return (
     <span
       className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider"
-      style={{ color, backgroundColor: `${color}18` }}
+      style={{ color, backgroundColor: `color-mix(in srgb, ${color} 9%, transparent)` }}
     >
       {label}
     </span>

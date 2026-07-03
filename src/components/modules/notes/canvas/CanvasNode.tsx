@@ -48,7 +48,7 @@ function getHandleStyle(handle: string): React.CSSProperties {
   const half = -size / 2
   const base: React.CSSProperties = {
     position: "absolute", width: size, height: size,
-    background: "#C4704A", borderRadius: 2, zIndex: 102,
+    background: "var(--accent-terracotta)", borderRadius: 2, zIndex: 102,
   }
   const map: Record<string, React.CSSProperties> = {
     nw: { top: half, left: half, cursor: "nwse-resize" },
@@ -174,7 +174,7 @@ export function CanvasNodeComponent({
   const renderConnectionHandles = () => (
     (["top", "right", "bottom", "left"] as const).map((side) => {
       const handleSize = isConnecting ? 14 : 12
-      const portColor = isConnecting ? "#5B8C6A" : "#B07A3A"
+      const portColor = isConnecting ? "var(--urgency-safe)" : "var(--module-notas)"
       const visibilityClass = isConnecting
         ? "opacity-80"
         : (isSelected ? "" : "opacity-0 group-hover/node:opacity-60")
@@ -188,7 +188,7 @@ export function CanvasNodeComponent({
             backgroundColor: portColor, border: "2px solid white",
             cursor: "crosshair", zIndex: 103,
             transition: "opacity 150ms, transform 150ms",
-            boxShadow: isConnecting ? `0 0 0 3px ${portColor}33` : undefined,
+            boxShadow: isConnecting ? `0 0 0 3px color-mix(in srgb, ${portColor} 20%, transparent)` : undefined,
           }}
           onMouseEnter={(e) => {
             (e.currentTarget as HTMLElement).style.transform =
@@ -233,7 +233,7 @@ export function CanvasNodeComponent({
         position: "absolute", left: screenX, top: screenY,
         width: screenW, height: screenH,
         backgroundColor: node.node_type === "url" ? colors.bg : colors.bg,
-        borderColor: isConnectionTarget ? "#B07A3A" : colors.border,
+        borderColor: isConnectionTarget ? "var(--module-notas)" : colors.border,
         borderWidth: 1,
         borderStyle: "solid", borderRadius: 12,
         zIndex: isSelected ? 100 : node.z_index,
@@ -242,7 +242,7 @@ export function CanvasNodeComponent({
         boxShadow: isConnectionTarget
           ? "0 0 0 3px rgba(122, 155, 118, 0.3)"
           : isSelected
-            ? "0 0 0 2px #C4704A, 0 4px 16px rgba(26,23,20,0.10)"
+            ? "0 0 0 2px var(--accent-terracotta), 0 4px 16px rgba(26,23,20,0.10)"
             : "0 1px 4px rgba(26,23,20,0.04)",
         overflow: "hidden",
         ...(isConnectionTarget ? { transform: "scale(1.02)" } : {}),
@@ -277,7 +277,7 @@ export function CanvasNodeComponent({
                 }}
               />
               <Link size={14 * scale} strokeWidth={1.75} style={{
-                color: "#B07A3A", flexShrink: 0,
+                color: "var(--module-notas)", flexShrink: 0,
               }} />
             </>
           ) : createElement(NodeIcon, { size: 14 * scale, strokeWidth: 1.75, style: { color: colors.border, flexShrink: 0 } })
@@ -298,7 +298,7 @@ export function CanvasNodeComponent({
             style={{
               flex: 1, display: "flex", flexDirection: "column",
               justifyContent: "center", gap: 2 * scale,
-              borderLeft: `${2 * scale}px solid #B07A3A`,
+              borderLeft: `${2 * scale}px solid var(--module-notas)`,
               paddingLeft: 6 * scale,
               overflow: "hidden",
               cursor: "pointer",
@@ -332,7 +332,7 @@ export function CanvasNodeComponent({
             <button
               style={{
                 display: "inline-flex", alignItems: "center", gap: 3 * scale,
-                fontSize: 9 * scale, color: "#B07A3A",
+                fontSize: 9 * scale, color: "var(--module-notas)",
                 background: "none", border: "none", cursor: "pointer",
                 padding: 0, marginTop: 2 * scale,
               }}
@@ -442,7 +442,7 @@ export function CanvasNodeComponent({
             width: 8 * scale,
             height: 8 * scale,
             borderRadius: "50%",
-            backgroundColor: "#C4704A",
+            backgroundColor: "var(--accent-terracotta)",
             pointerEvents: "none",
             zIndex: 101,
           }}

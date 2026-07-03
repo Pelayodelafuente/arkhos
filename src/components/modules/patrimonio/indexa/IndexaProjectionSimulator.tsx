@@ -53,7 +53,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
         <span style={{ color: "var(--text-muted)" }}>Aportado: </span>
         {formatEur(contributed)}
       </p>
-      <p style={{ color: "#3B78B0" }}>
+      <p style={{ color: "var(--module-gastos)" }}>
         <span style={{ color: "var(--text-muted)" }}>Intereses: </span>
         {formatEur(Math.max(0, interest))}
       </p>
@@ -141,7 +141,7 @@ export function IndexaProjectionSimulator({
                 style={{
                   backgroundColor:
                     years === y
-                      ? "var(--platform-indexa, #3B78B0)"
+                      ? "var(--platform-indexa, var(--module-gastos))"
                       : "var(--border-stone, rgba(160,120,80,0.15))",
                   color: years === y ? "#fff" : "var(--text-secondary)",
                 }}
@@ -246,7 +246,7 @@ export function IndexaProjectionSimulator({
             wrapperStyle={{ fontSize: 11 }}
           />
           <Bar dataKey="total_contributed" stackId="a" fill="rgba(59,120,176,0.4)" name="total_contributed" radius={[0, 0, 0, 0]} />
-          <Bar dataKey="interest_earned" stackId="a" fill="#3B78B0" name="interest_earned" radius={[3, 3, 0, 0]} />
+          <Bar dataKey="interest_earned" stackId="a" fill="var(--module-gastos)" name="interest_earned" radius={[3, 3, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
 
@@ -264,7 +264,7 @@ export function IndexaProjectionSimulator({
             {years} {years === 1 ? "año" : "años"}
           </span>
           <span style={{ color: "var(--text-muted)" }}> → estimado </span>
-          <span className="font-semibold" style={{ color: "#3B78B0" }}>
+          <span className="font-semibold" style={{ color: "var(--module-gastos)" }}>
             {formatEur(lastPoint.projected_value)}
           </span>
           <span style={{ color: "var(--text-muted)" }}> con </span>

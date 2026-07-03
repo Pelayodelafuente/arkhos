@@ -34,11 +34,11 @@ const PLATFORM_META: Record<
   string,
   { color: string; label: string }
 > = {
-  "trade-republic": { color: "#2E7D6B", label: "Trade Republic" },
-  indexa: { color: "#3B78B0", label: "Indexa Capital" },
-  horos: { color: "#7260C4", label: "Horos" },
-  mintos: { color: "#C4704A", label: "Mintos" },
-  crypto: { color: "#B07A3A", label: "Cripto" },
+  "trade-republic": { color: "var(--color-gain)", label: "Trade Republic" },
+  indexa: { color: "var(--module-gastos)", label: "Indexa Capital" },
+  horos: { color: "var(--module-mercados)", label: "Horos" },
+  mintos: { color: "var(--accent-terracotta)", label: "Mintos" },
+  crypto: { color: "var(--module-notas)", label: "Cripto" },
 };
 
 // ---------------------------------------------------------------------------
@@ -62,7 +62,7 @@ function buildGraph(
   const links: SankeyRawLink[] = [];
 
   // Node 0: source
-  nodes.push({ name: "Tu dinero", color: "var(--module-patrimonio, #2E7D6B)" });
+  nodes.push({ name: "Tu dinero", color: "var(--module-patrimonio, var(--color-gain))" });
 
   // Level 1: platforms (nodes 1-5)
   const platforms: Array<{ key: string; value: number }> = [

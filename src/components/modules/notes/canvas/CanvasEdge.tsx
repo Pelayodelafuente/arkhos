@@ -7,9 +7,9 @@ import type { CanvasEdge as CanvasEdgeType, CanvasNode, EdgeSide, EdgeStyle } fr
 const EDGE_COLORS: Record<string, string> = {
   default: 'var(--text-faint)',
   sage: 'var(--module-notas)',
-  terracotta: '#C4704A',
+  terracotta: 'var(--accent-terracotta)',
   stone: '#8A7A6A',
-  blue: '#3B78B0',
+  blue: 'var(--module-gastos)',
   gold: '#C4AA4A',
 }
 

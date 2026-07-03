@@ -72,7 +72,7 @@ export function ProximosPagosPanel({ subscriptions }: ProximosPagosProps) {
               <div key={sub.id} className="flex items-center gap-3 px-3.5 py-2.5">
                 <div
                   className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 text-[10px] font-bold font-mono"
-                  style={{ background: `${urgentColor}15`, color: urgentColor }}
+                  style={{ background: `color-mix(in srgb, ${urgentColor} 8%, transparent)`, color: urgentColor }}
                 >
                   {sub.daysLeft === 0 ? 'HOY' : `${sub.daysLeft}d`}
                 </div>

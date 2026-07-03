@@ -37,7 +37,7 @@ function getStatusColor(status: string): string {
     'Archivado': '#9a7a5a',
     'Idea': '#c4a07a',
     'Pausado': '#F59E0B',
-    'Completado': '#c4704a',
+    'Completado': 'var(--accent-terracotta)',
   };
   return map[status] ?? '#9a7a5a';
 }
@@ -60,7 +60,7 @@ function ProjectFolder({ logoUrl, isHovered, color }: { logoUrl: string | null; 
     );
   }
 
-  const folderColor = color ?? '#C4704A';
+  const folderColor = color ?? 'var(--accent-terracotta)';
   return (
     <div
       style={{
@@ -369,7 +369,7 @@ export function WindowProjects({ userId }: WindowProjectsProps) {
               borderRadius: 5,
               border: filterMode === tab.key ? '0.5px solid rgba(196,112,74,0.4)' : '0.5px solid var(--border-stone)',
               background: filterMode === tab.key ? 'rgba(196,112,74,0.10)' : 'transparent',
-              color: filterMode === tab.key ? '#C4704A' : 'var(--text-tertiary)',
+              color: filterMode === tab.key ? 'var(--accent-terracotta)' : 'var(--text-tertiary)',
             }}
           >
             {tab.label}
@@ -422,9 +422,9 @@ export function WindowProjects({ userId }: WindowProjectsProps) {
           style={{
             padding: 6,
             borderRadius: 6,
-            border: confirmingArchive ? '0.5px solid #c4704a' : '0.5px solid var(--border-stone)',
+            border: confirmingArchive ? '0.5px solid var(--accent-terracotta)' : '0.5px solid var(--border-stone)',
             background: confirmingArchive ? 'rgba(196,112,74,0.08)' : 'transparent',
-            color: confirmingArchive ? '#c4704a' : 'var(--text-secondary)',
+            color: confirmingArchive ? 'var(--accent-terracotta)' : 'var(--text-secondary)',
             transition: 'all 0.13s ease',
           }}
           onClick={handleArchiveOrUnarchive}
@@ -438,7 +438,7 @@ export function WindowProjects({ userId }: WindowProjectsProps) {
             padding: 6,
             borderRadius: 6,
             border: 'none',
-            background: '#C4704A',
+            background: 'var(--accent-terracotta)',
             color: '#fff',
             transition: 'all 0.13s ease',
           }}

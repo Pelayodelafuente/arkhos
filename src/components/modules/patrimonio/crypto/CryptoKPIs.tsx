@@ -57,7 +57,7 @@ export function CryptoKPIs({ overview, isLoading }: CryptoKPIsProps) {
 
   const hasPL = overview.has_live_prices && overview.pl_eur !== null && overview.pl_pct !== null;
   const plColor =
-    hasPL && (overview.pl_eur as number) >= 0 ? "var(--platform-patrimonio, #2E7D6B)" : "#A32D2D";
+    hasPL && (overview.pl_eur as number) >= 0 ? "var(--platform-patrimonio, var(--color-gain))" : "var(--color-loss)";
 
   return (
     <motion.div
@@ -102,7 +102,7 @@ export function CryptoKPIs({ overview, isLoading }: CryptoKPIsProps) {
             <span className="text-xs opacity-60">USDC</span>
           </span>
         }
-        accent="var(--platform-patrimonio, #2E7D6B)"
+        accent="var(--platform-patrimonio, var(--color-gain))"
       />
       <KPICard
         label="Aportación mensual"

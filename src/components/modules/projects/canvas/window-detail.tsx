@@ -273,7 +273,7 @@ function AddPhaseButton({ projectId }: { projectId: string }) {
 
   return (
     <div className="flex items-center gap-[4px] px-[6px] py-[3px]">
-      <Plus className="h-[10px] w-[10px] shrink-0" style={{ color: '#C4704A' }} />
+      <Plus className="h-[10px] w-[10px] shrink-0" style={{ color: 'var(--accent-terracotta)' }} />
       <input
         type="text"
         value={value}
@@ -382,7 +382,7 @@ export function WindowDetail({ userId }: WindowDetailProps) {
               borderRadius: 5,
               border: tab === t ? '0.5px solid rgba(196,112,74,0.4)' : '0.5px solid var(--border-stone)',
               background: tab === t ? 'rgba(196,112,74,0.10)' : 'transparent',
-              color: tab === t ? '#C4704A' : 'var(--text-tertiary)',
+              color: tab === t ? 'var(--accent-terracotta)' : 'var(--text-tertiary)',
             }}
           >
             {t === 'progress' ? 'Progreso' : 'Kanban'}

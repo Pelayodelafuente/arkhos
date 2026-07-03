@@ -7,7 +7,7 @@ import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { deleteTransaction } from "@/app/actions/patrimonio";
 import { useUIStore } from "@/stores/ui-store";
 import { Button } from "@/components/ui";
-import { C } from "@/lib/patrimonio/chart-colors";
+import { C, C_SUBTLE } from "@/lib/patrimonio/chart-colors";
 import { TransactionFormModal } from "./TransactionFormModal";
 import { AssetAccumulationChart } from "./AssetAccumulationChart";
 import { CATEGORY_LABELS } from "@/types/patrimonio";
@@ -28,24 +28,24 @@ const fmtQty = (v: number) =>
     : v.toLocaleString("es-ES", { maximumFractionDigits: 6 });
 
 const TX_BADGE: Record<TransactionType, { label: string; color: string; bg: string }> = {
-  buy:          { label: "Compra",      color: C.green,  bg: `${C.green}1A`  },
-  savings_plan: { label: "Plan ahorro", color: C.blue,   bg: `${C.blue}1A`   },
-  saveback:     { label: "Saveback",    color: C.purple, bg: `${C.purple}1A` },
-  sell:         { label: "Venta",       color: C.red,    bg: `${C.red}1A`    },
-  dividend:     { label: "Dividendo",   color: C.amber,  bg: `${C.amber}1A`  },
-  transfer_in:  { label: "Entrada",     color: C.green,  bg: `${C.green}1A`  },
-  transfer_out: { label: "Salida",      color: C.red,    bg: `${C.red}1A`    },
+  buy:          { label: "Compra",      color: C.green,  bg: C_SUBTLE.green  },
+  savings_plan: { label: "Plan ahorro", color: C.blue,   bg: C_SUBTLE.blue   },
+  saveback:     { label: "Saveback",    color: C.purple, bg: C_SUBTLE.purple },
+  sell:         { label: "Venta",       color: C.red,    bg: C_SUBTLE.red    },
+  dividend:     { label: "Dividendo",   color: C.amber,  bg: C_SUBTLE.amber  },
+  transfer_in:  { label: "Entrada",     color: C.green,  bg: C_SUBTLE.green  },
+  transfer_out: { label: "Salida",      color: C.red,    bg: C_SUBTLE.red    },
 };
 
 // Timeline dot color per transaction type
 const TX_DOT_COLOR: Record<TransactionType, string> = {
-  buy:          "#2E7D6B",
-  savings_plan: "#B07A3A",
-  saveback:     "#7260C4",
-  sell:         "#A32D2D",
-  dividend:     "#3B78B0",
-  transfer_in:  "#2E7D6B",
-  transfer_out: "#A32D2D",
+  buy:          C.green,
+  savings_plan: C.amber,
+  saveback:     C.purple,
+  sell:         C.red,
+  dividend:     C.blue,
+  transfer_in:  C.green,
+  transfer_out: C.red,
 };
 
 function formatDateDDMMYYYY(dateStr: string): string {
@@ -419,7 +419,7 @@ export function AssetDetailDrawer({ assetId, onClose }: AssetDetailDrawerProps) 
                                           onClick={() => handleDelete(tx.id)}
                                           disabled={isDeleting}
                                           className="rounded px-1.5 py-0.5 text-xs font-medium transition-colors"
-                                          style={{ color: "#A32D2D" }}
+                                          style={{ color: "var(--color-loss)" }}
                                         >
                                           {isDeleting ? "…" : "Confirmar"}
                                         </button>
@@ -491,7 +491,7 @@ export function AssetDetailDrawer({ assetId, onClose }: AssetDetailDrawerProps) 
                     ) : (
                       <ol className="relative" aria-label="Historial de transacciones">
                         {assetTransactions.map((tx, idx) => {
-                          const dotColor = TX_DOT_COLOR[tx.type] ?? "#2E7D6B";
+                          const dotColor = TX_DOT_COLOR[tx.type] ?? "var(--color-gain)";
                           const badge = TX_BADGE[tx.type] ?? TX_BADGE.buy;
                           const isLast = idx === assetTransactions.length - 1;
                           return (

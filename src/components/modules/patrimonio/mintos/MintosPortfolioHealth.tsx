@@ -114,13 +114,13 @@ export function MintosPortfolioHealth({ segments, snapshotDate }: MintosPortfoli
         className="flex items-center justify-between rounded-lg px-3 py-2 text-sm"
         style={{
           backgroundColor: moraPct > 5
-            ? "color-mix(in srgb, #A32D2D 8%, transparent)"
+            ? "color-mix(in srgb, var(--color-loss) 8%, transparent)"
             : "color-mix(in srgb, var(--platform-mintos) 6%, transparent)",
           border: "1px solid var(--border-stone, rgba(160,120,80,0.2))",
         }}
       >
         <span style={{ color: "var(--text-secondary)" }}>En mora total</span>
-        <span className="font-mono font-medium tabular-nums" style={{ color: moraPct > 5 ? "#A32D2D" : "var(--text-primary)" }}>
+        <span className="font-mono font-medium tabular-nums" style={{ color: moraPct > 5 ? "var(--color-loss)" : "var(--text-primary)" }}>
           {moraPct.toFixed(2)}% — {fmt(moraAmount)}
         </span>
       </div>

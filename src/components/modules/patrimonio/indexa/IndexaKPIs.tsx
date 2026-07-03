@@ -7,7 +7,7 @@ import { formatEur, formatPct } from "@/lib/utils/format";
 import { KPICard } from "@/components/viz";
 
 function accentColor(accent: "positive" | "negative" | "neutral"): string | undefined {
-  return accent === "positive" ? "#2E7D6B" : accent === "negative" ? "#A32D2D" : undefined;
+  return accent === "positive" ? "var(--color-gain)" : accent === "negative" ? "var(--color-loss)" : undefined;
 }
 
 interface IndexaKPIsProps {

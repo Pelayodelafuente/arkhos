@@ -14,11 +14,11 @@ import {
 
 const COLOR_SWATCHES = [
   AGENDA_COLOR, // ciruela (agenda)
-  "#C4704A", // terracota
-  "#3B78B0", // azul
-  "#2E7D6B", // teal
-  "#7260C4", // púrpura
-  "#B07A3A", // oro
+  "var(--accent-terracotta)", // terracota
+  "var(--module-gastos)", // azul
+  "var(--color-gain)", // teal
+  "var(--module-mercados)", // púrpura
+  "var(--module-notas)", // oro
 ]
 
 interface Props {

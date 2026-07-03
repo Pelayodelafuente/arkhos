@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import type { HorosAnnualCosts } from "@/types/horos";
 
-const HOROS_COLOR = "#7260C4";
+const HOROS_COLOR = "var(--module-mercados)";
 const GRANATE = "#8B1A2E";
 
 const fmt = (v: number | null) =>

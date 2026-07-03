@@ -43,7 +43,7 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
       <p className="font-medium text-text-secondary">{item.month}</p>
       <div className="mt-2 space-y-1">
         <div className="flex justify-between gap-5">
-          <span style={{ color: "#4A7A9B" }}>Intereses</span>
+          <span style={{ color: "var(--module-gastos)" }}>Intereses</span>
           <span className="font-mono">{formatEur(item.interest)}</span>
         </div>
         <div className="flex justify-between gap-5">
@@ -108,7 +108,7 @@ export function PassiveIncomePanel() {
     <div className="rounded-xl border border-border bg-card">
       <div className="flex items-center justify-between border-b border-border px-5 py-4">
         <div className="flex items-center gap-2">
-          <TrendingUp size={16} strokeWidth={1.75} style={{ color: "#4A7A9B" }} aria-hidden="true" />
+          <TrendingUp size={16} strokeWidth={1.75} style={{ color: "var(--module-gastos)" }} aria-hidden="true" />
           <h3 className="text-sm font-semibold text-foreground">Ingresos Pasivos</h3>
         </div>
         <span className="font-mono text-sm font-medium" style={{ color: "var(--module-patrimonio)" }}>
@@ -140,19 +140,19 @@ export function PassiveIncomePanel() {
                 width={36}
               />
               <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(196,160,120,0.08)" }} />
-              <Bar dataKey="interest" stackId="a" fill="#4A7A9B" fillOpacity={0.85} radius={[0, 0, 0, 0]} maxBarSize={24} isAnimationActive={false} />
-              <Bar dataKey="dividend" stackId="a" fill="#2E7D6B" fillOpacity={0.85} radius={[3, 3, 0, 0]} maxBarSize={24} isAnimationActive={false} />
+              <Bar dataKey="interest" stackId="a" fill="var(--module-gastos)" fillOpacity={0.85} radius={[0, 0, 0, 0]} maxBarSize={24} isAnimationActive={false} />
+              <Bar dataKey="dividend" stackId="a" fill="var(--color-gain)" fillOpacity={0.85} radius={[3, 3, 0, 0]} maxBarSize={24} isAnimationActive={false} />
             </BarChart>
           </ResponsiveContainer>
 
           {/* Legend */}
           <div className="mt-3 flex gap-5">
             <div className="flex items-center gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "#4A7A9B" }} aria-hidden="true" />
+              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "var(--module-gastos)" }} aria-hidden="true" />
               <span className="text-xs text-text-secondary">Intereses</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "#2E7D6B" }} aria-hidden="true" />
+              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "var(--color-gain)" }} aria-hidden="true" />
               <span className="text-xs text-text-secondary">Dividendos</span>
             </div>
           </div>
@@ -199,7 +199,7 @@ export function PassiveIncomePanel() {
                     : item.type === "saveback"
                       ? "Saveback"
                       : "Cupon";
-              const typeColor = item.type === "interest" ? "#4A7A9B" : "var(--module-patrimonio)";
+              const typeColor = item.type === "interest" ? "var(--module-gastos)" : "var(--module-patrimonio)";
               return (
                 <div key={item.id} className="flex items-center justify-between gap-3">
                   <div>
@@ -214,9 +214,9 @@ export function PassiveIncomePanel() {
                     <span
                       className="rounded-full px-1.5 py-0.5 text-[10px] font-medium"
                       style={{
-                        backgroundColor: `${typeColor}18`,
+                        backgroundColor: `color-mix(in srgb, ${typeColor} 9%, transparent)`,
                         color: typeColor,
-                        border: `1px solid ${typeColor}30`,
+                        border: `1px solid color-mix(in srgb, ${typeColor} 19%, transparent)`,
                       }}
                     >
                       {typeLabel}

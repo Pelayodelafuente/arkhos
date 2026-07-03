@@ -79,7 +79,7 @@ function TRSyncButton() {
 
   const isLoading = status === "loading" || isRefreshing;
   const label = isLoading ? "Actualizando…" : status === "success" ? "Actualizado" : status === "error" ? "Error" : "Actualizar";
-  const color = status === "success" ? "#2E7D6B" : status === "error" ? "#A32D2D" : "var(--platform-tr)";
+  const color = status === "success" ? "var(--color-gain)" : status === "error" ? "var(--color-loss)" : "var(--platform-tr)";
 
   return (
     <button
@@ -135,7 +135,7 @@ function CryptoSyncButton() {
 
   const isLoading = status === "loading";
   const label = isLoading ? "Actualizando…" : status === "success" ? "Actualizado" : status === "error" ? "Error" : "Actualizar";
-  const color = status === "success" ? "#2E7D6B" : status === "error" ? "#A32D2D" : "var(--platform-crypto)";
+  const color = status === "success" ? "var(--color-gain)" : status === "error" ? "var(--color-loss)" : "var(--platform-crypto)";
 
   return (
     <button
@@ -368,7 +368,7 @@ export function PatrimonioDashboard() {
       name: "Trade Republic",
       description: "Acciones y ETFs",
       color: "var(--platform-tr)",
-      colorHex: "#2E7D6B",
+      colorHex: "var(--color-gain)",
       icon: <Landmark size={16} strokeWidth={1.75} aria-hidden="true" />,
       currentValue: trValue > 0 ? trValue : null,
       totalInvested: trInvested > 0 ? trInvested : null,
@@ -385,7 +385,7 @@ export function PatrimonioDashboard() {
       name: "Indexa Capital",
       description: "Fondos indexados globales",
       color: "var(--platform-indexa)",
-      colorHex: "#3B78B0",
+      colorHex: "var(--module-gastos)",
       icon: <TrendingUp size={16} strokeWidth={1.75} aria-hidden="true" />,
       currentValue: indexaOverview?.total_value ?? null,
       totalInvested: indexaOverview?.total_cost ?? null,
@@ -399,7 +399,7 @@ export function PatrimonioDashboard() {
       name: "Horos",
       description: "Gestión activa value",
       color: "var(--platform-horos)",
-      colorHex: "#7260C4",
+      colorHex: "var(--module-mercados)",
       icon: <BarChart2 size={16} strokeWidth={1.75} aria-hidden="true" />,
       currentValue: horosPosition?.total_value ?? null,
       totalInvested: horosPosition?.total_cost ?? null,
@@ -413,7 +413,7 @@ export function PatrimonioDashboard() {
       name: "Mintos",
       description: "P2P Lending",
       color: "var(--platform-mintos)",
-      colorHex: "#C4704A",
+      colorHex: "var(--accent-terracotta)",
       icon: <Coins size={16} strokeWidth={1.75} aria-hidden="true" />,
       currentValue: mintosOverview?.total_value ?? null,
       totalInvested: mintosInvested > 0 ? mintosInvested : null,
@@ -428,7 +428,7 @@ export function PatrimonioDashboard() {
       name: "Cripto",
       description: "Criptomonedas",
       color: "var(--platform-crypto)",
-      colorHex: "#B07A3A",
+      colorHex: "var(--module-notas)",
       icon: <Bitcoin size={16} strokeWidth={1.75} aria-hidden="true" />,
       currentValue: cryptoOverview?.total_value_eur ?? null,
       totalInvested: cryptoOverview?.total_invested_eur ?? null,
