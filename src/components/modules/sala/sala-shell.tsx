@@ -13,6 +13,8 @@ import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
 import { useSalaStore } from "@/stores/sala-store";
 import { SalaFallback } from "./sala-fallback";
+import { SalaHud } from "./sala-hud";
+import { useSalaAudio } from "./audio/use-sala-audio";
 
 const SalaExperience = dynamic(
   () => import("./sala-experience").then((m) => m.SalaExperience),
@@ -39,6 +41,7 @@ function detectMode(): SalaMode {
 export function SalaShell() {
   const router = useRouter();
   const [mode, setMode] = useState<SalaMode>("detecting");
+  useSalaAudio();
 
   // La detección necesita window: se resuelve tras el primer render (SSR-safe)
   useEffect(() => {
@@ -61,6 +64,7 @@ export function SalaShell() {
       {mode === "3d" && <SalaExperience />}
       {mode === "flat" && <SalaFallback />}
       {mode === "detecting" && <SalaBooting />}
+      {mode !== "detecting" && <SalaHud />}
 
       <button
         type="button"

@@ -27,6 +27,7 @@ import { DragController } from "./interaction/drag-controller";
 export function SalaExperience() {
   const reducedMotion = usePrefersReducedMotion();
   const hydrateLayout = useSalaStore((s) => s.hydrateLayout);
+  const quality = useSalaStore((s) => s.quality);
 
   // Layout guardado (localStorage) — solo disponible en cliente
   useEffect(() => {
@@ -35,7 +36,7 @@ export function SalaExperience() {
 
   return (
     <Canvas
-      dpr={[1, 1.75]}
+      dpr={quality === "alta" ? [1, 1.75] : 1}
       gl={{ antialias: true, powerPreference: "high-performance" }}
       camera={{ position: CAMERA_INTRO_POS, fov: 42 }}
     >
