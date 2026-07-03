@@ -46,6 +46,7 @@
 - Patrimonio ✅ — `src/components/modules/patrimonio/` — TR, Indexa, Horos, Crypto, Mintos
 - Mercados ✅ — `src/app/(dashboard)/mercados/` — Fases 0-5 + auditoría v1.1
 - Cronos (Agenda) ✅ — `src/app/(dashboard)/agenda/` — calendario mes/semana/día + agregación cross-módulo (Gastos/Proyectos/Mercados) + IA NL/auto-scheduling + feed ICS (Proton) + Web Push. Color `--module-agenda #8A5A7A`
+- **Arkhos OPS (Sala 3D)** ✅ experimento (2026-07-03) — `src/app/(dashboard)/sala/` + `src/components/modules/sala/` + `src/lib/sala/` + `sala-store` — centro de mando inmersivo R3F (three + fiber 9 + drei 10 + postprocessing; solo en el chunk de /sala vía dynamic ssr:false). Muro de 7 pantallas híbridas (bisel 3D emisivo + `<Html transform>` con widgets Recharts reales de los stores), modo foco con dolly, drag & drop 3D, Núcleo/racks/vault/ticker con datos reales, sonido WebAudio opcional, fallback 2D (`?flat=1` o sin WebGL/móvil). Layout en localStorage `arkhos-sala-layout`. Todo procedural: NO añadir GLB/draco/ktx2 sin ampliar CSP (`worker-src`/`wasm-unsafe-eval`)
 
 ## Reglas activas
 Ver: `.claude/rules/reading-protocol.md` — lectura eficiente de archivos
