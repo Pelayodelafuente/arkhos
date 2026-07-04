@@ -10,6 +10,7 @@ import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { SALA_COLORS } from "@/lib/sala/palette";
+import { mulberry32 } from "@/lib/sala/random";
 
 const DUST_COUNT = 220;
 
@@ -17,11 +18,12 @@ export function Atmosphere({ reducedMotion }: { reducedMotion: boolean }) {
   const points = useRef<THREE.Points>(null);
 
   const positions = useMemo(() => {
+    const rnd = mulberry32(0xa7c0);
     const arr = new Float32Array(DUST_COUNT * 3);
     for (let i = 0; i < DUST_COUNT; i++) {
-      arr[i * 3] = (Math.random() - 0.5) * 14;
-      arr[i * 3 + 1] = Math.random() * 5.5;
-      arr[i * 3 + 2] = -4 + Math.random() * 10;
+      arr[i * 3] = (rnd() - 0.5) * 14;
+      arr[i * 3 + 1] = rnd() * 5.5;
+      arr[i * 3 + 2] = -4 + rnd() * 10;
     }
     return arr;
   }, []);

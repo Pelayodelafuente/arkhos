@@ -11,6 +11,10 @@ import { timeAgo } from "@/lib/sala/format";
 import { WidgetShell } from "./widget-shell";
 import type { SalaWidgetProps } from "./types";
 
+// Timestamp de carga del módulo: la edad del snapshot no necesita precisión
+// viva y Date.now() en render es impuro para el React Compiler.
+const MOUNT_TS = Date.now();
+
 export function WidgetSistema({ height }: SalaWidgetProps) {
   const data = useDashboardStore((s) => s.data);
 
@@ -21,7 +25,7 @@ export function WidgetSistema({ height }: SalaWidgetProps) {
   }, [data]);
 
   const snapshotAgeDays = lastSnapshot
-    ? Math.floor((Date.now() - new Date(lastSnapshot.snapshot_date).getTime()) / 86_400_000)
+    ? Math.floor((MOUNT_TS - new Date(lastSnapshot.snapshot_date).getTime()) / 86_400_000)
     : null;
   const fresh = snapshotAgeDays !== null && snapshotAgeDays <= 7;
 

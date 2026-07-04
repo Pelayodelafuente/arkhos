@@ -12,6 +12,7 @@ import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { usePatrimonioStore } from "@/stores/patrimonio-store";
 import { SALA_COLORS } from "@/lib/sala/palette";
+import { mulberry32 } from "@/lib/sala/random";
 
 const POSITION: [number, number, number] = [0, 0, -2.05];
 const PARTICLE_COUNT = 360;
@@ -30,11 +31,12 @@ export function Nucleo({ reducedMotion }: { reducedMotion: boolean }) {
   const halo = useRef<THREE.Points>(null);
 
   const particles = useMemo(() => {
+    const rnd = mulberry32(0x9c1e0);
     const positions = new Float32Array(PARTICLE_COUNT * 3);
     for (let i = 0; i < PARTICLE_COUNT; i++) {
-      const r = 0.5 + Math.random() * 0.22;
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos(2 * Math.random() - 1);
+      const r = 0.5 + rnd() * 0.22;
+      const theta = rnd() * Math.PI * 2;
+      const phi = Math.acos(2 * rnd() - 1);
       positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
       positions[i * 3 + 1] = r * Math.cos(phi) * 0.75;
       positions[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta);
