@@ -221,6 +221,24 @@ export async function getSnapshots(userId: string): Promise<PortfolioSnapshot[]>
       'id, user_id, snapshot_date, platform_id, total_value, total_invested, cash_value, pl_amount, pl_percentage, created_at'
     )
     .eq('user_id', userId)
+    // Las filas globales (platform_id NULL) viven aparte — ver getDailyGlobalSnapshots.
+    // Los charts de TR consumen este listado sin filtrar por plataforma.
+    .not('platform_id', 'is', null)
+    .order('snapshot_date');
+  if (error) return [];
+  return (data ?? []) as PortfolioSnapshot[];
+}
+
+/** Serie diaria del patrimonio GLOBAL (filas platform_id NULL del cron diario). */
+export async function getDailyGlobalSnapshots(userId: string): Promise<PortfolioSnapshot[]> {
+  const supabase = await getClient();
+  const { data, error } = await supabase
+    .from('portfolio_snapshots')
+    .select(
+      'id, user_id, snapshot_date, platform_id, total_value, total_invested, cash_value, pl_amount, pl_percentage, created_at'
+    )
+    .eq('user_id', userId)
+    .is('platform_id', null)
     .order('snapshot_date');
   if (error) return [];
   return (data ?? []) as PortfolioSnapshot[];

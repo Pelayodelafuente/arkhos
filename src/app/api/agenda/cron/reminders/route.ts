@@ -23,12 +23,24 @@ export async function GET(req: NextRequest) {
   if (req.headers.get("authorization") !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 })
   }
+  const admin = createAdminClient()
+  if (!admin) return NextResponse.json({ error: "Sin service role" }, { status: 503 })
+
+  // ── Snapshot diario global de Patrimonio ──────────────────────────────
+  // Piggyback en este cron (Vercel Hobby = máx. 2 crons): registra la fila
+  // global (platform_id NULL) de portfolio_snapshots para todos los usuarios.
+  // Nunca bloquea el digest de eventos.
+  let snapshotUsers = 0
+  try {
+    const { data: snapCount, error: snapError } = await admin.rpc("run_daily_global_snapshots")
+    if (!snapError) snapshotUsers = snapCount ?? 0
+  } catch {
+    /* el snapshot fallido no impide los recordatorios */
+  }
+
   if (!configureWebPush()) {
     return NextResponse.json({ error: "VAPID no configurado" }, { status: 503 })
   }
-
-  const admin = createAdminClient()
-  if (!admin) return NextResponse.json({ error: "Sin service role" }, { status: 503 })
 
   const now = new Date()
   const horizon = new Date(now.getTime() + HORIZON_H * 60 * 60 * 1000).toISOString()
@@ -36,7 +48,7 @@ export async function GET(req: NextRequest) {
   const { data: subs } = await admin
     .from("agenda_push_subscriptions")
     .select("user_id, endpoint, p256dh, auth")
-  if (!subs?.length) return NextResponse.json({ ok: true, sent: 0 })
+  if (!subs?.length) return NextResponse.json({ ok: true, sent: 0, snapshotUsers })
 
   const byUser = new Map<string, PushSub[]>()
   for (const s of subs) {
@@ -87,5 +99,5 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({ ok: true, sent, at: now.toISOString() })
+  return NextResponse.json({ ok: true, sent, snapshotUsers, at: now.toISOString() })
 }

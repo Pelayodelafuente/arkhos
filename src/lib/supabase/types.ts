@@ -2650,6 +2650,111 @@ export type Database = {
           },
         ]
       }
+      reconciliation_audit: {
+        Row: {
+          aplicado: boolean
+          aplicado_at: string | null
+          campo: string | null
+          created_at: string
+          delta: number | null
+          entidad: string | null
+          estado: string | null
+          id: string
+          plataforma: string | null
+          registro_ref: string | null
+          run_id: string
+          user_id: string
+          valor_antes: Json | null
+          valor_despues: Json | null
+        }
+        Insert: {
+          aplicado?: boolean
+          aplicado_at?: string | null
+          campo?: string | null
+          created_at?: string
+          delta?: number | null
+          entidad?: string | null
+          estado?: string | null
+          id?: string
+          plataforma?: string | null
+          registro_ref?: string | null
+          run_id: string
+          user_id: string
+          valor_antes?: Json | null
+          valor_despues?: Json | null
+        }
+        Update: {
+          aplicado?: boolean
+          aplicado_at?: string | null
+          campo?: string | null
+          created_at?: string
+          delta?: number | null
+          entidad?: string | null
+          estado?: string | null
+          id?: string
+          plataforma?: string | null
+          registro_ref?: string | null
+          run_id?: string
+          user_id?: string
+          valor_antes?: Json | null
+          valor_despues?: Json | null
+        }
+        Relationships: []
+      }
+      reconciliation_snapshots: {
+        Row: {
+          activo_o_prestamo: string | null
+          cantidad: number | null
+          comision: number | null
+          created_at: string
+          divisa: string
+          fecha: string | null
+          id: string
+          importe: number | null
+          originador: string | null
+          plataforma: string
+          raw_json: Json | null
+          run_id: string
+          source: string
+          tipo: string | null
+          user_id: string
+        }
+        Insert: {
+          activo_o_prestamo?: string | null
+          cantidad?: number | null
+          comision?: number | null
+          created_at?: string
+          divisa?: string
+          fecha?: string | null
+          id?: string
+          importe?: number | null
+          originador?: string | null
+          plataforma: string
+          raw_json?: Json | null
+          run_id: string
+          source: string
+          tipo?: string | null
+          user_id: string
+        }
+        Update: {
+          activo_o_prestamo?: string | null
+          cantidad?: number | null
+          comision?: number | null
+          created_at?: string
+          divisa?: string
+          fecha?: string | null
+          id?: string
+          importe?: number | null
+          originador?: string | null
+          plataforma?: string
+          raw_json?: Json | null
+          run_id?: string
+          source?: string
+          tipo?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       savings_plan_items: {
         Row: {
           asset_id: string
@@ -3149,16 +3254,17 @@ export type Database = {
         Returns: undefined
       }
       global_search: {
-        Args: { p_query: string; p_limit?: number }
+        Args: { p_limit?: number; p_query: string }
         Returns: {
-          kind: string
           id: string
-          title: string
-          snippet: string
+          kind: string
           rank: number
+          snippet: string
+          title: string
         }[]
       }
       reset_crypto_for_user: { Args: { p_user_id: string }; Returns: undefined }
+      run_daily_global_snapshots: { Args: never; Returns: number }
       seed_crypto_for_user: { Args: { p_user_id: string }; Returns: undefined }
       seed_crypto_for_user_v2: {
         Args: { p_user_id: string }
@@ -3172,6 +3278,10 @@ export type Database = {
         Returns: undefined
       }
       update_aave_apr2026: { Args: { p_user_id: string }; Returns: undefined }
+      upsert_daily_global_snapshot: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
       upsert_today_snapshot: { Args: { p_user_id: string }; Returns: undefined }
     }
     Enums: {

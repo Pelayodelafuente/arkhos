@@ -20,6 +20,7 @@ import {
   getAllAssets,
   getAllTransactions,
   getSnapshots,
+  getDailyGlobalSnapshots,
   getPortfolioOverview,
   getPlatforms,
   getSavingsPlan,
@@ -103,17 +104,19 @@ export interface PatrimonioMutationSnapshot {
   assets: PortfolioAsset[];
   transactions: PortfolioTransaction[];
   snapshots: PortfolioSnapshot[];
+  dailySnapshots: PortfolioSnapshot[];
   overview: PortfolioOverview | null;
 }
 
 async function getMutationSnapshot(userId: string): Promise<PatrimonioMutationSnapshot> {
-  const [assets, transactions, snapshots, overview] = await Promise.all([
+  const [assets, transactions, snapshots, dailySnapshots, overview] = await Promise.all([
     getAllAssets(userId),
     getAllTransactions(userId, 500),
     getSnapshots(userId),
+    getDailyGlobalSnapshots(userId),
     getPortfolioOverview(userId),
   ]);
-  return { assets, transactions, snapshots, overview };
+  return { assets, transactions, snapshots, dailySnapshots, overview };
 }
 
 export interface PatrimonioFullSnapshot extends PatrimonioMutationSnapshot {
@@ -639,8 +642,9 @@ async function recalcAssets(
       .eq('user_id', userId);
   }
 
-  // Regenerar snapshot del día actual con los valores actualizados
+  // Regenerar snapshots del día actual con los valores actualizados (TR + global)
   await supabase.rpc('upsert_today_snapshot', { p_user_id: userId });
+  await supabase.rpc('upsert_daily_global_snapshot', { p_user_id: userId });
 }
 
 // ---------------------------------------------------------------------------
@@ -682,6 +686,7 @@ export async function updateLivePrices(
   ).length;
 
   await supabase.rpc('upsert_today_snapshot', { p_user_id: user.id });
+  await supabase.rpc('upsert_daily_global_snapshot', { p_user_id: user.id });
 
   return { updated };
 }

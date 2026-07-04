@@ -23,6 +23,7 @@ import { loadCryptoData } from "@/app/actions/crypto";
 import type { PlatformSlug } from "@/types/patrimonio";
 import { PlatformCard, type PlatformCardProps } from "@/components/modules/patrimonio/dashboard/PlatformCard";
 import { GlobalEvolutionChart } from "@/components/modules/patrimonio/dashboard/GlobalEvolutionChart";
+import { DailyEvolutionChart } from "@/components/modules/patrimonio/dashboard/DailyEvolutionChart";
 import { PatrimonioHero } from "@/components/modules/patrimonio/dashboard/PatrimonioHero";
 import { PlatformDistributionBar } from "@/components/modules/patrimonio/dashboard/PlatformDistributionBar";
 import dynamic from "next/dynamic";
@@ -504,6 +505,9 @@ export function PatrimonioDashboard() {
               <PlatformDistributionBar />
             </div>
           </div>
+
+          {/* ── EVOLUCIÓN DIARIA (snapshots del cron; oculto hasta ≥2 días) ── */}
+          <DailyEvolutionChart />
 
           {/* ── SANKEY ────────────────────────────────────────────────────── */}
           <SankeyDiagram />

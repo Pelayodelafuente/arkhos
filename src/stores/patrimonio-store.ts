@@ -33,6 +33,8 @@ interface PatrimonioStore {
   transactions: PortfolioTransaction[];
   savingsPlan: SavingsPlanItem[];
   snapshots: PortfolioSnapshot[];
+  /** Serie diaria del patrimonio global (filas platform_id NULL del cron) */
+  dailySnapshots: PortfolioSnapshot[];
   passiveIncome: PassiveIncome[];
 
   // Price change map: isin → day change %
@@ -63,6 +65,7 @@ interface PatrimonioStore {
   setTransactions: (transactions: PortfolioTransaction[]) => void;
   setSavingsPlan: (plan: SavingsPlanItem[]) => void;
   setSnapshots: (snapshots: PortfolioSnapshot[]) => void;
+  setDailySnapshots: (snapshots: PortfolioSnapshot[]) => void;
   setPassiveIncome: (income: PassiveIncome[]) => void;
   setIsLoading: (loading: boolean) => void;
   setIsLoadingPrices: (loading: boolean) => void;
@@ -112,6 +115,7 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
   transactions: [],
   savingsPlan: [],
   snapshots: [],
+  dailySnapshots: [],
   passiveIncome: [],
   priceChanges: {},
   isLoading: false,
@@ -131,6 +135,7 @@ export const usePatrimonioStore = create<PatrimonioStore>((set, get) => ({
   setTransactions: (transactions) => set({ transactions }),
   setSavingsPlan: (savingsPlan) => set({ savingsPlan }),
   setSnapshots: (snapshots) => set({ snapshots }),
+  setDailySnapshots: (dailySnapshots) => set({ dailySnapshots }),
   setPassiveIncome: (passiveIncome) => set({ passiveIncome }),
   setIsLoading: (isLoading) => set({ isLoading }),
   setIsLoadingPrices: (isLoadingPrices) => set({ isLoadingPrices }),

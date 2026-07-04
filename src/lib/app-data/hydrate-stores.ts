@@ -73,6 +73,7 @@ export function hydrateAllStores(data: AppData): void {
     patrimonioStore.setTransactions(p.transactions)
     patrimonioStore.setSavingsPlan(p.savingsPlan)
     patrimonioStore.setSnapshots(p.snapshots)
+    patrimonioStore.setDailySnapshots(p.dailySnapshots)
     patrimonioStore.setPassiveIncome(p.passiveIncome)
     patrimonioStore.setPlatforms(p.platforms)
 

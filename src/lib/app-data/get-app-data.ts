@@ -33,6 +33,7 @@ import {
   getAllTransactions,
   getSavingsPlan,
   getSnapshots,
+  getDailyGlobalSnapshots,
   getPassiveIncome,
   getPlatforms,
 } from '@/lib/supabase/patrimonio'
@@ -104,6 +105,7 @@ export interface PatrimonioLoadedData {
   transactions: PortfolioTransaction[]
   savingsPlan: SavingsPlanItem[]
   snapshots: PortfolioSnapshot[]
+  dailySnapshots: PortfolioSnapshot[]
   passiveIncome: PassiveIncome[]
   platforms: InvestmentPlatform[]
   indexaOverview: IndexaOverview | null
@@ -134,6 +136,7 @@ async function loadPatrimonio(userId: string): Promise<PatrimonioAppData> {
     transactions,
     savingsPlan,
     snapshots,
+    dailySnapshots,
     passiveIncome,
     platforms,
     indexaOverview,
@@ -153,6 +156,7 @@ async function loadPatrimonio(userId: string): Promise<PatrimonioAppData> {
     getAllTransactions(userId, 500),
     getSavingsPlan(userId),
     getSnapshots(userId),
+    getDailyGlobalSnapshots(userId),
     getPassiveIncome(userId),
     getPlatforms(userId),
     getIndexaOverview(userId).catch(() => null as IndexaOverview | null),
@@ -177,6 +181,7 @@ async function loadPatrimonio(userId: string): Promise<PatrimonioAppData> {
     transactions,
     savingsPlan,
     snapshots,
+    dailySnapshots,
     passiveIncome,
     platforms,
     indexaOverview,
