@@ -1,7 +1,12 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import {
+  ACTIVITY_COOKIE,
+  ACTIVITY_COOKIE_MAX_AGE,
+} from "@/lib/auth/session";
 import { z } from "zod/v4";
 
 const loginSchema = z.object({
@@ -51,6 +56,17 @@ export async function login(
     return { error: "Credenciales incorrectas", success: null };
   }
 
+  // Sella la actividad al iniciar sesión: evita que un marcador viejo cierre
+  // la sesión nada más entrar (ver caducidad por inactividad en el middleware).
+  const cookieStore = await cookies();
+  cookieStore.set(ACTIVITY_COOKIE, String(Date.now()), {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: ACTIVITY_COOKIE_MAX_AGE,
+  });
+
   redirect("/");
 }
 
@@ -93,6 +109,9 @@ export async function register(
 export async function logout() {
   const supabase = await createClient();
   await supabase.auth.signOut();
+  // Limpia el marcador de actividad para que un futuro login empiece de cero.
+  const cookieStore = await cookies();
+  cookieStore.delete(ACTIVITY_COOKIE);
   redirect("/login");
 }
 

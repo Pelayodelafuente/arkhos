@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useActionState, useMemo } from "react";
+import { useState, useActionState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { login, type AuthState } from "../actions";
 import { AuthInput } from "@/components/auth/AuthInput";
 import { AuthButton } from "@/components/auth/AuthButton";
-import { Mail, Lock, Eye, EyeOff, Sun, CloudSun, Moon } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Sun, CloudSun, Moon, Clock } from "lucide-react";
 import { motion } from "framer-motion";
 
 const initialState: AuthState = { error: null, success: null };
@@ -20,8 +20,16 @@ function getGreeting(): { text: string; Icon: typeof Sun } {
 export default function LoginPage() {
   const [state, formAction, pending] = useActionState(login, initialState);
   const [showPassword, setShowPassword] = useState(false);
+  const [expiredNotice, setExpiredNotice] = useState(false);
   const greeting = useMemo(() => getGreeting(), []);
   const GreetingIcon = greeting.Icon;
+
+  // Aviso de sesión cerrada por inactividad (?expired=1 desde el middleware)
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("expired") === "1") {
+      setExpiredNotice(true);
+    }
+  }, []);
 
   return (
     <div className="relative">
@@ -54,6 +62,21 @@ export default function LoginPage() {
         className="mx-auto mt-5 mb-6 h-[1px] w-10"
         style={{ background: "linear-gradient(90deg, transparent, var(--auth-copper), transparent)" }}
       />
+
+      {/* Aviso de sesión caducada por inactividad */}
+      {expiredNotice && (
+        <div
+          className="mb-5 flex items-center gap-2 rounded-xl px-3 py-2.5 text-[13px]"
+          style={{
+            background: "var(--warning-bg)",
+            border: "1px solid var(--warning-border)",
+            color: "var(--warning)",
+          }}
+        >
+          <Clock size={15} strokeWidth={1.75} className="flex-shrink-0" />
+          <span>Tu sesión se cerró por inactividad. Vuelve a iniciar sesión.</span>
+        </div>
+      )}
 
       {/* Form */}
       <form action={formAction} className="space-y-5">
