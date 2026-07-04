@@ -6,6 +6,7 @@ import { Button, Badge, Skeleton, SelectCustom } from "@/components/ui"
 import { useFilteredNotes, useNotesStore } from "@/stores/notes-store"
 import type { NoteSortMode } from "@/stores/notes-store"
 import { NoteCard } from "./NoteCard"
+import { NOTE_COLORS } from "./NoteColorPicker"
 import type { Note } from "@/types/notes"
 import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core"
 import {
@@ -142,6 +143,7 @@ export function NotesList({ userId, onEdit, onNew, selectedNoteId }: Props) {
   const sortMode = useNotesStore((s) => s.sortMode)
   const setSortMode = useNotesStore((s) => s.setSortMode)
   const setNotes = useNotesStore((s) => s.setNotes)
+  const folders = useNotesStore((s) => s.folders)
   const isTrashView = activeFolderId === 'trash'
 
   const isSelectionMode = useNotesStore((s) => s.isSelectionMode)
@@ -266,6 +268,23 @@ export function NotesList({ userId, onEdit, onNew, selectedNoteId }: Props) {
   const pinnedNotes = notes.filter((n) => n.is_pinned)
   const regularNotes = notes.filter((n) => !n.is_pinned)
 
+  // Vista «Todas»: agrupar por carpeta con cabecera en su color (estructura
+  // del mockup Opción A). Con búsqueda, carpeta concreta u orden manual se
+  // mantiene el grid plano.
+  const groupByFolder = !activeFolderId && !searchQuery && !isManual
+  const folderAccent = (color: string): string => {
+    const cfg = NOTE_COLORS.find((c) => c.value === color)
+    return !cfg || color === 'default' ? 'var(--text-faint)' : cfg.border
+  }
+  const folderGroups = groupByFolder
+    ? folders
+        .map((f) => ({ folder: f, list: regularNotes.filter((n) => n.folder_id === f.id) }))
+        .filter((g) => g.list.length > 0)
+    : []
+  const ungroupedNotes = groupByFolder
+    ? regularNotes.filter((n) => !n.folder_id || !folders.some((f) => f.id === n.folder_id))
+    : []
+
   const renderGrid = (list: Note[], indexOffset = 0) => (
     <div className={`grid gap-3 ${selectedNoteId ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"}`}>
       {list.map((note, i) => (
@@ -310,15 +329,52 @@ export function NotesList({ userId, onEdit, onNew, selectedNoteId }: Props) {
         </div>
       )}
 
-      {regularNotes.length > 0 && (
-        <div className="space-y-3">
-          {pinnedNotes.length > 0 && (
-            <span className="text-[11px] font-semibold uppercase tracking-wide text-text-tertiary">
-              Notas
-            </span>
+      {groupByFolder ? (
+        <>
+          {folderGroups.map(({ folder, list }) => (
+            <div key={folder.id} className="space-y-3">
+              <div className="flex items-center gap-2">
+                <span
+                  className="inline-block h-[9px] w-[9px] rounded-[3px] flex-shrink-0"
+                  style={{ background: folderAccent(folder.color) }}
+                />
+                <span className="text-xs font-bold text-foreground">{folder.name}</span>
+                <span className="font-mono text-[10px] text-text-tertiary">
+                  {list.length} {list.length === 1 ? 'nota' : 'notas'}
+                </span>
+                <div
+                  className="h-px flex-1"
+                  style={{ background: `color-mix(in srgb, ${folderAccent(folder.color)} 30%, transparent)` }}
+                />
+              </div>
+              {renderGrid(list, pinnedNotes.length)}
+            </div>
+          ))}
+          {ungroupedNotes.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="inline-block h-[9px] w-[9px] rounded-[3px] flex-shrink-0 bg-[var(--text-faint)] opacity-50" />
+                <span className="text-xs font-bold text-text-secondary">Sin carpeta</span>
+                <span className="font-mono text-[10px] text-text-tertiary">
+                  {ungroupedNotes.length} {ungroupedNotes.length === 1 ? 'nota' : 'notas'}
+                </span>
+                <div className="h-px flex-1 bg-border-subtle" style={{ background: 'var(--border-subtle)' }} />
+              </div>
+              {renderGrid(ungroupedNotes, pinnedNotes.length)}
+            </div>
           )}
-          {renderGrid(regularNotes, pinnedNotes.length)}
-        </div>
+        </>
+      ) : (
+        regularNotes.length > 0 && (
+          <div className="space-y-3">
+            {pinnedNotes.length > 0 && (
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-text-tertiary">
+                Notas
+              </span>
+            )}
+            {renderGrid(regularNotes, pinnedNotes.length)}
+          </div>
+        )
       )}
     </div>
   )

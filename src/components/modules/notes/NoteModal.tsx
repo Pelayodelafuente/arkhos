@@ -180,6 +180,10 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
   // Auto-save for existing notes (debounce 800ms) — only when there are real changes
   useEffect(() => {
     if (!isEdit || !note || !open) return
+    // Igual que en NotePane: no evaluar "dirty" mientras el content lazy aún
+    // no ha llegado (evita guardados con datos a medio sincronizar tras un
+    // remount/HMR con un timer superviviente).
+    if (note.contentLoaded === false) return
     const snap = snapshotRef.current
     if (!snap) return
     const isDirty = (
@@ -191,6 +195,8 @@ export function NoteModal({ open, onClose, userId, note, onOpenNote }: Props) {
       JSON.stringify(tags) !== JSON.stringify(snap.tags)
     )
     if (!isDirty) return
+    // Nunca pisar un título real con el placeholder ante una desincronización transitoria.
+    if (!title.trim() && snap.title.trim()) return
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current)
     autoSaveTimer.current = setTimeout(() => {
       editNote(note.id, { title: title || 'Sin título', content, color, icon, tags, status })

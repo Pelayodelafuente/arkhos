@@ -209,6 +209,11 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
   // Auto-save (debounce 800ms)
   useEffect(() => {
     if (!note) return
+    // El content lazy-load puede coincidir con un remount (Fast Refresh en dev,
+    // o cualquier reinicio del árbol de efectos) mientras el ref del timer
+    // sobrevive: no evaluar "dirty" hasta que el contenido real haya llegado,
+    // para no disparar un guardado con datos a medio sincronizar.
+    if (note.contentLoaded === false) return
     const snap = snapshotRef.current
     if (!snap) return
     const isDirty = (
@@ -220,6 +225,10 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
       JSON.stringify(tags) !== JSON.stringify(snap.tags)
     )
     if (!isDirty) return
+    // Nunca pisar un título real con el placeholder: si el campo está vacío
+    // pero la nota ya tenía título, es una desincronización transitoria
+    // (remount/HMR), no una edición real del usuario — se ignora ese guardado.
+    if (!title.trim() && snap.title.trim()) return
     setSaveStatus('saving')
     // Track latest dirty data for flush on unmount
     pendingSaveRef.current = { noteId: note.id, title, content, color, icon, tags, status }
@@ -246,8 +255,10 @@ export function NotePane({ noteId, userId, onClose, onOpenNote }: Props) {
         const currentNote = store.notes.find((n) => n.id === pending.noteId)
         // Solo hacer flush si el contenido fue cargado desde la DB.
         // Evita sobrescribir el contenido real con "" cuando se archiva/cierra
-        // antes de que termine la carga lazy del content.
-        if (currentNote?.contentLoaded !== false) {
+        // antes de que termine la carga lazy del content. Tampoco pisar un
+        // título real con el placeholder ante una desincronización transitoria.
+        const wouldBlankTitle = !pending.title.trim() && Boolean(currentNote?.title.trim())
+        if (currentNote?.contentLoaded !== false && !wouldBlankTitle) {
           store.editNote(pending.noteId, {
             title: pending.title || 'Sin título',
             content: pending.content,
