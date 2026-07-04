@@ -4,7 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useProjectsStore } from "@/stores/projects-store";
 import { useNotesStore } from "@/stores/notes-store";
-import { MODULES, IcoDashboard } from "./BottomDock";
+import { MODULES } from "./BottomDock";
+import { IconDashboard } from "@/components/ui";
 
 // ══════════════════════════════════════
 // BottomNav — dock móvil (<1024px)
@@ -94,8 +95,8 @@ export function BottomNav({
             display: "flex",
           }}
         >
-          <span style={{ transform: "scale(0.82)", display: "flex" }}>
-            <Icon />
+          <span style={{ display: "flex" }}>
+            <Icon size={28} />
           </span>
         </span>
         <span
@@ -166,7 +167,7 @@ export function BottomNav({
               display: "flex",
             }}
           >
-            <IcoDashboard />
+            <IconDashboard size={28} />
           </span>
           <span
             aria-hidden="true"

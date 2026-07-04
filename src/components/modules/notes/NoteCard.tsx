@@ -56,6 +56,15 @@ export function NoteCard({ note, userId: _userId, onEdit, onDelete, onTogglePin,
   const [folderMenuOpen, setFolderMenuOpen] = useState(false)
   const colorConfig = NOTE_COLORS.find((c) => c.value === note.color) ?? NOTE_COLORS[0]
   const folders = useNotesStore((s) => s.folders)
+  // Opción A (mockup 2026-07-04): carpeta arriba en su color + borde izquierdo acentuado
+  const folder = note.folder_id ? folders.find((f) => f.id === note.folder_id) ?? null : null
+  const folderColorConfig = folder?.color ? NOTE_COLORS.find((c) => c.value === folder.color) : null
+  const accentColor =
+    note.color !== 'default'
+      ? colorConfig.border
+      : folderColorConfig
+        ? folderColorConfig.border
+        : 'var(--module-notas)'
   const moveNoteToFolder = useNotesStore((s) => s.moveNoteToFolder)
   const restoreFromTrash = useNotesStore((s) => s.restoreFromTrash)
   const permanentlyDelete = useNotesStore((s) => s.permanentlyDelete)
@@ -82,6 +91,7 @@ export function NoteCard({ note, userId: _userId, onEdit, onDelete, onTogglePin,
             : colorConfig.border.startsWith('#')
               ? colorConfig.border + '80'
               : colorConfig.border,
+        borderLeft: `3px solid ${isPaneActive ? 'var(--module-notas)' : accentColor}`,
         boxShadow: isPaneActive ? '0 0 0 2px rgba(122,155,118,0.2)' : undefined,
       }}
       onClick={() => isSelectionMode ? onToggleSelect?.(note.id) : (!isInTrash && onEdit(note))}
@@ -99,6 +109,20 @@ export function NoteCard({ note, userId: _userId, onEdit, onDelete, onTogglePin,
       )}
 
       <div className="p-4">
+        {/* Carpeta — etiqueta superior en su color (Opción A) */}
+        {folder && (
+          <div
+            className="mb-1.5 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide"
+            style={{ color: accentColor }}
+          >
+            <span
+              className="inline-block h-[7px] w-[7px] rounded-[2px]"
+              style={{ background: accentColor }}
+            />
+            {folder.name}
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex items-start gap-2 mb-2">
           {/* Selection checkbox */}
@@ -267,8 +291,11 @@ export function NoteCard({ note, userId: _userId, onEdit, onDelete, onTogglePin,
           </div>
         )}
 
-        {/* Status badge + tags + time */}
-        <div className="flex items-end justify-between gap-2">
+        {/* Status badge + tags + time — fila de meta separada (Opción A) */}
+        <div
+          className="flex items-end justify-between gap-2 mt-3 pt-2.5 border-t"
+          style={{ borderColor: 'var(--border-subtle)' }}
+        >
           <div className="flex flex-wrap gap-1 items-center">
             {note.status && note.status !== 'none' && (() => {
               const cfg = NOTE_STATUS_CONFIG[note.status]

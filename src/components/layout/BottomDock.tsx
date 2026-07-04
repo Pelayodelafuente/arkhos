@@ -7,8 +7,20 @@ import { useProjectsStore } from "@/stores/projects-store";
 import { useNotesStore } from "@/stores/notes-store";
 import { logout } from "@/app/(auth)/actions";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import {
+  IconDashboard,
+  IconProyectos,
+  IconNotas,
+  IconGastos,
+  IconPatrimonio,
+  IconMercados,
+  IconCronos,
+} from "@/components/ui";
+import type { ModuleIconProps } from "@/components/ui";
 
 // ─── SVG Icons ───────────────────────────────────────────────────────────────
+// Los iconos de módulo son las baldosas app-style de @/components/ui/module-icons
+// (mockup aprobado 2026-07-04). Aquí solo quedan los auxiliares del dock.
 
 const SVG = {
   fill: "none" as const,
@@ -18,124 +30,6 @@ const SVG = {
   strokeLinejoin: "round" as const,
 };
 
-export function IcoDashboard() {
-  const c = "#D4895E";
-  return (
-    <svg fill="none" width="26" height="26" viewBox="0 0 24 24">
-      <rect x="3" y="3" width="7" height="7" rx="1.5" fill={c} />
-      <rect x="14" y="3" width="7" height="7" rx="1.5" fill={c} />
-      <rect x="3" y="14" width="7" height="7" rx="1.5" fill={c} />
-      <rect x="14" y="14" width="7" height="7" rx="1.5" fill={c} />
-    </svg>
-  );
-}
-function IcoProyectos() {
-  const c = "#E07848";
-  return (
-    <svg fill="none" width="34" height="34" viewBox="0 0 24 24">
-      <path
-        d="M2 9.5C2 8.4 2.9 7.5 4 7.5h4.6l1.9 2.2H20a2 2 0 012 2V19a2 2 0 01-2 2H4a2 2 0 01-2-2V9.5z"
-        fill={c} fillOpacity="0.18"
-      />
-      <rect x="5.5" y="13.5" width="3" height="5.5" rx="1" fill={c} />
-      <rect x="10.5" y="11" width="3" height="8" rx="1" fill={c} />
-      <rect x="15.5" y="15.5" width="3" height="3.5" rx="1" fill={c} />
-    </svg>
-  );
-}
-function IcoNotas() {
-  const c = "#CC9040";
-  return (
-    <svg fill="none" width="34" height="34" viewBox="0 0 24 24">
-      <path d="M12 5.5C9.5 4.7 6 5 3.5 5.8v13C6 18 9.5 18.2 12 19V5.5z" fill={c} fillOpacity="0.22" />
-      <path d="M12 5.5c2.5-.8 6-.5 8.5.3v13c-2.5-.8-6-1-8.5-.3V5.5z" fill={c} fillOpacity="0.14" />
-      <rect x="11.5" y="5.5" width="1" height="13.5" rx="0.5" fill={c} fillOpacity="0.7" />
-      <rect x="5" y="9" width="5" height="1.2" rx="0.6" fill={c} />
-      <rect x="5" y="11.8" width="4" height="1.2" rx="0.6" fill={c} />
-      <rect x="5" y="14.6" width="4.5" height="1.2" rx="0.6" fill={c} />
-      <rect x="13.5" y="9" width="5" height="1.2" rx="0.6" fill={c} fillOpacity="0.7" />
-      <rect x="13.5" y="11.8" width="3.5" height="1.2" rx="0.6" fill={c} fillOpacity="0.7" />
-      <rect x="13.5" y="14.6" width="4.5" height="1.2" rx="0.6" fill={c} fillOpacity="0.7" />
-    </svg>
-  );
-}
-function IcoMercados() {
-  const c = "#9880E8";
-  return (
-    <svg fill="none" width="34" height="34" viewBox="0 0 24 24">
-      {/* Candlestick 1 — left, bearish */}
-      <line x1="5.5" y1="13.5" x2="5.5" y2="15" stroke={c} strokeOpacity="0.55" strokeWidth="1.2" strokeLinecap="round" />
-      <rect x="3.5" y="15" width="4" height="4.5" rx="0.8" fill={c} fillOpacity="0.4" />
-      <line x1="5.5" y1="19.5" x2="5.5" y2="21" stroke={c} strokeOpacity="0.55" strokeWidth="1.2" strokeLinecap="round" />
-      {/* Candlestick 2 — center, neutral */}
-      <line x1="12" y1="8.5" x2="12" y2="10.5" stroke={c} strokeOpacity="0.7" strokeWidth="1.2" strokeLinecap="round" />
-      <rect x="10" y="10.5" width="4" height="5" rx="0.8" fill={c} fillOpacity="0.65" />
-      <line x1="12" y1="15.5" x2="12" y2="17.5" stroke={c} strokeOpacity="0.7" strokeWidth="1.2" strokeLinecap="round" />
-      {/* Candlestick 3 — right, bullish */}
-      <line x1="18.5" y1="4" x2="18.5" y2="6" stroke={c} strokeWidth="1.2" strokeLinecap="round" />
-      <rect x="16.5" y="6" width="4" height="5" rx="0.8" fill={c} />
-      <line x1="18.5" y1="11" x2="18.5" y2="13" stroke={c} strokeWidth="1.2" strokeLinecap="round" />
-    </svg>
-  );
-}
-function IcoPatrimonio() {
-  const c = "#3AAA80";
-  return (
-    <svg fill="none" width="34" height="34" viewBox="0 0 24 24">
-      <rect x="2" y="2.5" width="18" height="19" rx="2.5" fill={c} fillOpacity="0.18" />
-      <rect x="20.5" y="8" width="1.5" height="8" rx="0.75" fill={c} fillOpacity="0.6" />
-      <circle cx="11" cy="12" r="5.8" stroke={c} strokeWidth="1.8" />
-      <circle cx="11" cy="12" r="3.4" fill={c} fillOpacity="0.18" />
-      <line x1="11" y1="7" x2="11" y2="8.4" stroke={c} strokeWidth="1.2" strokeLinecap="round" />
-      <line x1="15" y1="9" x2="14" y2="9.9" stroke={c} strokeWidth="1.2" strokeLinecap="round" />
-      <line x1="15" y1="15" x2="14" y2="14.1" stroke={c} strokeWidth="1.2" strokeLinecap="round" />
-      <line x1="11" y1="17" x2="11" y2="15.6" stroke={c} strokeWidth="1.2" strokeLinecap="round" />
-      <line x1="7" y1="15" x2="8" y2="14.1" stroke={c} strokeWidth="1.2" strokeLinecap="round" />
-      <line x1="7" y1="9" x2="8" y2="9.9" stroke={c} strokeWidth="1.2" strokeLinecap="round" />
-      <circle cx="11" cy="12" r="1.4" fill={c} />
-      <line x1="11" y1="12" x2="13.4" y2="9.8" stroke={c} strokeWidth="1.5" strokeLinecap="round" />
-      <circle cx="4.5" cy="5" r="0.9" fill={c} fillOpacity="0.5" />
-      <circle cx="17.5" cy="5" r="0.9" fill={c} fillOpacity="0.5" />
-      <circle cx="4.5" cy="19" r="0.9" fill={c} fillOpacity="0.5" />
-      <circle cx="17.5" cy="19" r="0.9" fill={c} fillOpacity="0.5" />
-    </svg>
-  );
-}
-function IcoGastos() {
-  const c = "#4A90CC";
-  return (
-    <svg fill="none" width="34" height="34" viewBox="0 0 24 24">
-      <rect x="1" y="4.5" width="22" height="15" rx="2.5" fill={c} fillOpacity="0.2" />
-      <rect x="1" y="4.5" width="22" height="4" rx="2.5" fill={c} fillOpacity="0.35" />
-      <rect x="3.5" y="11" width="5" height="4" rx="1" fill={c} fillOpacity="0.7" />
-      <line x1="6" y1="11" x2="6" y2="15" stroke="rgba(255,255,255,0.25)" strokeWidth="0.8" />
-      <line x1="3.5" y1="13" x2="8.5" y2="13" stroke="rgba(255,255,255,0.25)" strokeWidth="0.8" />
-      <path d="M18.5 10.5 Q20.5 11.5 20.5 13 Q20.5 14.5 18.5 15.5" stroke={c} strokeWidth="1.5" strokeLinecap="round" fill="none" />
-      <path d="M16.8 11.5 Q18.2 12 18.2 13 Q18.2 14 16.8 14.5" stroke={c} strokeOpacity="0.6" strokeWidth="1.5" strokeLinecap="round" fill="none" />
-      <circle cx="4" cy="17.5" r="0.9" fill={c} />
-      <circle cx="6.5" cy="17.5" r="0.9" fill={c} />
-      <circle cx="9" cy="17.5" r="0.9" fill={c} />
-      <circle cx="11.5" cy="17.5" r="0.9" fill={c} />
-      <rect x="15" y="16.8" width="7" height="1.5" rx="0.75" fill={c} fillOpacity="0.5" />
-    </svg>
-  );
-}
-function IcoAgenda() {
-  const c = "#B584C8";
-  return (
-    <svg fill="none" width="34" height="34" viewBox="0 0 24 24">
-      <rect x="3" y="4.5" width="18" height="16" rx="2.5" fill={c} fillOpacity="0.18" />
-      <rect x="3" y="4.5" width="18" height="4" rx="2.5" fill={c} fillOpacity="0.4" />
-      <line x1="7.5" y1="2.5" x2="7.5" y2="6" stroke={c} strokeWidth="1.6" strokeLinecap="round" />
-      <line x1="16.5" y1="2.5" x2="16.5" y2="6" stroke={c} strokeWidth="1.6" strokeLinecap="round" />
-      <rect x="6" y="11" width="3" height="3" rx="0.7" fill={c} />
-      <rect x="10.5" y="11" width="3" height="3" rx="0.7" fill={c} fillOpacity="0.7" />
-      <rect x="15" y="11" width="3" height="3" rx="0.7" fill={c} fillOpacity="0.5" />
-      <rect x="6" y="15.5" width="3" height="3" rx="0.7" fill={c} fillOpacity="0.7" />
-      <rect x="10.5" y="15.5" width="3" height="3" rx="0.7" fill={c} />
-    </svg>
-  );
-}
 function IcoSettings() {
   return (
     <svg {...SVG} width={20} height={20} viewBox="0 0 24 24" stroke="rgba(255,255,255,0.55)">
@@ -169,7 +63,7 @@ export interface ModuleConfig {
   countKey?: "proyectos" | "notas";
   previewSub: string;
   previewFeatures: string[];
-  Icon: React.ComponentType;
+  Icon: React.ComponentType<ModuleIconProps>;
 }
 
 export const MODULES: ModuleConfig[] = [
@@ -184,7 +78,7 @@ export const MODULES: ModuleConfig[] = [
     countKey: "proyectos",
     previewSub: "Gestión y kanban",
     previewFeatures: ["Kanban", "Fases", "Tareas", "Links"],
-    Icon: IcoProyectos,
+    Icon: IconProyectos,
   },
   {
     key: "notas",
@@ -196,7 +90,7 @@ export const MODULES: ModuleConfig[] = [
     previewBg: "rgba(176,122,58,0.22)",
     previewSub: "Texto y canvas",
     previewFeatures: ["Rich text", "Canvas", "IA", "Imágenes"],
-    Icon: IcoNotas,
+    Icon: IconNotas,
   },
   {
     key: "mercados",
@@ -208,7 +102,7 @@ export const MODULES: ModuleConfig[] = [
     previewBg: "rgba(114,96,196,0.22)",
     previewSub: "Datos en tiempo real",
     previewFeatures: ["Crypto", "Índices", "Forex", "Macro"],
-    Icon: IcoMercados,
+    Icon: IconMercados,
   },
   {
     key: "patrimonio",
@@ -220,7 +114,7 @@ export const MODULES: ModuleConfig[] = [
     previewBg: "rgba(46,125,107,0.22)",
     previewSub: "Inversiones y activos",
     previewFeatures: ["Cartera", "Cripto", "Fondos", "Cash"],
-    Icon: IcoPatrimonio,
+    Icon: IconPatrimonio,
   },
   {
     key: "gastos",
@@ -232,7 +126,7 @@ export const MODULES: ModuleConfig[] = [
     previewBg: "rgba(59,120,176,0.22)",
     previewSub: "Control financiero",
     previewFeatures: ["Suscripciones", "Historial", "Tags", "Ciclos"],
-    Icon: IcoGastos,
+    Icon: IconGastos,
   },
   {
     key: "agenda",
@@ -244,7 +138,7 @@ export const MODULES: ModuleConfig[] = [
     previewBg: "rgba(138,90,122,0.22)",
     previewSub: "Línea de tiempo",
     previewFeatures: ["Calendario", "Timeboxing", "IA", "Recordatorios"],
-    Icon: IcoAgenda,
+    Icon: IconCronos,
   },
 ];
 
@@ -561,13 +455,13 @@ export function BottomDock({
                   )}
                   <div ref={(el) => { if (el) { iconRefs.current.set(mod.key, el); el.dataset.glow = mod.glow; } else { iconRefs.current.delete(mod.key); } }}
                     style={{ width: 52, height: 52, borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s", willChange: "transform" }}>
-                    <Icon />
+                    <Icon size={44} />
                   </div>
                   <span style={{ fontSize: 10, fontWeight: 500, color: active ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.42)", transition: "color 0.2s", whiteSpace: "nowrap" }}>{mod.label}</span>
                   <span style={{ position: "absolute", bottom: -8, left: "50%", transform: "translateX(-50%)", width: 4, height: 4, borderRadius: "50%", background: mod.gradFrom, boxShadow: `0 0 8px ${mod.glow}`, opacity: active ? 1 : 0, transition: "opacity 0.2s" }} />
                 </Link>
                 <PreviewCard visible={hoveredKey === mod.key}>
-                  <PreviewHeader icon={<Icon />} name={mod.label} sub={mod.previewSub} iconBg={mod.previewBg} />
+                  <PreviewHeader icon={<Icon size={22} />} name={mod.label} sub={mod.previewSub} iconBg={mod.previewBg} />
                   {count !== null && <PreviewChips chips={[{ val: String(count), lbl: mod.key === "proyectos" ? "Activos" : "Total", color: mod.gradFrom }, { val: "→", lbl: "Abrir" }]} />}
                   <PreviewTags tags={mod.previewFeatures} accent={mod.gradFrom} />
                 </PreviewCard>
@@ -582,13 +476,13 @@ export function BottomDock({
             onMouseEnter={() => setHoveredKey("dashboard")} onMouseLeave={() => setHoveredKey(null)}>
             <Link href="/" style={{ textDecoration: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
               <div ref={(el) => { if (el) iconRefs.current.set("dashboard", el); else iconRefs.current.delete("dashboard"); }} style={{ width: 48, height: 48, borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s", willChange: "transform" }}>
-                <IcoDashboard />
+                <IconDashboard size={40} />
               </div>
               <span style={{ fontSize: 10, fontWeight: 500, color: isActive("/") ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.42)", transition: "color 0.2s", whiteSpace: "nowrap" }}>Dashboard</span>
               <span style={{ position: "absolute", bottom: -8, left: "50%", transform: "translateX(-50%)", width: 4, height: 4, borderRadius: "50%", background: "#D4895E", boxShadow: "0 0 8px rgba(196,112,74,0.7)", opacity: isActive("/") ? 1 : 0, transition: "opacity 0.2s" }} />
             </Link>
             <PreviewCard visible={hoveredKey === "dashboard"}>
-              <PreviewHeader icon={<IcoDashboard />} name="Dashboard" sub="Centro de control" iconBg="rgba(196,112,74,0.25)" />
+              <PreviewHeader icon={<IconDashboard size={22} />} name="Dashboard" sub="Centro de control" iconBg="rgba(196,112,74,0.25)" />
               <PreviewChips chips={[{ val: "5", lbl: "Módulos" }, { val: String(projectCount), lbl: "Proyectos" }, { val: String(noteCount), lbl: "Notas" }]} />
               <PreviewTags tags={["Resumen", "Actividad", "Métricas"]} accent="#D4895E" />
             </PreviewCard>
@@ -636,13 +530,13 @@ export function BottomDock({
                 <Link href={mod.href} style={{ textDecoration: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
                   <div ref={(el) => { if (el) { iconRefs.current.set(mod.key, el); el.dataset.glow = mod.glow; } else { iconRefs.current.delete(mod.key); } }}
                     style={{ width: 52, height: 52, borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s", willChange: "transform" }}>
-                    <Icon />
+                    <Icon size={44} />
                   </div>
                   <span style={{ fontSize: 10, fontWeight: 500, color: active ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.42)", transition: "color 0.2s", whiteSpace: "nowrap" }}>{mod.label}</span>
                   <span style={{ position: "absolute", bottom: -8, left: "50%", transform: "translateX(-50%)", width: 4, height: 4, borderRadius: "50%", background: mod.gradFrom, boxShadow: `0 0 8px ${mod.glow}`, opacity: active ? 1 : 0, transition: "opacity 0.2s" }} />
                 </Link>
                 <PreviewCard visible={hoveredKey === mod.key}>
-                  <PreviewHeader icon={<Icon />} name={mod.label} sub={mod.previewSub} iconBg={mod.previewBg} />
+                  <PreviewHeader icon={<Icon size={22} />} name={mod.label} sub={mod.previewSub} iconBg={mod.previewBg} />
                   <PreviewTags tags={mod.previewFeatures} accent={mod.gradFrom} />
                 </PreviewCard>
               </div>
