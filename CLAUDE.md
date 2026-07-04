@@ -26,7 +26,12 @@
   (BottomNav = misma identidad que BottomDock; drawer y Sidebar eliminados),
   **copiloto cross-módulo con acciones** (crear evento/nota/suscripción,
   completar tarea — `src/lib/ai/copilot-tools.ts`) y **búsqueda global FTS**
-  en ⌘K (RPC `global_search`, español, título+contenido)
+  en ⌘K (RPC `global_search`, español, título+contenido). Bloques [L]
+  ejecutados (2026-07-04): **snapshots diarios globales** de Patrimonio
+  (RPC + cron piggyback en recordatorios + `DailyEvolutionChart`) y
+  **GitHub en Proyectos** (pestaña GitHub: commits/CI vía
+  `/api/projects/github`, `GITHUB_TOKEN` opcional). Restante: modo oscuro ✅
+  (ya en design system)
 
 ## Stack
 | Tecnología | Versión | Nota |

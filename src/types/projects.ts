@@ -227,6 +227,7 @@ export interface UpdateProjectInput {
   status?: string;
   stack?: string[];
   sort_order?: number;
+  repository_url?: string | null;
 }
 
 export interface CreatePhaseInput {

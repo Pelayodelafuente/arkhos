@@ -62,6 +62,7 @@ import { ExportModal } from "./export-modal";
 import { ConfirmModal } from "./confirm-modal";
 import { EnrichedTaskItem } from "./enriched-task-item";
 import { ProjectLinks } from "./project-links";
+import { ProjectGitHubPanel } from "./project-github-panel";
 import KanbanView from "./kanban-view";
 import DashboardView from "./dashboard-view";
 import { TaskSlideOver } from "./task-slide-over";
@@ -215,7 +216,7 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
   const [expandedPhases, setExpandedPhases] = useState<Set<string>>(new Set());
   const [newTaskText, setNewTaskText] = useState<Record<string, string>>({});
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [viewTab, setViewTab] = useState<"progress" | "kanban" | "dashboard" | "table" | "activity" | "notes">("progress");
+  const [viewTab, setViewTab] = useState<"progress" | "kanban" | "dashboard" | "table" | "activity" | "notes" | "github">("progress");
   const [slideOverTask, setSlideOverTask] = useState<PhaseTask | null>(null);
   const [projectTypes, setProjectTypes] = useState<ProjectTypeRecord[]>([]);
   const [projectStatuses, setProjectStatuses] = useState<ProjectStatusRecord[]>([]);
@@ -668,6 +669,7 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
           { key: "table", label: "Tabla" },
           { key: "activity", label: "Actividad" },
           { key: "notes", label: "Notas" },
+          { key: "github", label: "GitHub" },
         ] as const).map((tab) => (
           <button
             key={tab.key}
@@ -837,6 +839,11 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
       {/* Notes view */}
       {viewTab === "notes" && (
         <NotesView projectId={projectId} userId={userId} />
+      )}
+
+      {/* GitHub view */}
+      {viewTab === "github" && (
+        <ProjectGitHubPanel projectId={projectId} repositoryUrl={project.repository_url} />
       )}
 
       {/* Delete project confirmation */}
