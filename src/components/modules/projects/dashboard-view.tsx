@@ -134,7 +134,7 @@ export default function DashboardView({ phases }: DashboardViewProps) {
             <CheckCircle2 size={18} className="text-[#22C55E]" />
             <span className="text-xs text-text-tertiary">Tareas completadas</span>
           </div>
-          <p className="font-mono text-2xl text-foreground">
+          <p className="font-mono text-2xl font-semibold text-foreground">
             {doneTasks}/{totalTasks}
           </p>
         </div>
@@ -149,8 +149,8 @@ export default function DashboardView({ phases }: DashboardViewProps) {
             <span className="text-xs text-text-tertiary">Alta prioridad</span>
           </div>
           <p
-            className="font-mono text-2xl"
-            style={{ color: highPriorityTasks > 0 ? 'var(--error)' : undefined }}
+            className="font-mono text-2xl font-semibold text-foreground"
+            style={highPriorityTasks > 0 ? { color: 'var(--error)' } : undefined}
           >
             {highPriorityTasks}
           </p>
@@ -175,7 +175,7 @@ export default function DashboardView({ phases }: DashboardViewProps) {
             <Layers size={18} className="text-text-tertiary" />
             <span className="text-xs text-text-tertiary">Fases completadas</span>
           </div>
-          <p className="font-mono text-2xl text-foreground">
+          <p className="font-mono text-2xl font-semibold text-foreground">
             {donePhases}/{totalPhases}
           </p>
         </div>
