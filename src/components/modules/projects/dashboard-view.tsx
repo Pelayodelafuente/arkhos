@@ -216,7 +216,7 @@ export default function DashboardView({ phases }: DashboardViewProps) {
               textAnchor="middle"
               dominantBaseline="middle"
               className="font-mono"
-              style={{ fontSize: '36px', fontWeight: 700, fill: '#2a1a10' }}
+              style={{ fontSize: '36px', fontWeight: 700, fill: 'var(--text-primary)' }}
             >
               {progress}%
             </text>
@@ -225,7 +225,7 @@ export default function DashboardView({ phases }: DashboardViewProps) {
               y={118}
               textAnchor="middle"
               dominantBaseline="middle"
-              style={{ fontSize: '12px', fill: '#9a7a5a' }}
+              style={{ fontSize: '12px', fill: 'var(--text-tertiary)' }}
             >
               completado
             </text>
@@ -285,7 +285,7 @@ export default function DashboardView({ phases }: DashboardViewProps) {
                     )}
                     <span
                       className="text-xs font-mono shrink-0"
-                      style={{ color: rel.isPast ? '#EF4444' : 'var(--text-muted)' }}
+                      style={{ color: rel.isPast ? 'var(--error)' : 'var(--text-muted)' }}
                     >
                       {rel.text}
                     </span>

@@ -21,7 +21,7 @@ import { WindowProjects } from './window-projects';
 import { WindowStats } from './window-stats';
 import { WindowDetail } from './window-detail';
 import { WindowContext } from './window-context';
-import { WindowAIPlaceholder } from './window-ai-placeholder';
+import { WindowActivity } from './window-activity';
 import { WindowFocus } from './window-focus';
 
 // ─── Types ───────────────────────────
@@ -137,12 +137,8 @@ export function ProjectCanvas({ userId }: ProjectCanvasProps) {
             <WindowContext />
           </CanvasWindow>
 
-          <CanvasWindow
-            id="ai"
-            title="Inteligencia Artificial"
-            badge={{ text: 'Próximamente', variant: 'gray' }}
-          >
-            <WindowAIPlaceholder />
+          <CanvasWindow id="activity" title="Actividad reciente">
+            <WindowActivity userId={userId} />
           </CanvasWindow>
 
           <CanvasWindow id="focus" title="Focus — Tareas pendientes" className="flex-1 min-h-0">

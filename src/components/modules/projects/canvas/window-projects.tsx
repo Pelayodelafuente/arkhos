@@ -94,10 +94,12 @@ function ProjectCard({
   project,
   isActive,
   onClick,
+  onOpen,
 }: {
   project: ProjectListItem;
   isActive: boolean;
   onClick: () => void;
+  onOpen: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
   const statusColor = getStatusColor(project.status);
@@ -112,6 +114,7 @@ function ProjectCard({
     <button
       type="button"
       onClick={onClick}
+      onDoubleClick={onOpen}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       className="flex cursor-pointer flex-col items-start gap-[5px] text-left"
@@ -190,10 +193,12 @@ function ProjectsGrid({
   projects,
   selectedProjectId,
   onSelect,
+  onOpen,
 }: {
   projects: ProjectListItem[];
   selectedProjectId: string | null;
   onSelect: (id: string) => void;
+  onOpen: (id: string) => void;
 }) {
   const [showAll, setShowAll] = useState(false);
   const visible = showAll ? projects : projects.slice(0, MAX_VISIBLE_PROJECTS);
@@ -208,6 +213,7 @@ function ProjectsGrid({
             project={project}
             isActive={project.id === selectedProjectId}
             onClick={() => onSelect(project.id)}
+            onOpen={() => onOpen(project.id)}
           />
         ))}
       </div>
@@ -315,11 +321,15 @@ export function WindowProjects({ userId }: WindowProjectsProps) {
     [setSelectedProjectId, fetchProject],
   );
 
-  const handleOpen = useCallback(() => {
-    if (selectedProjectId) {
-      router.push(`/proyectos/${selectedProjectId}`);
-    }
-  }, [router, selectedProjectId]);
+  const handleOpen = useCallback(
+    (projectId?: string) => {
+      const id = projectId ?? selectedProjectId;
+      if (id) {
+        router.push(`/proyectos/${id}`);
+      }
+    },
+    [router, selectedProjectId],
+  );
 
   const isArchivedTab = filterMode === 'archived';
 
@@ -410,6 +420,7 @@ export function WindowProjects({ userId }: WindowProjectsProps) {
           projects={filteredProjects}
           selectedProjectId={selectedProjectId}
           onSelect={handleSelectProject}
+          onOpen={handleOpen}
         />
       )}
 
@@ -442,7 +453,7 @@ export function WindowProjects({ userId }: WindowProjectsProps) {
             color: '#fff',
             transition: 'all 0.13s ease',
           }}
-          onClick={handleOpen}
+          onClick={() => handleOpen()}
         >
           Abrir
         </button>

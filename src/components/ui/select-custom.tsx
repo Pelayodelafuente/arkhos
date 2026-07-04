@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { ChevronDown } from "lucide-react"
+import { ChevronDown, Trash2 } from "lucide-react"
 
 interface SelectCustomOption {
   value: string
@@ -15,6 +15,8 @@ interface SelectCustomProps {
   placeholder?: string
   className?: string
   buttonClassName?: string
+  /** When provided, shows a delete icon next to each option (e.g. to remove user-defined entries) */
+  onDeleteOption?: (value: string) => void
 }
 
 export function SelectCustom({
@@ -24,6 +26,7 @@ export function SelectCustom({
   placeholder = "Seleccionar...",
   className = "",
   buttonClassName = "",
+  onDeleteOption,
 }: SelectCustomProps) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -88,28 +91,44 @@ export function SelectCustom({
           style={{ animationDuration: "120ms" }}
         >
           {options.map((opt) => (
-            <button
+            <div
               key={opt.value}
-              role="option"
-              aria-selected={opt.value === value}
-              type="button"
-              onClick={() => {
-                onChange(opt.value)
-                setOpen(false)
-              }}
-              className={`
-                flex w-full items-center px-3 py-1.5
-                text-xs font-sans text-left
-                transition-colors duration-100
-                hover:bg-sand
-                ${opt.value === value
-                  ? "text-foreground font-medium"
-                  : "text-text-secondary"
-                }
-              `}
+              className="group flex w-full items-center hover:bg-sand"
             >
-              {opt.label}
-            </button>
+              <button
+                role="option"
+                aria-selected={opt.value === value}
+                type="button"
+                onClick={() => {
+                  onChange(opt.value)
+                  setOpen(false)
+                }}
+                className={`
+                  flex flex-1 items-center px-3 py-1.5
+                  text-xs font-sans text-left
+                  transition-colors duration-100
+                  ${opt.value === value
+                    ? "text-foreground font-medium"
+                    : "text-text-secondary"
+                  }
+                `}
+              >
+                {opt.label}
+              </button>
+              {onDeleteOption && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onDeleteOption(opt.value)
+                  }}
+                  title="Eliminar"
+                  className="mr-2 flex-shrink-0 rounded p-1 text-text-tertiary opacity-0 transition-colors hover:text-[var(--error)] group-hover:opacity-100"
+                >
+                  <Trash2 size={12} strokeWidth={1.75} />
+                </button>
+              )}
+            </div>
           ))}
         </div>
       )}

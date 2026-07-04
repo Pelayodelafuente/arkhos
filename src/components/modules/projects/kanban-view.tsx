@@ -50,10 +50,10 @@ interface ColumnDef {
 }
 
 const COLUMNS: ColumnDef[] = [
-  { status: 'todo', label: 'Pendiente', bg: 'bg-[#f7f1e8]' },
-  { status: 'in_progress', label: 'En progreso', bg: 'bg-[#fdf5ee]' },
-  { status: 'review', label: 'En revisión', bg: 'bg-[#f0e8d8]' },
-  { status: 'done', label: 'Completada', bg: 'bg-[#eef5f4]' },
+  { status: 'todo', label: 'Pendiente', bg: 'var(--bg-sand)' },
+  { status: 'in_progress', label: 'En progreso', bg: 'color-mix(in srgb, var(--accent-terracotta) 7%, var(--bg-card))' },
+  { status: 'review', label: 'En revisión', bg: 'var(--warning-bg)' },
+  { status: 'done', label: 'Completada', bg: 'var(--success-bg)' },
 ];
 
 // ─── Enriched task (with phase info) ────
@@ -86,7 +86,8 @@ function KanbanColumn({
   return (
     <div
       ref={setNodeRef}
-      className={`${column.bg} min-w-[200px] flex-1 rounded-xl p-3 flex flex-col gap-2 transition-all duration-150 ${
+      style={{ background: column.bg }}
+      className={`min-w-[200px] flex-1 rounded-xl p-3 flex flex-col gap-2 transition-all duration-150 ${
         isOver ? 'ring-2 ring-dashed ring-[var(--accent-terracotta)]' : ''
       }`}
     >
@@ -170,7 +171,7 @@ function SortableCard({
       ref={isDragOverlay ? undefined : setNodeRef}
       style={style}
       onClick={() => !isDragOverlay && onOpenTask(task)}
-      className={`bg-white rounded-xl p-3 border border-[--border-stone] transition-all duration-150 cursor-pointer ${
+      className={`bg-card rounded-xl p-3 border border-[--border-stone] transition-all duration-150 cursor-pointer ${
         isBeingDragged ? 'opacity-0' : ''
       } ${isDragOverlay ? 'rotate-2 scale-105 shadow-lg' : ''}`}
     >

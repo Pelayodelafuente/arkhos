@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Modal, Button, Input, SelectCustom } from "@/components/ui";
 import { ProjectIcon } from "./project-icon";
+import { ConfirmModal } from "./confirm-modal";
 import { COLOR_PRESETS as COLOR_PRESETS_CONFIG } from "@/lib/constants/colors";
 
 // ─── Color picker presets ─────────────
@@ -23,6 +24,7 @@ interface TypeSelectProps {
   options: Array<{ value: string; label: string }>;
   onChange: (value: string) => void;
   onCreateNew: (name: string, extra: { icon?: string; color?: string }) => Promise<void>;
+  onDeleteOption?: (value: string) => Promise<void>;
   mode: "type" | "status";
 }
 
@@ -32,6 +34,7 @@ export function TypeStatusSelect({
   options,
   onChange,
   onCreateNew,
+  onDeleteOption,
   mode,
 }: TypeSelectProps) {
   const [showCreate, setShowCreate] = useState(false);
@@ -39,6 +42,19 @@ export function TypeStatusSelect({
   const [newIcon, setNewIcon] = useState("Box");
   const [newColor, setNewColor] = useState(COLOR_PRESETS[0]);
   const [saving, setSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ value: string; label: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleConfirmDelete() {
+    if (!deleteTarget || !onDeleteOption) return;
+    setDeleting(true);
+    try {
+      await onDeleteOption(deleteTarget.value);
+    } finally {
+      setDeleting(false);
+      setDeleteTarget(null);
+    }
+  }
 
   async function handleCreate() {
     if (!newName.trim()) return;
@@ -67,6 +83,11 @@ export function TypeStatusSelect({
           options={options}
           className="flex-1"
           buttonClassName="px-3 py-2 text-sm"
+          onDeleteOption={
+            onDeleteOption
+              ? (v) => setDeleteTarget({ value: v, label: options.find((o) => o.value === v)?.label ?? v })
+              : undefined
+          }
         />
         <button
           type="button"
@@ -160,6 +181,20 @@ export function TypeStatusSelect({
           </div>
         </div>
       </Modal>
+
+      {/* Delete confirmation */}
+      <ConfirmModal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleConfirmDelete}
+        title={mode === "type" ? "Eliminar tipo" : "Eliminar estado"}
+        message={
+          deleteTarget
+            ? `¿Eliminar "${deleteTarget.label}"? Los proyectos que ya lo usan conservarán el valor, pero dejará de estar disponible para elegir.`
+            : ""
+        }
+        loading={deleting}
+      />
     </div>
   );
 }

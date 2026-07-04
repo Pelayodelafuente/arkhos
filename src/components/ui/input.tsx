@@ -23,7 +23,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         <input
           ref={ref}
           id={inputId}
-          className={`w-full rounded-xl border bg-white/60 px-3 py-2 text-sm text-foreground outline-none transition-all duration-300 placeholder:text-text-faint focus:bg-white ${
+          className={`w-full rounded-xl border bg-card px-3 py-2 text-sm text-foreground outline-none transition-all duration-300 placeholder:text-text-faint ${
             error
               ? "focus:border-[var(--error)]"
               : "focus:border-accent"

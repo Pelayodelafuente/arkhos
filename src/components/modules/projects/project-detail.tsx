@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef, useSyncExternalStore } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Edit3,
@@ -69,7 +70,7 @@ import { TaskSlideOver } from "./task-slide-over";
 import TableView from "./table-view";
 import ActivityView from "./activity-view";
 import NotesView from "./notes-view";
-import type { PhaseTask } from "@/types/projects";
+import type { PhaseTask, Project, Tag } from "@/types/projects";
 
 // ─── Mobile detection (external store: matchMedia) ──────────
 const MOBILE_QUERY = "(max-width: 640px)";
@@ -193,12 +194,16 @@ function Confetti() {
 interface ProjectDetailProps {
   projectId: string;
   userId: string;
+  /** Snapshot fetcheado server-side en page.tsx — evita el loading extra al entrar directo a la ruta */
+  initialProject?: Project | null;
+  initialTags?: Tag[];
 }
 
-export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
+export function ProjectDetail({ projectId, userId, initialProject, initialTags }: ProjectDetailProps) {
   const project = useProjectsStore((s) => s.activeProject);
   const loading = useProjectsStore((s) => s.loading);
   const fetchProject = useProjectsStore((s) => s.fetchProject);
+  const hydrateActiveProject = useProjectsStore((s) => s.hydrateActiveProject);
   const removeProject = useProjectsStore((s) => s.removeProject);
   const addPhase = useProjectsStore((s) => s.addPhase);
   const editPhase = useProjectsStore((s) => s.editPhase);
@@ -212,7 +217,9 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
   const duplicateProject = useProjectsStore((s) => s.duplicateProject);
   const editProject = useProjectsStore((s) => s.editProject);
   const openModal = useUIStore((s) => s.openModal);
+  const router = useRouter();
 
+  const [isLeaving, setIsLeaving] = useState(false);
   const [expandedPhases, setExpandedPhases] = useState<Set<string>>(new Set());
   const [newTaskText, setNewTaskText] = useState<Record<string, string>>({});
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -244,9 +251,24 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
   const [showConfetti, setShowConfetti] = useState(false);
   const prevProgressRef = useRef<number | null>(null);
 
+  // Server hydration sync: seed el store síncronamente cuando page.tsx ya
+  // trajo este proyecto — evita el flash de loading al entrar directo a la ruta
+  const [prevHydratedId, setPrevHydratedId] = useState<string | null>(null);
+  if (initialProject && prevHydratedId !== initialProject.id) {
+    setPrevHydratedId(initialProject.id);
+    hydrateActiveProject(initialProject, initialTags ?? []);
+  }
+
   useEffect(() => {
-    fetchProject(projectId);
+    setIsLeaving(false);
+  }, [projectId]);
+
+  useEffect(() => {
+    if (!initialProject || initialProject.id !== projectId) {
+      fetchProject(projectId);
+    }
     return () => clearActiveProject();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId, fetchProject, clearActiveProject]);
 
   useEffect(() => {
@@ -357,7 +379,7 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
     prevProgressRef.current = overallProgress;
   }, [overallProgress]);
 
-  if (loading && !project) return <DetailSkeleton />;
+  if ((loading && !project) || isLeaving) return <DetailSkeleton />;
 
   if (!project) {
     return (
@@ -436,21 +458,26 @@ export function ProjectDetail({ projectId, userId }: ProjectDetailProps) {
 
   async function handleDelete() {
     if (!project) return;
+    setIsLeaving(true);
     await removeProject(project.id);
-    window.location.href = "/proyectos";
+    router.push("/proyectos");
   }
 
   async function handleDuplicate() {
+    setIsLeaving(true);
     const newId = await duplicateProject(userId);
     if (newId) {
-      window.location.href = `/proyectos/${newId}`;
+      router.push(`/proyectos/${newId}`);
+    } else {
+      setIsLeaving(false);
     }
   }
 
   async function handleArchive() {
     if (!project) return;
+    setIsLeaving(true);
     await editProject(project.id, { status: "Archivado" });
-    window.location.href = "/proyectos";
+    router.push("/proyectos");
   }
 
   async function handleUnarchive() {

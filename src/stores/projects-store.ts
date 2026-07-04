@@ -68,6 +68,7 @@ interface ProjectsState {
 
 interface ProjectsActions {
   hydrateProjects: (projects: ProjectListItem[]) => void;
+  hydrateActiveProject: (project: Project, tags: Tag[]) => void;
   fetchProjects: (userId: string) => Promise<void>;
   fetchProject: (projectId: string) => Promise<void>;
   addProject: (userId: string, input: CreateProjectInput) => Promise<Project | null>;
@@ -154,6 +155,11 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
   // Hidratación SSR: snapshot fetcheado en page.tsx de /proyectos
   hydrateProjects: (projects) => {
     set({ projects, loading: false, error: null, initialized: true });
+  },
+
+  // Hidratación SSR: snapshot fetcheado en page.tsx de /proyectos/[id]
+  hydrateActiveProject: (project, tags) => {
+    set({ activeProject: project, projectTags: tags, loading: false, error: null });
   },
 
   fetchProjects: async (userId) => {

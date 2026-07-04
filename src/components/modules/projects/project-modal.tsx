@@ -10,6 +10,8 @@ import {
   deleteProjectLogo,
   createProjectType,
   createProjectStatus,
+  deleteProjectType,
+  deleteProjectStatus,
 } from "@/lib/supabase/projects";
 import { ProjectIcon } from "./project-icon";
 import { StatusBadge } from "./status-badge";
@@ -198,6 +200,28 @@ export function ProjectModal({
     onStatusesChange?.(updated);
   }
 
+  async function handleDeleteType(typeName: string) {
+    const record = localTypes.find((t) => t.name === typeName);
+    if (!record) return;
+    const client = createClient();
+    await deleteProjectType(client, record.id);
+    const updated = localTypes.filter((t) => t.id !== record.id);
+    setLocalTypes(updated);
+    onTypesChange?.(updated);
+    if (type === typeName) setType(updated[0]?.name ?? "");
+  }
+
+  async function handleDeleteStatus(statusName: string) {
+    const record = localStatuses.find((s) => s.name === statusName);
+    if (!record) return;
+    const client = createClient();
+    await deleteProjectStatus(client, record.id);
+    const updated = localStatuses.filter((s) => s.id !== record.id);
+    setLocalStatuses(updated);
+    onStatusesChange?.(updated);
+    if (status === statusName) setStatus(updated[0]?.name ?? "");
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
@@ -330,6 +354,7 @@ export function ProjectModal({
               .map((t) => ({ value: t.name, label: t.name }))}
             onChange={setType}
             onCreateNew={handleCreateType}
+            onDeleteOption={handleDeleteType}
             mode="type"
           />
           <TypeStatusSelect
@@ -338,6 +363,7 @@ export function ProjectModal({
             options={localStatuses.map((s) => ({ value: s.name, label: s.name }))}
             onChange={setStatus}
             onCreateNew={handleCreateStatus}
+            onDeleteOption={handleDeleteStatus}
             mode="status"
           />
         </div>
