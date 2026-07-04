@@ -3,8 +3,6 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useProjectsStore } from "@/stores/projects-store";
-import { useNotesStore } from "@/stores/notes-store";
 import { logout } from "@/app/(auth)/actions";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import {
@@ -60,7 +58,6 @@ export interface ModuleConfig {
   gradTo: string;
   glow: string;
   previewBg: string;
-  countKey?: "proyectos" | "notas";
   previewSub: string;
   previewFeatures: string[];
   Icon: React.ComponentType<ModuleIconProps>;
@@ -75,7 +72,6 @@ export const MODULES: ModuleConfig[] = [
     gradTo: "#6B2A0C",
     glow: "rgba(196,112,74,0.4)",
     previewBg: "rgba(196,112,74,0.22)",
-    countKey: "proyectos",
     previewSub: "Gestión y kanban",
     previewFeatures: ["Kanban", "Fases", "Tareas", "Links"],
     Icon: IconProyectos,
@@ -217,24 +213,6 @@ function PreviewHeader({ icon, name, sub, iconBg }: { icon: React.ReactNode; nam
   );
 }
 
-function PreviewChips({ chips }: { chips: { val: string; lbl: string; color?: string }[] }) {
-  return (
-    <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
-      {chips.map(({ val, lbl, color }) => (
-        <div key={lbl} style={{
-          flex: 1, padding: "6px 8px",
-          background: "rgba(255,255,255,0.04)",
-          border: "1px solid rgba(255,255,255,0.07)",
-          borderRadius: 8, textAlign: "center",
-        }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: color ?? "rgba(255,255,255,0.8)" }}>{val}</div>
-          <div style={{ fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.3)", textTransform: "uppercase" }}>{lbl}</div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 function PreviewTags({ tags }: { tags: string[]; accent: string }) {
   return (
     <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
@@ -259,8 +237,6 @@ function PreviewTags({ tags }: { tags: string[]; accent: string }) {
 interface BottomDockProps {
   userName: string;
   avatarUrl?: string | null;
-  initialProjectCount?: number;
-  initialNoteCount?: number;
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
@@ -268,19 +244,8 @@ interface BottomDockProps {
 export function BottomDock({
   userName,
   avatarUrl,
-  initialProjectCount = 0,
-  initialNoteCount = 0,
 }: BottomDockProps) {
   const pathname = usePathname();
-
-  const storeProjectCount = useProjectsStore((s) =>
-    s.initialized ? s.projects.filter((p) => p.status !== "archived").length : null
-  );
-  const storeNoteCount = useNotesStore((s) =>
-    s.initialized ? s.notes.filter((n) => !n.archived).length : null
-  );
-  const projectCount = storeProjectCount ?? initialProjectCount;
-  const noteCount = storeNoteCount ?? initialNoteCount;
 
   // Default estable para SSR y primer render cliente → evita hydration mismatch
   // (el `title` y el `transform` del dock dependían del valor de localStorage).
@@ -344,12 +309,6 @@ export function BottomDock({
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
-
-  const getCount = (key?: "proyectos" | "notas"): number | null => {
-    if (key === "proyectos") return projectCount;
-    if (key === "notas") return noteCount;
-    return null;
-  };
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
@@ -441,18 +400,12 @@ export function BottomDock({
           {/* ── Izquierda: Proyectos · Notas · Gastos ───────────────── */}
           {[MODULES[0], MODULES[1], MODULES[4]].map((mod) => {
             const active = isActive(mod.href);
-            const count = getCount(mod.countKey);
             const Icon = mod.Icon;
             return (
               <div key={mod.key}
                 style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer", flexShrink: 0 }}
                 onMouseEnter={() => setHoveredKey(mod.key)} onMouseLeave={() => setHoveredKey(null)}>
                 <Link href={mod.href} style={{ textDecoration: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-                  {count !== null && count > 0 && (
-                    <div style={{ position: "absolute", top: -4, right: -4, minWidth: 17, height: 17, background: "#D84040", border: "2px solid rgba(13,8,3,0.9)", borderRadius: 99, fontSize: 9, fontWeight: 700, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 3px", zIndex: 2, boxShadow: "0 1px 4px rgba(216,64,64,0.5)" }}>
-                      {count}
-                    </div>
-                  )}
                   <div ref={(el) => { if (el) { iconRefs.current.set(mod.key, el); el.dataset.glow = mod.glow; } else { iconRefs.current.delete(mod.key); } }}
                     style={{ width: 52, height: 52, borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s", willChange: "transform" }}>
                     <Icon size={44} />
@@ -462,7 +415,6 @@ export function BottomDock({
                 </Link>
                 <PreviewCard visible={hoveredKey === mod.key}>
                   <PreviewHeader icon={<Icon size={22} />} name={mod.label} sub={mod.previewSub} iconBg={mod.previewBg} />
-                  {count !== null && <PreviewChips chips={[{ val: String(count), lbl: mod.key === "proyectos" ? "Activos" : "Total", color: mod.gradFrom }, { val: "→", lbl: "Abrir" }]} />}
                   <PreviewTags tags={mod.previewFeatures} accent={mod.gradFrom} />
                 </PreviewCard>
               </div>
@@ -483,7 +435,6 @@ export function BottomDock({
             </Link>
             <PreviewCard visible={hoveredKey === "dashboard"}>
               <PreviewHeader icon={<IconDashboard size={22} />} name="Dashboard" sub="Centro de control" iconBg="rgba(196,112,74,0.25)" />
-              <PreviewChips chips={[{ val: "5", lbl: "Módulos" }, { val: String(projectCount), lbl: "Proyectos" }, { val: String(noteCount), lbl: "Notas" }]} />
               <PreviewTags tags={["Resumen", "Actividad", "Métricas"]} accent="#D4895E" />
             </PreviewCard>
           </div>
@@ -555,7 +506,6 @@ export function BottomDock({
               ref={(el) => { if (el) iconRefs.current.set("profile", el); else iconRefs.current.delete("profile"); }}
               style={{
                 width: 44, height: 44, borderRadius: "50%",
-                background: avatarUrl ? "transparent" : "linear-gradient(135deg, var(--accent-terracotta), #7a2030)",
                 border: "2px solid rgba(196,112,74,0.4)",
                 boxShadow: "0 4px 16px rgba(0,0,0,0.4), 0 0 0 2px rgba(196,112,74,0.15)",
                 overflow: "hidden", flexShrink: 0,
@@ -565,14 +515,8 @@ export function BottomDock({
                 position: "relative",
               }}
             >
-              {avatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={avatarUrl} alt={userName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              ) : (
-                <span style={{ fontSize: 16, fontWeight: 700, color: "#fff" }}>
-                  {userName.charAt(0).toUpperCase()}
-                </span>
-              )}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={avatarUrl || "/dev-avatar.jpg"} alt={userName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               <div style={{
                 position: "absolute", bottom: 2, right: 2,
                 width: 9, height: 9, borderRadius: "50%",
@@ -602,13 +546,9 @@ export function BottomDock({
               <div style={{ position: "absolute", top: "100%", left: "50%", transform: "translateX(-50%)", width: 0, height: 0, borderLeft: "5px solid transparent", borderRight: "5px solid transparent", borderTop: "5px solid rgba(255,255,255,0.07)" }} />
 
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                <div style={{ width: 34, height: 34, borderRadius: "50%", background: avatarUrl ? "transparent" : "linear-gradient(135deg, var(--accent-terracotta), #7a2030)", border: "1px solid rgba(196,112,74,0.35)", overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  {avatarUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={avatarUrl} alt={userName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  ) : (
-                    <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{userName.charAt(0).toUpperCase()}</span>
-                  )}
+                <div style={{ width: 34, height: 34, borderRadius: "50%", border: "1px solid rgba(196,112,74,0.35)", overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={avatarUrl || "/dev-avatar.jpg"} alt={userName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 </div>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.9)" }}>{userName}</div>

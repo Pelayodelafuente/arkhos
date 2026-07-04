@@ -2,8 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useProjectsStore } from "@/stores/projects-store";
-import { useNotesStore } from "@/stores/notes-store";
 import { MODULES } from "./BottomDock";
 import { IconDashboard } from "@/components/ui";
 
@@ -16,35 +14,16 @@ import { IconDashboard } from "@/components/ui";
 interface BottomNavProps {
   userName?: string;
   avatarUrl?: string | null;
-  initialProjectCount?: number;
-  initialNoteCount?: number;
 }
 
 export function BottomNav({
   userName = "",
   avatarUrl = null,
-  initialProjectCount = 0,
-  initialNoteCount = 0,
 }: BottomNavProps) {
   const pathname = usePathname();
 
-  const storeProjectCount = useProjectsStore((s) =>
-    s.initialized ? s.projects.filter((p) => p.status !== "archived").length : null
-  );
-  const storeNoteCount = useNotesStore((s) =>
-    s.initialized ? s.notes.filter((n) => !n.archived).length : null
-  );
-  const projectCount = storeProjectCount ?? initialProjectCount;
-  const noteCount = storeNoteCount ?? initialNoteCount;
-
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
-
-  const getCount = (key?: "proyectos" | "notas"): number | null => {
-    if (key === "proyectos") return projectCount;
-    if (key === "notas") return noteCount;
-    return null;
-  };
 
   // Mismo orden que el dock de escritorio, con Dashboard en el centro
   const left = [MODULES[0], MODULES[1], MODULES[4]];
@@ -52,7 +31,6 @@ export function BottomNav({
 
   const renderModule = (mod: (typeof MODULES)[number]) => {
     const active = isActive(mod.href);
-    const count = getCount(mod.countKey);
     const Icon = mod.Icon;
     return (
       <Link
@@ -62,31 +40,6 @@ export function BottomNav({
         aria-current={active ? "page" : undefined}
         className="relative flex h-11 flex-1 flex-col items-center justify-center"
       >
-        {count !== null && count > 0 && (
-          <span
-            style={{
-              position: "absolute",
-              top: 0,
-              right: "50%",
-              marginRight: -18,
-              minWidth: 15,
-              height: 15,
-              background: "#D84040",
-              border: "2px solid rgba(13,8,3,0.9)",
-              borderRadius: 99,
-              fontSize: 8,
-              fontWeight: 700,
-              color: "#fff",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "0 3px",
-              zIndex: 2,
-            }}
-          >
-            {count}
-          </span>
-        )}
         <span
           className="transition-transform duration-200"
           style={{
@@ -199,7 +152,6 @@ export function BottomNav({
               width: 26,
               height: 26,
               borderRadius: "50%",
-              background: avatarUrl ? "transparent" : "linear-gradient(135deg, var(--accent-terracotta), #7a2030)",
               border: "1.5px solid rgba(196,112,74,0.4)",
               overflow: "hidden",
               display: "flex",
@@ -208,18 +160,12 @@ export function BottomNav({
               flexShrink: 0,
             }}
           >
-            {avatarUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={avatarUrl}
-                alt={userName || "Perfil"}
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-            ) : (
-              <span style={{ fontSize: 11, fontWeight: 700, color: "#fff" }}>
-                {(userName || "?").charAt(0).toUpperCase()}
-              </span>
-            )}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={avatarUrl || "/dev-avatar.jpg"}
+              alt={userName || "Perfil"}
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
           </span>
           <span
             aria-hidden="true"

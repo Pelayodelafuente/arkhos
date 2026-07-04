@@ -21,32 +21,17 @@ export default async function DashboardLayout({
   const userId = user?.id ?? "";
   let userName = user?.email || "usuario";
   let avatarUrl: string | null = null;
-  let initialProjectCount = 0;
-  let initialNoteCount = 0;
   let mfaActive = false;
 
   if (user) {
-    const [{ data: profile }, { count: projectCount }, { count: noteCount }, { data: mfaData }] =
+    const [{ data: profile }, { data: mfaData }] =
       await Promise.all([
         supabase.from("profiles").select("full_name, avatar_url").eq("id", user.id).single(),
-        supabase
-          .from("projects")
-          .select("id", { count: "exact", head: true })
-          .eq("user_id", user.id)
-          .neq("status", "archived"),
-        supabase
-          .from("notes")
-          .select("id", { count: "exact", head: true })
-          .eq("user_id", user.id)
-          .eq("archived", false)
-          .is("deleted_at", null),
         supabase.auth.mfa.listFactors(),
       ]);
 
     if (profile?.full_name) userName = profile.full_name;
     avatarUrl = profile?.avatar_url ?? null;
-    initialProjectCount = projectCount ?? 0;
-    initialNoteCount = noteCount ?? 0;
     mfaActive = (mfaData?.totp ?? []).some((f) => f.status === "verified");
   }
 
@@ -69,16 +54,12 @@ export default async function DashboardLayout({
       <BottomNav
         userName={userName}
         avatarUrl={avatarUrl}
-        initialProjectCount={initialProjectCount}
-        initialNoteCount={initialNoteCount}
       />
 
       {/* Desktop bottom dock */}
       <BottomDock
         userName={userName}
         avatarUrl={avatarUrl}
-        initialProjectCount={initialProjectCount}
-        initialNoteCount={initialNoteCount}
       />
 
       <QuickCapture userId={userId} />
