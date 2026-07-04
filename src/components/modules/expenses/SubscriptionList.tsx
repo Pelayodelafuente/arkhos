@@ -426,7 +426,7 @@ function SubscriptionRow({
         viewport: { once: true, margin: "-20px" },
         transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1], delay: index * 0.04 },
       })}
-      className={`group relative flex items-center gap-3 px-3 py-3 transition-all hover:bg-[rgba(240,235,225,0.5)] hover:-translate-y-[1px] cursor-pointer ${
+      className={`group relative flex items-center gap-3 px-3 py-3 transition-all hover:bg-sand/60 hover:-translate-y-[1px] cursor-pointer ${
         isInactive ? 'opacity-35' : ''
       }`}
       onClick={onEdit}

@@ -64,8 +64,8 @@ function TaskRow({ task, onOpen }: { task: PhaseTask; onOpen: (t: PhaseTask) => 
         onClick={() => editTask(task.id, { done: !task.done, status: !task.done ? 'done' : 'todo' })}
         className="flex h-[14px] w-[14px] cursor-pointer shrink-0 items-center justify-center rounded-[3px] border transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent"
         style={{
-          borderColor: task.done ? '#22C55E' : 'rgba(160,120,80,0.35)',
-          background: task.done ? '#22C55E' : 'transparent',
+          borderColor: task.done ? 'var(--success)' : 'rgba(160,120,80,0.35)',
+          background: task.done ? 'var(--success)' : 'transparent',
         }}
       >
         {task.done && (
@@ -85,7 +85,7 @@ function TaskRow({ task, onOpen }: { task: PhaseTask; onOpen: (t: PhaseTask) => 
       <span
         className="flex-1 truncate cursor-pointer text-[11px] leading-tight"
         style={{
-          color: task.done ? '#9a7a5a' : '#5a3e28',
+          color: task.done ? 'var(--text-muted)' : 'var(--text-secondary)',
           textDecoration: task.done ? 'line-through' : 'none',
         }}
         onClick={() => onOpen(task)}
@@ -97,7 +97,7 @@ function TaskRow({ task, onOpen }: { task: PhaseTask; onOpen: (t: PhaseTask) => 
       {stale && (
         <AlertCircle
           className="h-[11px] w-[11px] shrink-0"
-          style={{ color: '#F59E0B' }}
+          style={{ color: 'var(--warning)' }}
         />
       )}
 
@@ -148,7 +148,7 @@ function AddTaskInline({ phaseId }: { phaseId: string }) {
 
   return (
     <div className="flex items-center gap-[4px] px-[6px] py-[2px]">
-      <Plus className="h-[10px] w-[10px] shrink-0" style={{ color: '#9a7a5a' }} />
+      <Plus className="h-[10px] w-[10px] shrink-0" style={{ color: 'var(--text-muted)' }} />
       <input
         type="text"
         value={value}
@@ -157,7 +157,7 @@ function AddTaskInline({ phaseId }: { phaseId: string }) {
         onBlur={submit}
         placeholder="Añadir tarea..."
         aria-label="Añadir nueva tarea"
-        className="flex-1 border-none bg-transparent text-[11px] leading-tight text-[#5a3e28] outline-none placeholder:text-[#b89878] focus-visible:outline-none"
+        className="flex-1 border-none bg-transparent text-[11px] leading-tight text-text-secondary outline-none placeholder:text-text-faint focus-visible:outline-none"
       />
     </div>
   );
@@ -184,7 +184,7 @@ function PhaseSection({ phase, onOpenTask }: { phase: ProjectPhase; onOpenTask: 
       >
         <Icon
           className="h-[12px] w-[12px] shrink-0"
-          style={{ color: '#9a7a5a' }}
+          style={{ color: 'var(--text-muted)' }}
         />
 
         {/* Status dot (auto, not clickable) */}
@@ -198,7 +198,7 @@ function PhaseSection({ phase, onOpenTask }: { phase: ProjectPhase; onOpenTask: 
         {/* Phase name */}
         <h3
           className="flex-1 truncate text-left text-[11px] font-medium leading-tight"
-          style={{ color: '#2a1a10', margin: 0 }}
+          style={{ color: 'var(--text-primary)', margin: 0 }}
         >
           {phase.name}
         </h3>
@@ -206,7 +206,7 @@ function PhaseSection({ phase, onOpenTask }: { phase: ProjectPhase; onOpenTask: 
         {/* Task count */}
         <span
           className="shrink-0 font-mono text-[10px]"
-          style={{ color: '#9a7a5a' }}
+          style={{ color: 'var(--text-muted)' }}
         >
           {doneCount}/{totalCount}
         </span>
@@ -263,7 +263,7 @@ function AddPhaseButton({ projectId }: { projectId: string }) {
         type="button"
         onClick={() => setAdding(true)}
         className="flex cursor-pointer items-center gap-[4px] rounded-md px-[6px] py-[4px] text-[11px] transition-colors duration-150 hover:bg-[rgba(196,112,74,0.05)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent"
-        style={{ color: '#9a7a5a' }}
+        style={{ color: 'var(--text-muted)' }}
       >
         <Plus className="h-[11px] w-[11px]" />
         Añadir fase
@@ -282,7 +282,7 @@ function AddPhaseButton({ projectId }: { projectId: string }) {
         onBlur={submit}
         autoFocus
         placeholder="Nombre de la fase..."
-        className="flex-1 border-none bg-transparent text-[11px] font-medium leading-tight text-[#2a1a10] outline-none placeholder:text-[#b89878]"
+        className="flex-1 border-none bg-transparent text-[11px] font-medium leading-tight text-foreground outline-none placeholder:text-text-faint"
       />
     </div>
   );
@@ -305,7 +305,7 @@ export function WindowDetail({ userId }: WindowDetailProps) {
   if (!selectedProjectId || !activeProject || activeProject.id !== selectedProjectId) {
     return (
       <div className="flex h-full items-center justify-center px-4 py-6">
-        <span className="text-center text-[11px]" style={{ color: '#9a7a5a' }}>
+        <span className="text-center text-[11px]" style={{ color: 'var(--text-muted)' }}>
           Selecciona un proyecto
         </span>
       </div>
@@ -325,7 +325,7 @@ export function WindowDetail({ userId }: WindowDetailProps) {
         <div className="flex items-center gap-[6px]">
           <span
             className="flex-1 truncate text-[12px] font-semibold leading-tight"
-            style={{ color: '#2a1a10' }}
+            style={{ color: 'var(--text-primary)' }}
           >
             {activeProject.name}
           </span>

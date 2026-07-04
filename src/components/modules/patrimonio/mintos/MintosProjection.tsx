@@ -61,7 +61,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
         style={{ borderColor: "var(--border-stone, rgba(160,120,80,0.2))" }}
       >
         <span style={{ color: "var(--text-muted)" }}>Intereses generados</span>
-        <span className="font-mono tabular-nums font-semibold" style={{ color: "#3B7A57" }}>
+        <span className="font-mono tabular-nums font-semibold" style={{ color: "var(--color-gain)" }}>
           {fmt(interest)}
         </span>
       </div>
@@ -266,7 +266,7 @@ export function MintosProjection({ kpis, plan }: MintosProjectionProps) {
                   <td className="py-2 px-4 text-right font-mono tabular-nums" style={{ color: "var(--text-secondary)" }}>
                     {fmt(row.total_contributed)}
                   </td>
-                  <td className="py-2 pl-4 text-right font-mono tabular-nums" style={{ color: "#3B7A57" }}>
+                  <td className="py-2 pl-4 text-right font-mono tabular-nums" style={{ color: "var(--color-gain)" }}>
                     +{fmt(row.interest_earned)}
                   </td>
                 </tr>

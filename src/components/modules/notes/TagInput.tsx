@@ -68,7 +68,7 @@ export function TagInput({
           <span
             key={tag}
             className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium"
-            style={{ backgroundColor: 'rgba(122,155,118,0.12)', color: '#5a7a56' }}
+            style={{ backgroundColor: 'rgba(122,155,118,0.12)', color: 'var(--urgency-safe)' }}
           >
             {tag}
             <button type="button" onClick={() => removeTag(tag)} className="hover:text-foreground">
@@ -126,7 +126,7 @@ export function TagInput({
             <span
               key={tag}
               className="inline-flex items-center gap-0.5 rounded-md border text-[11px] font-medium"
-              style={{ background: 'rgba(122,155,118,0.06)', borderColor: 'rgba(122,155,118,0.3)', color: '#5a7a56', padding: '2px 6px' }}
+              style={{ background: 'rgba(122,155,118,0.06)', borderColor: 'rgba(122,155,118,0.3)', color: 'var(--urgency-safe)', padding: '2px 6px' }}
             >
               <Sparkles size={9} strokeWidth={2} className="opacity-70" />
               {tag}

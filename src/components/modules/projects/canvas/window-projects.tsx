@@ -15,11 +15,11 @@ function relativeTime(dateStr: string): string {
 }
 
 function healthColor(done: number, total: number): string {
-  if (total === 0) return '#9a7a5a';
+  if (total === 0) return 'var(--text-muted)';
   const pct = done / total;
-  if (pct >= 0.7) return '#22C55E';
-  if (pct >= 0.3) return '#F59E0B';
-  return '#9a7a5a';
+  if (pct >= 0.7) return 'var(--success)';
+  if (pct >= 0.3) return 'var(--warning)';
+  return 'var(--text-muted)';
 }
 import { useCanvasStore } from '@/stores/canvas-store';
 import { useProjectsStore } from '@/stores/projects-store';
@@ -33,13 +33,13 @@ interface WindowProjectsProps {
 
 function getStatusColor(status: string): string {
   const map: Record<string, string> = {
-    'Activo': '#22C55E',
-    'Archivado': '#9a7a5a',
+    'Activo': 'var(--success)',
+    'Archivado': 'var(--text-muted)',
     'Idea': '#c4a07a',
-    'Pausado': '#F59E0B',
+    'Pausado': 'var(--warning)',
     'Completado': 'var(--accent-terracotta)',
   };
-  return map[status] ?? '#9a7a5a';
+  return map[status] ?? 'var(--text-muted)';
 }
 
 function ProjectFolder({ logoUrl, isHovered, color }: { logoUrl: string | null; isHovered: boolean; color?: string }) {
@@ -395,8 +395,8 @@ export function WindowProjects({ userId }: WindowProjectsProps) {
           aria-label="Buscar proyecto"
           value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
-          className="w-full border-none bg-transparent font-sans text-[11px] outline-none placeholder:text-[#b89878] focus-visible:outline-none"
-          style={{ color: '#5a3e28' }}
+          className="w-full border-none bg-transparent font-sans text-[11px] outline-none placeholder:text-text-faint focus-visible:outline-none"
+          style={{ color: 'var(--text-secondary)' }}
         />
       </div>
 

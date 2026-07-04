@@ -62,11 +62,11 @@ export function MintosFiscal() {
           </div>
 
           {/* Net income */}
-          <div className="flex items-center justify-between py-2.5 px-3 rounded-lg mt-1" style={{ backgroundColor: "color-mix(in srgb, #3B7A57 8%, transparent)" }}>
+          <div className="flex items-center justify-between py-2.5 px-3 rounded-lg mt-1" style={{ backgroundColor: "color-mix(in srgb, var(--color-gain) 8%, transparent)" }}>
             <span className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
               Rendimiento neto
             </span>
-            <span className="font-mono text-base font-semibold tabular-nums" style={{ color: "#3B7A57" }}>
+            <span className="font-mono text-base font-semibold tabular-nums" style={{ color: "var(--color-gain)" }}>
               {fmt(fiscal.net_income)}
             </span>
           </div>

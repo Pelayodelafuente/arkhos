@@ -99,9 +99,9 @@ function StatusBadge({ isNew }: { isNew: boolean }) {
       className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-xs font-medium flex-shrink-0"
       style={{
         backgroundColor: isNew
-          ? "color-mix(in srgb, #3B7A57 12%, transparent)"
+          ? "color-mix(in srgb, var(--color-gain) 12%, transparent)"
           : "color-mix(in srgb, #C8A84B 12%, transparent)",
-        color: isNew ? "#3B7A57" : "#7A6220",
+        color: isNew ? "var(--color-gain)" : "#7A6220",
       }}
     >
       {isNew ? <Sparkles size={9} strokeWidth={2.5} /> : <RefreshCw size={9} strokeWidth={2.5} />}
@@ -117,8 +117,8 @@ function DuplicateBadge({ isDuplicate }: { isDuplicate: boolean }) {
       style={{
         backgroundColor: isDuplicate
           ? "color-mix(in srgb, var(--text-muted) 10%, transparent)"
-          : "color-mix(in srgb, #3B7A57 12%, transparent)",
-        color: isDuplicate ? "var(--text-muted)" : "#3B7A57",
+          : "color-mix(in srgb, var(--color-gain) 12%, transparent)",
+        color: isDuplicate ? "var(--text-muted)" : "var(--color-gain)",
       }}
     >
       {isDuplicate ? "Ya existe" : "Nuevo"}
@@ -131,8 +131,8 @@ function Badge({ ok, text }: { ok: boolean; text: string }) {
     <span
       className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
       style={{
-        backgroundColor: ok ? "color-mix(in srgb, #3B7A57 12%, transparent)" : "color-mix(in srgb, var(--color-loss) 12%, transparent)",
-        color: ok ? "#3B7A57" : "var(--color-loss)",
+        backgroundColor: ok ? "color-mix(in srgb, var(--color-gain) 12%, transparent)" : "color-mix(in srgb, var(--color-loss) 12%, transparent)",
+        color: ok ? "var(--color-gain)" : "var(--color-loss)",
       }}
     >
       {ok ? <CheckCircle2 size={11} strokeWidth={2} /> : <X size={11} strokeWidth={2} />}
@@ -240,7 +240,7 @@ function ImportPreview({
             <Info size={13} strokeWidth={1.75} style={{ color: "var(--text-muted)" }} aria-hidden="true" />
             <span className="text-xs" style={{ color: "var(--text-secondary)" }}>
               {conflict.newMonths > 0 && (
-                <span style={{ color: "#3B7A57" }}>
+                <span style={{ color: "var(--color-gain)" }}>
                   {conflict.newMonths} {conflict.newMonths === 1 ? "mes nuevo" : "meses nuevos"}
                 </span>
               )}
@@ -256,7 +256,7 @@ function ImportPreview({
                 <span style={{ color: "var(--text-muted)" }}> · </span>
               )}
               {conflict.newDeposits > 0 && (
-                <span style={{ color: "#3B7A57" }}>
+                <span style={{ color: "var(--color-gain)" }}>
                   {conflict.newDeposits} {conflict.newDeposits === 1 ? "depósito nuevo" : "depósitos nuevos"}
                 </span>
               )}
@@ -307,7 +307,7 @@ function ImportPreview({
           <SectionTitle>Depósitos detectados</SectionTitle>
           <div className="flex items-center gap-2">
             {conflict.newDeposits > 0 && (
-              <span className="text-xs" style={{ color: "#3B7A57" }}>
+              <span className="text-xs" style={{ color: "var(--color-gain)" }}>
                 {conflict.newDeposits} nuevos
               </span>
             )}
@@ -333,7 +333,7 @@ function ImportPreview({
                 style={{
                   backgroundColor: d.isDuplicate
                     ? "color-mix(in srgb, var(--text-muted) 5%, transparent)"
-                    : "color-mix(in srgb, #3B7A57 5%, transparent)",
+                    : "color-mix(in srgb, var(--color-gain) 5%, transparent)",
                   opacity: d.isDuplicate ? 0.7 : 1,
                 }}
               >
@@ -346,7 +346,7 @@ function ImportPreview({
                 <div className="flex items-center gap-2">
                   <span
                     className="font-mono text-sm font-semibold"
-                    style={{ color: d.isDuplicate ? "var(--text-muted)" : "#3B7A57" }}
+                    style={{ color: d.isDuplicate ? "var(--text-muted)" : "var(--color-gain)" }}
                   >
                     +{formatEur(d.amount)}
                   </span>
@@ -356,12 +356,12 @@ function ImportPreview({
             ))}
             <div
               className="flex items-center justify-between rounded-lg px-3 py-2 mt-1"
-              style={{ backgroundColor: "color-mix(in srgb, #3B7A57 10%, transparent)" }}
+              style={{ backgroundColor: "color-mix(in srgb, var(--color-gain) 10%, transparent)" }}
             >
               <span className="text-xs font-semibold" style={{ color: "var(--text-muted)" }}>
                 Total depositado
               </span>
-              <span className="font-mono text-sm font-bold" style={{ color: "#3B7A57" }}>
+              <span className="font-mono text-sm font-bold" style={{ color: "var(--color-gain)" }}>
                 {formatEur(preview.totalDeposited)}
               </span>
             </div>
@@ -424,7 +424,7 @@ function ImportPreview({
                     </td>
                     <td
                       className="py-2 text-right font-mono tabular-nums font-semibold"
-                      style={{ color: m.net_interest >= 0 ? "#3B7A57" : "var(--color-loss)" }}
+                      style={{ color: m.net_interest >= 0 ? "var(--color-gain)" : "var(--color-loss)" }}
                     >
                       {m.net_interest >= 0 ? "+" : ""}
                       {formatEur(m.net_interest)}
@@ -441,7 +441,7 @@ function ImportPreview({
                 <td colSpan={4} />
                 <td
                   className="pt-2 text-right font-mono text-sm font-bold"
-                  style={{ color: preview.totalNetInterest >= 0 ? "#3B7A57" : "var(--color-loss)" }}
+                  style={{ color: preview.totalNetInterest >= 0 ? "var(--color-gain)" : "var(--color-loss)" }}
                 >
                   {preview.totalNetInterest >= 0 ? "+" : ""}
                   {formatEur(preview.totalNetInterest)}
@@ -835,7 +835,7 @@ export function MintosImporter() {
           }}
         >
           <div className="flex items-center gap-3">
-            <CheckCircle2 size={22} strokeWidth={1.5} style={{ color: "#3B7A57" }} aria-hidden="true" />
+            <CheckCircle2 size={22} strokeWidth={1.5} style={{ color: "var(--color-gain)" }} aria-hidden="true" />
             <h3 className="font-heading text-base" style={{ color: "var(--text-primary)" }}>
               Importación completada
             </h3>
@@ -843,7 +843,7 @@ export function MintosImporter() {
 
           <div className="grid grid-cols-3 gap-3">
             {[
-              { label: "Transacciones", value: result.totalRows.toLocaleString("es-ES"), color: "#3B7A57" },
+              { label: "Transacciones", value: result.totalRows.toLocaleString("es-ES"), color: "var(--color-gain)" },
               { label: "Meses actualizados", value: String(result.monthsProcessed.length), color: "var(--platform-mintos)" },
               { label: "Depósitos nuevos", value: String(result.depositsFound), color: "var(--platform-mintos)" },
             ].map((s) => (

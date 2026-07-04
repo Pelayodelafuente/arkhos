@@ -67,7 +67,7 @@ export function WindowContext() {
           key={row.label}
           className="flex items-center justify-between rounded-md px-[8px] py-[5px]"
           style={{
-            background: 'rgba(240,235,225,0.4)',
+            background: 'color-mix(in srgb, var(--bg-sand) 55%, transparent)',
           }}
         >
           <span className="text-[10px] font-medium text-text-tertiary">
@@ -76,7 +76,7 @@ export function WindowContext() {
           <div className="flex items-center gap-[6px]">
             <span
               className="max-w-[140px] truncate font-mono text-[10px]"
-              style={{ color: '#5a3e28' }}
+              style={{ color: 'var(--text-secondary)' }}
               title={row.value}
             >
               {row.value}

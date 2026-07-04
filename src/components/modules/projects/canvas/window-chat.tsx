@@ -63,12 +63,12 @@ function MessageBubble({ message }: { message: ChatMessage }) {
                 borderRadius: '10px 3px 10px 10px',
               }
             : {
-                background: 'rgba(237,232,224,0.75)',
+                background: 'color-mix(in srgb, var(--bg-sand) 75%, transparent)',
                 backdropFilter: 'blur(8px)',
                 border: '0.5px solid rgba(255,255,255,0.7)',
                 borderRadius: '3px 10px 10px 10px',
                 boxShadow: '0 4px 14px rgba(0,0,0,0.06)',
-                color: '#3a2a2a',
+                color: 'var(--text-primary)',
               }
         }
       >
@@ -303,7 +303,7 @@ export function WindowChat() {
           onMouseEnter={(e) => {
             if (!(e.currentTarget as HTMLButtonElement).disabled) {
               (e.currentTarget as HTMLButtonElement).style.background =
-                '#b05e3a';
+                'var(--accent-text)';
             }
           }}
           onMouseLeave={(e) => {

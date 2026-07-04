@@ -140,8 +140,8 @@ export function WindowFocus({ userId }: WindowFocusProps) {
   if (tasks.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-2 py-8">
-        <CheckCircle2 size={20} style={{ color: '#22C55E', opacity: 0.7 }} />
-        <p className="font-sans text-[11px] font-medium" style={{ color: '#22C55E' }}>¡Todo al día!</p>
+        <CheckCircle2 size={20} style={{ color: 'var(--success)', opacity: 0.7 }} />
+        <p className="font-sans text-[11px] font-medium" style={{ color: 'var(--success)' }}>¡Todo al día!</p>
         <p className="font-sans text-[10px] text-text-tertiary">No hay tareas pendientes</p>
       </div>
     );
@@ -240,7 +240,7 @@ export function WindowFocus({ userId }: WindowFocusProps) {
             <div className="flex-1 min-w-0">
               <p
                 className="truncate font-sans leading-tight"
-                style={{ fontSize: 10, color: '#5a3e28' }}
+                style={{ fontSize: 10, color: 'var(--text-secondary)' }}
               >
                 {task.text}
               </p>
@@ -253,7 +253,7 @@ export function WindowFocus({ userId }: WindowFocusProps) {
                 <span style={{ fontSize: 8, color: '#aaa' }}>·</span>
                 <span
                   className="truncate"
-                  style={{ fontSize: 8, color: '#9a7a5a', maxWidth: 80 }}
+                  style={{ fontSize: 8, color: 'var(--text-muted)', maxWidth: 80 }}
                 >
                   {task.project_name}
                 </span>
@@ -263,7 +263,7 @@ export function WindowFocus({ userId }: WindowFocusProps) {
                     <span
                       style={{
                         fontSize: 8,
-                        color: overdue ? '#dc2626' : '#9a7a5a',
+                        color: overdue ? '#dc2626' : 'var(--text-muted)',
                         fontFamily: 'monospace',
                       }}
                     >
