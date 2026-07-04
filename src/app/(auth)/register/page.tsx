@@ -153,7 +153,7 @@ export default function RegisterPage() {
               className="flex h-2 w-2 items-center justify-center rounded-full transition-all duration-300"
               style={{
                 backgroundColor:
-                  step >= s ? "var(--auth-copper)" : "rgba(226, 217, 202, 0.2)",
+                  step >= s ? "var(--auth-copper)" : "color-mix(in srgb, var(--bg-sand) 60%, transparent)",
                 border:
                   step >= s ? "none" : "1px solid var(--auth-border)",
                 boxShadow:
@@ -221,7 +221,7 @@ export default function RegisterPage() {
               />
             </div>
 
-            {error && <p className="mt-3 text-[13px] text-red-600">{error}</p>}
+            {error && <p className="mt-3 text-[13px] text-red-400">{error}</p>}
 
             <div className="mt-6">
               <AuthButton type="button" onClick={nextStep}>
@@ -322,7 +322,7 @@ export default function RegisterPage() {
               />
             </div>
 
-            {error && <p className="mt-3 text-[13px] text-red-600">{error}</p>}
+            {error && <p className="mt-3 text-[13px] text-red-400">{error}</p>}
 
             <div className="mt-6 flex gap-3">
               <AuthButton variant="ghost" type="button" onClick={prevStep}>
@@ -369,10 +369,10 @@ export default function RegisterPage() {
                     style={{
                       border: `1px solid ${selected ? mod.color : "var(--border-stone)"}`,
                       backgroundColor: selected
-                        ? `color-mix(in srgb, ${mod.color} 6%, transparent)`
-                        : "rgba(226, 217, 202, 0.2)",
+                        ? `color-mix(in srgb, ${mod.color} 12%, transparent)`
+                        : "color-mix(in srgb, var(--bg-sand) 45%, transparent)",
                       boxShadow: selected
-                        ? `0 0 16px color-mix(in srgb, ${mod.color} 13%, transparent)`
+                        ? `0 0 16px color-mix(in srgb, ${mod.color} 22%, transparent)`
                         : "none",
                     }}
                   >
@@ -400,7 +400,7 @@ export default function RegisterPage() {
               })}
             </div>
 
-            {error && <p className="mt-3 text-[13px] text-red-600">{error}</p>}
+            {error && <p className="mt-3 text-[13px] text-red-400">{error}</p>}
 
             <div className="mt-6 flex gap-3">
               <AuthButton variant="ghost" type="button" onClick={prevStep}>

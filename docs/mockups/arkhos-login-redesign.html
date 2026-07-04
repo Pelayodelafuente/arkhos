@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Arkhos · Login redesign — mockups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    /* Primary — dark warm (espresso) */
+    --d-page: hsl(29,16%,13%);
+    --d-sand: hsl(28,22%,19%);
+    --d-card: hsl(33,20%,17%);
+    --d-sidebar: hsl(24,18%,9%);
+    --d-border: rgba(196,174,150,0.22);
+    --d-border-strong: rgba(196,174,150,0.36);
+    --d-text: hsl(32,48%,87%);
+    --d-text-2: hsl(34,39%,74%);
+    --d-text-3: hsl(35,27%,58%);
+    /* Primary — light warm */
+    --l-page: hsl(35,37%,92%);
+    --l-sand: hsl(34,34%,90%);
+    --l-card: #ffffff;
+    --l-border: rgba(157,127,98,0.35);
+    --l-text: hsl(33,54%,15%);
+    --l-text-2: hsl(36,32%,28%);
+    --l-text-3: hsl(31,23%,42%);
+    /* Copper accent */
+    --copper: hsl(26,85%,58%);
+    --copper-l: hsl(21,81%,59%);
+    --copper-deep: hsl(18,90%,38%);
+    --grid: rgba(255,220,160,0.05);
+    --grid-l: rgba(160,130,90,0.13);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Plus Jakarta Sans',sans-serif;background:#0d0b09;color:#eee;}
+  .wrap{max-width:1400px;margin:0 auto;padding:40px 24px 80px;}
+  h2.section{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:0.25em;text-transform:uppercase;color:#c9a37a;margin:48px 0 6px;}
+  p.desc{font-size:13px;color:#9a9088;margin-bottom:16px;max-width:760px;line-height:1.6;}
+  .frame{border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);box-shadow:0 20px 60px rgba(0,0,0,0.5);}
+  .stage{height:640px;position:relative;overflow:hidden;}
+  .serif{font-family:'DM Serif Display',serif;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+
+  /* ============ SHARED LOGO ============ */
+  .logo-svg .stroke{stroke:var(--copper);}
+
+  /* ============ OPTION A — COMMAND CENTER (split) ============ */
+  .A{display:flex;height:100%;background:var(--d-page);}
+  .A-left{
+    flex:1.1;position:relative;background:var(--d-sidebar);
+    display:flex;flex-direction:column;justify-content:space-between;padding:44px;
+    overflow:hidden;
+  }
+  .A-left::before{
+    content:"";position:absolute;inset:0;
+    background-image:
+      radial-gradient(ellipse 60% 50% at 20% 15%, hsla(26,85%,58%,0.10) 0%, transparent 60%),
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:100% 100%, 26px 26px, 26px 26px;
+    pointer-events:none;
+  }
+  .A-left::after{
+    content:"";position:absolute;width:420px;height:420px;right:-140px;top:50%;transform:translateY(-50%);
+    background:radial-gradient(circle, hsla(26,85%,58%,0.14) 0%, transparent 70%);
+    filter:blur(20px);pointer-events:none;
+  }
+  .A-brandtop{position:relative;display:flex;align-items:center;gap:12px;}
+  .A-orbit{position:relative;width:52px;height:52px;display:flex;align-items:center;justify-content:center;}
+  .A-orbit .ring{position:absolute;border:1px solid hsla(26,85%,58%,0.18);border-radius:50%;}
+  .A-mid{position:relative;}
+  .A-mid .kicker{font-size:11px;letter-spacing:0.32em;text-transform:uppercase;color:var(--copper);opacity:0.8;}
+  .A-mid h1{font-size:52px;line-height:1.05;color:var(--d-text);margin:14px 0 18px;max-width:460px;}
+  .A-mid p{font-size:15px;line-height:1.7;color:var(--d-text-3);max-width:400px;}
+  .A-status{position:relative;display:flex;gap:26px;}
+  .A-stat .n{font-family:'JetBrains Mono',monospace;font-size:22px;color:var(--d-text);}
+  .A-stat .l{font-size:11px;color:var(--d-text-3);margin-top:3px;}
+  .A-dot{width:6px;height:6px;border-radius:50%;background:hsl(152,51%,54%);box-shadow:0 0 8px hsla(152,51%,54%,0.7);display:inline-block;margin-right:6px;}
+  .A-right{flex:0.9;display:flex;align-items:center;justify-content:center;padding:44px;position:relative;background:var(--d-page);}
+  .A-form{width:100%;max-width:340px;}
+  .A-form .greet{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+  .A-form .greet .serif{font-size:26px;color:var(--d-text);}
+  .A-form .sub{font-size:13px;color:var(--d-text-3);margin-bottom:26px;}
+  .field{position:relative;margin-bottom:16px;}
+  .field label{position:absolute;left:40px;top:9px;font-size:9px;letter-spacing:0.05em;color:var(--copper);opacity:0.8;text-transform:uppercase;}
+  .field input{
+    width:100%;height:52px;border-radius:12px;border:1px solid var(--d-border);
+    background:var(--d-card);color:var(--d-text);padding:20px 14px 6px 40px;font-size:14px;outline:none;
+    font-family:'Plus Jakarta Sans',sans-serif;
+  }
+  .field input:focus{border-color:var(--copper);box-shadow:0 0 0 3px hsla(26,85%,58%,0.14);}
+  .field .ic{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--d-text-3);}
+  .field.filled input{}
+  .btn-primary{
+    width:100%;height:52px;border:none;border-radius:12px;cursor:pointer;
+    background:linear-gradient(135deg, hsl(26,85%,58%), hsl(18,90%,44%));
+    color:#fff;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;letter-spacing:0.04em;
+    box-shadow:0 8px 24px hsla(26,85%,58%,0.30);margin-top:8px;
+  }
+  .link{color:var(--copper);font-size:12px;text-decoration:none;}
+  .foot{text-align:center;font-size:12px;color:var(--d-text-3);margin-top:22px;}
+
+  /* ============ OPTION B — WARM MONOLITH (centered dark) ============ */
+  .B{height:100%;position:relative;background:var(--d-page);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+  .B::before{
+    content:"";position:absolute;inset:0;
+    background-image:
+      radial-gradient(ellipse 70% 55% at 50% 0%, hsla(26,85%,58%,0.10) 0%, transparent 55%),
+      radial-gradient(ellipse 50% 45% at 50% 110%, hsla(18,90%,38%,0.10) 0%, transparent 55%),
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:100% 100%,100% 100%,26px 26px,26px 26px;
+  }
+  .B-dots{position:absolute;inset:0;pointer-events:none;}
+  .B-dots i{position:absolute;border-radius:50%;background:hsla(26,85%,58%,0.5);}
+  .B-panel{
+    position:relative;width:400px;border-radius:22px;padding:40px 38px;
+    background:hsla(33,20%,17%,0.72);
+    backdrop-filter:blur(24px) saturate(150%);-webkit-backdrop-filter:blur(24px) saturate(150%);
+    border:1px solid var(--d-border-strong);
+    box-shadow:0 30px 80px rgba(0,0,0,0.55), inset 0 1px 0 hsla(34,45%,80%,0.08);
+    text-align:center;
+  }
+  .B-brand{display:flex;flex-direction:column;align-items:center;margin-bottom:22px;}
+  .B-brand .name{font-family:'DM Serif Display',serif;font-size:26px;color:var(--d-text);margin-top:10px;}
+  .B-brand .tag{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.3em;text-transform:uppercase;color:var(--d-text-3);margin-top:6px;}
+  .B-sep{width:40px;height:1px;margin:0 auto 22px;background:linear-gradient(90deg,transparent,var(--copper),transparent);}
+  .B .field input{background:hsla(28,22%,19%,0.6);}
+  .B .foot{color:var(--d-text-3);}
+
+  /* ============ OPTION C — DAYBREAK (centered light) ============ */
+  .C{height:100%;position:relative;background:var(--l-page);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+  .C::before{
+    content:"";position:absolute;inset:0;
+    background-image:
+      radial-gradient(ellipse 60% 50% at 15% 10%, hsla(27,100%,50%,0.10) 0%, transparent 55%),
+      radial-gradient(ellipse 55% 50% at 90% 95%, hsla(21,81%,59%,0.10) 0%, transparent 55%),
+      linear-gradient(var(--grid-l) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-l) 1px, transparent 1px);
+    background-size:100% 100%,100% 100%,26px 26px,26px 26px;
+  }
+  .C-panel{
+    position:relative;width:400px;border-radius:22px;padding:40px 38px;background:var(--l-card);
+    border:1px solid var(--l-border);
+    box-shadow:0 24px 60px rgba(160,100,50,0.14), inset 0 1px 0 rgba(255,255,255,0.9);
+    text-align:center;
+  }
+  .C-brand{display:flex;flex-direction:column;align-items:center;margin-bottom:20px;}
+  .C-brand .name{font-family:'DM Serif Display',serif;font-size:26px;color:var(--l-text);margin-top:10px;}
+  .C-brand .tag{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.3em;text-transform:uppercase;color:var(--l-text-3);margin-top:6px;}
+  .C-sep{width:40px;height:1px;margin:0 auto 22px;background:linear-gradient(90deg,transparent,var(--copper-l),transparent);}
+  .C .field label{color:var(--copper-deep);}
+  .C .field input{background:var(--l-sand);border-color:var(--l-border);color:var(--l-text);}
+  .C .field input:focus{border-color:var(--copper-l);box-shadow:0 0 0 3px hsla(27,100%,50%,0.14);}
+  .C .field .ic{color:var(--l-text-3);}
+  .C .greet .serif{color:var(--l-text);}
+  .C .sub{color:var(--l-text-3);}
+  .C .btn-primary{background:linear-gradient(135deg,hsl(21,81%,59%),hsl(18,90%,42%));box-shadow:0 8px 24px hsla(21,81%,50%,0.28);}
+  .C .foot{color:var(--l-text-3);}
+  .C .link{color:var(--copper-deep);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div style="text-align:center;margin-bottom:8px;">
+    <span class="serif" style="font-size:30px;">Arkhos · Login redesign</span>
+    <p class="desc" style="margin:8px auto 0;">Tres direcciones sobre el design system Primary (cálido, cobre-sobre-espresso). El login actual usa un negro-azulado frío <span class="mono">#07070F</span> con panel cream flotante — no pega con la app nueva.</p>
+  </div>
+
+  <!-- OPTION A -->
+  <h2 class="section">Opción A — “Command Center” · split espresso + formulario</h2>
+  <p class="desc">Layout partido que <b>replica la estructura de la app</b> (sidebar espresso + panel de contenido). Izquierda: identidad de centro de mando con rejilla, logo en órbita, tagline y métricas “en vivo”. Derecha: formulario limpio sobre tarjeta cálida. La más espectacular y la que mejor comunica “centro de mando personal”.</p>
+  <div class="frame"><div class="stage">
+    <div class="A">
+      <div class="A-left">
+        <div class="A-brandtop">
+          <div class="A-orbit">
+            <div class="ring" style="width:52px;height:52px;"></div>
+            <div class="ring" style="width:40px;height:40px;"></div>
+            <svg width="30" height="30" viewBox="0 0 72 72" class="logo-svg" fill="none">
+              <path d="M36 6 L6 62 L18 62 L36 26 L54 62 L66 62 Z" fill="hsl(26,85%,58%)"/>
+              <line x1="15" y1="48" x2="57" y2="48" stroke="#1a120c" stroke-width="3" stroke-linecap="round"/>
+              <line x1="21" y1="38" x2="51" y2="38" stroke="#1a120c" stroke-width="3" stroke-linecap="round" opacity="0.5"/>
+            </svg>
+          </div>
+          <span class="mono" style="font-size:12px;letter-spacing:0.3em;text-transform:uppercase;color:var(--d-text-2);">Arkhos</span>
+        </div>
+        <div class="A-mid">
+          <div class="kicker">Personal command center</div>
+          <h1 class="serif">Tu vida,<br/>bajo control.</h1>
+          <p>Proyectos, patrimonio, mercados y notas. Un único puesto de mando para todo lo que gestionas.</p>
+        </div>
+        <div class="A-status">
+          <div class="A-stat"><div class="n"><span class="A-dot"></span>6</div><div class="l">módulos activos</div></div>
+          <div class="A-stat"><div class="n">v2.0</div><div class="l">sistema</div></div>
+          <div class="A-stat"><div class="n mono">99.9%</div><div class="l">uptime</div></div>
+        </div>
+      </div>
+      <div class="A-right">
+        <div class="A-form">
+          <div class="greet"><span class="serif">Buenas noches</span></div>
+          <div class="sub">Accede a tu espacio personal</div>
+          <div class="field filled">
+            <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg></span>
+            <label>Email</label>
+            <input value="pelayo@arkhos.es" readonly />
+          </div>
+          <div class="field filled">
+            <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+            <label>Contraseña</label>
+            <input type="password" value="000000000" readonly />
+          </div>
+          <div style="text-align:right;margin:-6px 0 14px;"><a class="link" href="#">¿Olvidaste tu contraseña?</a></div>
+          <button class="btn-primary">Iniciar sesión</button>
+          <div class="foot">¿No tienes cuenta? <a class="link" href="#">Registrarse</a></div>
+        </div>
+      </div>
+    </div>
+  </div></div>
+
+  <!-- OPTION B -->
+  <h2 class="section">Opción B — “Warm Monolith” · centrado, glass espresso</h2>
+  <p class="desc">Mantiene el formato centrado de una columna (como ahora) pero corrige la paleta: fondo espresso cálido de la app, partículas cobre, y una <b>tarjeta de cristal oscura translúcida</b> (no el cream que desentona). Más minimal y elegante; cambio de menor riesgo.</p>
+  <div class="frame"><div class="stage">
+    <div class="B">
+      <div class="B-dots" id="bdots"></div>
+      <div class="B-panel">
+        <div class="B-brand">
+          <div class="A-orbit" style="width:64px;height:64px;">
+            <div class="ring" style="width:64px;height:64px;"></div>
+            <div class="ring" style="width:50px;height:50px;"></div>
+            <svg width="38" height="38" viewBox="0 0 72 72" fill="none">
+              <path d="M36 6 L6 62 L18 62 L36 26 L54 62 L66 62 Z" fill="hsl(26,85%,58%)"/>
+              <line x1="15" y1="48" x2="57" y2="48" stroke="#1a120c" stroke-width="3" stroke-linecap="round"/>
+              <line x1="21" y1="38" x2="51" y2="38" stroke="#1a120c" stroke-width="3" stroke-linecap="round" opacity="0.5"/>
+            </svg>
+          </div>
+          <div class="name">Arkhos</div>
+          <div class="tag">Personal command center</div>
+        </div>
+        <div class="B-sep"></div>
+        <div class="greet" style="justify-content:center;margin-bottom:4px;"><span class="serif" style="font-size:22px;color:var(--d-text);">Buenas noches</span></div>
+        <div class="sub" style="margin-bottom:22px;">Accede a tu espacio personal</div>
+        <div style="text-align:left;">
+          <div class="field filled">
+            <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg></span>
+            <label>Email</label><input value="pelayo@arkhos.es" readonly />
+          </div>
+          <div class="field filled">
+            <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+            <label>Contraseña</label><input type="password" value="000000000" readonly />
+          </div>
+        </div>
+        <button class="btn-primary">Iniciar sesión</button>
+        <div class="foot">¿No tienes cuenta? <a class="link" href="#">Registrarse</a></div>
+      </div>
+    </div>
+  </div></div>
+
+  <!-- OPTION C -->
+  <h2 class="section">Opción C — “Daybreak” · centrado, modo claro cálido</h2>
+  <p class="desc">Alineado con el <b>modo claro</b> por defecto de la app: fondo cream con rejilla, tarjeta blanca, acento naranja Primary. Luminoso y limpio. Ideal si prefieres que el login abra en claro (el toggle de tema vive dentro de la app).</p>
+  <div class="frame"><div class="stage">
+    <div class="C">
+      <div class="C-panel">
+        <div class="C-brand">
+          <div class="A-orbit" style="width:64px;height:64px;">
+            <div class="ring" style="width:64px;height:64px;border-color:hsla(21,81%,50%,0.2);"></div>
+            <div class="ring" style="width:50px;height:50px;border-color:hsla(21,81%,50%,0.14);"></div>
+            <svg width="38" height="38" viewBox="0 0 72 72" fill="none">
+              <path d="M36 6 L6 62 L18 62 L36 26 L54 62 L66 62 Z" fill="hsl(21,81%,55%)"/>
+              <line x1="15" y1="48" x2="57" y2="48" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+              <line x1="21" y1="38" x2="51" y2="38" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity="0.55"/>
+            </svg>
+          </div>
+          <div class="name">Arkhos</div>
+          <div class="tag">Personal command center</div>
+        </div>
+        <div class="C-sep"></div>
+        <div class="greet" style="justify-content:center;margin-bottom:4px;"><span class="serif" style="font-size:22px;">Buenos días</span></div>
+        <div class="sub" style="margin-bottom:22px;">Accede a tu espacio personal</div>
+        <div style="text-align:left;">
+          <div class="field filled">
+            <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg></span>
+            <label>Email</label><input value="pelayo@arkhos.es" readonly />
+          </div>
+          <div class="field filled">
+            <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+            <label>Contraseña</label><input type="password" value="000000000" readonly />
+          </div>
+        </div>
+        <button class="btn-primary">Iniciar sesión</button>
+        <div class="foot">¿No tienes cuenta? <a class="link" href="#">Registrarse</a></div>
+      </div>
+    </div>
+  </div></div>
+
+</div>
+<script>
+  // scatter copper dots for option B
+  const bd = document.getElementById('bdots');
+  for(let i=0;i<40;i++){
+    const s=document.createElement('i');
+    const sz=1+Math.random()*2;
+    s.style.width=sz+'px';s.style.height=sz+'px';
+    s.style.left=Math.random()*100+'%';s.style.top=Math.random()*100+'%';
+    s.style.opacity=(0.2+Math.random()*0.6);
+    bd.appendChild(s);
+  }
+</script>
+</body>
+</html>

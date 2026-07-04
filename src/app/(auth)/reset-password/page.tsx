@@ -131,7 +131,7 @@ export default function ResetPasswordPage() {
         />
 
         {state.error && (
-          <p className="text-[13px] text-red-600">{state.error}</p>
+          <p className="text-[13px] text-red-400">{state.error}</p>
         )}
 
         <AuthButton type="submit" loading={pending}>

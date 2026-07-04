@@ -27,10 +27,11 @@ export const AuthInput = forwardRef<HTMLInputElement, AuthInputProps>(
           ref={ref}
           id={id}
           placeholder=" "
-          className={`peer h-[48px] w-full rounded-xl border bg-transparent pl-10 text-[14px] outline-none transition-all duration-200 ${rightElement ? "pr-11" : "pr-4"}`}
+          className={`peer h-[48px] w-full rounded-xl border pl-10 text-[14px] outline-none transition-all duration-200 focus:shadow-[0_0_0_3px_var(--auth-copper-glow)] ${rightElement ? "pr-11" : "pr-4"}`}
           style={{
             color: "var(--text-primary)",
-            borderColor: error ? "#DC2626" : "var(--border-stone)",
+            backgroundColor: "color-mix(in srgb, var(--bg-sand) 55%, transparent)",
+            borderColor: error ? "var(--error)" : "var(--border-stone)",
             caretColor: "var(--auth-copper)",
             animation: error ? "auth-shake 0.4s ease-out" : undefined,
             paddingTop: 18,

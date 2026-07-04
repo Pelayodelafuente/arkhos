@@ -381,14 +381,31 @@ summary,
    ══════════════════════════════════════ */
 
 .auth-dark {
-  --auth-bg: #07070F;
+  color-scheme: dark;
+
+  /* Espresso cálido — hermano del sidebar de la app (Primary d-gray) */
+  --auth-bg: hsl(25, 18%, 8%);
+  --auth-bg-deep: hsl(24, 20%, 6%);
+  --auth-panel: hsla(33, 20%, 15%, 0.72);
   --auth-copper: #D4845A;
   --auth-copper-dark: #A85C35;
   --auth-copper-glow: rgba(212, 132, 90, 0.15);
-  --auth-text: #F0EDE8;
-  --auth-gray: #6B7280;
+  --auth-text: hsl(32, 48%, 90%);
+  --auth-gray: hsl(35, 20%, 52%);
   --auth-surface: rgba(255, 255, 255, 0.04);
-  --auth-border: rgba(255, 255, 255, 0.08);
+  --auth-border: rgba(196, 174, 150, 0.22);
+  --auth-grid: rgba(255, 220, 160, 0.045);
+
+  /* Override de tokens Primary dentro del scope auth: todo hijo (inputs,
+     labels, páginas de registro/reset/MFA) hereda la paleta oscura cálida */
+  --text-primary:   hsl(32, 48%, 88%);
+  --text-secondary: hsl(34, 39%, 76%);
+  --text-tertiary:  hsl(35, 27%, 60%);
+  --text-muted:     hsl(35, 27%, 60%);
+  --text-faint:     hsl(34, 24%, 50%);
+  --border-stone:   rgba(196, 174, 150, 0.22);
+  --bg-card:        hsl(33, 20%, 17%);
+  --bg-sand:        hsl(28, 22%, 19%);
 }
 
 /* Shimmer sweep for buttons */
@@ -458,12 +475,12 @@ summary,
   animation: auth-draw-check 0.4s ease-out 0.7s forwards;
 }
 
-/* Autofill override for auth panel */
+/* Autofill override for auth panel — espresso cálido, no cream */
 .auth-dark input:-webkit-autofill,
 .auth-dark input:-webkit-autofill:hover,
 .auth-dark input:-webkit-autofill:focus {
-  -webkit-box-shadow: 0 0 0 30px #f7f1e8 inset;
-  -webkit-text-fill-color: #2a1a10;
+  -webkit-box-shadow: 0 0 0 30px hsl(28, 22%, 19%) inset;
+  -webkit-text-fill-color: hsl(32, 48%, 88%);
   caret-color: #D4845A;
   transition: background-color 5000s ease-in-out 0s;
 }
