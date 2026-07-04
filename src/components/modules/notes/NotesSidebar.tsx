@@ -68,7 +68,21 @@ export function NotesSidebar({ userId }: Props) {
   const addNote = useNotesStore((s) => s.addNote)
   const setSelectedNoteId = useNotesStore((s) => s.setSelectedNoteId)
 
-  const [collapsed, setCollapsed] = useState(false)
+  // Cerrado por defecto; la preferencia del usuario persiste en localStorage
+  const [collapsed, setCollapsed] = useState(true)
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("arkhos-notes-sidebar")
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- sincroniza preferencia guardada tras montar (patrón BottomDock, evita hydration mismatch)
+      if (saved !== null) setCollapsed(saved === "collapsed")
+    } catch { /* ignore */ }
+  }, [])
+
+  const setCollapsedPersist = (next: boolean) => {
+    setCollapsed(next)
+    try { localStorage.setItem("arkhos-notes-sidebar", next ? "collapsed" : "open") } catch { /* ignore */ }
+  }
   const [creatingFolder, setCreatingFolder] = useState(false)
   const [newFolderName, setNewFolderName] = useState("")
   const [renamingFolderId, setRenamingFolderId] = useState<string | null>(null)
@@ -162,7 +176,7 @@ export function NotesSidebar({ userId }: Props) {
     return (
       <div className="flex flex-col items-center gap-1 border-r border-border bg-[var(--bg-card-hover)] w-10 py-3 flex-shrink-0">
         <button
-          onClick={() => setCollapsed(false)}
+          onClick={() => setCollapsedPersist(false)}
           className="flex h-7 w-7 items-center justify-center rounded-md text-text-tertiary hover:text-text-secondary hover:bg-sand transition-colors"
           title="Expandir barra lateral"
         >
@@ -219,7 +233,7 @@ export function NotesSidebar({ userId }: Props) {
           Notas
         </span>
         <button
-          onClick={() => setCollapsed(true)}
+          onClick={() => setCollapsedPersist(true)}
           className="flex h-6 w-6 items-center justify-center rounded-md text-text-tertiary hover:text-text-secondary hover:bg-sand transition-colors"
           title="Colapsar barra lateral"
         >

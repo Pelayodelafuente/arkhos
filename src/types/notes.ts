@@ -175,13 +175,15 @@ export interface SnapGuide {
 
 // ─── Color Configs ──────────────────
 
+// Fondos theme-aware: tinte del acento sobre --bg-card → en claro queda el
+// "papel" de siempre y en oscuro la tarjeta se oscurece con el texto legible.
 export const NOTE_COLOR_CONFIG: { value: NoteColor; bg: string; border: string; label: string }[] = [
-  { value: 'default', bg: '#f7f1e8', border: 'rgba(160,120,80,0.35)', label: 'Neutro' },
-  { value: 'sage', bg: '#faf5ec', border: 'var(--module-notas)', label: 'Sage' },
-  { value: 'terracotta', bg: '#faf0ec', border: 'var(--accent-terracotta)', label: 'Terracotta' },
-  { value: 'stone', bg: '#f5f2ee', border: 'var(--text-faint)', label: 'Stone' },
-  { value: 'blue', bg: '#eef2f8', border: 'var(--module-gastos)', label: 'Blue' },
-  { value: 'gold', bg: '#faf5ec', border: '#C4974A', label: 'Gold' },
+  { value: 'default', bg: 'var(--bg-card-hover)', border: 'rgba(160,120,80,0.35)', label: 'Neutro' },
+  { value: 'sage', bg: 'color-mix(in srgb, var(--module-notas) 9%, var(--bg-card))', border: 'var(--module-notas)', label: 'Sage' },
+  { value: 'terracotta', bg: 'color-mix(in srgb, var(--accent-terracotta) 9%, var(--bg-card))', border: 'var(--accent-terracotta)', label: 'Terracotta' },
+  { value: 'stone', bg: 'color-mix(in srgb, var(--text-faint) 10%, var(--bg-card))', border: 'var(--text-faint)', label: 'Stone' },
+  { value: 'blue', bg: 'color-mix(in srgb, var(--module-gastos) 9%, var(--bg-card))', border: 'var(--module-gastos)', label: 'Blue' },
+  { value: 'gold', bg: 'color-mix(in srgb, var(--platform-crypto) 11%, var(--bg-card))', border: 'var(--platform-crypto)', label: 'Gold' },
 ]
 
 // ─── History Entry ────────────────────

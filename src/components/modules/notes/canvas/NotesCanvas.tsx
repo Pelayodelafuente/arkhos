@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState, useCallback, useEffect, useMemo } from "react"
+import { useRef, useState, useCallback, useEffect, useLayoutEffect, useMemo } from "react"
 import { useNotesStore, useCanvasSearchResults } from "@/stores/notes-store"
 import { useUIStore } from "@/stores/ui-store"
 import { CanvasNodeComponent } from "./CanvasNode"
@@ -297,7 +297,10 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
     return () => ro.disconnect()
   }, [])
 
-  useEffect(() => {
+  // useLayoutEffect: el viewport guardado se aplica ANTES del primer paint —
+  // sin esto el canvas pintaba un frame con el viewport por defecto (esquina,
+  // límites visibles) y luego "saltaba" a su sitio (efecto apertura torcida).
+  useLayoutEffect(() => {
     if (!canvas) return
     const key = `${VIEWPORT_STORAGE_PREFIX}${canvas.id}:viewport`
     try {
@@ -705,7 +708,7 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
     else if (node.node_type === "text") setEditingNode(nodeId)
   }, [nodeMap, onEditNote, setEditingNode])
 
-  const fitAllNodes = useCallback(() => {
+  const fitAllNodes = useCallback((animate = true) => {
     if (nodes.length === 0) { setViewport({ offsetX: 0, offsetY: 0, scale: 1 }); return }
     const rect = containerRef.current?.getBoundingClientRect()
     if (!rect || rect.width === 0 || rect.height === 0) return
@@ -719,6 +722,7 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
     const newScale = Math.min(Math.max(Math.min(rect.width / contentW, rect.height / contentH), 0.2), 1.5)
     const centerX = (minX + maxX) / 2, centerY = (minY + maxY) / 2
     const target = { scale: newScale, offsetX: rect.width / 2 - centerX * newScale, offsetY: rect.height / 2 - centerY * newScale }
+    if (!animate) { setViewport(target); return }
     // Animate with easeOutCubic over 400ms
     const from = viewportRef.current
     const duration = 400
@@ -736,12 +740,16 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
     requestAnimationFrame(step)
   }, [nodes, setViewport])
 
-  // Auto-fit inicial — declarado tras fitAllNodes para no acceder antes de su declaración
-  useEffect(() => {
-    if (hasAutoFitted.current || nodes.length === 0 || containerSize.w === 0) return
+  // Auto-fit inicial — useLayoutEffect + sin animación: el primer encuadre
+  // ocurre antes del paint del frame que trae los nodos, así el canvas abre
+  // ya centrado (nada de deslizamiento desde la esquina ni límites a la vista).
+  useLayoutEffect(() => {
+    if (hasAutoFitted.current || nodes.length === 0) return
+    const rect = containerRef.current?.getBoundingClientRect()
+    if (!rect || rect.width === 0) return
     hasAutoFitted.current = true
-    requestAnimationFrame(() => fitAllNodes())
-  }, [nodes.length, containerSize.w, fitAllNodes, nodes])
+    fitAllNodes(false)
+  }, [nodes.length, fitAllNodes, nodes])
 
   const centerOnNode = useCallback((nodeId: string) => {
     const node = nodeMap.get(nodeId)
@@ -919,7 +927,7 @@ export function NotesCanvas({ userId, onEditNote, onNewNote }: Props) {
         <defs>
           <pattern id="grid" width={20 * viewport.scale} height={20 * viewport.scale}
             x={viewport.offsetX % (20 * viewport.scale)} y={viewport.offsetY % (20 * viewport.scale)} patternUnits="userSpaceOnUse">
-            <circle cx={1} cy={1} r={0.5} fill="rgba(0,0,0,0.06)" />
+            <circle cx={1} cy={1} r={0.5} fill="var(--grid-color)" />
           </pattern>
         </defs>
         <rect width="100%" height="100%" fill="var(--bg-cream)" />

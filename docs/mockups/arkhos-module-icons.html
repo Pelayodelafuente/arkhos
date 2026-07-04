@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arkhos — Iconos de módulos (propuesta app-style)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Plus Jakarta Sans',sans-serif; background:hsl(35,37%,92%); color:hsl(33,54%,15%); padding:48px 5vw 80px; }
+  h1 { font-family:'DM Serif Display',serif; font-size:40px; font-weight:400; }
+  h2 { font-family:'DM Serif Display',serif; font-size:24px; font-weight:400; margin:48px 0 4px; }
+  .sub { color:hsl(36,32%,30%); font-size:14.5px; margin-top:8px; max-width:70ch; line-height:1.55; }
+  .hint { color:hsl(31,23%,45%); font-size:12.5px; margin:4px 0 18px; }
+
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:16px; }
+  .card { background:#fff; border:1px solid hsl(37,38%,83%); border-radius:14px; padding:22px 20px 18px; text-align:center; }
+  .card .icon { filter:drop-shadow(0 6px 14px rgba(40,20,5,0.22)); display:inline-block; }
+  .card .name { font-weight:700; font-size:14px; margin-top:14px; }
+  .card .desc { font-size:11.5px; color:hsl(31,23%,45%); margin-top:3px; line-height:1.45; }
+
+  .strip { display:flex; align-items:center; gap:26px; flex-wrap:wrap; border-radius:14px; padding:22px 26px; margin-top:14px; }
+  .strip.light { background:hsl(35,37%,92%); border:1px solid hsl(37,38%,83%); }
+  .strip.dark { background:hsl(29,16%,13%); border:1px solid hsl(31,27%,25%); }
+  .strip .cell { display:flex; flex-direction:column; align-items:center; gap:7px; }
+  .strip .cell span { font-size:10px; font-weight:600; }
+  .strip.light .cell span { color:hsl(36,32%,30%); }
+  .strip.dark .cell span { color:hsl(34,39%,74%); }
+  .sizes { display:flex; align-items:flex-end; gap:18px; }
+
+  .note { background:hsl(36,38%,98%); border:1px solid hsl(37,38%,83%); border-left:3px solid hsl(21,81%,59%); border-radius:10px; padding:14px 18px; font-size:13px; color:hsl(36,32%,30%); line-height:1.6; max-width:78ch; margin-top:34px; }
+</style>
+</head>
+<body>
+
+<h1>Iconos de módulos — estilo app real</h1>
+<p class="sub">Mismo lenguaje que los logos de Obsidian, Notion o Linear: <strong>baldosa con gradiente
+profundo del color del módulo</strong> + brillo superior, y un <strong>glifo facetado</strong> (caras luz/sombra que
+simulan volumen). Cero iconos de librería — cada uno es un logo propio dibujado a mano en SVG.</p>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <!-- ═══ Gradientes de baldosa por módulo (oscuro abajo-dcha → vivo arriba-izda) ═══ -->
+    <linearGradient id="t-dash" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F09A5E"/><stop offset=".5" stop-color="#D4703A"/><stop offset="1" stop-color="#6E2B10"/></linearGradient>
+    <linearGradient id="t-proy" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFA061"/><stop offset=".5" stop-color="#EB7D42"/><stop offset="1" stop-color="#8A3A12"/></linearGradient>
+    <linearGradient id="t-notas" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F2C14E"/><stop offset=".5" stop-color="#D79719"/><stop offset="1" stop-color="#7A5300"/></linearGradient>
+    <linearGradient id="t-gastos" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#66A9DC"/><stop offset=".5" stop-color="#3079B0"/><stop offset="1" stop-color="#123B5E"/></linearGradient>
+    <linearGradient id="t-patri" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5FBF8B"/><stop offset=".5" stop-color="#329562"/><stop offset="1" stop-color="#0C4A2C"/></linearGradient>
+    <linearGradient id="t-merc" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#A79BE3"/><stop offset=".5" stop-color="#7D71C1"/><stop offset="1" stop-color="#352A70"/></linearGradient>
+    <linearGradient id="t-cronos" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E39AA6"/><stop offset=".5" stop-color="#C7707D"/><stop offset="1" stop-color="#6E2130"/></linearGradient>
+    <linearGradient id="t-sala" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7FD2CE"/><stop offset=".5" stop-color="#4CAEAA"/><stop offset="1" stop-color="#0E4A48"/></linearGradient>
+    <!-- Brillo superior de baldosa -->
+    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".32"/><stop offset=".45" stop-color="#fff" stop-opacity=".04"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+    <!-- Facetas del glifo -->
+    <linearGradient id="f-hi" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity=".85"/></linearGradient>
+    <linearGradient id="f-mid" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".72"/><stop offset="1" stop-color="#fff" stop-opacity=".55"/></linearGradient>
+    <linearGradient id="f-lo" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".42"/><stop offset="1" stop-color="#fff" stop-opacity=".26"/></linearGradient>
+  </defs>
+</svg>
+
+<!-- ═══════════ plantilla de cada icono como <symbol> ═══════════ -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+
+    <!-- DASHBOARD · monograma A facetado (la marca Arkhos) -->
+    <symbol id="icon-dashboard" viewBox="0 0 112 112">
+      <rect width="112" height="112" rx="26" fill="url(#t-dash)"/>
+      <rect width="112" height="112" rx="26" fill="url(#sheen)"/>
+      <rect x=".75" y=".75" width="110.5" height="110.5" rx="25.25" fill="none" stroke="#fff" stroke-opacity=".22" stroke-width="1.5"/>
+      <!-- A de Arkhos: dos alas facetadas -->
+      <polygon points="56,20 30,88 44,88 56,52" fill="url(#f-hi)"/>
+      <polygon points="56,20 56,52 68,88 82,88" fill="url(#f-lo)"/>
+      <polygon points="47,70 65,70 68,79 44,79" fill="url(#f-mid)"/>
+      <circle cx="56" cy="33" r="3.6" fill="#fff" opacity=".95"/>
+    </symbol>
+
+    <!-- PROYECTOS · pila isométrica de tableros -->
+    <symbol id="icon-proyectos" viewBox="0 0 112 112">
+      <rect width="112" height="112" rx="26" fill="url(#t-proy)"/>
+      <rect width="112" height="112" rx="26" fill="url(#sheen)"/>
+      <rect x=".75" y=".75" width="110.5" height="110.5" rx="25.25" fill="none" stroke="#fff" stroke-opacity=".22" stroke-width="1.5"/>
+      <!-- capa inferior -->
+      <polygon points="56,58 88,72 56,86 24,72" fill="url(#f-lo)"/>
+      <!-- capa media -->
+      <polygon points="56,42 88,56 56,70 24,56" fill="url(#f-mid)"/>
+      <!-- capa superior con cara luz -->
+      <polygon points="56,24 88,38 56,52 24,38" fill="url(#f-hi)"/>
+      <!-- tick de tarea hecha sobre la capa superior -->
+      <path d="M47 38.5 l6 5 l12 -10" fill="none" stroke="#B9500F" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" opacity=".85"/>
+    </symbol>
+
+    <!-- NOTAS · gema-página plegada (guiño a Obsidian) -->
+    <symbol id="icon-notas" viewBox="0 0 112 112">
+      <rect width="112" height="112" rx="26" fill="url(#t-notas)"/>
+      <rect width="112" height="112" rx="26" fill="url(#sheen)"/>
+      <rect x=".75" y=".75" width="110.5" height="110.5" rx="25.25" fill="none" stroke="#fff" stroke-opacity=".22" stroke-width="1.5"/>
+      <!-- página con esquina plegada, dos facetas -->
+      <path d="M34 22 h32 l14 14 v54 h-46 z" fill="url(#f-mid)"/>
+      <path d="M34 22 h32 v0 l-8 70 h-24 z" fill="url(#f-hi)"/>
+      <!-- pliegue -->
+      <path d="M66 22 l14 14 h-14 z" fill="url(#f-lo)"/>
+      <path d="M66 22 l14 14 h-14 z" fill="#000" opacity=".08"/>
+      <!-- líneas de tinta -->
+      <rect x="42" y="48" width="28" height="4.5" rx="2.25" fill="#8A5F00" opacity=".55"/>
+      <rect x="42" y="59" width="21" height="4.5" rx="2.25" fill="#8A5F00" opacity=".45"/>
+      <rect x="42" y="70" width="25" height="4.5" rx="2.25" fill="#8A5F00" opacity=".35"/>
+    </symbol>
+
+    <!-- GASTOS · moneda € biselada -->
+    <symbol id="icon-gastos" viewBox="0 0 112 112">
+      <rect width="112" height="112" rx="26" fill="url(#t-gastos)"/>
+      <rect width="112" height="112" rx="26" fill="url(#sheen)"/>
+      <rect x=".75" y=".75" width="110.5" height="110.5" rx="25.25" fill="none" stroke="#fff" stroke-opacity=".22" stroke-width="1.5"/>
+      <!-- canto de la moneda (sombra inferior) -->
+      <circle cx="56" cy="60" r="30" fill="#000" opacity=".22"/>
+      <!-- cuerpo -->
+      <circle cx="56" cy="55" r="30" fill="url(#f-mid)"/>
+      <!-- bisel luz -->
+      <path d="M56 25 a30 30 0 0 1 30 30 l-7 0 a23 23 0 0 0 -23 -23 z" fill="url(#f-hi)"/>
+      <path d="M56 85 a30 30 0 0 1 -30 -30 l7 0 a23 23 0 0 0 23 23 z" fill="url(#f-lo)"/>
+      <!-- € grabado -->
+      <text x="56" y="67" text-anchor="middle" font-family="'Plus Jakarta Sans',sans-serif" font-weight="800" font-size="36" fill="#0F3A5C">€</text>
+      <rect x="36" y="47" width="18" height="4" rx="2" fill="#0F3A5C" opacity=".9"/>
+      <rect x="36" y="56" width="15" height="4" rx="2" fill="#0F3A5C" opacity=".9"/>
+    </symbol>
+
+    <!-- PATRIMONIO · escudo-caja fuerte facetado -->
+    <symbol id="icon-patrimonio" viewBox="0 0 112 112">
+      <rect width="112" height="112" rx="26" fill="url(#t-patri)"/>
+      <rect width="112" height="112" rx="26" fill="url(#sheen)"/>
+      <rect x=".75" y=".75" width="110.5" height="110.5" rx="25.25" fill="none" stroke="#fff" stroke-opacity=".22" stroke-width="1.5"/>
+      <!-- escudo: cara izquierda luz, derecha sombra -->
+      <path d="M56 20 L86 32 v24 c0 18 -13 30 -30 36 V20 z" fill="url(#f-lo)"/>
+      <path d="M56 20 L26 32 v24 c0 18 13 30 30 36 V20 z" fill="url(#f-hi)"/>
+      <!-- rueda de caja fuerte -->
+      <circle cx="56" cy="52" r="12.5" fill="none" stroke="#0B4227" stroke-width="5" opacity=".8"/>
+      <circle cx="56" cy="52" r="3.4" fill="#0B4227" opacity=".8"/>
+      <g stroke="#0B4227" stroke-width="3.4" stroke-linecap="round" opacity=".8">
+        <line x1="56" y1="34.5" x2="56" y2="40"/>
+        <line x1="56" y1="64" x2="56" y2="69.5"/>
+        <line x1="38.5" y1="52" x2="44" y2="52"/>
+        <line x1="68" y1="52" x2="73.5" y2="52"/>
+      </g>
+    </symbol>
+
+    <!-- MERCADOS · cristales-velas ascendentes -->
+    <symbol id="icon-mercados" viewBox="0 0 112 112">
+      <rect width="112" height="112" rx="26" fill="url(#t-merc)"/>
+      <rect width="112" height="112" rx="26" fill="url(#sheen)"/>
+      <rect x=".75" y=".75" width="110.5" height="110.5" rx="25.25" fill="none" stroke="#fff" stroke-opacity=".22" stroke-width="1.5"/>
+      <!-- tres prismas como velas, cada uno con cara luz + cara sombra -->
+      <g>
+        <polygon points="26,62 35,58 35,88 26,88" fill="url(#f-hi)"/>
+        <polygon points="35,58 44,62 44,88 35,88" fill="url(#f-lo)"/>
+        <line x1="35" y1="50" x2="35" y2="58" stroke="#fff" stroke-opacity=".75" stroke-width="3" stroke-linecap="round"/>
+      </g>
+      <g>
+        <polygon points="47,46 56,42 56,88 47,88" fill="url(#f-hi)"/>
+        <polygon points="56,42 65,46 65,88 56,88" fill="url(#f-lo)"/>
+        <line x1="56" y1="33" x2="56" y2="42" stroke="#fff" stroke-opacity=".75" stroke-width="3" stroke-linecap="round"/>
+      </g>
+      <g>
+        <polygon points="68,30 77,26 77,88 68,88" fill="url(#f-hi)"/>
+        <polygon points="77,26 86,30 86,88 77,88" fill="url(#f-lo)"/>
+        <line x1="77" y1="18" x2="77" y2="26" stroke="#fff" stroke-opacity=".75" stroke-width="3" stroke-linecap="round"/>
+      </g>
+    </symbol>
+
+    <!-- CRONOS · reloj de arena gema en anillo -->
+    <symbol id="icon-cronos" viewBox="0 0 112 112">
+      <rect width="112" height="112" rx="26" fill="url(#t-cronos)"/>
+      <rect width="112" height="112" rx="26" fill="url(#sheen)"/>
+      <rect x=".75" y=".75" width="110.5" height="110.5" rx="25.25" fill="none" stroke="#fff" stroke-opacity=".22" stroke-width="1.5"/>
+      <!-- anillo orbital -->
+      <circle cx="56" cy="56" r="34" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="4"/>
+      <circle cx="56" cy="22" r="4" fill="#fff" opacity=".9"/>
+      <!-- reloj de arena: copa superior luz, inferior sombra -->
+      <polygon points="40,34 72,34 56,56" fill="url(#f-hi)"/>
+      <polygon points="40,78 72,78 56,56" fill="url(#f-lo)"/>
+      <rect x="38" y="30" width="36" height="5" rx="2.5" fill="url(#f-mid)"/>
+      <rect x="38" y="77" width="36" height="5" rx="2.5" fill="url(#f-mid)"/>
+      <!-- arena cayendo -->
+      <circle cx="56" cy="63" r="2" fill="#fff" opacity=".85"/>
+      <polygon points="50,74 62,74 56,66" fill="#fff" opacity=".85"/>
+    </symbol>
+
+    <!-- SALA OPS · núcleo hexagonal reactor -->
+    <symbol id="icon-sala" viewBox="0 0 112 112">
+      <rect width="112" height="112" rx="26" fill="url(#t-sala)"/>
+      <rect width="112" height="112" rx="26" fill="url(#sheen)"/>
+      <rect x=".75" y=".75" width="110.5" height="110.5" rx="25.25" fill="none" stroke="#fff" stroke-opacity=".22" stroke-width="1.5"/>
+      <!-- hexágono exterior facetado -->
+      <polygon points="56,20 85,38 85,74 56,92 27,74 27,38" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="4.5" stroke-linejoin="round"/>
+      <!-- núcleo -->
+      <polygon points="56,38 72,48 72,64 56,74 40,64 40,48" fill="url(#f-hi)"/>
+      <polygon points="56,38 72,48 72,64 56,74" fill="#000" opacity=".10"/>
+      <circle cx="56" cy="56" r="6.5" fill="#0B403E"/>
+      <!-- destellos orbitales -->
+      <circle cx="85" cy="38" r="3.2" fill="#fff" opacity=".9"/>
+      <circle cx="27" cy="74" r="3.2" fill="#fff" opacity=".6"/>
+    </symbol>
+
+  </defs>
+</svg>
+
+<h2>Propuesta</h2>
+<p class="hint">Baldosa 26% de radio (proporción app iOS/macOS) · gradiente diagonal del color del módulo (paleta Primary) · glifo facetado luz/sombra.</p>
+<div class="grid">
+  <div class="card"><svg class="icon" width="96" height="96"><use href="#icon-dashboard"/></svg><div class="name">Dashboard · Arkhos</div><div class="desc">El monograma «A» facetado — la marca de la casa, cobre espresso</div></div>
+  <div class="card"><svg class="icon" width="96" height="96"><use href="#icon-proyectos"/></svg><div class="name">Proyectos</div><div class="desc">Pila isométrica de tableros con tick de tarea completada</div></div>
+  <div class="card"><svg class="icon" width="96" height="96"><use href="#icon-notas"/></svg><div class="name">Notas</div><div class="desc">Página-gema con pliegue y líneas de tinta (guiño a Obsidian)</div></div>
+  <div class="card"><svg class="icon" width="96" height="96"><use href="#icon-gastos"/></svg><div class="name">Gastos</div><div class="desc">Moneda € biselada con canto y grabado</div></div>
+  <div class="card"><svg class="icon" width="96" height="96"><use href="#icon-patrimonio"/></svg><div class="name">Patrimonio</div><div class="desc">Escudo-caja fuerte facetado con rueda de apertura</div></div>
+  <div class="card"><svg class="icon" width="96" height="96"><use href="#icon-mercados"/></svg><div class="name">Mercados</div><div class="desc">Tres velas-cristal ascendentes con mechas</div></div>
+  <div class="card"><svg class="icon" width="96" height="96"><use href="#icon-cronos"/></svg><div class="name">Cronos</div><div class="desc">Reloj de arena gema dentro del anillo orbital</div></div>
+  <div class="card"><svg class="icon" width="96" height="96"><use href="#icon-sala"/></svg><div class="name">Sala OPS</div><div class="desc">Núcleo hexagonal reactor — el corazón del centro de mando</div></div>
+</div>
+
+<h2>Sobre fondo claro y oscuro</h2>
+<p class="hint">Los mismos SVG funcionan en ambos temas (la baldosa lleva su propio fondo, como un icono de app real).</p>
+<div class="strip light">
+  <div class="cell"><svg class="icon" width="56" height="56"><use href="#icon-dashboard"/></svg><span>Dashboard</span></div>
+  <div class="cell"><svg class="icon" width="56" height="56"><use href="#icon-proyectos"/></svg><span>Proyectos</span></div>
+  <div class="cell"><svg class="icon" width="56" height="56"><use href="#icon-notas"/></svg><span>Notas</span></div>
+  <div class="cell"><svg class="icon" width="56" height="56"><use href="#icon-gastos"/></svg><span>Gastos</span></div>
+  <div class="cell"><svg class="icon" width="56" height="56"><use href="#icon-patrimonio"/></svg><span>Patrimonio</span></div>
+  <div class="cell"><svg class="icon" width="56" height="56"><use href="#icon-mercados"/></svg><span>Mercados</span></div>
+  <div class="cell"><svg class="icon" width="56" height="56"><use href="#icon-cronos"/></svg><span>Cronos</span></div>
+  <div class="cell"><svg class="icon" width="56" height="56"><use href="#icon-sala"/></svg><span>Sala</span></div>
+</div>
+<div class="strip dark">
+  <div class="cell"><svg class="icon" width="56" height="56"><use href="#icon-dashboard"/></svg><span>Dashboard</span></div>
+  <div class="cell"><svg class="icon" width="56" height="56"><use href="#icon-proyectos"/></svg><span>Proyectos</span></div>
+  <div class="cell"><svg class="icon" width="56" height="56"><use href="#icon-notas"/></svg><span>Notas</span></div>
+  <div class="cell"><svg class="icon" width="56" height="56"><use href="#icon-gastos"/></svg><span>Gastos</span></div>
+  <div class="cell"><svg class="icon" width="56" height="56"><use href="#icon-patrimonio"/></svg><span>Patrimonio</span></div>
+  <div class="cell"><svg class="icon" width="56" height="56"><use href="#icon-mercados"/></svg><span>Mercados</span></div>
+  <div class="cell"><svg class="icon" width="56" height="56"><use href="#icon-cronos"/></svg><span>Cronos</span></div>
+  <div class="cell"><svg class="icon" width="56" height="56"><use href="#icon-sala"/></svg><span>Sala</span></div>
+</div>
+
+<h2>Escalas (dock 52px · nav 34px · badges 22px)</h2>
+<div class="strip dark">
+  <div class="sizes">
+    <svg class="icon" width="96" height="96"><use href="#icon-notas"/></svg>
+    <svg class="icon" width="52" height="52"><use href="#icon-notas"/></svg>
+    <svg class="icon" width="34" height="34"><use href="#icon-notas"/></svg>
+    <svg class="icon" width="22" height="22"><use href="#icon-notas"/></svg>
+  </div>
+  <div class="sizes">
+    <svg class="icon" width="96" height="96"><use href="#icon-patrimonio"/></svg>
+    <svg class="icon" width="52" height="52"><use href="#icon-patrimonio"/></svg>
+    <svg class="icon" width="34" height="34"><use href="#icon-patrimonio"/></svg>
+    <svg class="icon" width="22" height="22"><use href="#icon-patrimonio"/></svg>
+  </div>
+  <div class="sizes">
+    <svg class="icon" width="96" height="96"><use href="#icon-mercados"/></svg>
+    <svg class="icon" width="52" height="52"><use href="#icon-mercados"/></svg>
+    <svg class="icon" width="34" height="34"><use href="#icon-mercados"/></svg>
+    <svg class="icon" width="22" height="22"><use href="#icon-mercados"/></svg>
+  </div>
+</div>
+
+<div class="note">
+  <strong>Si te gustan (o con los ajustes que me digas):</strong> los integro como componentes SVG
+  (<code>src/components/ui/module-icons.tsx</code>) y los coloco en el BottomDock (52px), el dock móvil (34px)
+  y de forma opcional en headers de módulo y ⌘K. Cada uno acepta <code>size</code> y hereda el drop-shadow
+  del dock. También puedo generar versiones 192/512px para los iconos PWA.
+</div>
+
+</body>
+</html>

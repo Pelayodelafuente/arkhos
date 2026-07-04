@@ -82,7 +82,7 @@ export function ProjectCanvas({ userId }: ProjectCanvasProps) {
       <div
         className="relative z-10 flex h-12 shrink-0 items-center gap-3 px-4"
         style={{
-          background: 'rgba(250,247,242,0.85)',
+          background: 'color-mix(in srgb, var(--bg-page) 85%, transparent)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
           borderBottom: '0.5px solid var(--border-stone)',

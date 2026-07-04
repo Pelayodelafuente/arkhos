@@ -73,7 +73,7 @@ function StatCard({ data, animateDelay }: { data: StatCardData; animateDelay: nu
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        background: '#F5F0EA',
+        background: 'var(--bg-sand)',
         borderRadius: 9,
         padding: '10px 10px 8px',
         cursor: 'default',

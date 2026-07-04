@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arkhos — Notas: propuestas de vista</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: hsl(35,37%,92%); --card: #fff; --surface: hsl(36,38%,98%); --sand: hsl(34,34%,90%);
+    --border: hsl(37,38%,83%); --b-soft: hsl(36,35%,88%);
+    --t1: hsl(33,54%,15%); --t2: hsl(36,32%,28%); --t3: hsl(31,23%,42%);
+    --notas: hsl(40,79%,47%); --acc: hsl(21,81%,59%);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg); color:var(--t1); padding:48px 5vw 80px; }
+  h1 { font-family:'DM Serif Display',serif; font-size:38px; font-weight:400; }
+  h2 { font-family:'DM Serif Display',serif; font-size:23px; font-weight:400; margin:52px 0 4px; }
+  .tag { display:inline-block; font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; border:1px solid var(--border); border-radius:99px; padding:4px 12px; color:var(--t3); background:var(--surface); margin-bottom:10px; }
+  .sub { color:var(--t2); font-size:14px; margin:6px 0 16px; max-width:72ch; line-height:1.55; }
+  .frame { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px; }
+
+  /* ── A: grid con jerarquía ── */
+  .gridA { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:14px; }
+  .ncard { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px 16px; border-left:3px solid var(--notas); transition:transform .15s; }
+  .ncard:hover { transform:translateY(-2px); }
+  .ncard .folder { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--notas); display:flex; align-items:center; gap:5px; }
+  .ncard .folder::before { content:''; width:7px; height:7px; border-radius:2px; background:var(--notas); }
+  .ncard h4 { font-size:15px; font-weight:700; margin:7px 0 5px; line-height:1.3; }
+  .ncard p { font-size:12px; color:var(--t3); line-height:1.5; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+  .ncard .meta { display:flex; align-items:center; justify-content:space-between; margin-top:12px; padding-top:9px; border-top:1px solid var(--b-soft); font-size:10.5px; color:var(--t3); }
+  .chips { display:flex; gap:4px; }
+  .chip { font-size:9.5px; font-weight:600; padding:2px 7px; border-radius:99px; background:color-mix(in srgb, var(--notas) 12%, transparent); color:hsl(40,98%,28%); }
+
+  /* ── B: secciones por carpeta ── */
+  .sect { margin-bottom:20px; }
+  .sect-h { display:flex; align-items:center; gap:9px; padding:7px 4px; border-bottom:2px solid var(--dot,var(--notas)); margin-bottom:12px; }
+  .sect-h .dot { width:10px; height:10px; border-radius:3px; background:var(--dot,var(--notas)); }
+  .sect-h b { font-size:13.5px; }
+  .sect-h span { font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--t3); }
+  .sect-h .collapse { margin-left:auto; color:var(--t3); font-size:11px; cursor:pointer; }
+  .rowB { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:12px; }
+  .mini { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:11px 13px; }
+  .mini h5 { font-size:13px; font-weight:700; }
+  .mini p { font-size:11px; color:var(--t3); margin-top:4px; line-height:1.45; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .mini .m { font-size:9.5px; color:var(--t3); margin-top:8px; }
+
+  /* ── C: tabla densa ── */
+  table.dense { border-collapse:collapse; width:100%; background:var(--card); border:1px solid var(--border); border-radius:12px; overflow:hidden; font-size:12.5px; }
+  table.dense th { text-align:left; font-size:9.5px; text-transform:uppercase; letter-spacing:1px; color:var(--t3); padding:9px 14px; background:var(--sand); border-bottom:1px solid var(--border); }
+  table.dense td { padding:9px 14px; border-bottom:1px solid var(--b-soft); vertical-align:middle; }
+  table.dense tr:last-child td { border-bottom:0; }
+  table.dense tr:hover td { background:var(--surface); }
+  .fdot { display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:600; }
+  .fdot i { width:8px; height:8px; border-radius:2.5px; display:inline-block; }
+  .title-cell { font-weight:700; font-size:13px; }
+  .snippet { color:var(--t3); font-size:11px; }
+  .pin { color:var(--acc); font-size:11px; }
+
+  .verdict { background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--acc); border-radius:10px; padding:14px 18px; font-size:13px; color:var(--t2); line-height:1.65; max-width:80ch; margin-top:40px; }
+</style>
+</head>
+<body>
+
+<h1>Notas — propuestas de vista</h1>
+<p class="sub">El tablero actual es un grid plano de tarjetas iguales: sin jerarquía, sin agrupación, y el ojo
+no sabe dónde ir. Tres opciones (combinables: A sustituye al grid actual, B y C serían modos nuevos del selector
+Lista/Canvas/Grafo).</p>
+
+<!-- ═══════════ OPCIÓN A ═══════════ -->
+<h2>Opción A — Grid con jerarquía (mejora del actual)</h2>
+<span class="tag">sustituye el tablero actual</span>
+<p class="sub">Cada tarjeta gana: carpeta arriba en su color, título fuerte, extracto de 3 líneas, y una fila de
+meta separada (tags + fecha). El borde izquierdo lleva el color de la nota. Pinneadas con fondo tintado.</p>
+<div class="frame">
+  <div class="gridA">
+    <div class="ncard"><div class="folder">Inversión</div><h4>Tesis Bitcoin 2026 — ciclo post-halving</h4><p>El patrón histórico sugiere que los 12-18 meses tras el halving concentran el grueso del movimiento. Revisar M2 global como confirmación y mantener el DCA…</p><div class="meta"><div class="chips"><span class="chip">crypto</span><span class="chip">macro</span></div><span>hace 2 h</span></div></div>
+    <div class="ncard" style="border-left-color:hsl(206,57%,44%)"><div class="folder" style="color:hsl(206,57%,44%)">Ideas<i></i></div><h4>App de recetas con lo que hay en la nevera</h4><p>Fotografiar la nevera → visión → recetas ordenadas por caducidad de ingredientes. El truco está en el inventario incremental…</p><div class="meta"><div class="chips"><span class="chip" style="background:hsla(206,57%,44%,.12);color:hsl(206,64%,30%)">side-project</span></div><span>ayer</span></div></div>
+    <div class="ncard" style="border-left-color:hsl(351,44%,61%)"><div class="folder" style="color:hsl(351,44%,61%)">Diario</div><h4>Semana 27 — balance</h4><p>Cerrado el design system nuevo. Pendiente QA del modo oscuro y decidir los iconos. La rutina de gym aguanta 4/4 días…</p><div class="meta"><div class="chips"><span class="chip" style="background:hsla(351,44%,61%,.12);color:hsl(351,50%,38%)">semanal</span></div><span>hace 3 días</span></div></div>
+  </div>
+</div>
+
+<!-- ═══════════ OPCIÓN B ═══════════ -->
+<h2>Opción B — Boards por carpeta</h2>
+<span class="tag">modo nuevo · «Boards»</span>
+<p class="sub">Secciones colapsables por carpeta con su color y contador — el orden lo pone la estructura que ya
+tienes en el sidebar. Ideal cuando acumulas muchas notas: escaneas por contexto, no por fecha.</p>
+<div class="frame">
+  <div class="sect" style="--dot:hsl(40,79%,47%)">
+    <div class="sect-h"><span class="dot"></span><b>Inversión</b><span>8 notas</span><span class="collapse">— colapsar</span></div>
+    <div class="rowB">
+      <div class="mini"><h5>Tesis Bitcoin 2026</h5><p>El patrón post-halving concentra el movimiento en 12-18 meses…</p><div class="m">hace 2 h · 📌</div></div>
+      <div class="mini"><h5>Rebalanceo semestral</h5><p>Si RV supera el 70% del total, mover el exceso a monetario…</p><div class="m">hace 5 días</div></div>
+      <div class="mini"><h5>Notas call Indexa</h5><p>Cartera 8/10, comisión baja a 0,42% al pasar de 50k…</p><div class="m">hace 2 semanas</div></div>
+    </div>
+  </div>
+  <div class="sect" style="--dot:hsl(206,57%,44%)">
+    <div class="sect-h"><span class="dot"></span><b>Ideas</b><span>5 notas</span><span class="collapse">— colapsar</span></div>
+    <div class="rowB">
+      <div class="mini"><h5>App de recetas con la nevera</h5><p>Visión sobre foto de la nevera → recetas por caducidad…</p><div class="m">ayer</div></div>
+      <div class="mini"><h5>Boletín mensual personal</h5><p>Un email a mí mismo el día 1 con KPIs de Arkhos…</p><div class="m">hace 1 semana</div></div>
+    </div>
+  </div>
+  <div class="sect" style="--dot:hsl(351,44%,61%)">
+    <div class="sect-h"><span class="dot"></span><b>Diario</b><span>12 notas</span><span class="collapse">— colapsar</span></div>
+    <div class="rowB">
+      <div class="mini"><h5>Semana 27 — balance</h5><p>Cerrado el design system nuevo. Pendiente QA del dark…</p><div class="m">hace 3 días</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ OPCIÓN C ═══════════ -->
+<h2>Opción C — Tabla densa (estilo Notion)</h2>
+<span class="tag">modo nuevo · «Tabla»</span>
+<p class="sub">Máxima densidad: una nota por fila con carpeta, tags y fecha en columnas ordenables. Perfecta
+para buscar/triar rápido cuando el volumen crece; combinada con el panel lateral de lectura.</p>
+<div class="frame">
+  <table class="dense">
+    <tr><th style="width:42%">Título</th><th>Carpeta</th><th>Tags</th><th>Estado</th><th>Editada</th></tr>
+    <tr><td class="title-cell"><span class="pin">📌</span> Tesis Bitcoin 2026 <div class="snippet">El patrón post-halving concentra el movimiento…</div></td><td><span class="fdot"><i style="background:hsl(40,79%,47%)"></i>Inversión</span></td><td><span class="chip">crypto</span> <span class="chip">macro</span></td><td><span class="chip" style="background:hsla(148,48%,47%,.14);color:hsl(153,65%,25%)">Hecho</span></td><td class="snippet">hace 2 h</td></tr>
+    <tr><td class="title-cell">App de recetas con la nevera <div class="snippet">Visión sobre foto de la nevera → recetas…</div></td><td><span class="fdot"><i style="background:hsl(206,57%,44%)"></i>Ideas</span></td><td><span class="chip" style="background:hsla(206,57%,44%,.12);color:hsl(206,64%,30%)">side-project</span></td><td><span class="chip" style="background:hsla(43,83%,57%,.18);color:hsl(40,98%,26%)">Idea</span></td><td class="snippet">ayer</td></tr>
+    <tr><td class="title-cell">Semana 27 — balance <div class="snippet">Cerrado el design system nuevo…</div></td><td><span class="fdot"><i style="background:hsl(351,44%,61%)"></i>Diario</span></td><td><span class="chip" style="background:hsla(351,44%,61%,.12);color:hsl(351,50%,38%)">semanal</span></td><td><span class="chip" style="background:hsla(206,57%,44%,.12);color:hsl(206,64%,30%)">En curso</span></td><td class="snippet">hace 3 días</td></tr>
+    <tr><td class="title-cell">Rebalanceo semestral <div class="snippet">Si RV supera el 70% del total…</div></td><td><span class="fdot"><i style="background:hsl(40,79%,47%)"></i>Inversión</span></td><td><span class="chip">cartera</span></td><td><span class="chip" style="background:hsla(148,48%,47%,.14);color:hsl(153,65%,25%)">Hecho</span></td><td class="snippet">hace 5 días</td></tr>
+  </table>
+</div>
+
+<div class="verdict">
+  <strong>Mi recomendación:</strong> aplicar la <strong>Opción A</strong> como mejora directa del tablero
+  (es lo que ves hoy, pero legible y con jerarquía) y añadir la <strong>Opción B «Boards»</strong> como
+  cuarto modo del selector (Lista · Boards · Canvas · Grafo) — es la que mejor casa con tus carpetas.
+  La C la dejaría para cuando el volumen de notas lo pida. Dime combinación y la implemento.
+</div>
+
+</body>
+</html>

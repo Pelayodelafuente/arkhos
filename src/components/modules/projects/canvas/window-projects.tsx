@@ -381,7 +381,7 @@ export function WindowProjects({ userId }: WindowProjectsProps) {
       <div
         className="flex items-center gap-[6px]"
         style={{
-          background: '#F5F0EA',
+          background: 'var(--bg-sand)',
           border: '0.5px solid var(--border-stone)',
           borderRadius: 7,
           padding: '6px 9px',

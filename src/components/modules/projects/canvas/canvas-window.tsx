@@ -50,7 +50,7 @@ export function CanvasWindow({
     <div
       className={`flex flex-col overflow-hidden ${className}`}
       style={{
-        background: 'rgba(255,252,248,0.97)',
+        background: 'color-mix(in srgb, var(--bg-card) 97%, transparent)',
         border: '0.5px solid var(--border-stone)',
         borderRadius: 14,
         boxShadow: '0 8px 32px rgba(0,0,0,0.09), 0 1px 4px rgba(0,0,0,0.05)',
@@ -62,8 +62,8 @@ export function CanvasWindow({
         className="flex items-center gap-2"
         style={{
           padding: '10px 12px 9px',
-          borderBottom: isMinimized ? 'none' : '0.5px solid #EDE8E0',
-          background: 'rgba(250,247,242,0.6)',
+          borderBottom: isMinimized ? 'none' : '0.5px solid var(--border-subtle)',
+          background: 'color-mix(in srgb, var(--bg-sand) 60%, transparent)',
           borderRadius: isMinimized ? 14 : '14px 14px 0 0',
           cursor: 'default',
           userSelect: 'none',

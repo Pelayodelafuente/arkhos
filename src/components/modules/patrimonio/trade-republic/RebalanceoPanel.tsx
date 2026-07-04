@@ -111,7 +111,7 @@ export function RebalanceoPanel() {
           className="flex items-center gap-2 rounded-lg border px-3 py-2 text-xs"
           style={{
             borderColor: "#e8a0a0",
-            backgroundColor: "#fff5f5",
+            backgroundColor: "var(--error-bg)",
             color: "#7a1a1a",
           }}
         >

@@ -205,7 +205,7 @@ export function MarketPulseCard({
               />
               <Tooltip
                 contentStyle={{
-                  background: "#ffffff",
+                  background: "var(--bg-card)",
                   border: "1px solid rgba(160, 120, 80, 0.35)",
                   borderRadius: "6px",
                   fontSize: "11px",
