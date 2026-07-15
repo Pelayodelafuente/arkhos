@@ -206,13 +206,7 @@ export function MercadosView() {
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
-      <div className="animate-fade-in-up relative z-10 flex items-center justify-between">
-        <div>
-          <h1 className="font-heading text-2xl text-foreground">Mercados</h1>
-          <p className="mt-1 text-sm text-text-tertiary">
-            Datos en tiempo real
-          </p>
-        </div>
+      <div className="animate-fade-in-up relative z-10 flex items-center justify-end">
         <div className="flex items-center gap-2">
           {/* Bell icon con AlertsFeed */}
           <div ref={bellRef} className="relative">

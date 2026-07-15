@@ -31,7 +31,7 @@ interface SubMetricProps {
 
 function SubMetric({ label, value, subtext, color }: SubMetricProps) {
   return (
-    <div className="px-2.5 py-4 sm:px-5">
+    <div className="px-2.5 py-3 sm:px-5">
       <p className="text-xs" style={{ color: "var(--text-muted)" }}>{label}</p>
       <p className="font-mono text-[13px] font-semibold mt-0.5 sm:text-xl" style={{ color }}>{value}</p>
       {subtext && (
@@ -45,7 +45,14 @@ function SubMetric({ label, value, subtext, color }: SubMetricProps) {
 // PatrimonioHero
 // ---------------------------------------------------------------------------
 
-export function PatrimonioHero() {
+interface PatrimonioHeroProps {
+  /** Toggle Vista rápida/detallada integrado en la cabecera del hero (evita la
+   *  fila y el hueco vertical que generaba encima de la card). */
+  viewMode?: "quick" | "detailed";
+  onViewModeChange?: (mode: "quick" | "detailed") => void;
+}
+
+export function PatrimonioHero({ viewMode, onViewModeChange }: PatrimonioHeroProps = {}) {
   // ── Trade Republic ──────────────────────────────────────────────────────
   const trOverview = usePatrimonioStore((s) => s.overview);
   const getKPISparklines = usePatrimonioStore((s) => s.getKPISparklines);
@@ -241,7 +248,7 @@ export function PatrimonioHero() {
       }}
     >
       {/* ── Fila superior: número grande + controles ── */}
-      <div className="px-5 pt-5 pb-4 flex items-start justify-between gap-4">
+      <div className="px-5 pt-4 pb-3.5 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <p
             className="text-xs uppercase tracking-wider font-medium"
@@ -251,9 +258,9 @@ export function PatrimonioHero() {
           </p>
 
           {/* Número grande + sparkline */}
-          <div className="flex items-end gap-4 mt-1">
+          <div className="flex items-end gap-4 mt-0.5">
             <p
-              className="font-heading text-5xl sm:text-6xl font-semibold tabular-nums"
+              className="font-heading text-4xl sm:text-5xl font-semibold tabular-nums"
               style={{ color: "var(--module-patrimonio)" }}
               aria-label={`Total patrimonio: ${formatEur(totalValue)}`}
             >
@@ -277,8 +284,33 @@ export function PatrimonioHero() {
           )}
         </div>
 
-        {/* Live badge + privacy toggle */}
+        {/* Vista rápida/detallada + Live badge + privacy toggle */}
         <div className="flex items-center gap-2 flex-shrink-0 pt-1">
+          {viewMode && onViewModeChange && (
+            <div
+              className="flex items-center gap-0.5 rounded-lg p-0.5"
+              style={{ backgroundColor: "var(--bg-surface)", border: "1px solid var(--border-stone)" }}
+              role="group"
+              aria-label="Modo de vista"
+            >
+              {(["quick", "detailed"] as const).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => onViewModeChange(mode)}
+                  className={`rounded-md px-2.5 py-1 text-xs transition-all duration-150 ${viewMode === mode ? "font-semibold" : "font-medium"}`}
+                  style={
+                    viewMode === mode
+                      ? { backgroundColor: "var(--module-patrimonio)", color: "#fff" }
+                      : { backgroundColor: "transparent", color: "var(--text-tertiary)" }
+                  }
+                  aria-pressed={viewMode === mode}
+                >
+                  {mode === "quick" ? "Rápida" : "Detallada"}
+                </button>
+              ))}
+            </div>
+          )}
           {isLoadingPrices ? (
             <span
               className="animate-pulse rounded-full px-3 py-1 text-xs"

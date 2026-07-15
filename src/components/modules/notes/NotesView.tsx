@@ -158,13 +158,7 @@ export function NotesView({ userId }: Props) {
       <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
         {/* Header */}
         <div className="px-6 pt-6 pb-0 animate-fade-in-up flex-shrink-0">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="font-heading text-2xl text-foreground">Notas</h1>
-              <p className="mt-1 text-sm text-text-tertiary">
-                Organiza tus ideas y conecta conocimiento
-              </p>
-            </div>
+          <div className="flex items-center justify-end mb-4">
             <div className="flex items-center gap-2">
               <div className="flex items-center rounded-lg bg-sand p-0.5">
                 <button

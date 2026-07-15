@@ -440,36 +440,9 @@ export function PatrimonioDashboard() {
   ];
 
   return (
-    <div className="space-y-7">
-      {/* ── CABECERA CON TOGGLE ─────────────────────────────────────────── */}
-      <div className="flex items-center justify-end">
-        <div
-          className="flex items-center gap-0.5 rounded-lg p-0.5"
-          style={{ backgroundColor: "var(--bg-surface)", border: "1px solid var(--border-stone)" }}
-          role="group"
-          aria-label="Modo de vista"
-        >
-          {(["quick", "detailed"] as const).map((mode) => (
-            <button
-              key={mode}
-              type="button"
-              onClick={() => setViewMode(mode)}
-              className={`rounded-md px-3 py-1 text-xs transition-all duration-150 ${viewMode === mode ? "font-semibold" : "font-medium"}`}
-              style={
-                viewMode === mode
-                  ? { backgroundColor: "var(--module-patrimonio)", color: "#fff" }
-                  : { backgroundColor: "transparent", color: "var(--text-tertiary)" }
-              }
-              aria-pressed={viewMode === mode}
-            >
-              {mode === "quick" ? "Vista rápida" : "Vista detallada"}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* ── HERO ────────────────────────────────────────────────────────── */}
-      <PatrimonioHero />
+    <div className="space-y-5">
+      {/* ── HERO (con toggle Vista rápida/detallada integrado) ──────────── */}
+      <PatrimonioHero viewMode={viewMode} onViewModeChange={setViewMode} />
 
       {/* ── ALERTAS ─────────────────────────────────────────────────────── */}
       <PatrimonioAlerts />

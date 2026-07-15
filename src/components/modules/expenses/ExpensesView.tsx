@@ -140,16 +140,8 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
 
   return (
     <div className="pb-24 lg:pb-8">
-      {/* Header */}
-      <div className="mb-6 animate-fade-in-up">
-        <h1 className="font-heading text-2xl text-foreground">Gastos</h1>
-        <p className="mt-1 text-sm text-text-tertiary">
-          Control de suscripciones y gastos recurrentes
-        </p>
-      </div>
-
       {/* Toolbar */}
-      <div className="mb-6 flex flex-wrap items-center gap-3 animate-fade-in-up" style={{ animationDelay: '50ms' }}>
+      <div className="mb-6 flex flex-wrap items-center gap-3 animate-fade-in-up">
         <CycleFilterToggle />
 
         {/* Search — collapsible */}
