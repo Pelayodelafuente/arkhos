@@ -6,7 +6,7 @@ import { z } from "zod/v4"
 import { Modal, Button, Input, Textarea } from "@/components/ui"
 import { useExpensesStore } from "@/stores/expenses-store"
 import type { SubscriptionWithCategory, BillingCycle } from "@/types/expenses"
-import type { SubscriptionService } from "@/data/subscriptionServices"
+import { findServiceById, type SubscriptionService } from "@/data/subscriptionServices"
 import { ServicesCombobox } from "./ServicesCombobox"
 import { CustomSelect } from "./CustomSelect"
 import type { CustomSelectOption } from "./CustomSelect"
@@ -102,6 +102,17 @@ export function SubscriptionModal({
     setErrors({})
     setConfirmDelete(false)
     setDismissedDuplicates(false)
+  }, [])
+
+  // Limpia el error de un campo en cuanto pasa a ser válido (validación
+  // on-change): el mensaje rojo no debe quedarse tras corregir el valor.
+  const clearError = useCallback((field: string) => {
+    setErrors((prev) => {
+      if (!prev[field]) return prev
+      const next = { ...prev }
+      delete next[field]
+      return next
+    })
   }, [])
 
   // ── Populate on edit ────────────────
@@ -275,6 +286,12 @@ export function SubscriptionModal({
     }),
   ]
 
+  // Logo de la marca autocompletada: cuando el servicio es conocido (icon =
+  // id de la marca) mostramos su logotipo oficial en el círculo de Logo, no
+  // solo el color.
+  const brandLogo = findServiceById(icon)
+  const BrandLogoIcon = brandLogo?.icon
+
   return (
     <Modal
       open={open}
@@ -314,28 +331,29 @@ export function SubscriptionModal({
         <Input
           label="Nombre"
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={(e) => {
+            setName(e.target.value)
+            if (e.target.value.trim()) clearError("name")
+          }}
           error={errors.name}
           placeholder="Nombre del servicio"
         />
 
-        {/* Color + Logo upload */}
+        {/* Color + Logo upload — ambos campos visibles siempre (crear y editar) */}
         <div className="flex items-end gap-4">
-          {/* Color — hidden when logo is present */}
-          {!iconUrl && (
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-text-secondary">Color</label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={color}
-                  onChange={(e) => setColor(e.target.value)}
-                  className="h-9 w-9 cursor-pointer rounded-md border border-border bg-card"
-                />
-                <span className="font-mono text-xs text-text-tertiary">{color}</span>
-              </div>
+          {/* Color */}
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-text-secondary">Color</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+                className="h-9 w-9 cursor-pointer rounded-md border border-border bg-card"
+              />
+              <span className="font-mono text-xs text-text-tertiary">{color}</span>
             </div>
-          )}
+          </div>
 
           {/* Logo upload circle */}
           <div className="flex flex-col gap-1">
@@ -344,12 +362,16 @@ export function SubscriptionModal({
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="relative h-12 w-12 rounded-full border-2 border-dashed border-border bg-card hover:border-accent hover:bg-sand transition-colors flex items-center justify-center overflow-hidden cursor-pointer"
+                className="relative h-12 w-12 rounded-full border-2 border-dashed border-border hover:border-accent transition-colors flex items-center justify-center overflow-hidden cursor-pointer"
+                style={brandLogo?.darkIcon && !iconUrl ? { background: brandLogo.color } : undefined}
                 title="Subir logo"
               >
                 {iconUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={iconUrl} alt="logo" className="h-full w-full object-contain p-1 rounded-full" />
+                ) : BrandLogoIcon ? (
+                  // Logo oficial de la marca autocompletada (Netflix, Spotify…)
+                  <BrandLogoIcon width={26} height={26} />
                 ) : (
                   <Upload size={14} strokeWidth={1.75} className="text-text-tertiary" />
                 )}
@@ -383,7 +405,10 @@ export function SubscriptionModal({
             step="0.01"
             min="0"
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            onChange={(e) => {
+              setAmount(e.target.value)
+              if (parseFloat(e.target.value) > 0) clearError("amount")
+            }}
             error={errors.amount}
             placeholder=""
           />

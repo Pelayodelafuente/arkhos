@@ -5,7 +5,7 @@ import { CalendarDays } from "lucide-react"
 import { motion, useSpring, useTransform, useMotionValue, useReducedMotion } from "framer-motion"
 import { useEffect } from "react"
 import { Card } from "@/components/ui"
-import { useExpensesStore, useExpenseSummary } from "@/stores/expenses-store"
+import { useExpensesStore, useCycleFilteredSubscriptions } from "@/stores/expenses-store"
 import { formatCurrency } from "@/lib/gastos-utils"
 
 function AnimatedCurrency({ value }: { value: number }) {
@@ -24,8 +24,11 @@ function AnimatedCurrency({ value }: { value: number }) {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function BudgetRing({ userId }: { userId: string }) {
-  const subscriptions = useExpensesStore((s) => s.subscriptions)
-  const summary = useExpenseSummary()
+  // Respeta el filtro de ciclo activo (Todo/Mes): así el panel es coherente con
+  // la lista y la tabla — al filtrar por Mes solo cuenta las suscripciones
+  // mensuales, sin arrastrar las anuales.
+  const subscriptions = useCycleFilteredSubscriptions()
+  const cycleFilter = useExpensesStore((s) => s.cycleFilter)
 
   const { annualTotal, monthlyContrib, annualContrib, quarterlyContrib, semiannualContrib } = useMemo(() => {
     const active = subscriptions.filter((s) => s.status === 'active' || s.status === 'trial')
@@ -45,8 +48,14 @@ export function BudgetRing({ userId }: { userId: string }) {
   const countMonthly = subscriptions.filter((s) => (s.status === 'active' || s.status === 'trial') && s.cycle === 'monthly').length
   const countAnnual = subscriptions.filter((s) => (s.status === 'active' || s.status === 'trial') && s.cycle === 'annual').length
   const countOther = subscriptions.filter((s) => (s.status === 'active' || s.status === 'trial') && (s.cycle === 'quarterly' || s.cycle === 'semiannual')).length
+  const countActive = countMonthly + countAnnual + countOther
 
-  if (summary.countActive === 0) {
+  // En la vista Anual la tarjeta KPI ya muestra el total anual: evitamos duplicarlo.
+  if (cycleFilter === 'annual') return null
+
+  const isFiltered = cycleFilter === 'monthly'
+
+  if (countActive === 0) {
     return (
       <Card padding="md">
         <div className="flex flex-col items-center gap-2 py-4 text-center">
@@ -64,7 +73,7 @@ export function BudgetRing({ userId }: { userId: string }) {
         <div className="flex items-center gap-2">
           <div className="h-3 w-0.5 rounded-full bg-[var(--module-gastos)]" />
           <span className="font-mono text-[9px] uppercase tracking-[0.08em] text-text-tertiary font-semibold">
-            Gasto anual real
+            {isFiltered ? 'Proyección anual · mensuales' : 'Proyección anual'}
           </span>
         </div>
 
@@ -74,7 +83,7 @@ export function BudgetRing({ userId }: { userId: string }) {
             <AnimatedCurrency value={annualTotal} />
           </p>
           <p className="text-[10px] text-text-tertiary mt-0.5 font-mono">
-            {summary.countActive} suscripciones activas
+            coste anualizado · {countActive} suscripción{countActive !== 1 ? 'es' : ''}
           </p>
         </div>
 

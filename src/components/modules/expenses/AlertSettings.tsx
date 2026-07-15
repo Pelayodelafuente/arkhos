@@ -76,7 +76,7 @@ export function AlertSettings({ open, onClose, userId }: AlertSettingsProps) {
 
         {/* Days before billing */}
         <Input
-          label="Avisar X dias antes del cobro"
+          label="Avisar X días antes del cobro"
           type="number"
           min={1}
           max={30}
@@ -87,7 +87,7 @@ export function AlertSettings({ open, onClose, userId }: AlertSettingsProps) {
 
         {/* Renewal alert days */}
         <Input
-          label="Avisar renovaciones con X dias de antelacion"
+          label="Avisar renovaciones con X días de antelación"
           type="number"
           min={7}
           max={90}
@@ -97,8 +97,8 @@ export function AlertSettings({ open, onClose, userId }: AlertSettingsProps) {
         />
 
         <p className="text-[11px] text-text-tertiary">
-          Las alertas de cobro se muestran {daysBefore} dia{parseInt(daysBefore, 10) !== 1 ? 's' : ''} antes.
-          Las renovaciones anuales se avisan con {renewalDays} dias de antelacion.
+          Las alertas de cobro se muestran {daysBefore} día{parseInt(daysBefore, 10) !== 1 ? 's' : ''} antes.
+          Las renovaciones anuales se avisan con {renewalDays} días de antelación.
         </p>
 
         {/* Actions */}

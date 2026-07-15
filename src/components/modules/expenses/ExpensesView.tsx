@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState, useCallback, useRef } from "react"
-import { motion, AnimatePresence } from "framer-motion"
 import { Plus, Settings, Search, Download, X, Bell } from "lucide-react"
 import { Button } from "@/components/ui"
 import { useExpensesStore } from "@/stores/expenses-store"
@@ -49,7 +48,6 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
   const setSearchQuery = useExpensesStore((s) => s.setSearchQuery)
   const isLoading = useExpensesStore((s) => s.isLoading)
   const subscriptions = useExpensesStore((s) => s.subscriptions)
-  const cycleFilter = useExpensesStore((s) => s.cycleFilter)
 
   const [localSearch, setLocalSearch] = useState("")
   const [searchExpanded, setSearchExpanded] = useState(false)
@@ -141,7 +139,7 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
   }, [subscriptions])
 
   return (
-    <div>
+    <div className="pb-24 lg:pb-8">
       {/* Header */}
       <div className="mb-6 animate-fade-in-up">
         <h1 className="font-heading text-2xl text-foreground">Gastos</h1>
@@ -237,52 +235,43 @@ export function ExpensesView({ userId }: ExpensesViewProps) {
         </Button>
       </div>
 
-      {/* Main content — 2-column dashboard */}
+      {/* Main content — 2-column dashboard.
+          El contenido NO se remonta al cambiar de filtro (Todo/Mes/Anual): así
+          se evita el flash en blanco y los números cuentan suavemente hasta su
+          nuevo valor en lugar de reiniciarse desde 0. */}
       {isLoading ? (
         <GastosLoading />
       ) : (
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={cycleFilter}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-          >
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
-              {/* Left column */}
-              <div className="space-y-6 min-w-0">
-                <div className="animate-fade-in-up" style={{ animationDelay: '100ms' }}>
-                  <KPICards />
-                </div>
-                <div className="animate-fade-in-up" style={{ animationDelay: '100ms' }}>
-                  <AlertBanner />
-                </div>
-                <div className="animate-fade-in-up" style={{ animationDelay: '200ms' }}>
-                  <ExpenseCalendar onNewWithDay={handleNewWithDay} onEdit={handleEdit} />
-                </div>
-                <div className="animate-fade-in-up" style={{ animationDelay: '300ms' }}>
-                  <SubscriptionList onEdit={handleEdit} onNew={handleNew} />
-                </div>
-              </div>
-
-              {/* Right column (sidebar) — sticky on desktop */}
-              <div className="space-y-4 lg:sticky lg:top-4 lg:self-start">
-                {cycleFilter !== 'annual' && (
-                  <div className="animate-fade-in-up" style={{ animationDelay: '130ms' }}>
-                    <BudgetRing userId={userId} />
-                  </div>
-                )}
-                <div className="animate-fade-in-up" style={{ animationDelay: '200ms' }}>
-                  <MiniDistributionChart />
-                </div>
-                <div className="animate-fade-in-up" style={{ animationDelay: '270ms' }}>
-                  <SpendingTrend />
-                </div>
-              </div>
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
+          {/* Left column */}
+          <div className="space-y-6 min-w-0">
+            <div className="animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+              <KPICards />
             </div>
-          </motion.div>
-        </AnimatePresence>
+            <div className="animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+              <AlertBanner />
+            </div>
+            <div className="animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+              <ExpenseCalendar onNewWithDay={handleNewWithDay} onEdit={handleEdit} />
+            </div>
+            <div className="animate-fade-in-up" style={{ animationDelay: '300ms' }}>
+              <SubscriptionList onEdit={handleEdit} onNew={handleNew} />
+            </div>
+          </div>
+
+          {/* Right column (sidebar) — sticky on desktop */}
+          <div className="space-y-4 lg:sticky lg:top-4 lg:self-start">
+            <div className="animate-fade-in-up" style={{ animationDelay: '130ms' }}>
+              <BudgetRing userId={userId} />
+            </div>
+            <div className="animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+              <MiniDistributionChart />
+            </div>
+            <div className="animate-fade-in-up" style={{ animationDelay: '270ms' }}>
+              <SpendingTrend />
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Modals */}

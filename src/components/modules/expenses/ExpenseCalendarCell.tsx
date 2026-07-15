@@ -202,7 +202,7 @@ export function ExpenseCalendarCell({
                 animate={{ opacity: 1, scale: 1, y: 0, boxShadow: '0 8px 32px rgba(26,23,20,0.12)' }}
                 exit={{ opacity: 0, scale: 0.96, y: 4 }}
                 transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                className="rounded-2xl border border-border bg-card overflow-hidden"
+                className="rounded-xl border border-border bg-card overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
               >
                 <ExpensePopupContent

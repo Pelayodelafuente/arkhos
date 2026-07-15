@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useEffect } from "react"
+import { useMemo, useEffect, useRef } from "react"
 import { Wallet, CalendarClock, FolderOpen, RotateCcw } from "lucide-react"
 import { motion, useSpring, useTransform, useMotionValue, useReducedMotion } from "framer-motion"
 import { useExpensesStore, useExpenseSummary, useCycleFilteredSubscriptions } from "@/stores/expenses-store"
@@ -13,14 +13,23 @@ const MONTH_NAMES = [
 ]
 
 function AnimatedNumber({ value, format }: { value: number; format?: (n: number) => string }) {
-  const motionValue = useMotionValue(0)
-  const spring = useSpring(motionValue, { stiffness: 100, damping: 30 })
-  const display = useTransform(spring, (v) => format ? format(v) : v.toFixed(2))
+  const shouldReduce = useReducedMotion()
+  // Inicializar en el valor real: sin count-up desde 0 al montar (ni al
+  // remontar por cambio de tema/pestaña). Solo anima cuando el dato cambia
+  // de verdad, y en ~600-700 ms en vez de los >3 s de antes.
+  const motionValue = useMotionValue(value)
+  const spring = useSpring(motionValue, { stiffness: 220, damping: 30, restDelta: 0.01 })
+  const display = useTransform(spring, (v) => (format ? format(v) : v.toFixed(2)))
+  const prev = useRef(value)
 
   useEffect(() => {
-    motionValue.set(value)
+    if (prev.current !== value) {
+      motionValue.set(value)
+      prev.current = value
+    }
   }, [value, motionValue])
 
+  if (shouldReduce) return <span>{format ? format(value) : value.toFixed(2)}</span>
   return <motion.span>{display}</motion.span>
 }
 
@@ -109,7 +118,6 @@ export function KPICards() {
           initial: { opacity: 0, y: 12, scale: 0.96 },
           animate: { opacity: 1, y: 0, scale: 1 },
           transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] as const, delay: index * 0.08 },
-          whileHover: { y: -2, boxShadow: '0 8px 32px rgba(26,23,20,0.10)' },
         }
 
   return (
@@ -117,11 +125,8 @@ export function KPICards() {
       {/* Card 1: Total */}
       <motion.div
         {...cardMotionProps(0)}
-        className="relative overflow-hidden rounded-2xl p-4 transition-all duration-200 hover:shadow-[var(--shadow-md)] hover:-translate-y-0.5"
-        style={{
-          ...glassStyle,
-          borderLeft: '4px solid var(--module-gastos)',
-        }}
+        className="relative overflow-hidden rounded-xl p-4"
+        style={glassStyle}
       >
         <div className="flex items-center gap-2 mb-2">
           <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--text-tertiary)] font-medium">
@@ -144,14 +149,11 @@ export function KPICards() {
       {/* Card 2: Next billing */}
       <motion.div
         {...cardMotionProps(1)}
-        className="relative overflow-hidden rounded-2xl p-4 transition-all duration-200 hover:shadow-[var(--shadow-md)] hover:-translate-y-0.5"
+        className="relative overflow-hidden rounded-xl p-4"
         style={{
           ...glassStyle,
-          borderLeft: nextBillingDays === 0
-            ? '4px solid var(--urgency-critical)'
-            : nextBillingDays !== null && nextBillingDays <= 3
-              ? '4px solid var(--urgency-warning)'
-              : '4px solid var(--module-gastos)',
+          // La urgencia se comunica solo con un tinte de fondo sutil, no con
+          // un borde de color de 4px.
           ...(nextBillingDays === 0 ? { background: 'var(--urgency-critical-bg)' } : {}),
           ...(nextBillingDays !== null && nextBillingDays > 0 && nextBillingDays <= 3 ? { background: 'var(--urgency-warning-bg)' } : {}),
         }}
@@ -204,11 +206,8 @@ export function KPICards() {
       {/* Card 3: Top category */}
       <motion.div
         {...cardMotionProps(2)}
-        className="relative overflow-hidden rounded-2xl p-4 transition-all duration-200 hover:shadow-[var(--shadow-md)] hover:-translate-y-0.5"
-        style={{
-          ...glassStyle,
-          borderLeft: '4px solid var(--module-patrimonio)',
-        }}
+        className="relative overflow-hidden rounded-xl p-4"
+        style={glassStyle}
       >
         <div className="flex items-center gap-2 mb-2">
           <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--text-tertiary)] font-medium">
@@ -242,11 +241,8 @@ export function KPICards() {
       {/* Card 4: Next renewal */}
       <motion.div
         {...cardMotionProps(3)}
-        className="relative overflow-hidden rounded-2xl p-4 transition-all duration-200 hover:shadow-[var(--shadow-md)] hover:-translate-y-0.5"
-        style={{
-          ...glassStyle,
-          borderLeft: '4px solid var(--module-mercados)',
-        }}
+        className="relative overflow-hidden rounded-xl p-4"
+        style={glassStyle}
       >
         <div className="flex items-center gap-2 mb-2">
           <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--text-tertiary)] font-medium">
