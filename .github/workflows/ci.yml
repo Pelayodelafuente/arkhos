@@ -42,5 +42,13 @@ jobs:
       - name: Test
         run: pnpm exec vitest run
 
-      - name: Audit dependencies
-        run: pnpm audit --prod --audit-level high
+      # Auditoría de dependencias con OSV-Scanner (base de datos OSV.dev).
+      # Sustituye a `pnpm audit`, cuyo endpoint "quick audit" fue retirado por
+      # npm (responde 410). Escanea el lockfile y falla el build si encuentra
+      # vulnerabilidades conocidas (gate bloqueante). Para silenciar un aviso
+      # concreto (falso positivo o sin fix), añadir un `osv-scanner.toml`.
+      - name: Audit dependencies (OSV-Scanner)
+        uses: google/osv-scanner-action/osv-scanner-action@v2.3.8
+        with:
+          scan-args: |-
+            --lockfile=./pnpm-lock.yaml
