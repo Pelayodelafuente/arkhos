@@ -62,6 +62,7 @@ import { ProjectModal } from "./project-modal";
 import { ExportModal } from "./export-modal";
 import { ConfirmModal } from "./confirm-modal";
 import { EnrichedTaskItem } from "./enriched-task-item";
+import { TagChip } from "./tag-chip";
 import { ProjectLinks } from "./project-links";
 import { ProjectGitHubPanel } from "./project-github-panel";
 import KanbanView from "./kanban-view";
@@ -216,6 +217,7 @@ export function ProjectDetail({ projectId, userId, initialProject, initialTags }
   const clearActiveProject = useProjectsStore((s) => s.clearActiveProject);
   const duplicateProject = useProjectsStore((s) => s.duplicateProject);
   const editProject = useProjectsStore((s) => s.editProject);
+  const projectTags = useProjectsStore((s) => s.projectTags);
   const openModal = useUIStore((s) => s.openModal);
   const router = useRouter();
 
@@ -672,6 +674,16 @@ export function ProjectDetail({ projectId, userId, initialProject, initialTags }
                     </span>
                   </Tooltip>
                 )}
+              </div>
+            </>
+          )}
+          {projectTags.length > 0 && (
+            <>
+              <span className="text-border">·</span>
+              <div className="flex flex-wrap gap-1">
+                {projectTags.map((tag) => (
+                  <TagChip key={tag.id} tag={tag} size="sm" />
+                ))}
               </div>
             </>
           )}

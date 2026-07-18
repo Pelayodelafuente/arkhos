@@ -23,6 +23,7 @@ function healthColor(done: number, total: number): string {
 }
 import { useCanvasStore } from '@/stores/canvas-store';
 import { useProjectsStore } from '@/stores/projects-store';
+import { ProjectIcon } from '../project-icon';
 import type { ProjectListItem } from '@/types/projects';
 
 type FilterMode = 'active' | 'all' | 'archived';
@@ -42,7 +43,7 @@ function getStatusColor(status: string): string {
   return map[status] ?? 'var(--text-muted)';
 }
 
-function ProjectFolder({ logoUrl, isHovered, color }: { logoUrl: string | null; isHovered: boolean; color?: string }) {
+function ProjectFolder({ logoUrl, icon, isHovered, color }: { logoUrl: string | null; icon: string; isHovered: boolean; color?: string }) {
   if (logoUrl) {
     return (
       /* eslint-disable-next-line @next/next/no-img-element */
@@ -63,29 +64,19 @@ function ProjectFolder({ logoUrl, isHovered, color }: { logoUrl: string | null; 
   const folderColor = color ?? 'var(--accent-terracotta)';
   return (
     <div
+      className="flex items-center justify-center"
       style={{
         width: 40,
         height: 32,
         borderRadius: 5,
-        background: folderColor,
-        position: 'relative',
+        background: `color-mix(in srgb, ${folderColor} 14%, transparent)`,
+        border: `1px solid color-mix(in srgb, ${folderColor} 30%, transparent)`,
+        color: folderColor,
         transition: 'transform 0.2s ease',
         transform: isHovered ? 'translateX(-2px) rotate(-5deg)' : undefined,
       }}
     >
-      <span
-        style={{
-          content: '""',
-          position: 'absolute',
-          top: -6,
-          left: 3,
-          width: 13,
-          height: 7,
-          background: folderColor,
-          borderRadius: '3px 3px 0 0',
-          opacity: 0.72,
-        }}
-      />
+      <ProjectIcon icon={icon} size={17} />
     </div>
   );
 }
@@ -139,7 +130,7 @@ function ProjectCard({
       {/* Top row: folder + name */}
       <div className="flex items-center gap-[6px] w-full min-w-0">
         <div style={{ opacity: isActive ? 1 : 0.6, flexShrink: 0 }}>
-          <ProjectFolder logoUrl={project.logo_url} isHovered={hovered} color={statusColor} />
+          <ProjectFolder logoUrl={project.logo_url} icon={project.icon} isHovered={hovered} color={statusColor} />
         </div>
         <div className="flex flex-col min-w-0 flex-1">
           <span

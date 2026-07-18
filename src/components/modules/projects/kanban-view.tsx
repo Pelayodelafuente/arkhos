@@ -160,6 +160,7 @@ function SortableCard({
     : {
         transform: CSS.Transform.toString(transform),
         transition,
+        touchAction: 'none' as const,
       };
 
   const priorityConfig = TASK_PRIORITY_CONFIG[task.priority];
@@ -167,25 +168,26 @@ function SortableCard({
   const totalSubtasks = task.subtasks.length;
 
   return (
+    // Toda la card es arrastrable (listeners en el contenedor) y no seleccionable;
+    // un click sin movimiento (< distancia de activación) abre la tarea.
     <div
       ref={isDragOverlay ? undefined : setNodeRef}
       style={style}
       onClick={() => !isDragOverlay && onOpenTask(task)}
-      className={`bg-card rounded-xl p-3 border border-[--border-stone] transition-all duration-150 cursor-pointer ${
+      {...(isDragOverlay ? {} : listeners)}
+      {...(isDragOverlay ? {} : attributes)}
+      className={`bg-card rounded-xl p-3 border border-[--border-stone] transition-all duration-150 cursor-grab active:cursor-grabbing select-none ${
         isBeingDragged ? 'opacity-0' : ''
       } ${isDragOverlay ? 'rotate-2 scale-105 shadow-lg' : ''}`}
     >
-      {/* Top row: drag handle + task name */}
+      {/* Top row: drag handle (decorativo) + task name */}
       <div className="flex items-start gap-2">
-        <button
-          {...(isDragOverlay ? {} : listeners)}
-          {...(isDragOverlay ? {} : attributes)}
-          onClick={(e) => e.stopPropagation()}
-          className="mt-0.5 cursor-grab active:cursor-grabbing text-[--text-tertiary] hover:text-[--text-secondary] transition-all duration-150 shrink-0"
-          aria-label="Arrastrar tarea"
+        <span
+          className="mt-0.5 text-[--text-tertiary] shrink-0"
+          aria-hidden="true"
         >
           <GripVertical size={14} />
-        </button>
+        </span>
         <span className="text-sm font-medium text-[--text-primary] leading-snug flex-1">
           {task.text}
         </span>

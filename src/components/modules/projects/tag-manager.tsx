@@ -7,6 +7,7 @@ import { TagChip } from './tag-chip';
 import { COLOR_PRESETS } from '@/lib/constants/colors';
 
 const PRESET_COLORS = COLOR_PRESETS.map((p) => p.value);
+const DEFAULT_TAG_COLOR = PRESET_COLORS[0];
 
 interface TagManagerProps {
   projectId: string;
@@ -19,7 +20,7 @@ export function TagManager({ projectId }: TagManagerProps) {
   const removeTag = useProjectsStore((s) => s.removeTag);
 
   const [newName, setNewName] = useState('');
-  const [newColor, setNewColor] = useState('var(--accent-terracotta)');
+  const [newColor, setNewColor] = useState(DEFAULT_TAG_COLOR);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [editColor, setEditColor] = useState('');
@@ -29,7 +30,7 @@ export function TagManager({ projectId }: TagManagerProps) {
     if (!newName.trim()) return;
     addTag(projectId, newName.trim(), newColor);
     setNewName('');
-    setNewColor('var(--accent-terracotta)');
+    setNewColor(DEFAULT_TAG_COLOR);
   }
 
   function startEdit(tag: { id: string; name: string; color: string }) {
@@ -66,39 +67,54 @@ export function TagManager({ projectId }: TagManagerProps) {
           {projectTags.map((tag) => (
             <div key={tag.id} className="flex items-center gap-2">
               {editingId === tag.id ? (
-                <>
-                  <input
-                    type="color"
-                    value={editColor}
-                    onChange={(e) => setEditColor(e.target.value)}
-                    className="h-6 w-6 cursor-pointer rounded border-none bg-transparent"
-                  />
-                  <input
-                    type="text"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') saveEdit();
-                      if (e.key === 'Escape') setEditingId(null);
-                    }}
-                    className="flex-1 rounded-md border border-accent bg-card px-2 py-0.5 text-xs text-foreground focus:outline-none"
-                    autoFocus
-                  />
-                  <button
-                    type="button"
-                    onClick={saveEdit}
-                    className="text-accent transition-colors hover:text-foreground"
-                  >
-                    <Check size={14} strokeWidth={2} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setEditingId(null)}
-                    className="text-text-tertiary transition-colors hover:text-foreground"
-                  >
-                    <X size={14} strokeWidth={2} />
-                  </button>
-                </>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="h-4 w-4 shrink-0 rounded-full"
+                      style={{ backgroundColor: editColor }}
+                    />
+                    <input
+                      type="text"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') saveEdit();
+                        if (e.key === 'Escape') setEditingId(null);
+                      }}
+                      className="flex-1 rounded-md border border-accent bg-card px-2 py-0.5 text-xs text-foreground focus:outline-none"
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      onClick={saveEdit}
+                      className="text-accent transition-colors hover:text-foreground"
+                    >
+                      <Check size={14} strokeWidth={2} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditingId(null)}
+                      className="text-text-tertiary transition-colors hover:text-foreground"
+                    >
+                      <X size={14} strokeWidth={2} />
+                    </button>
+                  </div>
+                  {/* Color presets (edición) */}
+                  <div className="mt-1.5 flex items-center gap-1 pl-6">
+                    {PRESET_COLORS.map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        onClick={() => setEditColor(color)}
+                        className={`h-4 w-4 rounded-full transition-transform hover:scale-125 ${
+                          editColor === color ? 'ring-2 ring-offset-1 ring-accent' : ''
+                        }`}
+                        style={{ backgroundColor: color }}
+                        aria-label={`Color ${color}`}
+                      />
+                    ))}
+                  </div>
+                </div>
               ) : (
                 <>
                   <TagChip tag={tag} size="md" />
@@ -132,15 +148,12 @@ export function TagManager({ projectId }: TagManagerProps) {
 
       {/* Create new tag */}
       <div className="flex items-center gap-2">
-        {/* Color picker */}
-        <div className="relative">
-          <input
-            type="color"
-            value={newColor}
-            onChange={(e) => setNewColor(e.target.value)}
-            className="h-7 w-7 cursor-pointer rounded border border-border bg-transparent"
-          />
-        </div>
+        {/* Color actual (preview del swatch elegido) */}
+        <span
+          className="h-4 w-4 shrink-0 rounded-full"
+          style={{ backgroundColor: newColor }}
+          aria-hidden="true"
+        />
         <input
           type="text"
           value={newName}

@@ -10,6 +10,7 @@ import {
   Trash2,
   RefreshCw,
   Clock,
+  Calendar,
   Loader2,
   X,
   type LucideIcon,
@@ -81,7 +82,19 @@ const ACTION_MAP: Record<string, ActionConfig> = {
     icon: RefreshCw,
     color: "text-amber-600",
     dotColor: "bg-amber-500",
-    label: () => "Estado cambiado",
+    label: (name) => (name ? `Estado de «${name}» cambiado` : "Estado cambiado"),
+  },
+  priority_changed: {
+    icon: RefreshCw,
+    color: "text-amber-600",
+    dotColor: "bg-amber-500",
+    label: (name) => (name ? `Prioridad de «${name}» cambiada` : "Prioridad cambiada"),
+  },
+  date_changed: {
+    icon: Calendar,
+    color: "text-blue-600",
+    dotColor: "bg-blue-500",
+    label: (name) => (name ? `Fecha de «${name}» actualizada` : "Fecha actualizada"),
   },
   time_tracked: {
     icon: Clock,

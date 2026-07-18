@@ -67,9 +67,10 @@ function formatTimeAgo(dateStr: string): string {
 }
 
 function formatDueDate(dateStr: string): { text: string; isOverdue: boolean } {
+  const due = new Date(dateStr);
+  if (Number.isNaN(due.getTime())) return { text: "—", isOverdue: false };
   const now = new Date();
   now.setHours(0, 0, 0, 0);
-  const due = new Date(dateStr);
   due.setHours(0, 0, 0, 0);
   const diffMs = due.getTime() - now.getTime();
   const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));

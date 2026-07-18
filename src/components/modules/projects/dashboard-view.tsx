@@ -10,10 +10,23 @@ function getAllTasks(phases: ProjectPhase[]) {
   return phases.flatMap((p) => p.tasks);
 }
 
+// Fecha ISO válida (YYYY-MM-DD, año 1900-2200). Blinda el dashboard frente a
+// datos corruptos heredados (ej. "0202-07-20") que reventaban los cálculos.
+function isValidTaskDate(dateStr: string | null | undefined): dateStr is string {
+  if (!dateStr) return false;
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(dateStr);
+  if (!m) return false;
+  const year = Number(m[1]);
+  if (year < 1900 || year > 2200) return false;
+  return !Number.isNaN(new Date(dateStr).getTime());
+}
+
 function formatRelativeDate(dateStr: string): { text: string; isPast: boolean } {
+  const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) return { text: '—', isPast: false };
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const date = new Date(dateStr);
   date.setHours(0, 0, 0, 0);
 
   const diffMs = date.getTime() - today.getTime();
@@ -35,7 +48,7 @@ function computeHealthScore(phases: ProjectPhase[]): number {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const tasksWithDueDate = tasks.filter((t) => t.due_date);
+  const tasksWithDueDate = tasks.filter((t) => isValidTaskDate(t.due_date));
   const notOverdueTasks = tasksWithDueDate.filter((t) => {
     const due = new Date(t.due_date!);
     due.setHours(0, 0, 0, 0);
@@ -106,7 +119,7 @@ export default function DashboardView({ phases }: DashboardViewProps) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const tasksWithDates = tasks
-    .filter((t) => t.due_date && !t.done)
+    .filter((t) => isValidTaskDate(t.due_date) && !t.done)
     .sort((a, b) => new Date(a.due_date!).getTime() - new Date(b.due_date!).getTime())
     .slice(0, 5);
 

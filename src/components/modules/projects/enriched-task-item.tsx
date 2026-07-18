@@ -56,6 +56,16 @@ function isOverdue(date: string): boolean {
   return new Date(date) < new Date(new Date().toDateString());
 }
 
+// Solo persistir fechas completas y válidas (evita corromper el año con
+// estados intermedios del input date, ej. "0202-07-20").
+function isValidDateValue(val: string): boolean {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(val);
+  if (!m) return false;
+  const year = Number(m[1]);
+  if (year < 1900 || year > 2200) return false;
+  return !Number.isNaN(new Date(val).getTime());
+}
+
 function timeAgo(dateStr: string): string {
   const now = Date.now();
   const then = new Date(dateStr).getTime();
@@ -158,6 +168,33 @@ export function EnrichedTaskItem({
   const [newSubtaskText, setNewSubtaskText] = useState("");
   const [newCommentText, setNewCommentText] = useState("");
   const descTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  // Fechas: estado local para teclear sin persistir estados intermedios.
+  const [startDate, setStartDate] = useState(liveTask.start_date ?? "");
+  const [dueDate, setDueDate] = useState(liveTask.due_date ?? "");
+  const [prevDateSync, setPrevDateSync] = useState({
+    id: liveTask.id,
+    start: liveTask.start_date,
+    due: liveTask.due_date,
+  });
+  if (
+    prevDateSync.id !== liveTask.id ||
+    prevDateSync.start !== liveTask.start_date ||
+    prevDateSync.due !== liveTask.due_date
+  ) {
+    setPrevDateSync({ id: liveTask.id, start: liveTask.start_date, due: liveTask.due_date });
+    setStartDate(liveTask.start_date ?? "");
+    setDueDate(liveTask.due_date ?? "");
+  }
+
+  function commitDate(field: "start_date" | "due_date", val: string) {
+    // null si se vacía; se ignora un valor incompleto/ inválido.
+    const value: string | null | undefined =
+      val === "" ? null : isValidDateValue(val) ? val : undefined;
+    if (value === undefined) return;
+    if (field === "start_date") editTask(task.id, { start_date: value });
+    else editTask(task.id, { due_date: value });
+  }
 
   const subtasksDone = liveTask.subtasks.filter((s) => s.completed).length;
   const hasSubtasks = liveTask.subtasks.length > 0;
@@ -464,21 +501,25 @@ export function EnrichedTaskItem({
                   <span className="text-[10px] font-medium uppercase tracking-wide text-text-tertiary">Inicio</span>
                   <input
                     type="date"
-                    value={liveTask.start_date || ""}
-                    onChange={(e) => editTask(task.id, { start_date: e.target.value || null })}
+                    min="1900-01-01"
+                    max="2200-12-31"
+                    value={startDate}
+                    onChange={(e) => { setStartDate(e.target.value); commitDate("start_date", e.target.value); }}
                     className="rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground focus:border-accent focus:outline-none"
                   />
                 </label>
                 <label className="flex flex-col gap-0.5">
                   <span className={`text-[10px] font-medium uppercase tracking-wide ${
-                    liveTask.due_date && isOverdue(liveTask.due_date) && !liveTask.done ? "text-red-500" : "text-text-tertiary"
+                    dueDate && isValidDateValue(dueDate) && isOverdue(dueDate) && !liveTask.done ? "text-red-500" : "text-text-tertiary"
                   }`}>Limite</span>
                   <input
                     type="date"
-                    value={liveTask.due_date || ""}
-                    onChange={(e) => editTask(task.id, { due_date: e.target.value || null })}
+                    min="1900-01-01"
+                    max="2200-12-31"
+                    value={dueDate}
+                    onChange={(e) => { setDueDate(e.target.value); commitDate("due_date", e.target.value); }}
                     className={`rounded-md border bg-background px-2 py-1 text-xs focus:border-accent focus:outline-none ${
-                      liveTask.due_date && isOverdue(liveTask.due_date) && !liveTask.done
+                      dueDate && isValidDateValue(dueDate) && isOverdue(dueDate) && !liveTask.done
                         ? "border-red-300 text-red-500"
                         : "border-border text-foreground"
                     }`}

@@ -136,6 +136,28 @@ function toast(message: string, variant: 'success' | 'error') {
   useUIStore.getState().addToast(message, variant);
 }
 
+// ─── Activity logging helper ──────────
+// Registra el cambio más relevante de una edición de tarea. Ignora ediciones de
+// contenido/descripción/texto/subtareas/tags para no saturar el feed.
+function logTaskEdit(
+  client: ReturnType<typeof createClient>,
+  userId: string,
+  projectId: string,
+  taskName: string | undefined,
+  input: UpdateTaskInput
+): void {
+  const has = (k: keyof UpdateTaskInput) => Object.prototype.hasOwnProperty.call(input, k);
+  const detail = `project:${projectId}`;
+  if (has('done') || has('status')) {
+    const done = input.done === true || input.status === 'done';
+    logActivity(client, userId, 'proyectos', done ? 'task_completed' : 'status_changed', taskName, detail);
+  } else if (has('priority')) {
+    logActivity(client, userId, 'proyectos', 'priority_changed', taskName, detail);
+  } else if (has('due_date') || has('start_date')) {
+    logActivity(client, userId, 'proyectos', 'date_changed', taskName, detail);
+  }
+}
+
 // ─── Store ────────────────────────────
 
 export const useProjectsStore = create<ProjectsStore>((set, get) => ({
@@ -264,15 +286,50 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
   // ── Phases ──────────────────────────
 
   addPhase: async (input) => {
+    const active = get().activeProject;
+    const isActive = !!active && active.id === input.project_id;
+
+    // Optimistic insert con id temporal (aparición instantánea, igual que el
+    // toggle de tarea). Se reconcilia con la fila real o se revierte en error.
+    const tempId = `temp-${crypto.randomUUID()}`;
+    const optimisticPhase: ProjectPhase = {
+      id: tempId,
+      project_id: input.project_id,
+      name: input.name,
+      status: input.status ?? 'pending',
+      notes: input.notes ?? '',
+      start_date: null,
+      end_date: null,
+      color: '',
+      sort_order: input.sort_order ?? (active?.phases.length ?? 0),
+      created_at: new Date().toISOString(),
+      tasks: [],
+    };
+
+    if (isActive && active) {
+      set({ activeProject: { ...active, phases: [...active.phases, optimisticPhase] } });
+    }
+
     try {
       const client = createClient();
       const phase = await createPhaseApi(client, input);
-      const active = get().activeProject;
-      if (active && active.id === input.project_id) {
-        set({ activeProject: { ...active, phases: [...active.phases, phase] } });
+      const current = get().activeProject;
+      if (current && current.id === input.project_id) {
+        set({
+          activeProject: {
+            ...current,
+            phases: current.phases.map((p) => (p.id === tempId ? phase : p)),
+          },
+        });
+        logActivity(client, current.user_id, 'proyectos', 'phase_created', phase.name, `project:${current.id}`);
       }
       toast('Fase creada', 'success');
     } catch (e) {
+      // Rollback: quita la fase optimista
+      const current = get().activeProject;
+      if (current && current.id === input.project_id) {
+        set({ activeProject: { ...current, phases: current.phases.filter((p) => p.id !== tempId) } });
+      }
       const msg = e instanceof Error ? e.message : 'Error al crear fase';
       toast(msg, 'error');
     }
@@ -296,6 +353,21 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
     try {
       const client = createClient();
       await updatePhaseApi(client, phaseId, input);
+      // Registra cambios de estado de fase en el feed
+      if (input.status) {
+        const prev = prevPhases.find((p) => p.id === phaseId);
+        if (prev && prev.status !== input.status) {
+          const phaseName = prev.name;
+          logActivity(
+            client,
+            active.user_id,
+            'proyectos',
+            input.status === 'done' ? 'phase_completed' : 'status_changed',
+            phaseName,
+            `project:${active.id}`
+          );
+        }
+      }
     } catch (e) {
       set({ activeProject: { ...active, phases: prevPhases } });
       const msg = e instanceof Error ? e.message : 'Error al actualizar fase';
@@ -382,8 +454,14 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
         const orig = prevPhases.find((p) => p.id === phase.id);
         if (orig && orig.status !== phase.status) {
           await updatePhaseApi(client, phase.id, { status: phase.status });
+          if (phase.status === 'done') {
+            logActivity(client, active.user_id, 'proyectos', 'phase_completed', phase.name, `project:${active.id}`);
+          }
         }
       }
+      // Registra el cambio de estado/prioridad/fecha en el feed de actividad
+      const taskName = prevPhases.flatMap((p) => p.tasks).find((t) => t.id === taskId)?.text;
+      logTaskEdit(client, active.user_id, active.id, taskName, input);
     } catch (e) {
       set({ activeProject: { ...active, phases: prevPhases } });
       const msg = e instanceof Error ? e.message : 'Error al actualizar tarea';
@@ -513,10 +591,15 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
           }
         }
       }
-      if (newStatus === 'done') {
-        const taskName = prevPhases.flatMap((p) => p.tasks).find((t) => t.id === taskId)?.text;
-        logActivity(client, active.user_id, 'proyectos', 'task_completed', taskName, `project:${active.id}`);
-      }
+      const taskName = prevPhases.flatMap((p) => p.tasks).find((t) => t.id === taskId)?.text;
+      logActivity(
+        client,
+        active.user_id,
+        'proyectos',
+        newStatus === 'done' ? 'task_completed' : 'status_changed',
+        taskName,
+        `project:${active.id}`
+      );
     } catch (e) {
       set({ activeProject: { ...active, phases: prevPhases } });
       const msg = e instanceof Error ? e.message : 'Error al cambiar estado';

@@ -30,5 +30,6 @@ export function toggleTheme(): ArkhosTheme {
 }
 
 // Script inline para el <head>: aplica el tema guardado antes del primer paint.
-// Sin preferencia guardada, respeta prefers-color-scheme del sistema.
-export const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem("${THEME_STORAGE_KEY}");if(!t){t=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}document.documentElement.dataset.theme=t}catch(e){document.documentElement.dataset.theme="light"}})();`;
+// Sin preferencia guardada, el por defecto es SIEMPRE oscuro (se ignora
+// prefers-color-scheme). Solo se usa claro si el usuario lo eligió a propósito.
+export const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem("${THEME_STORAGE_KEY}");if(t!=="light"){t="dark"}document.documentElement.dataset.theme=t}catch(e){document.documentElement.dataset.theme="dark"}})();`;
