@@ -135,26 +135,6 @@ export function CapitalVsReturnChart({ height = 300 }: CapitalVsReturnChartProps
     : allSnapshots
   ).filter((s) => s.total_value > 0);
 
-  // Deduplicate to one tick per calendar month (same pattern as EvolutionChart)
-  // Include today's date when it falls in a new month to avoid visual gap at chart end
-  const uniqueMonthTicks = useMemo(() => {
-    const seen = new Set<string>();
-    const dates = snapshots.map((s) => s.snapshot_date);
-    if (currentTRValue > 0) {
-      const today = new Date().toISOString().substring(0, 10);
-      const lastDate = snapshots[snapshots.length - 1]?.snapshot_date ?? "";
-      if (today.substring(0, 7) !== lastDate.substring(0, 7)) {
-        dates.push(today);
-      }
-    }
-    return dates.filter((date) => {
-      const key = date.substring(0, 7);
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-  }, [snapshots, currentTRValue]);
-
   const data: StackedPoint[] = useMemo(() => {
     const currentMonth = new Date().toISOString().substring(0, 7);
 
@@ -172,22 +152,47 @@ export function CapitalVsReturnChart({ height = 300 }: CapitalVsReturnChartProps
     });
     const base = Array.from(monthMap.values());
 
+    // Capital invertido ACTUAL = total_invested del snapshot más reciente (incl.
+    // mes en curso). No el del último punto MENSUAL, que estaría rezagado y
+    // dispararía la rentabilidad del punto "hoy".
+    const latestCapital = snapshots.reduce<{ date: string; inv: number }>(
+      (acc, s) =>
+        s.snapshot_date > acc.date ? { date: s.snapshot_date, inv: s.total_invested } : acc,
+      { date: "", inv: 0 },
+    ).inv;
+
     // Append live "today" point if available
     if (currentTRValue > 0) {
       const today = new Date().toISOString().substring(0, 10);
       const last = base[base.length - 1];
       if (!last || last.date !== today) {
-        const lastCapital = last?.capital ?? 0;
+        const currentCapital = latestCapital > 0 ? latestCapital : last?.capital ?? 0;
         base.push({
           date: today,
-          capital: lastCapital,
-          rentabilidad: currentTRValue - lastCapital,
+          capital: currentCapital,
+          rentabilidad: currentTRValue - currentCapital,
         });
       }
     }
 
     return base;
   }, [snapshots, currentTRValue]);
+
+  // Ticks del eje X derivados del `data` FINAL (un punto por mes + hoy) para que
+  // cada tick coincida con una categoría real y no se pierdan meses con varios
+  // snapshots (mismo fix que EvolutionChart).
+  const monthTicks = useMemo(() => {
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const p of data) {
+      const key = p.date.substring(0, 7);
+      if (!seen.has(key)) {
+        seen.add(key);
+        out.push(p.date);
+      }
+    }
+    return out;
+  }, [data]);
 
   if (data.length === 0) {
     return (
@@ -240,7 +245,7 @@ export function CapitalVsReturnChart({ height = 300 }: CapitalVsReturnChartProps
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
           <XAxis
             dataKey="date"
-            ticks={uniqueMonthTicks}
+            ticks={monthTicks}
             tickFormatter={formatMonthYear}
             tick={{
               fontSize: 11,

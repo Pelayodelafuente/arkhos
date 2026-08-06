@@ -225,26 +225,6 @@ export function EvolutionChart({ height = 300, showBenchmark = false, showTotal:
   const currentTRValue = getTRInvestmentValue();
   const currentTRTotal = getTRCurrentValue(); // includes cash
 
-  // Deduplicate X-axis ticks to one per calendar month (BUG-06)
-  // Include today's date when it falls in a new month to avoid visual gap at chart end
-  const uniqueMonthTicks = useMemo(() => {
-    const seen = new Set<string>();
-    const dates = snapshots.map((s) => s.snapshot_date);
-    if (currentTRValue > 0) {
-      const today = new Date().toISOString().substring(0, 10);
-      const lastDate = snapshots[snapshots.length - 1]?.snapshot_date ?? "";
-      if (today.substring(0, 7) !== lastDate.substring(0, 7)) {
-        dates.push(today);
-      }
-    }
-    return dates.filter((date) => {
-      const key = date.substring(0, 7);
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-  }, [snapshots, currentTRValue]);
-
   const data: EvolutionPointExtended[] = useMemo(() => {
     const cutoff = getCutoffDate(period);
     const currentMonth = new Date().toISOString().substring(0, 7);
@@ -268,16 +248,26 @@ export function EvolutionChart({ height = 300, showBenchmark = false, showTotal:
       });
     const base = Array.from(monthMap.values());
 
+    // Capital invertido ACTUAL = total_invested del snapshot más reciente
+    // (incluido el del mes en curso, base transaccional canónica). No se usa el
+    // invertido del último punto MENSUAL porque estaría rezagado (p.ej. el de
+    // julio) y dispararía la rentabilidad del punto "hoy" (21% en vez de 11%).
+    const latestInvested = snapshots.reduce<{ date: string; inv: number }>(
+      (acc, s) =>
+        s.snapshot_date > acc.date ? { date: s.snapshot_date, inv: s.total_invested } : acc,
+      { date: "", inv: 0 },
+    ).inv;
+
     // Append "today" point if we have a live price
     if (currentTRValue > 0) {
       const today = new Date().toISOString().substring(0, 10);
       const lastSnapshot = base[base.length - 1];
-      const lastInvested = lastSnapshot?.invested ?? 0;
+      const currentInvested = latestInvested > 0 ? latestInvested : lastSnapshot?.invested ?? 0;
       base.push({
         date: today,
         value: currentTRValue,
-        invested: lastInvested,
-        pl: currentTRValue - lastInvested,
+        invested: currentInvested,
+        pl: currentTRValue - currentInvested,
         totalValue: currentTRTotal,
         isToday: true,
       });
@@ -310,6 +300,24 @@ export function EvolutionChart({ height = 300, showBenchmark = false, showTotal:
       return acc;
     }, []);
   }, [snapshots, period, currentTRValue, currentTRTotal, showBenchmark]);
+
+  // Ticks del eje X derivados del `data` FINAL (ya es un punto por mes + hoy),
+  // así cada tick coincide exactamente con una categoría existente y Recharts lo
+  // dibuja. Antes se calculaban desde los snapshots crudos cogiendo el PRIMER día
+  // del mes, que no casaba con el ÚLTIMO snapshot del mes guardado en `data` →
+  // los meses con varios snapshots (may/jun/jul) desaparecían del eje.
+  const monthTicks = useMemo(() => {
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const p of data) {
+      const key = p.date.substring(0, 7);
+      if (!seen.has(key)) {
+        seen.add(key);
+        out.push(p.date);
+      }
+    }
+    return out;
+  }, [data]);
 
   if (data.length === 0) {
     return (
@@ -409,7 +417,7 @@ export function EvolutionChart({ height = 300, showBenchmark = false, showTotal:
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
           <XAxis
             dataKey="date"
-            ticks={uniqueMonthTicks}
+            ticks={monthTicks}
             tickFormatter={formatMonthYear}
             tick={{ fontSize: 11, fill: "var(--text-tertiary)", fontFamily: "var(--font-mono)" }}
             axisLine={false}
