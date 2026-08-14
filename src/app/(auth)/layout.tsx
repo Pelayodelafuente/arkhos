@@ -86,7 +86,7 @@ export default function AuthLayout({
           className="mt-8 text-center text-[11px]"
           style={{ color: "var(--text-faint)" }}
         >
-          Built by Pelayo de la Fuente
+          Hecho por Pelayo de la Fuente
         </p>
       </div>
     </div>

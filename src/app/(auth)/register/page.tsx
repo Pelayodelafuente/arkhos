@@ -5,6 +5,7 @@ import Link from "next/link";
 import { register, type AuthState } from "../actions";
 import { AuthInput } from "@/components/auth/AuthInput";
 import { AuthButton } from "@/components/auth/AuthButton";
+import { AuthError } from "@/components/auth/AuthError";
 import { PasswordStrength } from "@/components/auth/PasswordStrength";
 import {
   User,
@@ -204,6 +205,7 @@ export default function RegisterPage() {
                 label="Nombre completo"
                 icon={User}
                 autoComplete="name"
+                autoFocus
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
@@ -221,7 +223,7 @@ export default function RegisterPage() {
               />
             </div>
 
-            {error && <p className="mt-3 text-[13px] text-red-400">{error}</p>}
+            {error && <AuthError message={error} className="mt-3" />}
 
             <div className="mt-6">
               <AuthButton type="button" onClick={nextStep}>
@@ -322,7 +324,7 @@ export default function RegisterPage() {
               />
             </div>
 
-            {error && <p className="mt-3 text-[13px] text-red-400">{error}</p>}
+            {error && <AuthError message={error} className="mt-3" />}
 
             <div className="mt-6 flex gap-3">
               <AuthButton variant="ghost" type="button" onClick={prevStep}>
@@ -400,7 +402,7 @@ export default function RegisterPage() {
               })}
             </div>
 
-            {error && <p className="mt-3 text-[13px] text-red-400">{error}</p>}
+            {error && <AuthError message={error} className="mt-3" />}
 
             <div className="mt-6 flex gap-3">
               <AuthButton variant="ghost" type="button" onClick={prevStep}>

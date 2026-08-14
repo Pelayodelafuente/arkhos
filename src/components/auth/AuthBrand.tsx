@@ -70,7 +70,7 @@ export function AuthBrand() {
           color: "rgba(250, 247, 242, 0.5)",
         }}
       >
-        Personal command center
+        Centro de mando personal
       </span>
     </div>
   );

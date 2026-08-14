@@ -1,28 +1,19 @@
 "use client";
 
-import { useState, useActionState, useMemo, useEffect } from "react";
+import { useState, useActionState, useEffect } from "react";
 import Link from "next/link";
 import { login, type AuthState } from "../actions";
 import { AuthInput } from "@/components/auth/AuthInput";
 import { AuthButton } from "@/components/auth/AuthButton";
-import { Mail, Lock, Eye, EyeOff, Sun, CloudSun, Moon, Clock } from "lucide-react";
-import { motion } from "framer-motion";
+import { AuthError } from "@/components/auth/AuthError";
+import { Mail, Lock, Eye, EyeOff, Clock } from "lucide-react";
 
 const initialState: AuthState = { error: null, success: null };
-
-function getGreeting(): { text: string; Icon: typeof Sun } {
-  const hour = new Date().getHours();
-  if (hour >= 6 && hour < 13) return { text: "Buenos días", Icon: Sun };
-  if (hour >= 13 && hour < 20) return { text: "Buenas tardes", Icon: CloudSun };
-  return { text: "Buenas noches", Icon: Moon };
-}
 
 export default function LoginPage() {
   const [state, formAction, pending] = useActionState(login, initialState);
   const [showPassword, setShowPassword] = useState(false);
   const [expiredNotice, setExpiredNotice] = useState(false);
-  const greeting = useMemo(() => getGreeting(), []);
-  const GreetingIcon = greeting.Icon;
 
   // Aviso de sesión cerrada por inactividad (?expired=1 desde el middleware)
   useEffect(() => {
@@ -33,36 +24,6 @@ export default function LoginPage() {
 
   return (
     <div className="relative">
-      {/* Greeting */}
-      <div className="flex items-center gap-3">
-        <motion.div
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.3 }}
-        >
-          <GreetingIcon
-            size={28}
-            strokeWidth={1.5}
-            style={{ color: "var(--auth-copper)" }}
-          />
-        </motion.div>
-        <h1
-          className="font-heading"
-          style={{ fontSize: 26, lineHeight: 1.2, color: "var(--text-primary)" }}
-        >
-          {greeting.text}
-        </h1>
-      </div>
-      <p className="mt-2 text-[14px]" style={{ color: "var(--text-secondary)" }}>
-        Accede a tu espacio personal
-      </p>
-
-      {/* Decorative separator */}
-      <div
-        className="mx-auto mt-5 mb-6 h-[1px] w-10"
-        style={{ background: "linear-gradient(90deg, transparent, var(--auth-copper), transparent)" }}
-      />
-
       {/* Aviso de sesión caducada por inactividad */}
       {expiredNotice && (
         <div
@@ -87,6 +48,7 @@ export default function LoginPage() {
           label="Email"
           icon={Mail}
           autoComplete="email"
+          autoFocus
           required
         />
 
@@ -128,9 +90,7 @@ export default function LoginPage() {
         </div>
 
         {/* Error */}
-        {state.error && (
-          <p className="text-[13px] text-red-400">{state.error}</p>
-        )}
+        {state.error && <AuthError message={state.error} />}
 
         <AuthButton type="submit" loading={pending}>
           Iniciar sesión

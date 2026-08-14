@@ -5,6 +5,7 @@ import Link from "next/link";
 import { resetPassword, type AuthState } from "../actions";
 import { AuthInput } from "@/components/auth/AuthInput";
 import { AuthButton } from "@/components/auth/AuthButton";
+import { AuthError } from "@/components/auth/AuthError";
 import { Mail, ArrowLeft } from "lucide-react";
 
 const initialState: AuthState = { error: null, success: null };
@@ -125,14 +126,13 @@ export default function ResetPasswordPage() {
           label="Email"
           icon={Mail}
           autoComplete="email"
+          autoFocus
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
 
-        {state.error && (
-          <p className="text-[13px] text-red-400">{state.error}</p>
-        )}
+        {state.error && <AuthError message={state.error} />}
 
         <AuthButton type="submit" loading={pending}>
           Enviar enlace

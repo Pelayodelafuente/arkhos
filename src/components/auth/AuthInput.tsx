@@ -34,7 +34,7 @@ export const AuthInput = forwardRef<HTMLInputElement, AuthInputProps>(
             borderColor: error ? "var(--error)" : "var(--border-stone)",
             caretColor: "var(--auth-copper)",
             animation: error ? "auth-shake 0.4s ease-out" : undefined,
-            paddingTop: 18,
+            paddingTop: 20,
             paddingBottom: 4,
           }}
           {...props}
@@ -43,22 +43,14 @@ export const AuthInput = forwardRef<HTMLInputElement, AuthInputProps>(
         {/* Floating label */}
         <label
           htmlFor={id}
-          className="pointer-events-none absolute left-10 text-[13px] transition-all duration-200 peer-focus:top-[4px] peer-focus:text-[9px] peer-focus:opacity-70 peer-[&:not(:placeholder-shown)]:top-[4px] peer-[&:not(:placeholder-shown)]:text-[9px] peer-[&:not(:placeholder-shown)]:opacity-70"
+          className="pointer-events-none absolute left-10 text-[13px] leading-none transition-all duration-200 peer-focus:top-[6px] peer-focus:text-[9px] peer-focus:opacity-70 peer-[&:not(:placeholder-shown)]:top-[6px] peer-[&:not(:placeholder-shown)]:text-[9px] peer-[&:not(:placeholder-shown)]:opacity-70"
           style={{
             color: "var(--text-tertiary)",
-            top: 15,
+            top: 17,
           }}
         >
           {label}
         </label>
-
-        {/* Bottom accent line */}
-        <span
-          className="absolute bottom-0 left-1/2 h-[2px] w-0 -translate-x-1/2 rounded-full transition-all duration-300 peer-focus:w-full"
-          style={{
-            backgroundColor: error ? "#DC2626" : "var(--auth-copper)",
-          }}
-        />
 
         {/* Right element (e.g. eye toggle) */}
         {rightElement && (
@@ -69,7 +61,9 @@ export const AuthInput = forwardRef<HTMLInputElement, AuthInputProps>(
 
         {/* Error message */}
         {error && (
-          <p className="mt-1.5 text-[12px] text-red-400">{error}</p>
+          <p className="mt-1.5 text-[12px]" style={{ color: "var(--error-text)" }}>
+            {error}
+          </p>
         )}
       </div>
     );
