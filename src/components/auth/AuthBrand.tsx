@@ -1,5 +1,7 @@
 "use client";
 
+import { ArkhosIcon } from "@/components/ui/arkhos-icon";
+
 export function AuthBrand() {
   return (
     <div
@@ -37,22 +39,12 @@ export function AuthBrand() {
           }}
         />
 
-        {/* Icon */}
-        <svg
-          width={52}
-          height={52}
-          viewBox="0 0 72 72"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
+        {/* Icon — logo oficial (misma forma que favicon/PWA), cobre sobre fondo oscuro */}
+        <ArkhosIcon
+          size={52}
+          color="var(--auth-copper)"
           style={{ animation: "auth-glow-pulse 3s ease-in-out infinite" }}
-        >
-          <path
-            d="M36 6 L6 62 L18 62 L36 26 L54 62 L66 62 Z"
-            fill="#D4845A"
-          />
-          <line x1="15" y1="48" x2="57" y2="48" stroke="#07070F" strokeWidth="3" strokeLinecap="round" />
-          <line x1="21" y1="38" x2="51" y2="38" stroke="#07070F" strokeWidth="3" strokeLinecap="round" opacity="0.5" />
-        </svg>
+        />
       </div>
 
       {/* Text */}

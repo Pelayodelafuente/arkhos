@@ -43,11 +43,8 @@ export const AuthInput = forwardRef<HTMLInputElement, AuthInputProps>(
         {/* Floating label */}
         <label
           htmlFor={id}
-          className="pointer-events-none absolute left-10 text-[13px] leading-none transition-all duration-200 peer-focus:top-[6px] peer-focus:text-[9px] peer-focus:opacity-70 peer-[&:not(:placeholder-shown)]:top-[6px] peer-[&:not(:placeholder-shown)]:text-[9px] peer-[&:not(:placeholder-shown)]:opacity-70"
-          style={{
-            color: "var(--text-tertiary)",
-            top: 17,
-          }}
+          className="pointer-events-none absolute left-10 top-[17px] text-[13px] leading-none transition-all duration-200 peer-focus:top-[7px] peer-focus:text-[9px] peer-focus:opacity-70 peer-[&:not(:placeholder-shown)]:top-[7px] peer-[&:not(:placeholder-shown)]:text-[9px] peer-[&:not(:placeholder-shown)]:opacity-70"
+          style={{ color: "var(--text-tertiary)" }}
         >
           {label}
         </label>

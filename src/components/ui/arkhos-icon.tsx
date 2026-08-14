@@ -1,9 +1,21 @@
 interface ArkhosIconProps {
   size?: number;
   className?: string;
+  /** Color del trazo. Por defecto el terracota de marca; el login lo sobreescribe con el cobre del tema oscuro. */
+  color?: string;
+  style?: React.CSSProperties;
 }
 
-export function ArkhosIcon({ size = 32, className }: ArkhosIconProps) {
+/**
+ * Logo oficial de Arkhos — fuente única de la marca.
+ * Debe coincidir siempre con `public/favicon.svg` y `public/icons/icon-*.svg`.
+ */
+export function ArkhosIcon({
+  size = 32,
+  className,
+  color = "var(--accent-terracotta)",
+  style,
+}: ArkhosIconProps) {
   return (
     <svg
       width={size}
@@ -12,11 +24,12 @@ export function ArkhosIcon({ size = 32, className }: ArkhosIconProps) {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
+      style={style}
     >
       {/* A shape */}
       <path
         d="M36 6 L6 62 L18 62 L36 26 L54 62 L66 62 Z"
-        stroke="var(--accent-terracotta)"
+        stroke={color}
         strokeWidth="3"
         strokeLinejoin="round"
         strokeLinecap="round"
@@ -28,7 +41,7 @@ export function ArkhosIcon({ size = 32, className }: ArkhosIconProps) {
         y1="48"
         x2="57"
         y2="48"
-        stroke="var(--accent-terracotta)"
+        stroke={color}
         strokeWidth="3"
         strokeLinecap="round"
       />
@@ -38,13 +51,13 @@ export function ArkhosIcon({ size = 32, className }: ArkhosIconProps) {
         y1="38"
         x2="51"
         y2="38"
-        stroke="var(--accent-terracotta)"
+        stroke={color}
         strokeWidth="3"
         strokeLinecap="round"
         opacity="0.5"
       />
       {/* Vertex dot */}
-      <circle cx="36" cy="18" r="2.5" fill="var(--accent-terracotta)" opacity="0.7" />
+      <circle cx="36" cy="18" r="2.5" fill={color} opacity="0.7" />
     </svg>
   );
 }
