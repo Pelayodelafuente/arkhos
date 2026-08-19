@@ -8,9 +8,11 @@ import { recalculateCryptoAssetTotals } from '@/lib/supabase/crypto';
 import type { CoinGeckoPrices } from '@/lib/crypto/coingecko';
 import type { AavePosition } from '@/lib/crypto/aave';
 
-const BTC_ADDRESS = 'bc1YOUR_BTC_ADDRESS';
-const ETH_ADDRESS = '0xYOUR_ETH_ADDRESS';
-const USDC_ADDRESS = '0xYOUR_WALLET_ADDRESS';
+// Direcciones de wallet on-chain (configurables por variables de entorno).
+// Se leen de la configuración del servidor; nunca se hardcodean direcciones personales.
+const BTC_ADDRESS = process.env.CRYPTO_BTC_ADDRESS ?? '';
+const ETH_ADDRESS = process.env.CRYPTO_ETH_ADDRESS ?? '';
+const USDC_ADDRESS = process.env.CRYPTO_USDC_ADDRESS ?? '';
 
 const COINGECKO_ID_TO_SYMBOL: Record<string, string> = {
   bitcoin: 'BTC',
